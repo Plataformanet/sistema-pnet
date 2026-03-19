@@ -4,11 +4,13 @@ namespace App\Services;
 
 use App\Actions\Fortify\CreateNewUser;
 use App\Models\Tenant;
+use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Hash;
 
 class TenantRegistrationService
 {
-    public function __construct(private CreateNewUser $createNewUser){}
 
     public function store(array $data): Tenant
     {
@@ -27,23 +29,23 @@ class TenantRegistrationService
             DB::beginTransaction();
 
             try {
-                $this->createNewUser->create([
+                User::create([
                     'name'     => $data['userName'],
                     'email'    => $data['email'],
-                    'password' => $data['password'],
+                    'password' => Hash::make($data['password']),
                 ]);
 
                 DB::commit();
 
             } catch (\Throwable $e) {
                 DB::rollBack();
-                throw $e;
+                Log::error('Error creating user for tenant: ' . $e->getMessage());
             }
         });
 
       } catch (\Throwable $e) {
         $tenant->delete();
-        throw $e;
+        Log::error('Error creating user for tenant: ' . $e->getMessage());
       }
 
       return $tenant;
