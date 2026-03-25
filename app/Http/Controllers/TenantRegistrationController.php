@@ -10,20 +10,22 @@ use Inertia\Inertia;
 
 class TenantRegistrationController extends Controller
 {
-    public function __construct(protected TenantRegistrationService $tenantRegistrationService){}
+    public function __construct(protected TenantRegistrationService $tenantRegistrationService)
+    {
+    }
 
     public function create()
     {
-      return Inertia::render('Auth/Register');
+        return Inertia::render('auth/Register');
     }
 
     public function store(StoreTenantRegistrationRequest $request)
     {
         $tenant = $this->tenantRegistrationService->store($request->validated());
 
-        if(config('app.env') === 'local'){
+        if (config('app.env') === 'local') {
             $loginUrl = "http://{$tenant->domains()->first()->domain}:8005/login";
-        }else{
+        } else {
             $loginUrl = "https://{$tenant->domains()->first()->domain}/login";
         }
 

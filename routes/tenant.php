@@ -30,6 +30,8 @@ Route::middleware([
     Route::get('/login', [AuthTenantController::class, 'showLoginForm'])->name('tenant.login');
     Route::post('/login', [AuthTenantController::class, 'login'])->name('tenant.login.submit');
     Route::get('/logout', [AuthTenantController::class, 'logout'])->name('tenant.logout');
+    Route::get('/forgot-password', [AuthTenantController::class, 'showForgotPasswordForm'])->name('tenant.forgot-password');
+    Route::get('/reset-password', [AuthTenantController::class, 'showResetPasswordForm'])->name('tenant.reset-password');
 
     Route::middleware(Authenticate::class)->group(function () {
         Route::get('/dashboard', [TenantController::class, 'dashboard'])->name('tenant.dashboard');

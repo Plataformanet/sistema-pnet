@@ -11,27 +11,37 @@ class AuthTenantController extends Controller
 {
     public function showLoginForm()
     {
-        return Inertia::render('Auth/Login');
+        return Inertia::render('tenant/auth/Login');
     }
 
     public function login(Request $request)
     {
-        if(Auth::attempt(['email' => $request->email, 'password' => $request->password])){
+        if (Auth::attempt(['email' => $request->email, 'password' => $request->password])) {
 
             $request->session()->regenerate();
 
-            return Inertia::location(route('tenant.dashboard'));
+            return redirect()->route('tenant.dashboard');
         }
     }
 
     public function logout(Request $request)
     {
-         Auth::logout();
+        Auth::logout();
 
-         $request->session()->invalidate();
+        $request->session()->invalidate();
 
-         $request->session()->regenerateToken();
+        $request->session()->regenerateToken();
 
-         return Inertia::location(route('tenant.login'));
+        return redirect()->route('tenant.login');
+    }
+
+    public function showForgotPasswordForm()
+    {
+        return Inertia::render('tenant/auth/ForgotPassword');
+    }
+
+    public function showResetPasswordForm()
+    {
+        return Inertia::render('tenant/auth/ResetPassword');
     }
 }

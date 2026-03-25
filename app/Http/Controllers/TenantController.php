@@ -7,11 +7,13 @@ use Inertia\Inertia;
 
 class TenantController extends Controller
 {
-    public function __construct(){}
+    public function __construct()
+    {
+    }
 
     public function dashboard()
     {
-        return Inertia::render('Tenant/Dashboard', [
+        return Inertia::render('tenant/Dashboard', [
             'message' => 'Bem-vindo ao dashboard do tenant!',
         ]);
     }

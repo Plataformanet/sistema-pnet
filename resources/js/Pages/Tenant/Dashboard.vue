@@ -1,13 +1,16 @@
 <script setup>
-import { useTenant } from '@/Composables/useTenant'
-import { Link } from '@inertiajs/vue3'
+import { useTenant } from "@/Composables/useTenant";
+import TenantLayout from "@/layouts/tenant-layout/TenantLayout.vue";
+import { Head, Link } from "@inertiajs/vue3";
+import { route } from "ziggy-js";
 
-const { tenant } = useTenant()
+defineOptions({ layout: TenantLayout });
+
+const { tenant } = useTenant();
 </script>
 
 <template>
-    <div>
-        <h1>Bem-vindo, {{ tenant.name }}</h1>
-        <Link href="/logout" view-transition>Sair</Link>
-    </div>
+    <Head title="Dashboard" />
+    <h1>Bem-vindo, {{ tenant.name }}</h1>
+    <Link :href="route('tenant.logout')" view-transition>Sair</Link>
 </template>
