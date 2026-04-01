@@ -15,6 +15,7 @@ import {
 import { Input } from "@/components/ui/input";
 import AuthLayout from "@/layouts/AuthLayout.vue";
 import { route } from "ziggy-js";
+import FieldError from "@/components/ui/field/FieldError.vue";
 
 const props = defineProps<{
     class?: HTMLAttributes["class"];
@@ -30,7 +31,7 @@ const form = useForm({
 
 function submit() {
     form.post(route("tenant.login.submit"), {
-        onFinish: () => form.reset("password"),
+        // onFinish: () => form.reset("password"),
     });
 }
 </script>
@@ -54,9 +55,9 @@ function submit() {
                         required
                         v-model="form.email"
                     />
-                    <span v-if="form.errors.email">{{
+                    <FieldError v-if="form.errors.email">{{
                         form.errors.email
-                    }}</span>
+                    }}</FieldError>
                 </Field>
                 <Field>
                     <div class="flex items-center">
@@ -74,9 +75,12 @@ function submit() {
                         required
                         v-model="form.password"
                     />
-                    <span v-if="form.errors.password">{{
+                    <FieldError v-if="form.errors.password">{{
                         form.errors.password
-                    }}</span>
+                    }}</FieldError>
+                    <FieldError v-if="$page.props.errors.invalidLogin">{{
+                        $page.props.errors.invalidLogin
+                    }}</FieldError>
                 </Field>
                 <Field>
                     <Button type="submit"> Login </Button>

@@ -19,117 +19,25 @@ import {
     SidebarMenuItem,
     SidebarRail,
 } from "@/components/ui/sidebar";
-import { Link } from "@inertiajs/vue3";
+import { Link, usePage } from "@inertiajs/vue3";
+import type { TenantNav } from "./TenantLayout.vue";
 
-const props = defineProps<SidebarProps>();
+const props = defineProps<SidebarProps & { data: TenantNav }>();
+
+const page = usePage();
+
+function isActive(url?: string) {
+    if (!url) return false;
+
+    const currentPath = page.url.split("?")[0];
+
+    const menuUrl = url.startsWith("/") ? url : `/${url}`;
+
+    return currentPath === menuUrl;
+}
 
 // This is sample data.
-const data = {
-    versions: ["1.0.1", "1.1.0-alpha", "2.0.0-beta1"],
-    navMain: [
-        {
-            title: "Dashboard",
-            url: "/",
-        },
-        {
-            title: "Vendas",
-            url: "/vendas/dashboard",
-            items: [
-                {
-                    title: "Lista orçamentos",
-                    url: "/orcamentos/lista",
-                },
-                {
-                    title: "Novo orçamento",
-                    url: "/orcamentos/novo",
-                },
-                {
-                    title: "Lista vendas",
-                    url: "/vendas/lista",
-                },
-                {
-                    title: "Nova venda",
-                    url: "/vendas/novo",
-                },
-            ],
-        },
-        {
-            title: "Serviços",
-            url: "/servicos/dashboard",
-            items: [
-                {
-                    title: "Lista Serviços",
-                    url: "/servicos/lista",
-                },
-                {
-                    title: "Novo serviço",
-                    url: "/servicos/novo",
-                },
-            ],
-        },
-        {
-            title: "Documentações",
-            url: "/documentacoes/dashboard",
-            items: [
-                {
-                    title: "Propostas",
-                    url: "/documentacoes/propostas/lista",
-                },
-                {
-                    title: "Nova proposta",
-                    url: "/documentacoes/propostas/novo",
-                },
-                {
-                    title: "Calculadora ITBI",
-                    url: "/documentacoes/propostas/novo",
-                },
-            ],
-        },
-        {
-            title: "Financeiro",
-            url: "financeiro/dashboard",
-            items: [
-                {
-                    title: "Categorias/Subcategorias",
-                    url: "financeiro/categorias/lista",
-                },
-                {
-                    title: "Contas Bancárias",
-                    url: "financeiro/contas-bancarias",
-                },
-                {
-                    title: "Contas a pagar",
-                    url: "financeiro/contas-pagar",
-                },
-                {
-                    title: "Contas a receber",
-                    url: "financeiro/contas-receber",
-                },
-                {
-                    title: "Fluxo de caixa",
-                    url: "financeiro/fluxo-caixa",
-                },
-                {
-                    title: "Fluxo de gastos",
-                    url: "financeiro/fluxo-gastos",
-                },
-                {
-                    title: "Faturamentos",
-                    url: "financeiro/faturamentos",
-                },
-            ],
-        },
-    ],
-};
-
-interface NavParentProps {
-    title: string;
-    url?: string;
-    items?: {
-        title: string;
-        url?: string;
-    }[];
-}
+const data = props.data;
 </script>
 
 <template>
@@ -144,7 +52,13 @@ interface NavParentProps {
         </SidebarHeader>
         <SidebarContent class="gap-0">
             <template v-for="item in data.navMain" :key="item.title">
-                <Collapsible :title="item.title" class="group/collapsible">
+                <Collapsible
+                    :title="item.title"
+                    class="group/collapsible"
+                    :default-open="
+                        item.items?.some((child) => isActive(child.url))
+                    "
+                >
                     <SidebarGroup>
                         <SidebarGroupLabel
                             as-child
@@ -159,7 +73,11 @@ interface NavParentProps {
                             </CollapsibleTrigger>
                         </SidebarGroupLabel>
                         <SidebarMenuItem v-else>
-                            <SidebarMenuButton as-child class="font-semibold">
+                            <SidebarMenuButton
+                                as-child
+                                class="font-semibold"
+                                :is-active="isActive(item.url)"
+                            >
                                 <Link :href="item.url">{{ item.title }}</Link>
                             </SidebarMenuButton>
                         </SidebarMenuItem>
@@ -171,7 +89,10 @@ interface NavParentProps {
                                         :key="childItem.title"
                                         :title="childItem.title"
                                     >
-                                        <SidebarMenuButton as-child>
+                                        <SidebarMenuButton
+                                            as-child
+                                            :is-active="isActive(childItem.url)"
+                                        >
                                             <Link :href="childItem.url">{{
                                                 childItem.title
                                             }}</Link>

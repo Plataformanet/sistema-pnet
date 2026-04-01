@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreTenantLoginRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 
 class AuthTenantController extends Controller
@@ -14,7 +16,7 @@ class AuthTenantController extends Controller
         return Inertia::render('tenant/auth/Login');
     }
 
-    public function login(Request $request)
+    public function login(StoreTenantLoginRequest $request)
     {
         if (Auth::attempt(['email' => $request->email, 'password' => $request->password])) {
 
@@ -22,6 +24,10 @@ class AuthTenantController extends Controller
 
             return redirect()->route('tenant.dashboard');
         }
+
+        return back()->withErrors([
+            'invalidLogin' => 'As credenciais informadas estão incorretas.',
+        ]);
     }
 
     public function logout(Request $request)
