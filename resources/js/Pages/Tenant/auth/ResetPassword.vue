@@ -11,7 +11,7 @@ import AuthLayout from "@/layouts/AuthLayout.vue";
             <FieldGroup>
                 <div class="flex flex-col items-center gap-2 text-center">
                     <h1 class="text-2xl font-bold">Redefinir senha</h1>
-                    <p class="text-muted-foreground text-balance">
+                    <p class="text-balance text-muted-foreground">
                         Insira sua nova senha
                     </p>
                 </div>

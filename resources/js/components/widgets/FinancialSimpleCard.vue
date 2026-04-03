@@ -18,7 +18,7 @@ const props = defineProps<Props>();
 
 <template>
     <Card
-        class="transition-all hover:shadow-md hover:border-primary/50 relative overflow-hidden group"
+        class="group relative overflow-hidden transition-all hover:border-primary/50 hover:shadow-md"
     >
         <!-- Efeito de brilho de fundo opcional -->
         <!-- <div class="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-primary/5 opacity-0 transition-opacity duration-500 group-hover:opacity-100"></div> -->
@@ -44,7 +44,7 @@ const props = defineProps<Props>();
             </div>
             <div class="mt-1 flex items-center text-xs text-muted-foreground">
                 <span
-                    class="flex items-center font-medium mr-1"
+                    class="mr-1 flex items-center font-medium"
                     :class="props.isGreen ? 'text-emerald-500' : 'text-red-500'"
                 >
                     <template v-if="props.percentageType === 'up'">

@@ -12,7 +12,7 @@ const props = defineProps<{
 <template>
     <Head :title="props.title" />
     <div
-        class="bg-muted flex min-h-svh flex-col items-center justify-center p-6 md:p-10"
+        class="flex min-h-svh flex-col items-center justify-center bg-muted p-6 md:p-10"
     >
         <div class="w-full max-w-sm md:max-w-4xl">
             <div :class="cn('flex flex-col gap-6', props.class)">
@@ -20,7 +20,7 @@ const props = defineProps<{
                     <CardContent class="grid p-0 md:grid-cols-2">
                         <slot />
                         <div
-                            class="relative flex items-center justify-center bg-white border-t border-gray-200 md:border-l md:border-t-0"
+                            class="relative flex items-center justify-center border-t border-gray-200 bg-white md:border-t-0 md:border-l"
                         >
                             <img
                                 src="/images/logo-plataformanet-preto.png"

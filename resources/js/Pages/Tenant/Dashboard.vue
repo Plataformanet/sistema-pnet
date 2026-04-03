@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { useTenant } from "@/composables/useTenant";
 import TenantLayout from "@/layouts/tenant-layout/TenantLayout.vue";
 import { Head, Link } from "@inertiajs/vue3";
 import { route } from "ziggy-js";
@@ -10,10 +9,10 @@ import MonthExpensesWidget from "@/components/widgets/MonthExpensesWidget.vue";
 import CurrentBalanceWidget from "@/components/widgets/CurrentBalanceWidget.vue";
 import DelinquencyWidget from "@/components/widgets/DelinquencyWidget.vue";
 import RevenueChartWidget from "@/components/widgets/RevenueChartWidget.vue";
+import RecentApprovalsWidget from "@/components/widgets/RecentApprovalsWidget.vue";
+import UpcomingPaymentsWidget from "@/components/widgets/UpcomingPaymentsWidget.vue";
 
 defineOptions({ layout: TenantLayout });
-
-const { tenant } = useTenant();
 </script>
 
 <template>
@@ -22,23 +21,15 @@ const { tenant } = useTenant();
     <div class="flex-1 space-y-6 pt-2 pb-8">
         <!-- Cabeçalho do Dashboard -->
         <div
-            class="flex items-center justify-between pb-4 border-b border-border"
+            class="flex items-center justify-between border-b border-border pb-4"
         >
             <div>
                 <h2 class="text-3xl font-bold tracking-tight text-foreground">
                     Dashboard
                 </h2>
-                <p class="text-muted-foreground mt-1 text-sm">
-                    Visão geral e atalhos rápidos da {{ tenant?.name }}
+                <p class="mt-1 text-sm text-muted-foreground">
+                    Visão geral e atalhos rápidos
                 </p>
-            </div>
-            <div>
-                <Link
-                    :href="route('tenant.logout')"
-                    class="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-                    view-transition
-                    >Sair</Link
-                >
             </div>
         </div>
 
@@ -51,17 +42,26 @@ const { tenant } = useTenant();
         </div>
 
         <!-- Linha 2: Grade Mista para Widgets Maiores -->
-        <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-7 mt-6">
+        <div class="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-7">
             <!-- Nosso Widget de Lista Ocupando 4 colunas em telas grandes -->
-            <CriticalIssuesWidget
+
+            <UpcomingPaymentsWidget
+                class="col-span-1 md:col-span-2 lg:col-span-3"
+            />
+
+            <!-- Nosso novo Gráfico de Faturamento ocupando 3 colunas -->
+            <RevenueChartWidget
                 class="col-span-1 md:col-span-2 lg:col-span-4"
             />
-            
-            <!-- Nosso novo Gráfico de Faturamento ocupando 3 colunas -->
-            <RevenueChartWidget class="col-span-1 md:col-span-2 lg:col-span-3" />
-            
-            <PlaceholderWidget class="col-span-1 md:col-span-2 lg:col-span-3" />
-            <PlaceholderWidget class="col-span-1 md:col-span-2 lg:col-span-4" />
+
+            <!-- Widget de Aprovações Recentes -->
+            <RecentApprovalsWidget
+                class="col-span-1 md:col-span-2 lg:col-span-4"
+            />
+            <CriticalIssuesWidget
+                class="col-span-1 md:col-span-2 lg:col-span-3"
+            />
+            <!-- Último Widget: Próximos Vencimentos -->
         </div>
     </div>
 </template>

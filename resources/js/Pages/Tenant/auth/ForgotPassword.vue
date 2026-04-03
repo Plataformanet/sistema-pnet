@@ -27,7 +27,7 @@ function onEmailSubmit(e: SubmitEvent) {
             <FieldGroup>
                 <div class="flex flex-col items-center gap-2 text-center">
                     <h1 class="text-2xl font-bold">Esqueci minha senha</h1>
-                    <p class="text-muted-foreground text-balance">
+                    <p class="text-balance text-muted-foreground">
                         Informe seu e-mail e em breve você receberá um e-mail
                         para redefinir a senha.
                     </p>
@@ -49,15 +49,15 @@ function onEmailSubmit(e: SubmitEvent) {
         </form>
         <div
             v-else
-            class="flex flex-col items-center gap-2 text-center p-6 pb-2"
+            class="flex flex-col items-center gap-2 p-6 pb-2 text-center"
         >
             <h1 class="text-2xl font-bold">Link enviado</h1>
-            <p class="text-muted-foreground text-balance">
+            <p class="text-balance text-muted-foreground">
                 Você receberá um link no seu e-mail com as informações para
                 redefinição de senha.
             </p>
             <div
-                class="w-full flex justify-between gap-2 items-center text-muted-foreground text-sm mt-4"
+                class="mt-4 flex w-full items-center justify-between gap-2 text-sm text-muted-foreground"
             >
                 <span>Problemas ao receber e-mail?</span>
                 <Button variant="ghost">

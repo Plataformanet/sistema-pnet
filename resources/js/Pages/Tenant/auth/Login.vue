@@ -42,7 +42,7 @@ function submit() {
             <FieldGroup>
                 <div class="flex flex-col items-center gap-2 text-center">
                     <h1 class="text-2xl font-bold">Bem vindo de volta</h1>
-                    <p class="text-muted-foreground text-balance">
+                    <p class="text-balance text-muted-foreground">
                         Faça o login da sua conta
                     </p>
                 </div>

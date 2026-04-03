@@ -46,7 +46,7 @@ const data = props.data;
             <img
                 src="/images/logo-plataformanet-preto.png"
                 alt="Logo PlataformaNet"
-                class="h-16 max-w-full block mx-auto"
+                class="mx-auto block h-16 max-w-full"
             />
             <SearchForm />
         </SidebarHeader>

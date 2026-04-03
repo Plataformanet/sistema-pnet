@@ -7,84 +7,94 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
-  Field,
-  FieldDescription,
-  FieldGroup,
-  FieldLabel,
+    Field,
+    FieldDescription,
+    FieldGroup,
+    FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 // import { route } from "ziggy-js";
 
 const props = defineProps<{
-  class?: HTMLAttributes["class"];
+    class?: HTMLAttributes["class"];
 }>();
 
 const flash: any = computed(() => usePage().props.flash);
 
 const form = useForm({
-  email: flash.value.email ?? "", // pré-preenche se vier do cadastro
-  password: "",
-  remember: false,
+    email: flash.value.email ?? "", // pré-preenche se vier do cadastro
+    password: "",
+    remember: false,
 });
 
 function submit() {
-  form.post(route("tenant.login.submit"), {
-    onFinish: () => form.reset("password"),
-  });
+    form.post(route("tenant.login.submit"), {
+        onFinish: () => form.reset("password"),
+    });
 }
 </script>
 
 <template>
-  <div
-    class="bg-muted flex min-h-svh flex-col items-center justify-center p-6 md:p-10"
-  >
-    <div class="w-full max-w-sm md:max-w-4xl">
-      <div :class="cn('flex flex-col gap-6', props.class)">
-        <Card class="overflow-hidden p-0">
-          <CardContent class="grid p-0 md:grid-cols-2">
-            <form class="p-6 md:p-8" @submit.prevent="submit">
-              <FieldGroup>
-                <div class="flex flex-col items-center gap-2 text-center">
-                  <h1 class="text-2xl font-bold">Bem vindo de volta</h1>
-                  <p class="text-muted-foreground text-balance">
-                    Faça o login da sua conta
-                  </p>
-                </div>
-                <Field>
-                  <FieldLabel for="email"> Email </FieldLabel>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="m@example.com"
-                    required
-                    v-model="form.email"
-                  />
-                  <span v-if="form.errors.email">{{ form.errors.email }}</span>
-                </Field>
-                <Field>
-                  <div class="flex items-center">
-                    <FieldLabel for="password"> Senha </FieldLabel>
-                    <a
-                      href="/auth/forget-password"
-                      class="ml-auto text-sm underline-offset-2 hover:underline"
-                    >
-                      Esqueceu sua senha?
-                    </a>
-                  </div>
-                  <Input
-                    id="password"
-                    type="password"
-                    required
-                    v-model="form.password"
-                  />
-                  <span v-if="form.errors.password">{{
-                    form.errors.password
-                  }}</span>
-                </Field>
-                <Field>
-                  <Button type="submit"> Login </Button>
-                </Field>
-                <!-- <FieldSeparator class="*:data-[slot=field-separator-content]:bg-card">
+    <div
+        class="flex min-h-svh flex-col items-center justify-center bg-muted p-6 md:p-10"
+    >
+        <div class="w-full max-w-sm md:max-w-4xl">
+            <div :class="cn('flex flex-col gap-6', props.class)">
+                <Card class="overflow-hidden p-0">
+                    <CardContent class="grid p-0 md:grid-cols-2">
+                        <form class="p-6 md:p-8" @submit.prevent="submit">
+                            <FieldGroup>
+                                <div
+                                    class="flex flex-col items-center gap-2 text-center"
+                                >
+                                    <h1 class="text-2xl font-bold">
+                                        Bem vindo de volta
+                                    </h1>
+                                    <p
+                                        class="text-balance text-muted-foreground"
+                                    >
+                                        Faça o login da sua conta
+                                    </p>
+                                </div>
+                                <Field>
+                                    <FieldLabel for="email"> Email </FieldLabel>
+                                    <Input
+                                        id="email"
+                                        type="email"
+                                        placeholder="m@example.com"
+                                        required
+                                        v-model="form.email"
+                                    />
+                                    <span v-if="form.errors.email">{{
+                                        form.errors.email
+                                    }}</span>
+                                </Field>
+                                <Field>
+                                    <div class="flex items-center">
+                                        <FieldLabel for="password">
+                                            Senha
+                                        </FieldLabel>
+                                        <a
+                                            href="/auth/forget-password"
+                                            class="ml-auto text-sm underline-offset-2 hover:underline"
+                                        >
+                                            Esqueceu sua senha?
+                                        </a>
+                                    </div>
+                                    <Input
+                                        id="password"
+                                        type="password"
+                                        required
+                                        v-model="form.password"
+                                    />
+                                    <span v-if="form.errors.password">{{
+                                        form.errors.password
+                                    }}</span>
+                                </Field>
+                                <Field>
+                                    <Button type="submit"> Login </Button>
+                                </Field>
+                                <!-- <FieldSeparator class="*:data-[slot=field-separator-content]:bg-card">
               Or continue with
             </FieldSeparator>
             <Field class="grid grid-cols-3 gap-4">
@@ -116,27 +126,27 @@ function submit() {
                 <span class="sr-only">Login with Meta</span>
               </Button>
             </Field> -->
-                <FieldDescription class="text-center">
-                  Não possui uma conta?
-                  <Link href="/signup"> Cadastre-se </Link>
-                </FieldDescription>
-              </FieldGroup>
-            </form>
-            <div class="bg-muted relative hidden md:block">
-              <!-- <img
+                                <FieldDescription class="text-center">
+                                    Não possui uma conta?
+                                    <Link href="/signup"> Cadastre-se </Link>
+                                </FieldDescription>
+                            </FieldGroup>
+                        </form>
+                        <div class="relative hidden bg-muted md:block">
+                            <!-- <img
             src="/placeholder.svg"
             alt="Image"
             class="absolute inset-0 h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
           > -->
+                        </div>
+                    </CardContent>
+                </Card>
+                <FieldDescription class="px-6 text-center">
+                    Ao continuar, você concorda com nossos
+                    <a href="#">Termos de serviço</a> e
+                    <a href="#">Política de privacidade</a>.
+                </FieldDescription>
             </div>
-          </CardContent>
-        </Card>
-        <FieldDescription class="px-6 text-center">
-          Ao continuar, você concorda com nossos
-          <a href="#">Termos de serviço</a> e
-          <a href="#">Política de privacidade</a>.
-        </FieldDescription>
-      </div>
+        </div>
     </div>
-  </div>
 </template>

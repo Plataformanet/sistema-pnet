@@ -18,7 +18,7 @@ import {
 </script>
 
 <template>
-    <Card class="flex h-full flex-col col-span-1 md:col-span-2">
+    <Card class="col-span-1 flex h-full flex-col md:col-span-2">
         <CardHeader class="flex flex-row items-center justify-between pb-4">
             <div>
                 <CardTitle class="text-lg">Pendências Críticas</CardTitle>
@@ -49,11 +49,11 @@ import {
                     </div>
                     <div class="flex-1 space-y-1 truncate">
                         <p
-                            class="text-sm font-medium leading-none text-foreground"
+                            class="text-sm leading-none font-medium text-foreground"
                         >
                             Imobiliária Alfa - Contrato #1402
                         </p>
-                        <p class="text-sm text-destructive truncate">
+                        <p class="truncate text-sm text-destructive">
                             Falta RG dos Compradores
                         </p>
                     </div>
@@ -72,18 +72,18 @@ import {
                     </div>
                     <div class="flex-1 space-y-1 truncate">
                         <p
-                            class="text-sm font-medium leading-none text-foreground"
+                            class="text-sm leading-none font-medium text-foreground"
                         >
                             Roberto Almeida (Avaliação)
                         </p>
-                        <p class="text-sm text-muted-foreground truncate">
+                        <p class="truncate text-sm text-muted-foreground">
                             Aguardando Laudo de Engenharia
                         </p>
                     </div>
                     <!-- Badge Secundário (Amber) -->
                     <Badge
                         variant="outline"
-                        class="text-amber-500 border-amber-500/30 ml-auto hidden sm:flex"
+                        class="ml-auto hidden border-amber-500/30 text-amber-500 sm:flex"
                     >
                         Próximo do Prazo
                     </Badge>
@@ -94,7 +94,7 @@ import {
         <CardFooter class="border-t pt-4">
             <Button
                 variant="ghost"
-                class="w-full text-primary hover:text-primary/80 transition-colors flex items-center justify-center gap-2"
+                class="flex w-full items-center justify-center gap-2 text-primary transition-colors hover:text-primary/80"
             >
                 Ver todas as 12 pendências
                 <ArrowRight class="h-4 w-4" />

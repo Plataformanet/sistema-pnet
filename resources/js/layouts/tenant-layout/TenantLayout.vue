@@ -17,6 +17,18 @@ import { Separator } from "@/components/ui/separator";
 import { Link, usePage } from "@inertiajs/vue3";
 import { route } from "ziggy-js";
 import { computed } from "vue";
+import { useTenant } from "@/composables/useTenant";
+import { Avatar, AvatarImage } from "@/components/ui/avatar";
+import AvatarFallback from "@/components/ui/avatar/AvatarFallback.vue";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { LogOut, User } from "lucide-vue-next";
 
 export interface TenantNav {
     navMain: TenantNavItem[];
@@ -163,6 +175,8 @@ const breadcrumbs = computed(() => {
 
     return match;
 });
+
+const { tenant } = useTenant();
 </script>
 
 <template>
@@ -170,7 +184,7 @@ const breadcrumbs = computed(() => {
         <TenantSidebar :data="data" />
         <SidebarInset>
             <header
-                class="bg-background sticky top-0 flex h-16 shrink-0 items-center gap-2 border-b px-4"
+                class="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-2 border-b bg-background px-4"
             >
                 <SidebarTrigger class="-ml-1" />
                 <Separator orientation="vertical" class="mr-2 h-4" />
@@ -197,6 +211,33 @@ const breadcrumbs = computed(() => {
                         </template>
                     </BreadcrumbList>
                 </Breadcrumb>
+                <div class="ml-auto">
+                    <DropdownMenu>
+                        <DropdownMenuTrigger as-child>
+                            <Avatar
+                                class="flex cursor-pointer items-center justify-center bg-accent"
+                            >
+                                <!-- <AvatarImage
+                                    src="https://github.com/alanvf1.png"
+                                /> -->
+                                <!-- <AvatarFallback>AV</AvatarFallback> -->
+                                <User class="w-4" />
+                            </Avatar>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent class="mr-4">
+                            <DropdownMenuLabel>{{
+                                tenant?.name
+                            }}</DropdownMenuLabel>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem><User />Perfil</DropdownMenuItem>
+                            <DropdownMenuItem as-child>
+                                <Link :href="route('logout')">
+                                    <LogOut />Sair
+                                </Link>
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </div>
             </header>
             <main class="flex-1 overflow-auto p-4">
                 <slot />

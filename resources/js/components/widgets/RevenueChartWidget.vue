@@ -43,7 +43,7 @@ const config = {
 </script>
 
 <template>
-    <Card class="flex flex-col h-full">
+    <Card class="flex h-full flex-col">
         <CardHeader class="pb-6">
             <CardTitle class="text-lg">Faturamento Anual</CardTitle>
             <CardDescription
@@ -52,7 +52,7 @@ const config = {
             >
         </CardHeader>
         <CardContent
-            class="flex-1 min-h-[250px] p-0 pr-6 pb-6 pt-0 flex items-center justify-center"
+            class="flex min-h-[250px] flex-1 items-center justify-center p-0 pt-0 pr-6 pb-6"
         >
             <ChartContainer :config="config" class="h-[250px] w-full">
                 <VisXYContainer

@@ -2,7 +2,7 @@
 <template>
     <!-- Placeholder interativo simulando um "Drop Zone" do Drag and Drop -->
     <div
-        class="rounded-xl border-2 border-dashed border-muted bg-muted/20 flex items-center justify-center p-12 text-center transition-colors hover:bg-muted/30"
+        class="flex items-center justify-center rounded-xl border-2 border-dashed border-muted bg-muted/20 p-12 text-center transition-colors hover:bg-muted/30"
     >
         <div class="flex flex-col items-center gap-3 text-muted-foreground">
             <svg
