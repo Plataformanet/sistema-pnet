@@ -11,6 +11,9 @@ import DelinquencyWidget from "@/components/widgets/DelinquencyWidget.vue";
 import RevenueChartWidget from "@/components/widgets/RevenueChartWidget.vue";
 import RecentApprovalsWidget from "@/components/widgets/RecentApprovalsWidget.vue";
 import UpcomingPaymentsWidget from "@/components/widgets/UpcomingPaymentsWidget.vue";
+import OpenTicketsWidget from "@/components/widgets/OpenTicketsWidget.vue";
+import TeamPerformanceWidget from "@/components/widgets/TeamPerformanceWidget.vue";
+import ResearchVolumeWidget from "@/components/widgets/ResearchVolumeWidget.vue";
 
 defineOptions({ layout: TenantLayout });
 </script>
@@ -62,6 +65,22 @@ defineOptions({ layout: TenantLayout });
                 class="col-span-1 md:col-span-2 lg:col-span-3"
             />
             <!-- Último Widget: Próximos Vencimentos -->
+        </div>
+
+        <!-- Linha 3: Módulo de Serviços (Atendimento) -->
+        <div class="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+            <OpenTicketsWidget class="col-span-1 md:col-span-2 lg:col-span-4" />
+            <TeamPerformanceWidget
+                class="col-span-1 md:col-span-2 lg:col-span-3"
+            />
+        </div>
+
+        <!-- Linha 4: Módulo de Pesquisas -->
+        <div class="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+            <ResearchVolumeWidget
+                class="col-span-1 md:col-span-2 lg:col-span-3"
+            />
+            <PlaceholderWidget class="col-span-1 md:col-span-2 lg:col-span-4" />
         </div>
     </div>
 </template>
