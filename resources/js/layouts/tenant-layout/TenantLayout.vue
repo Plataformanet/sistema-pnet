@@ -48,56 +48,78 @@ const data = {
             url: "/dashboard",
         },
         {
+            title: "Cadastros",
+            url: "/registrations/dashboard",
+            items: [
+                {
+                    title: "Clientes",
+                    url: "/registrations/clients/list",
+                },
+                {
+                    title: "Fornecedores",
+                    url: "/registrations/suppliers/list",
+                },
+                {
+                    title: "Funcionários",
+                    url: "/registrations/employees/list",
+                },
+                {
+                    title: "Usuários",
+                    url: "/registrations/users/list",
+                },
+            ],
+        },
+        {
             title: "Vendas",
-            url: "/vendas/dashboard",
+            url: "/sales/dashboard",
             items: [
                 {
                     title: "Lista orçamentos",
-                    url: "/orcamentos/lista",
+                    url: "/sales/quotes/list",
                 },
                 {
                     title: "Novo orçamento",
-                    url: "/orcamentos/novo",
+                    url: "/sales/quotes/new",
                 },
                 {
                     title: "Lista vendas",
-                    url: "/vendas/lista",
+                    url: "/sales/sales/list",
                 },
                 {
                     title: "Nova venda",
-                    url: "/vendas/novo",
+                    url: "/sales/sales/new",
                 },
             ],
         },
         {
             title: "Serviços",
-            url: "/servicos/dashboard",
+            url: "/services/dashboard",
             items: [
                 {
                     title: "Lista Serviços",
-                    url: "/servicos/lista",
+                    url: "/services/services/list",
                 },
                 {
                     title: "Novo serviço",
-                    url: "/servicos/novo",
+                    url: "/services/services/new",
                 },
             ],
         },
         {
             title: "Documentações",
-            url: "/documentacoes/dashboard",
+            url: "/documentation/dashboard",
             items: [
                 {
                     title: "Propostas",
-                    url: "/documentacoes/propostas/lista",
+                    url: "/documentation/proposals/list",
                 },
                 {
                     title: "Nova proposta",
-                    url: "/documentacoes/propostas/novo",
+                    url: "/documentation/proposals/new",
                 },
                 {
                     title: "Calculadora ITBI",
-                    url: "/documentacoes/propostas/novo",
+                    url: "/documentation/itbi-calculator/new",
                 },
             ],
         },

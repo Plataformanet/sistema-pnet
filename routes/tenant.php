@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Http\Controllers\Auth\AuthTenantController;
 use App\Http\Controllers\TenantController;
+use App\Http\Controllers\TenantCustomerController;
 use App\Http\Middleware\Authenticate;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -35,5 +36,6 @@ Route::middleware([
 
     Route::middleware(Authenticate::class)->group(function () {
         Route::get('/dashboard', [TenantController::class, 'dashboard'])->name('tenant.dashboard');
+        Route::get('/registrations/clients/list', [TenantCustomerController::class, 'customerList'])->name('tenant.registrations.clients.list');
     });
 });
