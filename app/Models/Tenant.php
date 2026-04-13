@@ -32,9 +32,9 @@ class Tenant extends BaseTenant implements TenantWithDatabase
             'is_active',
             'trial_ends_at',
         ];
-   }
+    }
 
-   public function plan()
+    public function plan()
     {
         return $this->belongsTo(Plan::class);
     }
@@ -72,16 +72,16 @@ class Tenant extends BaseTenant implements TenantWithDatabase
     /**
      * Verifica se está em trial
      */
-    public function isOnTrial(): bool
-    {
-        return $this->trial_ends_at && $this->trial_ends_at->isFuture();
-    }
+    // public function isOnTrial(): bool
+    // {
+    //     return $this->trial_ends_at && $this->trial_ends_at->isFuture();
+    // }
 
     /**
      * Verifica se o trial expirou
      */
-    public function trialExpired(): bool
-    {
-        return $this->trial_ends_at && $this->trial_ends_at->isPast();
-    }
+    // public function trialExpired(): bool
+    // {
+    //     return $this->trial_ends_at && $this->trial_ends_at->isPast();
+    // }
 }

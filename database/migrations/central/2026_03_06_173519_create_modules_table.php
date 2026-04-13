@@ -17,7 +17,7 @@ return new class extends Migration {
             $table->text('description')->nullable();
             $table->string('icon')->nullable();
             $table->boolean('is_core')->default(false);
-            $table->json('require_modules')->nullable();
+            $table->json('requires_modules')->nullable();
             $table->string('route_prefix')->nullable();
             $table->timestamps();
         });
