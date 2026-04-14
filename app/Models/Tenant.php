@@ -28,6 +28,7 @@ class Tenant extends BaseTenant implements TenantWithDatabase
         return [
             'id',
             'name',
+            'domain',
             'plan_id',
             'is_active',
             'trial_ends_at',

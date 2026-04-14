@@ -1,14 +1,71 @@
 <?php
 
-// app/Services/TenantService.php
+namespace App\Services;
 
 use App\Models\Module;
 use App\Models\Plan;
 use App\Models\Tenant;
+use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 
 class TenantService
 {
+
+    public function store(array $data): Tenant
+    {
+
+        $tenant = Tenant::create([
+            'name' => $data['name'],
+            'plan_id' => $data['plan_id'],
+            'is_active' => true,
+            // 'trial_ends_at' => now()->addDays(30),
+        ]);
+
+        try {
+            $tenant->domains()->create([
+                'domain' => $data['domain'],
+            ]);
+
+            $plan = Plan::find($data['plan_id']);
+            $includedModules = $plan->includedModules()->get();
+
+            foreach ($includedModules as $module) {
+
+                // if ($this->canActivateModule($tenant, $module)) {
+                $tenant->modules()->attach($module->id, [
+                    'is_active' => true,
+                    'activated_at' => now(),
+                ]);
+                // }
+
+            }
+
+            $tenant->run(function () use ($data) {
+                DB::beginTransaction();
+
+                try {
+                    User::create([
+                        'name' => $data['userName'],
+                        'email' => $data['email'],
+                        'password' => Hash::make($data['password']),
+                    ]);
+
+                    DB::commit();
+
+                } catch (\Throwable) {
+                    DB::rollBack();
+                }
+            });
+
+        } catch (\Throwable) {
+            $tenant->delete();
+        }
+
+        return $tenant;
+
+    }
+
     /**
      * Validar antes de ativar módulo
      */
@@ -40,7 +97,7 @@ class TenantService
     /**
      * Provisionar novo tenant
      */
-    public function provision(array $data): Tenant
+    public function provision(array $data)
     {
         DB::transaction(function () use ($data) {
             // 1. Criar tenant

@@ -25,6 +25,7 @@ class StoreTenantRegistrationRequest extends FormRequest
         return [
             'name' => 'required|string|max:255',
             'domain' => 'required|string|max:255',
+            'plan_id' => 'required|exists:plans,id',
             'userName' => 'required|string|max:255',
             'email' => 'required|string|email|max:255',
             'password' => 'required|string',
@@ -32,19 +33,21 @@ class StoreTenantRegistrationRequest extends FormRequest
         ];
     }
 
-        public function messages(): array
-        {
-            return [
-                'name.required' => 'O nome do tenant é obrigatório.',
-                'domain.required' => 'O domínio é obrigatório.',
-                'domain.unique' => 'Este domínio já está em uso.',
-                'userName.required' => 'O nome do usuário é obrigatório.',
-                'email.required' => 'O email é obrigatório.',
-                'email.email' => 'O email deve ser um endereço de email válido.',
-                'email.unique' => 'Este email já está em uso.',
-                'password.required' => 'A senha é obrigatória.',
-                'password.confirmed' => 'A confirmação da senha não corresponde.',
-                'password.min' => 'A senha deve ter pelo menos 8 caracteres.',
-            ];
-        }
+    public function messages(): array
+    {
+        return [
+            'name.required' => 'O nome do tenant é obrigatório.',
+            'domain.required' => 'O domínio é obrigatório.',
+            'domain.unique' => 'Este domínio já está em uso.',
+            'plan_id.required' => 'O plano é obrigatório.',
+            'plan_id.exists' => 'O plano selecionado não é válido.',
+            'userName.required' => 'O nome do usuário é obrigatório.',
+            'email.required' => 'O email é obrigatório.',
+            'email.email' => 'O email deve ser um endereço de email válido.',
+            'email.unique' => 'Este email já está em uso.',
+            'password.required' => 'A senha é obrigatória.',
+            'password.confirmed' => 'A confirmação da senha não corresponde.',
+            'password.min' => 'A senha deve ter pelo menos 8 caracteres.',
+        ];
+    }
 }

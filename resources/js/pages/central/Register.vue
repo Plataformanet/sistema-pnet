@@ -4,6 +4,7 @@ import { useForm } from "@inertiajs/vue3";
 const form = useForm({
     name: "",
     domain: "",
+    plan_id: "",
     userName: "",
     email: "",
     password: "",
@@ -43,6 +44,19 @@ function submit() {
             />
             <span v-if="form.errors.domain" class="text-sm text-red-500">
                 {{ form.errors.domain }}
+            </span>
+        </div>
+
+        <div class="w-50">
+            <label for="domain">Plano:</label>
+            <select v-model="form.plan_id" class="border-1 border-solid" id="plan">
+                <option value="">Selecione um plano</option>
+                <option value="1">Plano Básico</option>
+                <option value="2">Plano Padrão</option>
+                <option value="3">Plano Premium</option>
+            </select>
+            <span v-if="form.errors.plan_id" class="text-sm text-red-500">
+                {{ form.errors.plan_id }}
             </span>
         </div>
 
