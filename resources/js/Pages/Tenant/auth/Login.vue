@@ -83,7 +83,7 @@ function submit() {
                     }}</FieldError>
                 </Field>
                 <Field>
-                    <Button type="submit"> Login </Button>
+                    <Button type="submit" class="cursor-pointer">Login</Button>
                 </Field>
 
                 <!-- <FieldDescription class="text-center">

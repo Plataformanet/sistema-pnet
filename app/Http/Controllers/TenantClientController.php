@@ -9,6 +9,10 @@ class TenantClientController extends Controller
 {
     public function clientList()
     {
-        return Inertia::render('tenant/registrations/clients/List');
+        return Inertia::render('tenant/registrations/clients/list/List');
+    }
+    public function clientCreate()
+    {
+        return Inertia::render('tenant/registrations/clients/create/Create');
     }
 }
