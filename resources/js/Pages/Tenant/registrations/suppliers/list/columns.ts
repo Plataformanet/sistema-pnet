@@ -1,11 +1,11 @@
 import { h } from "vue";
-import { Client } from "./List.vue";
-import { ArrowUpDown, ChevronDown } from 'lucide-vue-next'
+import { Supplier } from "./List.vue";
+import { ArrowUpDown } from 'lucide-vue-next';
 import { ColumnDef } from "@tanstack/vue-table";
 import { Button } from "@/components/ui/button";
 import ActionDropdown from "./ActionDropdown.vue";
 
-export const columns: ColumnDef<Client>[] = [
+export const columns: ColumnDef<Supplier>[] = [
     {
         accessorKey: "name",
         header: ({ column }) => {
@@ -16,7 +16,7 @@ export const columns: ColumnDef<Client>[] = [
                     onClick: () => column.toggleSorting(column.getIsSorted() === "asc"),
                 },
                 () => [
-                    "Nome",
+                    "Nome/Razão Social",
                     h(ArrowUpDown, { class: "ml-2 h-4 w-4" }),
                 ]
             )
@@ -33,7 +33,7 @@ export const columns: ColumnDef<Client>[] = [
                     onClick: () => column.toggleSorting(column.getIsSorted() === "asc"),
                 },
                 () => [
-                    "CPF / CNPJ",
+                    "CNPJ / CPF",
                     h(ArrowUpDown, { class: "ml-2 h-4 w-4" }),
                 ]
             )
@@ -41,7 +41,26 @@ export const columns: ColumnDef<Client>[] = [
         cell: ({ row }) => {
             const cpf = row.original.cpf;
             const cnpj = row.original.cnpj;
-            return cpf ? cpf : (cnpj ? cnpj : "-----");
+            return cnpj ? cnpj : (cpf ? cpf : "-----");
+        },
+    },
+    {
+        accessorKey: "category",
+        header: ({ column }) => {
+            return h(
+                Button,
+                {
+                    variant: "ghost",
+                    onClick: () => column.toggleSorting(column.getIsSorted() === "asc"),
+                },
+                () => [
+                    "Categoria",
+                    h(ArrowUpDown, { class: "ml-2 h-4 w-4" }),
+                ]
+            )
+        },
+        cell: ({ row }) => {
+            return row.getValue("category") ?? "-----";
         },
     },
     {
@@ -64,9 +83,9 @@ export const columns: ColumnDef<Client>[] = [
         id: "actions",
         enableHiding: false,
         cell: ({ row }) => {
-            const client = row.original;
+            const supplier = row.original;
             return h("div", { class: "relative flex justify-end" }, h(ActionDropdown, {
-                client,
+                supplier,
             }));
         },
     },

@@ -4,57 +4,49 @@ import TenantLayout from "@/layouts/tenant-layout/TenantLayout.vue";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft } from "lucide-vue-next";
 import { route } from "ziggy-js";
-import ClientForm from "../components/ClientForm.vue";
+import UserForm from "../components/UserForm.vue";
 
 defineOptions({ layout: TenantLayout });
 
+const props = defineProps<{
+    user: any;
+}>();
+
 const form = useForm({
-    type: "PF",
-    // PF fields
-    name: "",
-    cpf: "",
-    // PJ fields
-    corporate_reason: "",
-    fantasy_name: "",
-    cnpj: "",
-    // Common fields
-    email: "",
-    phone: "",
-    cellphone: "",
-    // Address
-    zipcode: "",
-    street: "",
-    number: "",
-    complement: "",
-    neighborhood: "",
-    city: "",
-    state: "",
+    name: props.user.name ?? "",
+    email: props.user.email ?? "",
+    role: props.user.role ?? "",
+    active: props.user.active ?? true,
+    password: "",
+    password_confirmation: "",
 });
 
 function submit() {
-    // Para testar, por enquanto apenas submetemos um console logo.
-    // Assim que os endpoints no controller estiverem prontos: form.post(route('alguma.rota.store'))
-    console.log("Enviando dados do formulário:", form.data());
+    form.put(route("tenant.registrations.users.update", props.user.id));
 }
 </script>
 
 <template>
-    <Head title="Novo Cliente" />
+    <Head title="Editar Usuário" />
 
     <div class="mb-6 flex items-center justify-between border-b border-border pb-4">
         <div>
             <h2 class="text-3xl font-bold tracking-tight text-foreground">
-                Novo Cliente
+                Editar Usuário
             </h2>
         </div>
         <Button variant="outline" class="cursor-pointer" as-child>
-            <Link :href="route('tenant.registrations.clients.list')">
+            <Link :href="route('tenant.registrations.users.list')">
                 <ChevronLeft class="mr-2 h-4 w-4" /> Voltar
             </Link>
         </Button>
     </div>
 
     <div class="mx-auto mb-20 max-w-6xl py-4">
-        <ClientForm :form="form" @submit="submit" />
+        <UserForm
+            :form="form"
+            submitText="Atualizar Usuário"
+            @submit="submit"
+        />
     </div>
 </template>

@@ -4,12 +4,12 @@ import TenantLayout from "@/layouts/tenant-layout/TenantLayout.vue";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft } from "lucide-vue-next";
 import { route } from "ziggy-js";
-import ClientForm from "../components/ClientForm.vue";
+import SupplierForm from "../components/SupplierForm.vue";
 
 defineOptions({ layout: TenantLayout });
 
 const form = useForm({
-    type: "PF",
+    type: "PJ",
     // PF fields
     name: "",
     cpf: "",
@@ -17,6 +17,9 @@ const form = useForm({
     corporate_reason: "",
     fantasy_name: "",
     cnpj: "",
+    // Supplier specific
+    contact_name: "",
+    category: "",
     // Common fields
     email: "",
     phone: "",
@@ -32,29 +35,28 @@ const form = useForm({
 });
 
 function submit() {
-    // Para testar, por enquanto apenas submetemos um console logo.
-    // Assim que os endpoints no controller estiverem prontos: form.post(route('alguma.rota.store'))
     console.log("Enviando dados do formulário:", form.data());
+    // form.post(route('tenant.registrations.suppliers.store'))
 }
 </script>
 
 <template>
-    <Head title="Novo Cliente" />
+    <Head title="Novo Fornecedor" />
 
     <div class="mb-6 flex items-center justify-between border-b border-border pb-4">
         <div>
             <h2 class="text-3xl font-bold tracking-tight text-foreground">
-                Novo Cliente
+                Novo Fornecedor
             </h2>
         </div>
         <Button variant="outline" class="cursor-pointer" as-child>
-            <Link :href="route('tenant.registrations.clients.list')">
+            <Link :href="route('tenant.registrations.suppliers.list')">
                 <ChevronLeft class="mr-2 h-4 w-4" /> Voltar
             </Link>
         </Button>
     </div>
 
     <div class="mx-auto mb-20 max-w-6xl py-4">
-        <ClientForm :form="form" @submit="submit" />
+        <SupplierForm :form="form" @submit="submit" />
     </div>
 </template>
