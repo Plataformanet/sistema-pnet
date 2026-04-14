@@ -3,8 +3,8 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\Auth\AuthTenantController;
-use App\Http\Controllers\TenantController;
 use App\Http\Controllers\TenantClientController;
+use App\Http\Controllers\TenantController;
 use App\Http\Middleware\Authenticate;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;

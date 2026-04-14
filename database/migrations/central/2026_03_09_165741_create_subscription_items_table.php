@@ -4,18 +4,17 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
     public function up(): void
     {
         Schema::create('subscription_items', function (Blueprint $table) {
-            $table->id('id')->primary();
-            $table->unsignedBigInteger('subscription_id')->constrained('subscriptions')->cascadeOnDelete();
-            $table->unsignedBigInteger('module_id')->constrained('modules')->restrictOnDelete();
-            $table->unsignedBigInteger('plan_module_id')->constrained('plan_modules')->restrictOnDelete();
+            $table->id()->primary();
+            $table->foreignId('subscription_id')->constrained('subscriptions')->cascadeOnDelete();
+            $table->foreignId('module_id')->constrained('modules')->restrictOnDelete();
+            $table->foreignId('plan_module_id')->constrained('plan_modules')->restrictOnDelete();
             $table->text('description');
             $table->integer('quantity')->default(1);
             $table->decimal('unit_price', 10, 2);

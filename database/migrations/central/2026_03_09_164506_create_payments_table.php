@@ -4,17 +4,16 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
     public function up(): void
     {
         Schema::create('payments', function (Blueprint $table) {
-            $table->id('id')->primary();
-            $table->unsignedBigInteger('tenant_id')->constrained('tenants')->cascadeOnDelete();
-            $table->unsignedBigInteger('subscription_id')->constrained('subscriptions')->nullOnDelete();
+            $table->id()->primary();
+            $table->foreignUuid('tenant_id')->constrained('tenants')->cascadeOnDelete();
+            $table->foreignId('subscription_id')->constrained('subscriptions');
             $table->string('mp_payment_id')->nullable()->unique();
             $table->string('mp_preference_id')->nullable();
             $table->decimal('amount', 10, 2);

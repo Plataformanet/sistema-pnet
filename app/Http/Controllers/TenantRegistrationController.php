@@ -16,7 +16,7 @@ class TenantRegistrationController extends Controller
 
     public function create()
     {
-        return Inertia::render('auth/Register');
+        return Inertia::render('central/Register');
     }
 
     public function store(StoreTenantRegistrationRequest $request)
