@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-use App\Actions\Fortify\CreateNewUser;
 use App\Models\Module;
 use App\Models\Tenant;
 use App\Models\User;
