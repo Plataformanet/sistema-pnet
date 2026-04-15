@@ -50,10 +50,10 @@ class HandleInertiaRequests extends Middleware
             'tenant' => $this->getTenantData(),
 
             'flash' => [
-            'success' => fn () => $request->session()->get('success'),
-            'error'   => fn () => $request->session()->get('error'),
-            'email'   => fn () => $request->session()->get('email'),
-           ],
+                'success' => fn() => $request->session()->get('success'),
+                'error' => fn() => $request->session()->get('error'),
+                'email' => fn() => $request->session()->get('email'),
+            ],
         ]);
     }
 
@@ -66,10 +66,11 @@ class HandleInertiaRequests extends Middleware
         $tenant = tenant();
 
         return [
-            'id'     => $tenant->getTenantKey(),
-            'name'   => $tenant->name,
+            'id' => $tenant->getTenantKey(),
+            'name' => $tenant->name,
             'domain' => $tenant->domains?->first()?->domain,
-            'plan'   => $tenant->plan ?? null,
+            'plan' => $tenant->plan ?? null,
+            'hasModules' => $tenant->hasModule('finance'),
         ];
     }
 }

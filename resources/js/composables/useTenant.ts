@@ -6,6 +6,7 @@ export interface TenantProps {
     name: string;
     domain: string;
     plan?: string;
+    hasModule: boolean;
 }
 
 export function useTenant() {

@@ -13,6 +13,10 @@ class TenantController extends Controller
 
     public function dashboard()
     {
+        $tenant = tenant(); // Obtém o tenant atual
+
+        dd($tenant->activeModules()->get()); // Exibe os módulos ativos do tenant
+
         return Inertia::render('tenant/Dashboard', [
             'message' => 'Bem-vindo ao dashboard do tenant!',
         ]);

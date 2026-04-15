@@ -19,7 +19,7 @@ class TenantService
             'name' => $data['name'],
             'plan_id' => $data['plan_id'],
             'is_active' => true,
-            // 'trial_ends_at' => now()->addDays(30),
+            'trial_ends_at' => now()->addDays(30),
         ]);
 
         try {
