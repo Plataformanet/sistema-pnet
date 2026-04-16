@@ -17,8 +17,8 @@ return new class extends Migration {
             $table->foreignId('plan_module_id')->constrained('plan_modules')->restrictOnDelete();
             $table->text('description');
             $table->integer('quantity')->default(1);
-            $table->decimal('unit_price', 10, 2);
-            $table->decimal('total_price', 10, 2);
+            $table->integer('unit_price');
+            $table->integer('total_price');
             $table->timestamps();
         });
     }

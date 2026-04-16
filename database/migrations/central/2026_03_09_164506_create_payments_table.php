@@ -16,7 +16,7 @@ return new class extends Migration {
             $table->foreignId('subscription_id')->constrained('subscriptions');
             $table->string('mp_payment_id')->nullable()->unique();
             $table->string('mp_preference_id')->nullable();
-            $table->decimal('amount', 10, 2);
+            $table->integer('amount');
             $table->string('currency', 3)->default('BRL');
             $table->integer('status')->default(0); // 0 = pendente, 1 = pago, 2 = falhado, 3 = reembolsado
             $table->string('payment_method')->nullable();
