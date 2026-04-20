@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Enum;
+namespace App\Enums;
 
-enum CouponDuration: string
+enum CouponDurationEnum: string
 {
     case ONCE = 'once';              // Aplica apenas uma vez
     case REPEATING = 'repeating';    // Repete por X meses

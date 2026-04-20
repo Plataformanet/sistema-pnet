@@ -2,7 +2,7 @@
 
 namespace App\Enum;
 
-enum SettingType: int
+enum SettingTypeEnum: int
 {
     case STRING = 0;
     case INTEGER = 1;

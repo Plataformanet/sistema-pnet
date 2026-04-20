@@ -2,7 +2,7 @@
 
 namespace App\Enum;
 
-enum SubscriptionStatus: string
+enum SubscriptionStatusEnum: string
 {
     case ACTIVE = 'active';           // Ativa e em dia
     case TRIALING = 'trialing';       // Em período de teste
