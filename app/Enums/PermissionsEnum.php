@@ -2,7 +2,7 @@
 
 namespace App\Enums;
 
-enum PermissionEnum: string
+enum PermissionsEnum: string
 {
     // case NAMEINAPP = 'name-in-database';
 
