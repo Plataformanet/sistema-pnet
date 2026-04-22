@@ -21,10 +21,12 @@ import {
 } from "@/components/ui/sidebar";
 import { Link, usePage } from "@inertiajs/vue3";
 import type { TenantNav } from "./TenantLayout.vue";
+import { useTenant } from "@/composables/useTenant";
 
 const props = defineProps<SidebarProps & { data: TenantNav }>();
 
 const page = usePage();
+const {tenant} = useTenant();
 
 function isActive(url?: string) {
     if (!url) return false;
@@ -51,6 +53,7 @@ const data = props.data;
             <SearchForm />
         </SidebarHeader>
         <SidebarContent class="gap-0">
+            {{ tenant?.name }} - {{ tenant?.hasModules }}
             <template v-for="item in data.navMain" :key="item.title">
                 <Collapsible
                     :title="item.title"

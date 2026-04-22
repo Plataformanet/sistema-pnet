@@ -63,11 +63,25 @@ class Tenant extends BaseTenant implements TenantWithDatabase
     /**
      * Verifica se o tenant tem um módulo ativo
      */
-    public function hasModule(string $moduleSlug): bool
+    public function hasModule(array $moduleSlugs): array
     {
-        return $this->activeModules()
-            ->where('slug', $moduleSlug)
-            ->exists();
+        foreach ($moduleSlugs as $slug) {
+            $hasModule[$slug] = $this->activeModules()
+                ->where('slug', $slug)
+                ->exists();
+        }
+
+        return $hasModule;
+    }
+
+    public function modulesByTenants()
+    {
+        $slugs = $this->modules()->pluck('slug');
+
+        foreach ($slugs as $slug) {
+            $getSlugs[] = $slug;
+        }
+        return $getSlugs;
     }
 
     /**
