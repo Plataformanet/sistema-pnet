@@ -36,19 +36,22 @@ export interface TenantNav {
 
 export interface TenantNavItem {
     title: string;
+    module?: string;
     url: string;
     items?: TenantNavItem[];
 }
 
 // This is sample data.
-const data = {
+const data: TenantNav = {
     navMain: [
         {
             title: "Dashboard",
+            module: "",
             url: "/dashboard",
         },
         {
             title: "Cadastros",
+            module: "registrations",
             url: "/registrations/dashboard",
             items: [
                 {
@@ -71,6 +74,7 @@ const data = {
         },
         {
             title: "Vendas",
+            module: "sales",
             url: "/sales/dashboard",
             items: [
                 {
@@ -93,7 +97,8 @@ const data = {
         },
         {
             title: "Serviços",
-            url: "/services/dashboard",
+            module: "services",
+            url: "/services/services/list",
             items: [
                 {
                     title: "Lista Serviços",
@@ -101,12 +106,36 @@ const data = {
                 },
                 {
                     title: "Novo serviço",
-                    url: "/services/services/new",
+                    url: "/services/services/create",
+                },
+                {
+                    title: "Categorias",
+                    url: "/services/categories/list",
+                },
+            ],
+        },
+        {
+            title: "Produtos",
+            module: "products",
+            url: "/products/products/list",
+            items: [
+                {
+                    title: "Lista de Produtos",
+                    url: "/products/products/list",
+                },
+                {
+                    title: "Novo Produto",
+                    url: "/products/products/create",
+                },
+                {
+                    title: "Categorias",
+                    url: "/products/categories/list",
                 },
             ],
         },
         {
             title: "Documentações",
+            module: "documents",
             url: "/documentation/dashboard",
             items: [
                 {
@@ -125,6 +154,7 @@ const data = {
         },
         {
             title: "Financeiro",
+            module: "finance",
             url: "/financeiro/dashboard",
             items: [
                 {
