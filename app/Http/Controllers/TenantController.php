@@ -13,8 +13,6 @@ class TenantController extends Controller
 
     public function dashboard()
     {
-        return Inertia::render('tenant/Dashboard', [
-            'message' => 'Bem-vindo ao dashboard do tenant!',
-        ]);
+        return Inertia::render('tenant/Dashboard');
     }
 }

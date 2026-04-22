@@ -14,7 +14,7 @@ return new class extends Migration {
             $table->id()->primary();
             $table->string('name');
             $table->string('slug')->unique();
-            $table->decimal('price', 10, 2);
+            $table->integer('price');
             $table->integer('billing_cycle')->default(0); // 0 = monthly, 1 = yearly
             $table->integer('max_users')->nullable();
             $table->integer('max_storage')->nullable(); // Em MB

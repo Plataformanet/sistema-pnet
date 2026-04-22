@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Enum;
+namespace App\Enums;
 
-enum SubscriptionStatus: string
+enum SubscriptionStatusEnum: string
 {
     case ACTIVE = 'active';           // Ativa e em dia
     case TRIALING = 'trialing';       // Em período de teste

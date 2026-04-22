@@ -70,7 +70,7 @@ class HandleInertiaRequests extends Middleware
             'name' => $tenant->name,
             'domain' => $tenant->domains?->first()?->domain,
             'plan' => $tenant->plan ?? null,
-            'hasModules' => $tenant->hasModule('finance'),
+            'hasModules' => $tenant->hasModule($tenant->modulesByTenants()),
         ];
     }
 }

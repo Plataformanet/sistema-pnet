@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Enum;
+namespace App\Enums;
 
-enum PaymentStatus: string
+enum PaymentStatusEnum: string
 {
     case PENDING = 'pending';         // Aguardando pagamento
     case APPROVED = 'approved';       // Aprovado

@@ -14,7 +14,7 @@ return new class extends Migration {
             $table->id()->primary();
             $table->string('code')->unique();
             $table->integer('type');
-            $table->decimal('value', 10, 2);
+            $table->integer('value');
             $table->integer('duration');
             $table->integer('duration_in_months')->nullable();
             $table->integer('max_redemptions')->nullable();
