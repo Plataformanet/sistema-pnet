@@ -35,3 +35,16 @@ export const maskCEP = (value: string) => {
         .replace(/(\d{5})(\d)/, '$1-$2')
         .replace(/(-\d{3})\d+?$/, '$1')
 }
+
+export const maskCurrency = (value: string) => {
+    let v = value.replace(/\D/g, '')
+    if (!v) return ''
+    v = (Number(v) / 100).toFixed(2)
+    v = v.replace('.', ',')
+    v = v.replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.')
+    return `R$ ${v}`
+}
+
+export const parseCurrencyToCents = (value: string): number => {
+    return Number(value.replace(/\D/g, '')) || 0;
+}

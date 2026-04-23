@@ -62,5 +62,30 @@ Route::middleware([
         Route::get('/registrations/users/create', [TenantUserController::class, 'userCreate'])->name('tenant.registrations.users.create');
         Route::get('/registrations/users/{id}/edit', [TenantUserController::class, 'userEdit'])->name('tenant.registrations.users.edit');
         Route::put('/registrations/users/{id}', [TenantUserController::class, 'userUpdate'])->name('tenant.registrations.users.update');
+
+        // Services
+        Route::get('/services/services/list', [App\Http\Controllers\TenantServiceController::class, 'serviceList'])->name('tenant.services.services.list');
+        Route::get('/services/services/create', [App\Http\Controllers\TenantServiceController::class, 'serviceCreate'])->name('tenant.services.services.create');
+        Route::get('/services/services/{id}/edit', [App\Http\Controllers\TenantServiceController::class, 'serviceEdit'])->name('tenant.services.services.edit');
+        Route::put('/services/services/{id}', [App\Http\Controllers\TenantServiceController::class, 'serviceUpdate'])->name('tenant.services.services.update');
+
+        // Service Categories
+        Route::get('/services/categories/list', [App\Http\Controllers\TenantServiceCategoryController::class, 'categoryList'])->name('tenant.services.categories.list');
+        Route::get('/services/categories/create', [App\Http\Controllers\TenantServiceCategoryController::class, 'categoryCreate'])->name('tenant.services.categories.create');
+        Route::get('/services/categories/{id}/edit', [App\Http\Controllers\TenantServiceCategoryController::class, 'categoryEdit'])->name('tenant.services.categories.edit');
+        Route::put('/services/categories/{id}', [App\Http\Controllers\TenantServiceCategoryController::class, 'categoryUpdate'])->name('tenant.services.categories.update');
+
+        // Products
+        Route::get('/products/products/list', [App\Http\Controllers\TenantProductController::class, 'productList'])->name('tenant.products.products.list');
+        Route::get('/products/products/create', [App\Http\Controllers\TenantProductController::class, 'productCreate'])->name('tenant.products.products.create');
+        Route::get('/products/products/{id}/edit', [App\Http\Controllers\TenantProductController::class, 'productEdit'])->name('tenant.products.products.edit');
+        Route::put('/products/products/{id}', [App\Http\Controllers\TenantProductController::class, 'productUpdate'])->name('tenant.products.products.update');
+
+        // Product Categories
+        Route::get('/products/categories/list', [App\Http\Controllers\TenantProductCategoryController::class, 'categoryList'])->name('tenant.products.categories.list');
+        Route::get('/products/categories/create', [App\Http\Controllers\TenantProductCategoryController::class, 'categoryCreate'])->name('tenant.products.categories.create');
+        Route::get('/products/categories/{id}/edit', [App\Http\Controllers\TenantProductCategoryController::class, 'categoryEdit'])->name('tenant.products.categories.edit');
+        Route::put('/products/categories/{id}', [App\Http\Controllers\TenantProductCategoryController::class, 'categoryUpdate'])->name('tenant.products.categories.update');
+
     });
 });
