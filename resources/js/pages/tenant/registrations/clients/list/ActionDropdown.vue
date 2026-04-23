@@ -11,9 +11,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { Link, router } from "@inertiajs/vue3";
 import { route } from "ziggy-js";
+import { Client } from "@/types";
 
 const props = defineProps<{
-    client: { id: string };
+    client: Client;
 }>();
 </script>
 

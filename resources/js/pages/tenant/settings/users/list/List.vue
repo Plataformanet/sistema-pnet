@@ -2,7 +2,7 @@
 import { DataTable } from "@/components/ui/data-table";
 import TenantLayout from "@/layouts/tenant-layout/TenantLayout.vue";
 import { Head, Link } from "@inertiajs/vue3";
-import { columns } from "@/pages/tenant/registrations/users/list/columns";
+import { columns } from "@/pages/tenant/settings/users/list/columns";
 import { route } from "ziggy-js";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-vue-next";
@@ -23,21 +23,21 @@ const users: User[] = [
         name: "Administrador do Sistema",
         email: "admin@sistema.com",
         role: "Administrador",
-        active: true
+        active: true,
     },
     {
         id: "v5x6y7z8",
         name: "João Silva",
         email: "joao.vendas@sistema.com",
         role: "Vendedor",
-        active: true
+        active: true,
     },
     {
         id: "w9k0p1o2",
         name: "Maria Oliveira",
         email: "maria.fin@sistema.com",
         role: "Financeiro",
-        active: false
+        active: false,
     },
 ];
 </script>
@@ -45,14 +45,16 @@ const users: User[] = [
 <template>
     <Head title="Lista de usuários" />
     <div>
-        <div class="mb-4 flex items-center justify-between border-b border-border pb-4">
+        <div
+            class="mb-4 flex items-center justify-between border-b border-border pb-4"
+        >
             <div>
                 <h2 class="text-3xl font-bold tracking-tight text-foreground">
                     Lista de usuários
                 </h2>
             </div>
             <Button class="cursor-pointer" as-child variant="outline">
-                <Link :href="route('tenant.registrations.users.create')">
+                <Link :href="route('tenant.settings.users.create')">
                     <Plus /> Novo usuário
                 </Link>
             </Button>

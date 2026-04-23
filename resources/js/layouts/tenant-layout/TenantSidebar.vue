@@ -22,11 +22,13 @@ import {
 import { Link, usePage } from "@inertiajs/vue3";
 import type { TenantNav } from "./TenantLayout.vue";
 import { useTenant } from "@/composables/useTenant";
+import { computed } from "vue";
 
 const props = defineProps<SidebarProps & { data: TenantNav }>();
 
 const page = usePage();
-const {tenant} = useTenant();
+
+const { tenant } = useTenant();
 
 function isActive(url?: string) {
     if (!url) return false;
@@ -40,6 +42,26 @@ function isActive(url?: string) {
 
 // This is sample data.
 const data = props.data;
+
+console.log(tenant.value?.hasModules);
+
+const dataFiltered = computed(() => {
+    return data.navMain.filter((item) => {
+        if (
+            !item.module ||
+            !tenant.value?.hasModules.hasOwnProperty(item.module)
+        ) {
+            return item;
+        }
+
+        if (
+            tenant.value?.hasModules.hasOwnProperty(item.module) &&
+            tenant.value?.hasModules[item.module] === true
+        ) {
+            return item;
+        }
+    });
+});
 </script>
 
 <template>
@@ -53,8 +75,7 @@ const data = props.data;
             <SearchForm />
         </SidebarHeader>
         <SidebarContent class="gap-0">
-            {{ tenant?.name }} - {{ tenant?.hasModules }}
-            <template v-for="item in data.navMain" :key="item.title">
+            <template v-for="item in dataFiltered" :key="item.title">
                 <Collapsible
                     :title="item.title"
                     class="group/collapsible"

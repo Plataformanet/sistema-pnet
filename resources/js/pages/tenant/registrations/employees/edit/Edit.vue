@@ -6,10 +6,12 @@ import { ChevronLeft } from "lucide-vue-next";
 import { route } from "ziggy-js";
 import EmployeeForm from "../components/EmployeeForm.vue";
 
+import { Employee } from "@/types";
+
 defineOptions({ layout: TenantLayout });
 
 const props = defineProps<{
-    employee: any;
+    employee: Employee;
 }>();
 
 const form = useForm({

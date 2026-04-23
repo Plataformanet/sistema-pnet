@@ -57,11 +57,11 @@ Route::middleware([
         Route::get('/registrations/employees/{id}/edit', [TenantEmployeeController::class, 'employeeEdit'])->name('tenant.registrations.employees.edit');
         Route::put('/registrations/employees/{id}', [TenantEmployeeController::class, 'employeeUpdate'])->name('tenant.registrations.employees.update');
 
-        // Users
-        Route::get('/registrations/users/list', [TenantUserController::class, 'userList'])->name('tenant.registrations.users.list');
-        Route::get('/registrations/users/create', [TenantUserController::class, 'userCreate'])->name('tenant.registrations.users.create');
-        Route::get('/registrations/users/{id}/edit', [TenantUserController::class, 'userEdit'])->name('tenant.registrations.users.edit');
-        Route::put('/registrations/users/{id}', [TenantUserController::class, 'userUpdate'])->name('tenant.registrations.users.update');
+        // Configurações - Usuários
+        Route::get('/settings/users/list', [TenantUserController::class, 'userList'])->name('tenant.settings.users.list');
+        Route::get('/settings/users/create', [TenantUserController::class, 'userCreate'])->name('tenant.settings.users.create');
+        Route::get('/settings/users/{id}/edit', [TenantUserController::class, 'userEdit'])->name('tenant.settings.users.edit');
+        Route::put('/settings/users/{id}', [TenantUserController::class, 'userUpdate'])->name('tenant.settings.users.update');
 
         // Services
         Route::get('/services/services/list', [App\Http\Controllers\TenantServiceController::class, 'serviceList'])->name('tenant.services.services.list');
@@ -86,6 +86,12 @@ Route::middleware([
         Route::get('/products/categories/create', [App\Http\Controllers\TenantProductCategoryController::class, 'categoryCreate'])->name('tenant.products.categories.create');
         Route::get('/products/categories/{id}/edit', [App\Http\Controllers\TenantProductCategoryController::class, 'categoryEdit'])->name('tenant.products.categories.edit');
         Route::put('/products/categories/{id}', [App\Http\Controllers\TenantProductCategoryController::class, 'categoryUpdate'])->name('tenant.products.categories.update');
+
+        // Configurações - Cargos (Roles)
+        Route::get('/settings/roles/list', [App\Http\Controllers\TenantRoleController::class, 'roleList'])->name('tenant.settings.roles.list');
+        Route::get('/settings/roles/create', [App\Http\Controllers\TenantRoleController::class, 'roleCreate'])->name('tenant.settings.roles.create');
+        Route::get('/settings/roles/{id}/edit', [App\Http\Controllers\TenantRoleController::class, 'roleEdit'])->name('tenant.settings.roles.edit');
+        Route::put('/settings/roles/{id}', [App\Http\Controllers\TenantRoleController::class, 'roleUpdate'])->name('tenant.settings.roles.update');
 
     });
 });

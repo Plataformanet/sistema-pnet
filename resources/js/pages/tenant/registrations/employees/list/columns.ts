@@ -1,11 +1,27 @@
 import { h } from "vue";
-import { Employee } from "./List.vue";
+import { Employee } from "@/types";
 import { ArrowUpDown } from 'lucide-vue-next';
 import { ColumnDef } from "@tanstack/vue-table";
 import { Button } from "@/components/ui/button";
 import ActionDropdown from "./ActionDropdown.vue";
+import { Checkbox } from "@/components/ui/checkbox";
 
 export const columns: ColumnDef<Employee>[] = [
+    {
+        id: "select",
+        header: ({ table }) => h(Checkbox, {
+            "checked": table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && "indeterminate"),
+            "onUpdate:checked": (value: boolean) => table.toggleAllPageRowsSelected(!!value),
+            "ariaLabel": "Select all",
+        }),
+        cell: ({ row }) => h(Checkbox, {
+            "checked": row.getIsSelected(),
+            "onUpdate:checked": (value: boolean) => row.toggleSelected(!!value),
+            "ariaLabel": "Select row",
+        }),
+        enableSorting: false,
+        enableHiding: false,
+    },
     {
         accessorKey: "name",
         header: ({ column }) => {

@@ -6,40 +6,51 @@ import { ChevronLeft } from "lucide-vue-next";
 import { route } from "ziggy-js";
 import UserForm from "../components/UserForm.vue";
 
+import { User } from "@/types";
+
 defineOptions({ layout: TenantLayout });
 
+const props = defineProps<{
+    user: User;
+}>();
+
 const form = useForm({
-    name: "",
-    email: "",
-    role: "",
-    active: true,
+    name: props.user.name ?? "",
+    email: props.user.email ?? "",
+    role: props.user.role ?? "",
+    active: props.user.active ?? true,
     password: "",
     password_confirmation: "",
 });
 
 function submit() {
-    console.log("Enviando dados do formulário de usuário:", form.data());
-    // form.post(route('tenant.registrations.users.store'))
+    form.put(route("tenant.settings.users.update", props.user.id));
 }
 </script>
 
 <template>
-    <Head title="Novo Usuário" />
+    <Head title="Editar Usuário" />
 
-    <div class="mb-6 flex items-center justify-between border-b border-border pb-4">
+    <div
+        class="mb-6 flex items-center justify-between border-b border-border pb-4"
+    >
         <div>
             <h2 class="text-3xl font-bold tracking-tight text-foreground">
-                Novo Usuário
+                Editar Usuário
             </h2>
         </div>
         <Button variant="outline" class="cursor-pointer" as-child>
-            <Link :href="route('tenant.registrations.users.list')">
+            <Link :href="route('tenant.settings.users.list')">
                 <ChevronLeft class="mr-2 h-4 w-4" /> Voltar
             </Link>
         </Button>
     </div>
 
     <div class="mx-auto mb-20 max-w-6xl py-4">
-        <UserForm :form="form" @submit="submit" />
+        <UserForm
+            :form="form"
+            submitText="Atualizar Usuário"
+            @submit="submit"
+        />
     </div>
 </template>

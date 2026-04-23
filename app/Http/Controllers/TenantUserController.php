@@ -9,12 +9,12 @@ class TenantUserController extends Controller
 {
     public function userList()
     {
-        return Inertia::render('tenant/registrations/users/list/List');
+        return Inertia::render('tenant/settings/users/list/List');
     }
     
     public function userCreate()
     {
-        return Inertia::render('tenant/registrations/users/create/Create');
+        return Inertia::render('tenant/settings/users/create/Create');
     }
 
     public function userEdit($id)
@@ -28,7 +28,7 @@ class TenantUserController extends Controller
             'active' => true,
         ];
 
-        return Inertia::render('tenant/registrations/users/edit/Edit', [
+        return Inertia::render('tenant/settings/users/edit/Edit', [
             'user' => $user
         ]);
     }
@@ -36,6 +36,6 @@ class TenantUserController extends Controller
     public function userUpdate(Request $request, $id)
     {
         // Placeholder
-        return redirect()->route('tenant.registrations.users.list');
+        return redirect()->route('tenant.settings.users.list');
     }
 }

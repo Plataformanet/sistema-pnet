@@ -58,16 +58,24 @@ function onSubmit() {
                 </Field>
 
                 <Field>
-                    <FieldLabel for="category_id">Categoria de Serviço</FieldLabel>
+                    <FieldLabel for="category_id"
+                        >Categoria de Serviço</FieldLabel
+                    >
                     <Select v-model="form.category_id">
                         <SelectTrigger id="category_id">
-                            <SelectValue placeholder="Selecione uma categoria" />
+                            <SelectValue
+                                placeholder="Selecione uma categoria"
+                            />
                         </SelectTrigger>
                         <SelectContent>
                             <SelectGroup>
                                 <SelectItem value="1">Consultoria</SelectItem>
-                                <SelectItem value="2">Desenvolvimento</SelectItem>
-                                <SelectItem value="3">Suporte e Manutenção</SelectItem>
+                                <SelectItem value="2"
+                                    >Desenvolvimento</SelectItem
+                                >
+                                <SelectItem value="3"
+                                    >Suporte e Manutenção</SelectItem
+                                >
                             </SelectGroup>
                         </SelectContent>
                     </Select>
@@ -76,7 +84,7 @@ function onSubmit() {
                     }}</FieldError>
                 </Field>
             </div>
-            
+
             <h3 class="mt-8 mb-6 text-lg font-semibold text-card-foreground">
                 Valores e Detalhes
             </h3>
@@ -86,11 +94,15 @@ function onSubmit() {
                     <Input
                         id="cost_value"
                         :model-value="form.cost_value"
-                        @input="(e) => {
-                            const val = maskCurrency((e.target as HTMLInputElement).value);
-                            form.cost_value = val;
-                            (e.target as HTMLInputElement).value = val;
-                        }"
+                        @input="
+                            (e: Event) => {
+                                const val = maskCurrency(
+                                    (e.target as HTMLInputElement).value,
+                                );
+                                form.cost_value = val;
+                                (e.target as HTMLInputElement).value = val;
+                            }
+                        "
                         placeholder="R$ 0,00"
                     />
                     <FieldError v-if="form.errors.cost_value">{{
@@ -103,11 +115,15 @@ function onSubmit() {
                     <Input
                         id="sell_value"
                         :model-value="form.sell_value"
-                        @input="(e) => {
-                            const val = maskCurrency((e.target as HTMLInputElement).value);
-                            form.sell_value = val;
-                            (e.target as HTMLInputElement).value = val;
-                        }"
+                        @input="
+                            (e: Event) => {
+                                const val = maskCurrency(
+                                    (e.target as HTMLInputElement).value,
+                                );
+                                form.sell_value = val;
+                                (e.target as HTMLInputElement).value = val;
+                            }
+                        "
                         placeholder="R$ 0,00"
                     />
                     <FieldError v-if="form.errors.sell_value">{{
@@ -120,11 +136,15 @@ function onSubmit() {
                     <Input
                         id="fees"
                         :model-value="form.fees"
-                        @input="(e) => {
-                            const val = maskCurrency((e.target as HTMLInputElement).value);
-                            form.fees = val;
-                            (e.target as HTMLInputElement).value = val;
-                        }"
+                        @input="
+                            (e: Event) => {
+                                const val = maskCurrency(
+                                    (e.target as HTMLInputElement).value,
+                                );
+                                form.fees = val;
+                                (e.target as HTMLInputElement).value = val;
+                            }
+                        "
                         placeholder="R$ 0,00"
                     />
                     <FieldError v-if="form.errors.fees">{{
@@ -133,11 +153,13 @@ function onSubmit() {
                 </Field>
 
                 <Field class="md:col-span-3">
-                    <FieldLabel for="description">Descrição do Serviço</FieldLabel>
-                    <textarea 
-                        id="description" 
-                        v-model="form.description" 
-                        class="flex min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    <FieldLabel for="description"
+                        >Descrição do Serviço</FieldLabel
+                    >
+                    <textarea
+                        id="description"
+                        v-model="form.description"
+                        class="flex min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
                         placeholder="Detalhes sobre o serviço prestado..."
                     ></textarea>
                     <FieldError v-if="form.errors.description">{{
@@ -147,7 +169,12 @@ function onSubmit() {
 
                 <Field>
                     <FieldLabel for="duration">Duração (minutos)</FieldLabel>
-                    <Input id="duration" type="number" v-model="form.duration" placeholder="Ex: 60" />
+                    <Input
+                        id="duration"
+                        type="number"
+                        v-model="form.duration"
+                        placeholder="Ex: 60"
+                    />
                     <FieldError v-if="form.errors.duration">{{
                         form.errors.duration
                     }}</FieldError>
@@ -155,7 +182,10 @@ function onSubmit() {
 
                 <Field>
                     <FieldLabel for="active">Status</FieldLabel>
-                    <Select :model-value="form.active ? '1' : '0'" @update:model-value="form.active = $event === '1'">
+                    <Select
+                        :model-value="form.active ? '1' : '0'"
+                        @update:model-value="form.active = $event === '1'"
+                    >
                         <SelectTrigger id="active">
                             <SelectValue placeholder="Status" />
                         </SelectTrigger>
