@@ -6,10 +6,12 @@ import { ChevronLeft } from "lucide-vue-next";
 import { route } from "ziggy-js";
 import ClientForm from "../components/ClientForm.vue";
 
+import { Client } from "@/types";
+
 defineOptions({ layout: TenantLayout });
 
 const props = defineProps<{
-    client: any;
+    client: Client;
 }>();
 
 const form = useForm({

@@ -9,12 +9,11 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { Link, router } from "@inertiajs/vue3";
+import { Link } from "@inertiajs/vue3";
 import { route } from "ziggy-js";
-import { Supplier } from "@/types";
 
 const props = defineProps<{
-    supplier: Supplier;
+    role: { id: string | number };
 }>();
 </script>
 
@@ -29,17 +28,12 @@ const props = defineProps<{
         <DropdownMenuContent align="end">
             <DropdownMenuLabel>Ações</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem @click="console.log('Visualizar', supplier.id)">
+            <DropdownMenuItem @click="console.log('Visualizar', role.id)">
                 <Eye class="mr-2 h-4 w-4" /> Visualizar
             </DropdownMenuItem>
             <DropdownMenuItem as-child>
                 <Link
-                    :href="
-                        route(
-                            'tenant.registrations.suppliers.edit',
-                            supplier.id,
-                        )
-                    "
+                    :href="route('tenant.settings.roles.edit', role.id)"
                     class="flex w-full cursor-pointer items-center"
                 >
                     <Pencil class="mr-2 h-4 w-4" /> Editar
@@ -47,7 +41,7 @@ const props = defineProps<{
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
-                @click="console.log('Excluir', supplier.id)"
+                @click="console.log('Excluir', role.id)"
                 class="text-red-600"
             >
                 <Trash class="mr-2 h-4 w-4" /> Excluir

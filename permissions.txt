@@ -1,0 +1,127 @@
+//Lista de permissões por módulos
+
+//MÓDULO: Registrations (Cadastros)
+
+//Clientes
+registrations.clients.view
+registrations.clients.edit
+registrations.clients.create
+registrations.clients.delete
+
+//Fornecedores
+registration.suppliers.view
+registrations.suppliers.edit
+registrations.suppliers.create
+registrations.suppliers.delete
+
+//Funcionários
+registrations.employees.view
+registrations.employees.edit
+registrations.employees.create
+registrations.employees.delete
+
+//MÓDULO: Sales (Vendas)
+
+//Vendas
+sales.sales.view
+sales.sales.edit
+sales.sales.create
+sales.sales.delete
+
+//Orçamentos
+sales.quotations.view
+sales.quotations.edit
+sales.quotations.create
+sales.quotations.delete
+
+//MÓDULO: Serviços (Services)
+
+//Serviços
+services.services.view
+services.services.edit
+services.services.create
+services.services.delete
+
+//Categorias de serviços
+services.categories.view
+services.categories.edit
+services.categories.create
+services.categories.delete
+
+//MÓDULO: Produtos (Products)
+
+//Produtos
+products.products.view
+products.products.edit
+products.products.create
+products.products.delete
+
+//Categorias de produtos
+products.categories.view
+products.categories.edit
+products.categories.create
+products.categories.delete
+
+//MÓDULO: Financeiro (Finance)
+
+//Categorias/Subcategorias
+finance.categories.view
+finance.categories.edit
+finance.categories.create
+finance.categories.delete
+
+//Contas Bancárias
+finance.accounts.view
+finance.accounts.edit
+finance.accounts.create
+finance.accounts.delete
+
+//Contas a Pagar
+finance.accounts_payable.view
+finance.accounts_payable.edit
+finance.accounts_payable.create
+finance.accounts_payable.delete
+
+//Contas a Receber
+finance.accounts_receivable.view
+finance.accounts_receivable.edit
+finance.accounts_receivable.create
+finance.accounts_receivable.delete
+
+//Fluxo de caixa
+finance.cash_flow.view
+
+//Fluxo de gastos
+finance.expenses_flow.view
+
+//Faturamentos
+finance.billing.view
+
+//MÓDULO: Documentações (Documents)
+
+//Propostas
+documents.proposals.view
+documents.proposals.edit
+documents.proposals.create
+documents.proposals.delete
+
+//Calculadora ITBI
+documents.itbi_calculator.view
+documents.itbi_calculator.edit
+documents.itbi_calculator.create
+documents.itbi_calculator.delete
+
+//MÓDULO: Settings (Configurações)
+
+//Cargos
+settings.roles.view
+settings.roles.edit
+settings.roles.create
+settings.roles.delete
+
+//Usuários
+settings.users.view
+settings.users.edit
+settings.users.create
+settings.users.delete
+

@@ -6,10 +6,12 @@ import { ChevronLeft } from "lucide-vue-next";
 import { route } from "ziggy-js";
 import SupplierForm from "../components/SupplierForm.vue";
 
+import { Supplier } from "@/types";
+
 defineOptions({ layout: TenantLayout });
 
 const props = defineProps<{
-    supplier: any;
+    supplier: Supplier;
 }>();
 
 const form = useForm({

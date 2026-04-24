@@ -37,6 +37,7 @@ export interface TenantNav {
 export interface TenantNavItem {
     title: string;
     module?: string;
+    permission?: string;
     url: string;
     items?: TenantNavItem[];
 }
@@ -56,19 +57,18 @@ const data: TenantNav = {
             items: [
                 {
                     title: "Clientes",
+                    permission: "registrations.clients.view",
                     url: "/registrations/clients/list",
                 },
                 {
                     title: "Fornecedores",
+                    permission: "registrations.suppliers.view",
                     url: "/registrations/suppliers/list",
                 },
                 {
                     title: "Funcionários",
+                    permission: "registrations.employees.view",
                     url: "/registrations/employees/list",
-                },
-                {
-                    title: "Usuários",
-                    url: "/registrations/users/list",
                 },
             ],
         },
@@ -79,18 +79,22 @@ const data: TenantNav = {
             items: [
                 {
                     title: "Lista orçamentos",
+                    permission: "sales.quotations.view",
                     url: "/sales/quotes/list",
                 },
                 {
                     title: "Novo orçamento",
+                    permission: "sales.quotations.create",
                     url: "/sales/quotes/new",
                 },
                 {
                     title: "Lista vendas",
+                    permission: "sales.sales.view",
                     url: "/sales/sales/list",
                 },
                 {
                     title: "Nova venda",
+                    permission: "sales.sales.create",
                     url: "/sales/sales/new",
                 },
             ],
@@ -102,14 +106,17 @@ const data: TenantNav = {
             items: [
                 {
                     title: "Lista Serviços",
+                    permission: "services.services.view",
                     url: "/services/services/list",
                 },
                 {
                     title: "Novo serviço",
+                    permission: "services.services.create",
                     url: "/services/services/create",
                 },
                 {
                     title: "Categorias",
+                    permission: "services.categories.view",
                     url: "/services/categories/list",
                 },
             ],
@@ -121,14 +128,17 @@ const data: TenantNav = {
             items: [
                 {
                     title: "Lista de Produtos",
+                    permission: "products.products.view",
                     url: "/products/products/list",
                 },
                 {
                     title: "Novo Produto",
+                    permission: "products.products.create",
                     url: "/products/products/create",
                 },
                 {
                     title: "Categorias",
+                    permission: "products.categories.view",
                     url: "/products/categories/list",
                 },
             ],
@@ -140,14 +150,17 @@ const data: TenantNav = {
             items: [
                 {
                     title: "Propostas",
+                    permission: "documents.proposals.view",
                     url: "/documentation/proposals/list",
                 },
                 {
                     title: "Nova proposta",
+                    permission: "documents.proposals.create",
                     url: "/documentation/proposals/new",
                 },
                 {
                     title: "Calculadora ITBI",
+                    permission: "documents.itbi_calculator.view",
                     url: "/documentation/itbi-calculator/new",
                 },
             ],
@@ -159,31 +172,55 @@ const data: TenantNav = {
             items: [
                 {
                     title: "Categorias/Subcategorias",
+                    permission: "finance.categories.view",
                     url: "/financeiro/categorias/lista",
                 },
                 {
                     title: "Contas Bancárias",
+                    permission: "finance.accounts.view",
                     url: "/financeiro/contas-bancarias",
                 },
                 {
                     title: "Contas a pagar",
+                    permission: "finance.accounts_payable.view",
                     url: "/financeiro/contas-pagar",
                 },
                 {
                     title: "Contas a receber",
+                    permission: "finance.accounts_receivable.view",
                     url: "/financeiro/contas-receber",
                 },
                 {
                     title: "Fluxo de caixa",
+                    permission: "finance.cash_flow.view",
                     url: "/financeiro/fluxo-caixa",
                 },
                 {
                     title: "Fluxo de gastos",
+                    permission: "finance.expenses_flow.view",
                     url: "/financeiro/fluxo-gastos",
                 },
                 {
                     title: "Faturamentos",
+                    permission: "finance.billing.view",
                     url: "/financeiro/faturamentos",
+                },
+            ],
+        },
+        {
+            title: "Configurações",
+            module: "settings",
+            url: "/settings/roles/list",
+            items: [
+                {
+                    title: "Cargos",
+                    permission: "settings.roles.view",
+                    url: "/settings/roles/list",
+                },
+                {
+                    title: "Usuários",
+                    permission: "settings.users.view",
+                    url: "/settings/users/list",
                 },
             ],
         },

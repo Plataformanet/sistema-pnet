@@ -33,7 +33,7 @@ const props = defineProps<{
             </DropdownMenuItem>
             <DropdownMenuItem as-child>
                 <Link
-                    :href="route('tenant.registrations.users.edit', user.id)"
+                    :href="route('tenant.settings.users.edit', user.id)"
                     class="flex w-full cursor-pointer items-center"
                 >
                     <Pencil class="mr-2 h-4 w-4" /> Editar
