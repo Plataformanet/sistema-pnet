@@ -13,19 +13,36 @@ class PermissionSeeder extends Seeder
      */
     public function run(): void
     {
-        Permission::create([
-            'name'       => 'Admin',
-            'guard_name' => 'web',
-        ]);
 
-        Permission::create([
-            'name'       => 'Editor',
-            'guard_name' => 'web',
-        ]);
+        $permissions = [
 
-        Permission::create([
-            'name'       => 'Viewer',
-            'guard_name' => 'web',
-        ]);
+            'registrations.clients.view',
+            'registrations.clients.update',
+            'registrations.clients.create',
+            'registrations.clients.delete',
+
+            'registrations.suppliers.view',
+            'registrations.suppliers.update',
+            'registrations.suppliers.create',
+            'registrations.suppliers.delete',
+
+
+            'registrations.employees.view',
+            'registrations.employees.update',
+            'registrations.employees.create',
+            'registrations.employees.delete',
+
+            'registrations.users.view',
+            'registrations.users.update',
+            'registrations.users.create',
+            'registrations.users.delete',
+        ];
+
+        foreach ($permissions as $permission) {
+            Permission::create([
+                'name'       => $permission,
+                'guard_name' => 'web',
+            ]);
+        }
     }
 }

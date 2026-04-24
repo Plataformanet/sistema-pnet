@@ -8,6 +8,8 @@ use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 
 class TenantService
 {
@@ -16,9 +18,9 @@ class TenantService
     {
 
         $tenant = Tenant::create([
-            'name' => $data['name'],
-            'plan_id' => $data['plan_id'],
-            'is_active' => true,
+            'name'          => $data['name'],
+            'plan_id'       => $data['plan_id'],
+            'is_active'     => true,
             'trial_ends_at' => now()->addDays(30),
         ]);
 
@@ -27,39 +29,101 @@ class TenantService
                 'domain' => $data['domain'],
             ]);
 
-            $plan = Plan::find($data['plan_id']);
+            $plan            = Plan::find($data['plan_id']);
             $includedModules = $plan->includedModules()->get();
 
             foreach ($includedModules as $module) {
 
                 // if ($this->canActivateModule($tenant, $module)) {
                 $tenant->modules()->attach($module->id, [
-                    'is_active' => true,
+                    'is_active'    => true,
                     'activated_at' => now(),
                 ]);
                 // }
 
             }
 
-            $tenant->run(function () use ($data) {
+            $roles = [
+                'Admin',
+                'Seller',
+                'Manager',
+                'Financial',
+                'Partner'
+            ];
+
+            $arrayOfPermissionNames = [
+
+                'registrations.clients.view',
+                'registrations.clients.update',
+                'registrations.clients.create',
+                'registrations.clients.delete',
+
+                'registrations.suppliers.view',
+                'registrations.suppliers.update',
+                'registrations.suppliers.create',
+                'registrations.suppliers.delete',
+
+                'registrations.employees.view',
+                'registrations.employees.update',
+                'registrations.employees.create',
+                'registrations.employees.delete',
+
+                'registrations.users.view',
+                'registrations.users.update',
+                'registrations.users.create',
+                'registrations.users.delete',
+            ];
+
+            $tenant->run(function () use ($data, $arrayOfPermissionNames, $roles) {
                 DB::beginTransaction();
 
                 try {
-                    User::create([
-                        'name' => $data['userName'],
-                        'email' => $data['email'],
+
+                    $roles = collect($roles)->map(function ($role) {
+                        return [
+                            'name'       => $role,
+                            'guard_name' => 'web',
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ];
+                    });
+
+                    Role::insert($roles->toArray());
+
+                    $roleAdmin = Role::get()->first();
+
+                    $permissions = collect($arrayOfPermissionNames)->map(function ($permission) {
+                        return [
+                            'name'       => $permission,
+                            'guard_name' => 'web',
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ];
+                    });
+
+                    Permission::insert($permissions->toArray());
+
+                    $roleAdmin->givePermissionTo(Permission::all());
+
+                    $user = User::create([
+                        'name'     => $data['userName'],
+                        'email'    => $data['email'],
                         'password' => Hash::make($data['password']),
                     ]);
 
+                    $user->assignRole($roleAdmin->name);
+
                     DB::commit();
 
-                } catch (\Throwable) {
+                } catch (\Throwable $th) {
                     DB::rollBack();
+                    throw $th;
                 }
             });
 
-        } catch (\Throwable) {
+        } catch (\Throwable $e) {
             $tenant->delete();
+            throw $e;
         }
 
         return $tenant;
@@ -102,26 +166,26 @@ class TenantService
         DB::transaction(function () use ($data) {
             // 1. Criar tenant
             $tenant = Tenant::create([
-                'name' => $data['company_name'],
-                'plan_id' => $data['plan_id'],
-                'is_active' => true,
+                'name'          => $data['company_name'],
+                'plan_id'       => $data['plan_id'],
+                'is_active'     => true,
                 'trial_ends_at' => now()->addDays(30),
             ]);
 
             // 2. Criar domínio
             $tenant->domains()->create([
-                'domain' => $data['subdomain'] . '.seuapp.com',
-                'is_primary' => true,
+                'domain'      => $data['subdomain'] . '.seuapp.com',
+                'is_primary'  => true,
                 'verified_at' => now(),
             ]);
 
             // 3. Ativar módulos incluídos no plano
-            $plan = Plan::find($data['plan_id']);
+            $plan            = Plan::find($data['plan_id']);
             $includedModules = $plan->includedModules;
 
             foreach ($includedModules as $module) {
                 $tenant->modules()->attach($module->id, [
-                    'is_active' => true,
+                    'is_active'    => true,
                     'activated_at' => now(),
                 ]);
             }
