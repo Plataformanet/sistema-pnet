@@ -39,6 +39,8 @@ class TenantService
                     'is_active'    => true,
                     'activated_at' => now(),
                 ]);
+
+                $arrayOfPermissionNames[] = $module->permissions()->pluck('name')->toArray();
                 // }
 
             }
@@ -49,29 +51,6 @@ class TenantService
                 'Manager',
                 'Financial',
                 'Partner'
-            ];
-
-            $arrayOfPermissionNames = [
-
-                'registrations.clients.view',
-                'registrations.clients.update',
-                'registrations.clients.create',
-                'registrations.clients.delete',
-
-                'registrations.suppliers.view',
-                'registrations.suppliers.update',
-                'registrations.suppliers.create',
-                'registrations.suppliers.delete',
-
-                'registrations.employees.view',
-                'registrations.employees.update',
-                'registrations.employees.create',
-                'registrations.employees.delete',
-
-                'registrations.users.view',
-                'registrations.users.update',
-                'registrations.users.create',
-                'registrations.users.delete',
             ];
 
             $tenant->run(function () use ($data, $arrayOfPermissionNames, $roles) {
@@ -92,16 +71,19 @@ class TenantService
 
                     $roleAdmin = Role::get()->first();
 
-                    $permissions = collect($arrayOfPermissionNames)->map(function ($permission) {
-                        return [
-                            'name'       => $permission,
-                            'guard_name' => 'web',
-                            'created_at' => now(),
-                            'updated_at' => now(),
-                        ];
-                    });
+                    $getPermissions = [];
+                    foreach ($arrayOfPermissionNames as $permissions) {
+                        foreach ($permissions as $permission) {
+                            $getPermissions[] = [
+                                'name'       => $permission,
+                                'guard_name' => 'web',
+                                'created_at' => now(),
+                                'updated_at' => now(),
+                            ];
+                        }
+                    }
 
-                    Permission::insert($permissions->toArray());
+                    Permission::insert($getPermissions);
 
                     $roleAdmin->givePermissionTo(Permission::all());
 

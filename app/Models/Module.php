@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Module extends Model
 {
@@ -19,7 +20,7 @@ class Module extends Model
     ];
 
     protected $casts = [
-        'is_core' => 'boolean',
+        'is_core'          => 'boolean',
         'requires_modules' => 'array',
     ];
 
@@ -37,6 +38,11 @@ class Module extends Model
         return $this->belongsToMany(Tenant::class, 'tenant_modules')
             ->withPivot('is_active', 'activated_at', 'expires_at')
             ->withTimestamps();
+    }
+
+    public function permissions(): HasMany
+    {
+        return $this->hasMany(Permission::class);
     }
 
     // 3. Módulos que este módulo requer

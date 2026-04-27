@@ -27,7 +27,6 @@ class DatabaseSeeder extends Seeder
             PlanSeeder::class,
             PlanModuleSeeder::class,
             PermissionSeeder::class,
-            RoleSeeder::class,
         ]);
     }
 }
