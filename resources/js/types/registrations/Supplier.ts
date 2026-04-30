@@ -7,7 +7,8 @@ export interface Supplier {
     fantasy_name?: string;
     cnpj?: string;
     contact_name?: string;
-    category?: string;
+    description?: string;
+    categories?: string[];
     email?: string;
     phone?: string;
     cellphone?: string;

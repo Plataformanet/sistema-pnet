@@ -5,15 +5,13 @@ import { Button } from "@/components/ui/button";
 import FieldError from "@/components/ui/field/FieldError.vue";
 import { maskCPF, maskPhone, maskCEP } from "@/lib/masks";
 
-const props = defineProps({
-    form: {
-        type: Object,
-        required: true,
-    },
-    submitText: {
-        type: String,
-        default: "Salvar Funcionário",
-    },
+import { useForm } from "@inertiajs/vue3";
+
+const props = withDefaults(defineProps<{
+    form: ReturnType<typeof useForm>;
+    submitText?: string;
+}>(), {
+    submitText: "Salvar Funcionário",
 });
 
 const emit = defineEmits(["submit"]);

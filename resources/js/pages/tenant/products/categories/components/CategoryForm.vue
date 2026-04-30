@@ -12,15 +12,13 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 
-const props = defineProps({
-    form: {
-        type: Object,
-        required: true,
-    },
-    submitText: {
-        type: String,
-        default: "Salvar Categoria",
-    },
+import { useForm } from "@inertiajs/vue3";
+
+const props = withDefaults(defineProps<{
+    form: ReturnType<typeof useForm>;
+    submitText?: string;
+}>(), {
+    submitText: "Salvar Categoria",
 });
 
 const emit = defineEmits(["submit"]);

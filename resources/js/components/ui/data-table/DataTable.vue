@@ -22,6 +22,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input'
 import { h, ref } from 'vue';
 import DataTablePagination from './DataTablePagination.vue';
+import { Download } from 'lucide-vue-next';
+
+const emit = defineEmits<{
+  (e: 'export'): void
+}>()
 
 const props = defineProps<{
   columns: ColumnDef<TData, TValue>[]
@@ -51,10 +56,15 @@ const table = useVueTable({
 </script>
 
 <template>
-    <div class="flex items-center py-4">
+    <div class="flex items-center justify-between py-4">
         <Input class="max-w-sm" placeholder="Pesquisar..."
             :model-value="globalFilter"
             @update:model-value="globalFilter = $event as string" />
+        
+        <Button variant="outline" @click="$emit('export')">
+            <Download class="mr-2 h-4 w-4" />
+            Exportar lista
+        </Button>
     </div>
     <div class="border rounded-md">
       <Table>
