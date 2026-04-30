@@ -10,10 +10,10 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        $teams = config('permission.teams');
-        $tableNames = config('permission.table_names');
-        $columnNames = config('permission.column_names');
-        $pivotRole = $columnNames['role_pivot_key'] ?? 'role_id';
+        $teams           = config('permission.teams');
+        $tableNames      = config('permission.table_names');
+        $columnNames     = config('permission.column_names');
+        $pivotRole       = $columnNames['role_pivot_key'] ?? 'role_id';
         $pivotPermission = $columnNames['permission_pivot_key'] ?? 'permission_id';
 
         throw_if(empty($tableNames), 'Error: config/permission.php not loaded. Run [php artisan config:clear] and try again.');
@@ -25,6 +25,7 @@ return new class extends Migration {
         Schema::create($tableNames['permissions'], static function (Blueprint $table) {
             $table->id(); // permission id
             $table->string('name', 125);
+            $table->text('description')->nullable();
             $table->string('guard_name', 125);
             $table->timestamps();
 

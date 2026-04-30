@@ -30,14 +30,10 @@ class TenantRegistrationController extends Controller
                 $loginUrl = "https://{$tenant->domains()->first()->domain}/login";
             }
 
-            Session::flash('success', 'Conta criada! Faça login para continuar.');
-
             return Inertia::location($loginUrl);
 
         } catch (\Throwable $th) {
-            Log::error('Error creating user for tenant: ' . $th->getMessage());
-
-            Session::flash('error', 'Erro ao criar conta. Por favor, tente novamente.');
+            Log::error('Error creating user for tenant: ' . $th);
 
             return Inertia::render('central/Register');
         }
