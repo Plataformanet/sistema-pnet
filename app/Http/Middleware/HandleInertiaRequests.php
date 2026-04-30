@@ -43,16 +43,23 @@ class HandleInertiaRequests extends Middleware
     public function share(Request $request): array
     {
         return array_merge(parent::share($request), [
-            'auth' => [
+            'auth'        => [
                 'user' => $request->user(),
             ],
             // Compartilha dados do tenant com o Vue
-            'tenant' => $this->getTenantData(),
+            'tenant'      => $this->getTenantData(),
 
-            'flash' => [
+            'permissions' => function () use ($request) {
+                if ($request->user()) {
+                    return $request->user()->getAllPermissions()->pluck('name');
+                }
+                return [];
+            },
+
+            'flash'       => [
                 'success' => fn() => $request->session()->get('success'),
-                'error' => fn() => $request->session()->get('error'),
-                'email' => fn() => $request->session()->get('email'),
+                'error'   => fn() => $request->session()->get('error'),
+                'email'   => fn() => $request->session()->get('email'),
             ],
         ]);
     }
@@ -66,10 +73,10 @@ class HandleInertiaRequests extends Middleware
         $tenant = tenant();
 
         return [
-            'id' => $tenant->getTenantKey(),
-            'name' => $tenant->name,
-            'domain' => $tenant->domains?->first()?->domain,
-            'plan' => $tenant->plan ?? null,
+            'id'         => $tenant->getTenantKey(),
+            'name'       => $tenant->name,
+            'domain'     => $tenant->domains?->first()?->domain,
+            'plan'       => $tenant->plan ?? null,
             'hasModules' => $tenant->hasModule($tenant->modulesByTenants()),
         ];
     }

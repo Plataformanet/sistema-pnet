@@ -19,7 +19,7 @@ class TenantService
 
         $tenant = Tenant::create([
             'name'          => $data['name'],
-            'plan_id'       => $data['plan_id'],
+            'plan_id'       => 1, //$data['plan_id'],
             'is_active'     => true,
             'trial_ends_at' => now()->addDays(30),
         ]);

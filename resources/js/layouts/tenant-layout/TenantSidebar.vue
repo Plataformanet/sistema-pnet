@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { SidebarProps } from "@/components/ui/sidebar";
-import { ChevronRight } from "lucide-vue-next";
+import { ChevronRight, CloudCog } from "lucide-vue-next";
 import SearchForm from "@/layouts/tenant-layout/SearchForm.vue";
 import {
     Collapsible,
@@ -22,6 +22,7 @@ import {
 import { Link, usePage } from "@inertiajs/vue3";
 import type { TenantNav } from "./TenantLayout.vue";
 import { useTenant } from "@/composables/useTenant";
+import { usePermission } from "@/composables/usePermission";
 import { computed } from "vue";
 
 const props = defineProps<SidebarProps & { data: TenantNav }>();
@@ -29,6 +30,7 @@ const props = defineProps<SidebarProps & { data: TenantNav }>();
 const page = usePage();
 
 const { tenant } = useTenant();
+const { permissions } = usePermission();
 
 function isActive(url?: string) {
     if (!url) return false;
@@ -42,8 +44,6 @@ function isActive(url?: string) {
 
 // This is sample data.
 const data = props.data;
-
-console.log(tenant.value?.hasModules);
 
 const dataFiltered = computed(() => {
     return data.navMain.filter((item) => {
