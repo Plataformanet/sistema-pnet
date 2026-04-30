@@ -19,7 +19,8 @@ const form = useForm({
     cnpj: "",
     // Supplier specific
     contact_name: "",
-    category: "",
+    description: "",
+    categories: [] as string[],
     // Common fields
     email: "",
     phone: "",
@@ -43,7 +44,9 @@ function submit() {
 <template>
     <Head title="Novo Fornecedor" />
 
-    <div class="mb-6 flex items-center justify-between border-b border-border pb-4">
+    <div
+        class="mb-6 flex items-center justify-between border-b border-border pb-4"
+    >
         <div>
             <h2 class="text-3xl font-bold tracking-tight text-foreground">
                 Novo Fornecedor

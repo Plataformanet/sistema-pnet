@@ -22,7 +22,8 @@ const form = useForm({
     fantasy_name: props.supplier.fantasy_name ?? "",
     cnpj: props.supplier.cnpj ?? "",
     contact_name: props.supplier.contact_name ?? "",
-    category: props.supplier.category ?? "",
+    description: props.supplier.description ?? "",
+    categories: [] as string[],
     email: props.supplier.email ?? "",
     phone: props.supplier.phone ?? "",
     cellphone: props.supplier.cellphone ?? "",
@@ -43,7 +44,9 @@ function submit() {
 <template>
     <Head title="Editar Fornecedor" />
 
-    <div class="mb-6 flex items-center justify-between border-b border-border pb-4">
+    <div
+        class="mb-6 flex items-center justify-between border-b border-border pb-4"
+    >
         <div>
             <h2 class="text-3xl font-bold tracking-tight text-foreground">
                 Editar Fornecedor

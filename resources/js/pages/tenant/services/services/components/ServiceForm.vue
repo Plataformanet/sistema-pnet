@@ -13,15 +13,13 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 
-const props = defineProps({
-    form: {
-        type: Object,
-        required: true,
-    },
-    submitText: {
-        type: String,
-        default: "Salvar Serviço",
-    },
+import { useForm } from "@inertiajs/vue3";
+
+const props = withDefaults(defineProps<{
+    form: ReturnType<typeof useForm>;
+    submitText?: string;
+}>(), {
+    submitText: "Salvar Serviço",
 });
 
 const emit = defineEmits(["submit"]);
