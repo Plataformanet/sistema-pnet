@@ -22,21 +22,25 @@ class PermissionSeeder extends Seeder
                 'registrations.clients.update',
                 'registrations.clients.create',
                 'registrations.clients.delete',
+                'registrations.clients.show',
 
                 'registrations.suppliers.view',
                 'registrations.suppliers.update',
                 'registrations.suppliers.create',
                 'registrations.suppliers.delete',
+                'registrations.suppliers.show',
 
                 'registrations.employees.view',
                 'registrations.employees.update',
                 'registrations.employees.create',
                 'registrations.employees.delete',
+                'registrations.employees.show',
 
                 'registrations.users.view',
                 'registrations.users.update',
                 'registrations.users.create',
                 'registrations.users.delete',
+                'registrations.users.show',
             ],
 
             'sales'         => [
@@ -44,11 +48,13 @@ class PermissionSeeder extends Seeder
                 'sales.sales.edit',
                 'sales.sales.create',
                 'sales.sales.delete',
+                'sales.sales.show',
 
                 'sales.quotations.view',
                 'sales.quotations.edit',
                 'sales.quotations.create',
                 'sales.quotations.delete',
+                'sales.quotations.show',
             ],
 
             'services'      => [
@@ -56,11 +62,13 @@ class PermissionSeeder extends Seeder
                 'services.services.edit',
                 'services.services.create',
                 'services.services.delete',
+                'services.services.show',
 
                 'services.categories.view',
                 'services.categories.edit',
                 'services.categories.create',
                 'services.categories.delete',
+                'services.categories.show',
             ],
 
             'products'      => [
@@ -68,11 +76,13 @@ class PermissionSeeder extends Seeder
                 'products.products.edit',
                 'products.products.create',
                 'products.products.delete',
+                'products.products.show',
 
                 'products.categories.view',
                 'products.categories.edit',
                 'products.categories.create',
                 'products.categories.delete',
+                'products.categories.show',
             ],
 
             'finance'       => [
@@ -80,21 +90,25 @@ class PermissionSeeder extends Seeder
                 'finance.categories.edit',
                 'finance.categories.create',
                 'finance.categories.delete',
+                'finance.categories.show',
 
                 'finance.accounts.view',
                 'finance.accounts.edit',
                 'finance.accounts.create',
                 'finance.accounts.delete',
+                'finance.accounts.show',
 
                 'finance.accounts_payable.view',
                 'finance.accounts_payable.edit',
                 'finance.accounts_payable.create',
                 'finance.accounts_payable.delete',
+                'finance.accounts_payable.show',
 
                 'finance.accounts_receivable.view',
                 'finance.accounts_receivable.edit',
                 'finance.accounts_receivable.create',
                 'finance.accounts_receivable.delete',
+                'finance.accounts_receivable.show',
 
                 'finance.cash_flow.view',
 
@@ -108,16 +122,19 @@ class PermissionSeeder extends Seeder
                 'documents.proposals.edit',
                 'documents.proposals.create',
                 'documents.proposals.delete',
+                'documents.proposals.show',
 
                 'documents.itbi_calculator.view',
                 'documents.itbi_calculator.edit',
                 'documents.itbi_calculator.create',
                 'documents.itbi_calculator.delete',
+                'documents.itbi_calculator.show',
 
                 'documents.contracts.view',
                 'documents.contracts.edit',
                 'documents.contracts.create',
                 'documents.contracts.delete',
+                'documents.contracts.show',
             ],
         ];
 

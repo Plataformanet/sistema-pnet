@@ -11,18 +11,16 @@ defineOptions({ layout: TenantLayout });
 const form = useForm({
     type: "PF",
     // PF fields
-    name: "",
-    cpf: "",
+    name_corporatereason: "",
+    cpf_cnpj: "",
     // PJ fields
-    corporate_reason: "",
     fantasy_name: "",
-    cnpj: "",
     // Common fields
     email: "",
     phone: "",
-    cellphone: "",
+    cell_phone: "",
     // Address
-    zipcode: "",
+    zip_code: "",
     street: "",
     number: "",
     complement: "",
@@ -34,7 +32,7 @@ const form = useForm({
 function submit() {
     // Para testar, por enquanto apenas submetemos um console logo.
     // Assim que os endpoints no controller estiverem prontos: form.post(route('alguma.rota.store'))
-    console.log("Enviando dados do formulário:", form.data());
+    form.post(route('tenant.registrations.clients.store'));
 }
 </script>
 

@@ -73,37 +73,37 @@ function onSubmit() {
             <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
                 <template v-if="clientType === 'PF'">
                     <Field>
-                        <FieldLabel for="name">Nome Completo *</FieldLabel>
-                        <Input id="name" v-model="form.name" required />
-                        <FieldError v-if="form.errors.name">{{
-                            form.errors.name
+                        <FieldLabel for="name_corporatereason">Nome Completo *</FieldLabel>
+                        <Input id="name_corporatereason" v-model="form.name_corporatereason" required />
+                        <FieldError v-if="form.errors.name_corporatereason">{{
+                            form.errors.name_corporatereason
                         }}</FieldError>
                     </Field>
 
                     <Field>
-                        <FieldLabel for="cpf">CPF *</FieldLabel>
+                        <FieldLabel for="cpf_cnpj">CPF *</FieldLabel>
                         <Input
-                            id="cpf"
-                            :model-value="form.cpf"
+                            id="cpf_cnpj"
+                            :model-value="form.cpf_cnpj"
                             @update:model-value="
-                                form.cpf = maskCPF($event as string)
+                                form.cpf_cnpj = maskCPF($event as string)
                             "
                             required
                             placeholder="000.000.000-00"
                             maxlength="14"
                         />
-                        <FieldError v-if="form.errors.cpf">{{
-                            form.errors.cpf
+                        <FieldError v-if="form.errors.cpf_cnpj">{{
+                            form.errors.cpf_cnpj
                         }}</FieldError>
                     </Field>
                 </template>
 
                 <template v-if="clientType === 'PJ'">
                     <Field>
-                        <FieldLabel for="corporate_reason">Razão Social *</FieldLabel>
+                        <FieldLabel for="name_corporatereason">Razão Social *</FieldLabel>
                         <Input
-                            id="corporate_reason"
-                            v-model="form.corporate_reason"
+                            id="name_corporatereason"
+                            v-model="form.name_corporatereason"
                             required
                         />
                         <FieldError v-if="form.errors.corporate_reason">{{
@@ -112,19 +112,19 @@ function onSubmit() {
                     </Field>
 
                     <Field>
-                        <FieldLabel for="cnpj">CNPJ *</FieldLabel>
+                        <FieldLabel for="cpf_cnpj">CNPJ *</FieldLabel>
                         <Input
-                            id="cnpj"
-                            :model-value="form.cnpj"
+                            id="cpf_cnpj"
+                            :model-value="form.cpf_cnpj"
                             @update:model-value="
-                                form.cnpj = maskCNPJ($event as string)
+                                form.cpf_cnpj = maskCNPJ($event as string)
                             "
                             required
                             placeholder="00.000.000/0001-00"
                             maxlength="18"
                         />
-                        <FieldError v-if="form.errors.cnpj">{{
-                            form.errors.cnpj
+                        <FieldError v-if="form.errors.cpf_cnpj">{{
+                            form.errors.cpf_cnpj
                         }}</FieldError>
                     </Field>
 
@@ -172,18 +172,18 @@ function onSubmit() {
                 </Field>
 
                 <Field>
-                    <FieldLabel for="cellphone">Celular</FieldLabel>
+                    <FieldLabel for="cell_phone">Celular</FieldLabel>
                     <Input
-                        id="cellphone"
-                        :model-value="form.cellphone"
+                        id="cell_phone"
+                        :model-value="form.cell_phone"
                         @update:model-value="
-                            form.cellphone = maskPhone($event as string)
+                            form.cell_phone = maskPhone($event as string)
                         "
                         placeholder="(00) 00000-0000"
                         maxlength="15"
                     />
-                    <FieldError v-if="form.errors.cellphone">{{
-                        form.errors.cellphone
+                    <FieldError v-if="form.errors.cell_phone">{{
+                        form.errors.cell_phone
                     }}</FieldError>
                 </Field>
             </div>
@@ -195,18 +195,18 @@ function onSubmit() {
             </h3>
             <div class="grid grid-cols-1 gap-6 md:grid-cols-12">
                 <Field class="md:col-span-3">
-                    <FieldLabel for="zipcode">CEP</FieldLabel>
+                    <FieldLabel for="zip_code">CEP</FieldLabel>
                     <Input
-                        id="zipcode"
-                        :model-value="form.zipcode"
+                        id="zip_code"
+                        :model-value="form.zip_code"
                         @update:model-value="
-                            form.zipcode = maskCEP($event as string)
+                            form.zip_code = maskCEP($event as string)
                         "
                         placeholder="00000-000"
                         maxlength="9"
                     />
-                    <FieldError v-if="form.errors.zipcode">{{
-                        form.errors.zipcode
+                    <FieldError v-if="form.errors.zip_code">{{
+                        form.errors.zip_code
                     }}</FieldError>
                 </Field>
 
