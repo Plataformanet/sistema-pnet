@@ -6,9 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Clients extends Model
 {
-    protected $fillable = [
-        'contact_id',
-    ];
+    protected $fillable = [];
 
     public function contact()
     {

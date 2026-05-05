@@ -14,7 +14,7 @@ return new class extends Migration {
             $table->id();
             $table->foreignId('contact_id')->constrained('contacts')->onDelete('cascade');
             $table->string('zip_code');
-            $table->string('address');
+            $table->string('street');
             $table->string('number');
             $table->string('complement')->nullable();
             $table->string('neighborhood');

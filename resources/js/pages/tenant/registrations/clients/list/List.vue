@@ -13,130 +13,130 @@ export interface Client {
     id: string;
     name: string;
     email: string;
-    cpf?: string;
-    cnpj?: string;
+    cpf_cnpj?: string;
+    // cnpj?: string;
 }
 
 const clients: Client[] = [
     {
         id: "728ed52f",
-        name: "Alan Varela Ferreira",
+        name: "Alan Varela Ferreiras",
         email: "m@example.com",
-        cpf: "449.750.198-17",
+        cpf_cnpj: "449.750.198-17",
     },
     {
         id: "349bc91a",
         name: "Maria Silva Santos",
         email: "maria.silva@example.com",
-        cpf: "123.456.789-00",
+        cpf_cnpj: "123.456.789-00",
     },
     {
         id: "8f1a2b3c",
         name: "Empresa XPTO",
         email: "contato@xpto.com.br",
-        cnpj: "12.345.678/0001-90",
+        cpf_cnpj: "12.345.678/0001-90",
     },
     {
         id: "9d8e7f6a",
         name: "Ana Costa",
         email: "ana.costa@example.com",
-        cpf: "987.654.321-11",
+        cpf_cnpj: "987.654.321-11",
     },
     {
         id: "5c4b3a21",
         name: "Tech Solutions LTDA",
         email: "contato@techsolutions.com.br",
-        cnpj: "98.765.432/0001-21",
+        cpf_cnpj: "98.765.432/0001-21",
     },
     {
         id: "728ed52f",
         name: "Alan Varela Ferreira",
         email: "m@example.com",
-        cpf: "449.750.198-17",
+        cpf_cnpj: "449.750.198-17",
     },
     {
         id: "349bc91a",
         name: "Maria Silva Santos",
         email: "maria.silva@example.com",
-        cpf: "123.456.789-00",
+        cpf_cnpj: "123.456.789-00",
     },
     {
         id: "8f1a2b3c",
         name: "Empresa XPTO",
         email: "contato@xpto.com.br",
-        cnpj: "12.345.678/0001-90",
+        cpf_cnpj: "12.345.678/0001-90",
     },
     {
         id: "9d8e7f6a",
         name: "Ana Costa",
         email: "ana.costa@example.com",
-        cpf: "987.654.321-11",
+        cpf_cnpj: "987.654.321-11",
     },
     {
         id: "5c4b3a21",
         name: "Tech Solutions LTDA",
         email: "contato@techsolutions.com.br",
-        cnpj: "98.765.432/0001-21",
+        cpf_cnpj: "98.765.432/0001-21",
     },
     {
         id: "728ed52f",
         name: "Alan Varela Ferreira",
         email: "m@example.com",
-        cpf: "449.750.198-17",
+        cpf_cnpj: "449.750.198-17",
     },
     {
         id: "349bc91a",
         name: "Maria Silva Santos",
         email: "maria.silva@example.com",
-        cpf: "123.456.789-00",
+        cpf_cnpj: "123.456.789-00",
     },
     {
         id: "8f1a2b3c",
         name: "Empresa XPTO",
         email: "contato@xpto.com.br",
-        cnpj: "12.345.678/0001-90",
+        cpf_cnpj: "12.345.678/0001-90",
     },
     {
         id: "9d8e7f6a",
         name: "Ana Costa",
         email: "ana.costa@example.com",
-        cpf: "987.654.321-11",
+        cpf_cnpj: "987.654.321-11",
     },
     {
         id: "5c4b3a21",
         name: "Tech Solutions LTDA",
         email: "contato@techsolutions.com.br",
-        cnpj: "98.765.432/0001-21",
+        cpf_cnpj: "98.765.432/0001-21",
     },
     {
         id: "728ed52f",
         name: "Alan Varela Ferreira",
         email: "m@example.com",
-        cpf: "449.750.198-17",
+        cpf_cnpj: "449.750.198-17",
     },
     {
         id: "349bc91a",
         name: "Maria Silva Santos",
         email: "maria.silva@example.com",
-        cpf: "123.456.789-00",
+        cpf_cnpj: "123.456.789-00",
     },
     {
         id: "8f1a2b3c",
         name: "Empresa XPTO",
         email: "contato@xpto.com.br",
-        cnpj: "12.345.678/0001-90",
+        cpf_cnpj: "12.345.678/0001-90",
     },
     {
         id: "9d8e7f6a",
         name: "Ana Costa",
         email: "ana.costa@example.com",
-        cpf: "987.654.321-11",
+        cpf_cnpj: "987.654.321-11",
     },
     {
         id: "5c4b3a21",
         name: "Tech Solutions LTDA",
         email: "contato@techsolutions.com.br",
-        cnpj: "98.765.432/0001-21",
+        cpf_cnpj: "98.765.432/0001-21",
     },
 ];
 </script>

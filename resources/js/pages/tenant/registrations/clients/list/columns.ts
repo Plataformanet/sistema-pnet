@@ -24,7 +24,7 @@ export const columns: ColumnDef<Client>[] = [
     },
     {
         id: "document",
-        accessorFn: (row) => row.cpf || row.cnpj,
+        accessorFn: (row) => row.cpf_cnpj,
         header: ({ column }) => {
             return h(
                 Button,
@@ -39,9 +39,8 @@ export const columns: ColumnDef<Client>[] = [
             )
         },
         cell: ({ row }) => {
-            const cpf = row.original.cpf;
-            const cnpj = row.original.cnpj;
-            return cpf ? cpf : (cnpj ? cnpj : "-----");
+            const cpf_cnpj = row.original.cpf_cnpj;
+            return cpf_cnpj ? cpf_cnpj : "-----";
         },
     },
     {

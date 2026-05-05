@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreContactRequest;
+use App\Http\Requests\UpdateContactRequest;
 use App\Services\ClientService;
 use App\Services\ContactService;
 use Illuminate\Http\Request;
@@ -19,7 +20,11 @@ class TenantClientController extends Controller
 
     public function index()
     {
-        return Inertia::render('tenant/registrations/clients/list/List');
+        $clients = $this->contactService->findAll();
+
+        return Inertia::render('tenant/registrations/clients/list/List', [
+            'clients' => $clients,
+        ]);
     }
 
     public function create()
@@ -29,7 +34,6 @@ class TenantClientController extends Controller
 
     public function store(StoreContactRequest $request)
     {
-        dd($request->validated());
         $tenant = tenant();
 
         try {
@@ -41,22 +45,13 @@ class TenantClientController extends Controller
 
         } catch (\Throwable $th) {
             Log::error('Erro ao criar cliente: ' . $th->getMessage());
-            $contact->delete();
             return redirect()->back()->with('error', 'Erro ao criar cliente!');
         }
     }
 
     public function show($id)
     {
-        // Mock client
-        $client = [
-            'id'    => $id,
-            'type'  => 'PF',
-            'name'  => 'Mock Client',
-            'email' => 'mock@client.com',
-            'cpf'   => '000.000.000-00',
-            'phone' => '(00) 0000-0000',
-        ];
+        $client = $this->contactService->findById($id);
 
         return Inertia::render('tenant/registrations/clients/show/Show', [
             'client' => $client
@@ -65,30 +60,40 @@ class TenantClientController extends Controller
 
     public function edit($id)
     {
-        // Mock client
-        $client = [
-            'id'    => $id,
-            'type'  => 'PF',
-            'name'  => 'Mock Client',
-            'email' => 'mock@client.com',
-            'cpf'   => '000.000.000-00',
-            'phone' => '(00) 0000-0000',
-        ];
+        $client = $this->contactService->findById($id);
 
         return Inertia::render('tenant/registrations/clients/edit/Edit', [
-            'client' => $client
+            'client' => $client->toArray()
         ]);
     }
 
-    public function update(Request $request, $id)
+    public function update(UpdateContactRequest $request, $id)
     {
-        // Placeholder
-        return redirect()->route('tenant.registrations.clients.list');
+        $tenant = tenant();
+
+        try {
+            $contact = $this->contactService->update($request->validated(), $tenant, $id);
+
+            $this->clientService->update($contact, $request->validated(), $tenant);
+
+            return redirect()->route('tenant.registrations.clients.list')->with('success', 'Cliente atualizado com sucesso!');
+        } catch (\Throwable $th) {
+            Log::error('Erro ao atualizar cliente: ' . $th->getMessage());
+            return redirect()->back()->with('error', 'Erro ao atualizar cliente!');
+        }
     }
 
     public function destroy($id)
     {
-        // Placeholder
-        return redirect()->route('tenant.registrations.clients.list');
+        $tenant = tenant();
+
+        try {
+            $this->contactService->destroy($tenant, $id);
+
+            return redirect()->route('tenant.registrations.clients.list')->with('success', 'Cliente excluído com sucesso!');
+        } catch (\Throwable $th) {
+            Log::error('Erro ao excluir cliente: ' . $th->getMessage());
+            return redirect()->back()->with('error', 'Erro ao excluir cliente!');
+        }
     }
 }

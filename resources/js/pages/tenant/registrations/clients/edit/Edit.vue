@@ -16,21 +16,19 @@ const props = defineProps<{
 
 const form = useForm({
     type: props.client.type,
-    name: props.client.name ?? "",
-    cpf: props.client.cpf ?? "",
-    corporate_reason: props.client.corporate_reason ?? "",
+    name_corporatereason: props.client.name_corporatereason ?? "",
+    cpf_cnpj: props.client.cpf_cnpj ?? "",
     fantasy_name: props.client.fantasy_name ?? "",
-    cnpj: props.client.cnpj ?? "",
     email: props.client.email ?? "",
     phone: props.client.phone ?? "",
-    cellphone: props.client.cellphone ?? "",
-    zipcode: props.client.zipcode ?? "",
-    street: props.client.street ?? "",
-    number: props.client.number ?? "",
-    complement: props.client.complement ?? "",
-    neighborhood: props.client.neighborhood ?? "",
-    city: props.client.city ?? "",
-    state: props.client.state ?? "",
+    cell_phone: props.client.cell_phone ?? "",
+    zip_code: props.client.address?.zip_code ?? "",
+    street: props.client.address?.street ?? "",
+    number: props.client.address?.number ?? "",
+    complement: props.client.address?.complement ?? "",
+    neighborhood: props.client.address?.neighborhood ?? "",
+    city: props.client.address?.city ?? "",
+    state: props.client.address?.state ?? "",
 });
 
 function submit() {
