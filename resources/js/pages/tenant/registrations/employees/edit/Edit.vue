@@ -15,8 +15,8 @@ const props = defineProps<{
 }>();
 
 const form = useForm({
-    name: props.employee.name ?? "",
-    cpf: props.employee.cpf ?? "",
+    name_corporatereason: props.employee.name_corporatereason ?? "",
+    cpf_cnpj: props.employee.cpf_cnpj ?? "",
     rg: props.employee.rg ?? "",
     birth_date: props.employee.birth_date ?? "",
     position: props.employee.position ?? "",
@@ -24,14 +24,14 @@ const form = useForm({
     hire_date: props.employee.hire_date ?? "",
     email: props.employee.email ?? "",
     phone: props.employee.phone ?? "",
-    cellphone: props.employee.cellphone ?? "",
-    zipcode: props.employee.zipcode ?? "",
-    street: props.employee.street ?? "",
-    number: props.employee.number ?? "",
-    complement: props.employee.complement ?? "",
-    neighborhood: props.employee.neighborhood ?? "",
-    city: props.employee.city ?? "",
-    state: props.employee.state ?? "",
+    cell_phone: props.employee.cell_phone ?? "",
+    zip_code: props.employee.address?.zip_code ?? "",
+    street: props.employee.address?.street ?? "",
+    number: props.employee.address?.number ?? "",
+    complement: props.employee.address?.complement ?? "",
+    neighborhood: props.employee.address?.neighborhood ?? "",
+    city: props.employee.address?.city ?? "",
+    state: props.employee.address?.state ?? "",
 });
 
 function submit() {

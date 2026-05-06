@@ -20,7 +20,7 @@ class TenantClientController extends Controller
 
     public function index()
     {
-        $clients = $this->contactService->findAll();
+        $clients = $this->clientService->findAll();
 
         return Inertia::render('tenant/registrations/clients/list/List', [
             'clients' => $clients,
@@ -51,7 +51,7 @@ class TenantClientController extends Controller
 
     public function show($id)
     {
-        $client = $this->contactService->findById($id);
+        $client = $this->clientService->findById($id);
 
         return Inertia::render('tenant/registrations/clients/show/Show', [
             'client' => $client
@@ -60,7 +60,7 @@ class TenantClientController extends Controller
 
     public function edit($id)
     {
-        $client = $this->contactService->findById($id);
+        $client = $this->clientService->findById($id);
 
         return Inertia::render('tenant/registrations/clients/edit/Edit', [
             'client' => $client->toArray()

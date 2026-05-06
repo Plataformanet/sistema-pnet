@@ -23,7 +23,7 @@ class StoreContactRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'type'                 => 'required|in:PF,PJ',
+            'type'                 => 'sometimes|in:PF,PJ',
             'name_corporatereason' => 'required_if:type,PJ|string|max:255',
             'fantasy_name'         => 'nullable|string|max:255',
             'cpf_cnpj'             => 'required|string',

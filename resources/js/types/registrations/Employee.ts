@@ -1,7 +1,7 @@
 export interface Employee {
     id: string | number;
-    name?: string;
-    cpf?: string;
+    name_corporatereason?: string;
+    cpf_cnpj?: string;
     rg?: string;
     birth_date?: string;
     position?: string;
@@ -9,14 +9,16 @@ export interface Employee {
     hire_date?: string;
     email?: string;
     phone?: string;
-    cellphone?: string;
-    zipcode?: string;
-    street?: string;
-    number?: string;
-    complement?: string;
-    neighborhood?: string;
-    city?: string;
-    state?: string;
+    cell_phone?: string;
+    address?: {
+        zip_code?: string;
+        street?: string;
+        number?: string;
+        complement?: string;
+        neighborhood?: string;
+        city?: string;
+        state?: string;
+    };
     status?: string;
     role?: string;
     created_at?: string;

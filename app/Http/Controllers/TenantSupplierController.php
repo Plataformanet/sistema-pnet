@@ -3,8 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreContactRequest;
+use App\Http\Requests\UpdateContactRequest;
 use App\Services\ContactService;
-use App\Services\SupplierService;
+use App\Services\SuppliersService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
@@ -13,13 +14,17 @@ class TenantSupplierController extends Controller
 {
     public function __construct(
         protected ContactService $contactService,
-        protected SupplierService $supplierService,
+        protected SuppliersService $supplierService,
     ) {
     }
 
     public function index()
     {
-        return Inertia::render('tenant/registrations/suppliers/list/List');
+        $suppliers = $this->supplierService->findAll();
+
+        return Inertia::render('tenant/registrations/suppliers/list/List', [
+            'suppliers' => $suppliers,
+        ]);
     }
 
     public function create()
@@ -40,33 +45,13 @@ class TenantSupplierController extends Controller
 
         } catch (\Throwable $th) {
             Log::error('Erro ao criar fornecedor: ' . $th->getMessage());
-            $contact->delete();
             return redirect()->back()->with('error', 'Erro ao criar fornecedor!');
         }
     }
 
     public function show($id)
     {
-        // Mock supplier
-        $supplier = [
-            'id'               => $id,
-            'type'             => 'PJ',
-            'corporate_reason' => 'Mock Supplier LTDA',
-            'fantasy_name'     => 'Mock Supplier',
-            'email'            => 'mock@supplier.com',
-            'cnpj'             => '00.000.000/0001-00',
-            'contact_name'     => 'Mock Contact',
-            'category'         => 'Categoria Mock',
-            'phone'            => '(00) 0000-0000',
-            'cellphone'        => '(00) 0000-0000',
-            'zipcode'          => '00000-000',
-            'street'           => 'Rua Mock',
-            'number'           => '123',
-            'complement'       => 'Mock',
-            'neighborhood'     => 'Mock',
-            'city'             => 'Mock',
-            'state'            => 'Mock',
-        ];
+        $supplier = $this->supplierService->findById($id);
 
         return Inertia::render('tenant/registrations/suppliers/show/Show', [
             'supplier' => $supplier
@@ -75,41 +60,40 @@ class TenantSupplierController extends Controller
 
     public function edit($id)
     {
-        // Mock supplier
-        $supplier = [
-            'id'               => $id,
-            'type'             => 'PJ',
-            'corporate_reason' => 'Mock Supplier LTDA',
-            'fantasy_name'     => 'Mock Supplier',
-            'email'            => 'mock@supplier.com',
-            'cnpj'             => '00.000.000/0001-00',
-            'contact_name'     => 'Mock Contact',
-            'category'         => 'Categoria Mock',
-            'phone'            => '(00) 0000-0000',
-            'cellphone'        => '(00) 0000-0000',
-            'zipcode'          => '00000-000',
-            'street'           => 'Rua Mock',
-            'number'           => '123',
-            'complement'       => 'Mock',
-            'neighborhood'     => 'Mock',
-            'city'             => 'Mock',
-            'state'            => 'Mock',
-        ];
+        $supplier = $this->supplierService->findById($id);
 
         return Inertia::render('tenant/registrations/suppliers/edit/Edit', [
             'supplier' => $supplier
         ]);
     }
 
-    public function update(Request $request, $id)
+    public function update(UpdateContactRequest $request, $id)
     {
-        // Placeholder
-        return redirect()->route('tenant.registrations.suppliers.list');
+        $tenant = tenant();
+
+        try {
+            $contact = $this->contactService->update($request->validated(), $tenant, $id);
+
+            $this->supplierService->update($contact, $request->validated(), $tenant);
+
+            return redirect()->route('tenant.registrations.suppliers.list')->with('success', 'Fornecedor atualizado com sucesso!');
+        } catch (\Throwable $th) {
+            Log::error('Erro ao atualizar fornecedor: ' . $th->getMessage());
+            return redirect()->back()->with('error', 'Erro ao atualizar fornecedor!');
+        }
     }
 
     public function destroy($id)
     {
-        // Placeholder
-        return redirect()->route('tenant.registrations.suppliers.list');
+        $tenant = tenant();
+
+        try {
+            $this->contactService->destroy($tenant, $id);
+
+            return redirect()->route('tenant.registrations.suppliers.list')->with('success', 'Fornecedor excluído com sucesso!');
+        } catch (\Throwable $th) {
+            Log::error('Erro ao excluir fornecedor: ' . $th->getMessage());
+            return redirect()->back()->with('error', 'Erro ao excluir fornecedor!');
+        }
     }
 }

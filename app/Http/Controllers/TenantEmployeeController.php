@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreContactRequest;
+use App\Http\Requests\UpdateContactRequest;
 use App\Services\ContactService;
 use App\Services\EmployeesService;
 use Illuminate\Http\Request;
@@ -19,7 +20,11 @@ class TenantEmployeeController extends Controller
 
     public function index()
     {
-        return Inertia::render('tenant/registrations/employees/list/List');
+        $employees = $this->employeesService->findAll();
+
+        return Inertia::render('tenant/registrations/employees/list/List', [
+            'employees' => $employees
+        ]);
     }
 
     public function create()
@@ -40,23 +45,13 @@ class TenantEmployeeController extends Controller
 
         } catch (\Throwable $th) {
             Log::error('Erro ao criar funcionário: ' . $th->getMessage());
-            $contact->delete();
             return redirect()->back()->with('error', 'Erro ao criar funcionário!');
         }
     }
 
     public function show($id)
     {
-        // Mock employee
-        $employee = [
-            'id'       => $id,
-            'type'     => 'PF',
-            'name'     => 'Mock Employee',
-            'email'    => 'mock@employee.com',
-            'cpf'      => '000.000.000-00',
-            'position' => 'Mock Position',
-            'salary'   => '2500',
-        ];
+        $employee = $this->employeesService->findById($id);
 
         return Inertia::render('tenant/registrations/employees/show/Show', [
             'employee' => $employee
@@ -65,30 +60,40 @@ class TenantEmployeeController extends Controller
 
     public function edit($id)
     {
-        // Mock employee
-        $employee = [
-            'id'       => $id,
-            'name'     => 'Mock Employee',
-            'email'    => 'mock@employee.com',
-            'cpf'      => '000.000.000-00',
-            'position' => 'Mock Position',
-            'salary'   => '2500',
-        ];
+        $employee = $this->employeesService->findById($id);
 
         return Inertia::render('tenant/registrations/employees/edit/Edit', [
             'employee' => $employee
         ]);
     }
 
-    public function update(Request $request, $id)
+    public function update(UpdateContactRequest $request, $id)
     {
-        // Placeholder
-        return redirect()->route('tenant.registrations.employees.list');
+        $tenant = tenant();
+
+        try {
+            $contact = $this->contactService->update($request->validated(), $tenant, $id);
+
+            $this->employeesService->update($contact, $request->validated(), $tenant);
+
+            return redirect()->route('tenant.registrations.employees.list')->with('success', 'Funcionário atualizado com sucesso!');
+        } catch (\Throwable $th) {
+            Log::error('Erro ao atualizar funcionário: ' . $th->getMessage());
+            return redirect()->back()->with('error', 'Erro ao atualizar funcionário!');
+        }
     }
 
     public function destroy($id)
     {
-        // Placeholder
-        return redirect()->route('tenant.registrations.employees.list');
+        $tenant = tenant();
+
+        try {
+            $this->contactService->destroy($tenant, $id);
+
+            return redirect()->route('tenant.registrations.employees.list')->with('success', 'Funcionário excluído com sucesso!');
+        } catch (\Throwable $th) {
+            Log::error('Erro ao excluir funcionário: ' . $th->getMessage());
+            return redirect()->back()->with('error', 'Erro ao excluir funcionário!');
+        }
     }
 }

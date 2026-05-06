@@ -11,12 +11,10 @@ defineOptions({ layout: TenantLayout });
 const form = useForm({
     type: "PJ",
     // PF fields
-    name: "",
-    cpf: "",
+    name_corporatereason: "",
+    cpf_cnpj: "",
     // PJ fields
-    corporate_reason: "",
     fantasy_name: "",
-    cnpj: "",
     // Supplier specific
     contact_name: "",
     description: "",
@@ -24,9 +22,9 @@ const form = useForm({
     // Common fields
     email: "",
     phone: "",
-    cellphone: "",
+    cell_phone: "",
     // Address
-    zipcode: "",
+    zip_code: "",
     street: "",
     number: "",
     complement: "",

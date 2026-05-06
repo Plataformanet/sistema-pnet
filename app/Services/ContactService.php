@@ -15,9 +15,9 @@ class ContactService
 
             try {
                 $contact = Contact::create([
-                    'type'                 => $data['type'],
+                    'type'                 => $data['type'] ?? 'PF',
                     'name_corporatereason' => $data['name_corporatereason'],
-                    'fantasy_name'         => $data['fantasy_name'],
+                    'fantasy_name'         => $data['fantasy_name'] ?? null,
                     'cpf_cnpj'             => $data['cpf_cnpj'],
                     'email'                => $data['email'],
                     'phone'                => $data['phone'],

@@ -33,22 +33,22 @@ function onSubmit() {
             </h3>
             <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
                 <Field class="md:col-span-2">
-                    <FieldLabel for="name">Nome Completo *</FieldLabel>
-                    <Input id="name" v-model="form.name" required />
-                    <FieldError v-if="form.errors.name">{{ form.errors.name }}</FieldError>
+                    <FieldLabel for="name_corporatereason">Nome Completo *</FieldLabel>
+                    <Input id="name_corporatereason" v-model="form.name_corporatereason" required />
+                    <FieldError v-if="form.errors.name_corporatereason">{{ form.errors.name_corporatereason }}</FieldError>
                 </Field>
 
                 <Field>
                     <FieldLabel for="cpf">CPF *</FieldLabel>
                     <Input
-                        id="cpf"
-                        :model-value="form.cpf"
-                        @update:model-value="form.cpf = maskCPF($event as string)"
+                        id="cpf_cnpj"
+                        :model-value="form.cpf_cnpj"
+                        @update:model-value="form.cpf_cnpj = maskCPF($event as string)"
                         required
                         placeholder="000.000.000-00"
                         maxlength="14"
                     />
-                    <FieldError v-if="form.errors.cpf">{{ form.errors.cpf }}</FieldError>
+                    <FieldError v-if="form.errors.cpf_cnpj">{{ form.errors.cpf_cnpj }}</FieldError>
                 </Field>
 
                 <Field>
@@ -62,7 +62,7 @@ function onSubmit() {
                     <Input id="birth_date" type="date" v-model="form.birth_date" />
                     <FieldError v-if="form.errors.birth_date">{{ form.errors.birth_date }}</FieldError>
                 </Field>
-                
+
                 <!-- Spacer for grid alignment if needed, or another field -->
             </div>
         </div>
@@ -117,15 +117,15 @@ function onSubmit() {
                 </Field>
 
                 <Field>
-                    <FieldLabel for="cellphone">Celular</FieldLabel>
+                    <FieldLabel for="cell_phone">Celular</FieldLabel>
                     <Input
-                        id="cellphone"
-                        :model-value="form.cellphone"
-                        @update:model-value="form.cellphone = maskPhone($event as string)"
+                        id="cell_phone"
+                        :model-value="form.cell_phone"
+                        @update:model-value="form.cell_phone = maskPhone($event as string)"
                         placeholder="(00) 00000-0000"
                         maxlength="15"
                     />
-                    <FieldError v-if="form.errors.cellphone">{{ form.errors.cellphone }}</FieldError>
+                    <FieldError v-if="form.errors.cell_phone">{{ form.errors.cell_phone }}</FieldError>
                 </Field>
             </div>
         </div>
@@ -136,15 +136,15 @@ function onSubmit() {
             </h3>
             <div class="grid grid-cols-1 gap-6 md:grid-cols-12">
                 <Field class="md:col-span-3">
-                    <FieldLabel for="zipcode">CEP</FieldLabel>
+                    <FieldLabel for="zip_code">CEP</FieldLabel>
                     <Input
-                        id="zipcode"
-                        :model-value="form.zipcode"
-                        @update:model-value="form.zipcode = maskCEP($event as string)"
+                        id="zip_code"
+                        :model-value="form.zip_code"
+                        @update:model-value="form.zip_code = maskCEP($event as string)"
                         placeholder="00000-000"
                         maxlength="9"
                     />
-                    <FieldError v-if="form.errors.zipcode">{{ form.errors.zipcode }}</FieldError>
+                    <FieldError v-if="form.errors.zip_code">{{ form.errors.zip_code }}</FieldError>
                 </Field>
 
                 <Field class="md:col-span-7">

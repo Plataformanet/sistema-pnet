@@ -10,21 +10,21 @@ defineOptions({ layout: TenantLayout });
 
 const form = useForm({
     // Employee specifics
-    name: "",
-    cpf: "",
+    name_corporatereason: "",
+    cpf_cnpj: "",
     rg: "",
     birth_date: "",
     position: "",
     salary: "",
     hire_date: "",
-    
+
     // Contact
     email: "",
     phone: "",
-    cellphone: "",
-    
+    cell_phone: "",
+
     // Address
-    zipcode: "",
+    zip_code: "",
     street: "",
     number: "",
     complement: "",
@@ -34,8 +34,8 @@ const form = useForm({
 });
 
 function submit() {
-    console.log("Enviando dados do formulário de funcionário:", form.data());
-    // form.post(route('tenant.registrations.employees.store'))
+    // console.log("Enviando dados do formulário de funcionário:", form.data());
+    form.post(route('tenant.registrations.employees.store'))
 }
 </script>
 
