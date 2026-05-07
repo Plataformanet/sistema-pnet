@@ -54,6 +54,7 @@ Route::middleware([
         // Suppliers
         Route::get('/registrations/suppliers/list', [TenantSupplierController::class, 'index'])->name('tenant.registrations.suppliers.list')->middleware('permission:registrations.suppliers.view');
         Route::get('/registrations/suppliers/create', [TenantSupplierController::class, 'create'])->name('tenant.registrations.suppliers.create')->middleware('permission:registrations.suppliers.create');
+        Route::post('/registrations/suppliers/store', [TenantSupplierController::class, 'store'])->name('tenant.registrations.suppliers.store')->middleware('permission:registrations.suppliers.create');
         Route::get('/registrations/suppliers/{id}/edit', [TenantSupplierController::class, 'edit'])->name('tenant.registrations.suppliers.edit')->middleware('permission:registrations.suppliers.update');
         Route::put('/registrations/suppliers/{id}', [TenantSupplierController::class, 'update'])->name('tenant.registrations.suppliers.update')->middleware('permission:registrations.suppliers.update');
 

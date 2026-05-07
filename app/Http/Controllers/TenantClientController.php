@@ -63,7 +63,7 @@ class TenantClientController extends Controller
         $client = $this->clientService->findById($id);
 
         return Inertia::render('tenant/registrations/clients/edit/Edit', [
-            'client' => $client->toArray()
+            'client' => $client
         ]);
     }
 

@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Contact;
+use App\Models\Employee;
 use App\Models\Tenant;
 use DB;
 
@@ -66,12 +67,12 @@ class EmployeesService
 
     public function findAll()
     {
-        return Contact::with('employee')->get()->map(function ($contact) {
+        return Employee::with(['contact'])->get()->map(function ($employee) {
             return [
-                'id'       => $contact->id,
-                'name'     => $contact->name_corporatereason,
-                'email'    => $contact->email,
-                'cpf_cnpj' => $contact->cpf_cnpj,
+                'id'       => $employee->contact->id,
+                'name'     => $employee->contact->name_corporatereason,
+                'email'    => $employee->contact->email,
+                'cpf_cnpj' => $employee->contact->cpf_cnpj,
             ];
         });
     }

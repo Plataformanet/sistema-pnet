@@ -17,29 +17,10 @@ export interface Employee {
     email: string;
 }
 
-const employees: Employee[] = [
-    {
-        id: "e1f2g3h4",
-        name: "Carlos Eduardo Costa",
-        email: "carlos.costa@empresa.com",
-        cpf: "111.222.333-44",
-        position: "Vendedor"
-    },
-    {
-        id: "j5k6l7m8",
-        name: "Juliana Mendes",
-        email: "juliana.mendes@empresa.com",
-        cpf: "555.666.777-88",
-        position: "Gerente de Vendas"
-    },
-    {
-        id: "n9o0p1q2",
-        name: "Marcos Antônio",
-        email: "marcos.antonio@empresa.com",
-        cpf: "999.000.111-22",
-        position: "Assistente Administrativo"
-    },
-];
+defineProps<{
+    employees: Employee[];
+}>();
+
 </script>
 
 <template>

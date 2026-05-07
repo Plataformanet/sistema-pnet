@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Client;
 use App\Models\Contact;
 use App\Models\Tenant;
 use DB;
@@ -51,17 +52,17 @@ class ClientService
 
     public function findById(string $id)
     {
-        return Contact::with(['client', 'address'])->find($id);
+        return Client::with(['contact', 'contact.address'])->where('contact_id', $id)->firstOrFail();
     }
 
     public function findAll()
     {
-        return Contact::with('client')->get()->map(function ($contact) {
+        return Client::with(['contact'])->get()->map(function ($client) {
             return [
-                'id'       => $contact->id,
-                'name'     => $contact->name_corporatereason,
-                'email'    => $contact->email,
-                'cpf_cnpj' => $contact->cpf_cnpj,
+                'id'       => $client->contact->id,
+                'name'     => $client->contact->name_corporatereason,
+                'email'    => $client->contact->email,
+                'cpf_cnpj' => $client->contact->cpf_cnpj,
             ];
         });
     }

@@ -2,11 +2,13 @@ export interface Employee {
     id: string | number;
     name_corporatereason?: string;
     cpf_cnpj?: string;
-    rg?: string;
-    birth_date?: string;
-    position?: string;
-    salary?: string;
-    hire_date?: string;
+    employee?: {
+        rg?: string;
+        birth_date?: string;
+        position?: string;
+        salary?: string;
+        hire_date?: string;
+    };
     email?: string;
     phone?: string;
     cell_phone?: string;

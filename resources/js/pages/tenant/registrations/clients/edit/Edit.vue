@@ -15,24 +15,24 @@ const props = defineProps<{
 }>();
 
 const form = useForm({
-    type: props.client.type,
-    name_corporatereason: props.client.name_corporatereason ?? "",
-    cpf_cnpj: props.client.cpf_cnpj ?? "",
-    fantasy_name: props.client.fantasy_name ?? "",
-    email: props.client.email ?? "",
-    phone: props.client.phone ?? "",
-    cell_phone: props.client.cell_phone ?? "",
-    zip_code: props.client.address?.zip_code ?? "",
-    street: props.client.address?.street ?? "",
-    number: props.client.address?.number ?? "",
-    complement: props.client.address?.complement ?? "",
-    neighborhood: props.client.address?.neighborhood ?? "",
-    city: props.client.address?.city ?? "",
-    state: props.client.address?.state ?? "",
+    type: props.client.contact?.type,
+    name_corporatereason: props.client.contact?.name_corporatereason ?? "",
+    cpf_cnpj: props.client.contact?.cpf_cnpj ?? "",
+    fantasy_name: props.client.contact?.fantasy_name ?? "",
+    email: props.client.contact?.email ?? "",
+    phone: props.client.contact?.phone ?? "",
+    cell_phone: props.client.contact?.cell_phone ?? "",
+    zip_code: props.client.contact?.address?.zip_code ?? "",
+    street: props.client.contact?.address?.street ?? "",
+    number: props.client.contact?.address?.number ?? "",
+    complement: props.client.contact?.address?.complement ?? "",
+    neighborhood: props.client.contact?.address?.neighborhood ?? "",
+    city: props.client.contact?.address?.city ?? "",
+    state: props.client.contact?.address?.state ?? "",
 });
 
 function submit() {
-    form.put(route("tenant.registrations.clients.update", props.client.id));
+    form.put(route("tenant.registrations.clients.update", props.client.contact?.id));
 }
 </script>
 

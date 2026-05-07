@@ -18,29 +18,10 @@ export interface Supplier {
     cnpj?: string;
 }
 
-const suppliers: Supplier[] = [
-    {
-        id: "728ed52f",
-        name: "Fornecedor X LTDA",
-        email: "vendas@fornecedorx.com.br",
-        cnpj: "12.345.678/0001-90",
-        category: "Equipamentos"
-    },
-    {
-        id: "349bc91a",
-        name: "Limpeza & Cia",
-        email: "contato@limpezaecia.com.br",
-        cnpj: "98.765.432/0001-21",
-        category: "Limpeza"
-    },
-    {
-        id: "8f1a2b3c",
-        name: "João Autônomo",
-        email: "joao.servicos@example.com",
-        cpf: "123.456.789-00",
-        category: "Manutenção"
-    },
-];
+defineProps<{
+    suppliers: Supplier[];
+}>();
+
 </script>
 
 <template>

@@ -104,16 +104,16 @@ function onSubmit() {
 
                 <template v-if="supplierType === 'PJ'">
                     <Field>
-                        <FieldLabel for="corporate_reason"
+                        <FieldLabel for="name_corporatereason"
                             >Razão Social *</FieldLabel
                         >
                         <Input
-                            id="corporate_reason"
-                            v-model="form.corporate_reason"
+                            id="name_corporatereason"
+                            v-model="form.name_corporatereason"
                             required
                         />
-                        <FieldError v-if="form.errors.corporate_reason">{{
-                            form.errors.corporate_reason
+                        <FieldError v-if="form.errors.name_corporatereason">{{
+                            form.errors.name_corporatereason
                         }}</FieldError>
                     </Field>
 
@@ -146,14 +146,14 @@ function onSubmit() {
                 </template>
 
                 <Field :class="supplierType === 'PF' ? 'md:col-span-2' : ''">
-                    <FieldLabel for="contact_name">Nome do Contato</FieldLabel>
+                    <FieldLabel for="responsible_person">Nome do Contato</FieldLabel>
                     <Input
-                        id="contact_name"
-                        v-model="form.contact_name"
+                        id="responsible_person"
+                        v-model="form.responsible_person"
                         placeholder="Pessoa responsável"
                     />
-                    <FieldError v-if="form.errors.contact_name">{{
-                        form.errors.contact_name
+                    <FieldError v-if="form.errors.responsible_person">{{
+                        form.errors.responsible_person
                     }}</FieldError>
                 </Field>
 
@@ -169,12 +169,12 @@ function onSubmit() {
                     }}</FieldError>
                 </Field>
                 <Field class="md:col-span-2">
-                    <FieldLabel for="categories"
+                    <FieldLabel for="supply_category"
                         >Categorias de Fornecimento</FieldLabel
                     >
                     <Input
-                        id="categories"
-                        v-model="form.categories"
+                        id="supply_category"
+                        v-model="form.supply_category"
                         placeholder="Ex: Equipamentos, Serviços de TI, Limpeza..."
                     />
                     <FieldError v-if="form.errors.categories">{{

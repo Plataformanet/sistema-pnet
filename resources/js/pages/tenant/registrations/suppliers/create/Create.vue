@@ -16,9 +16,10 @@ const form = useForm({
     // PJ fields
     fantasy_name: "",
     // Supplier specific
-    contact_name: "",
+    responsible_person: "",
     description: "",
-    categories: [] as string[],
+    // categories: [] as string[],
+    supply_category: "",
     // Common fields
     email: "",
     phone: "",
@@ -34,8 +35,8 @@ const form = useForm({
 });
 
 function submit() {
-    console.log("Enviando dados do formulário:", form.data());
-    // form.post(route('tenant.registrations.suppliers.store'))
+    // console.log("Enviando dados do formulário:", form.data());
+    form.post(route('tenant.registrations.suppliers.store'))
 }
 </script>
 

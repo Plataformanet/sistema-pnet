@@ -4,9 +4,12 @@ export interface Supplier {
     name_corporatereason?: string;
     cpf_cnpj?: string;
     fantasy_name?: string;
-    contact_name?: string;
-    description?: string;
-    categories?: string[];
+    supplier?:{
+        responsible_person?: string;
+        description?: string;
+        supply_category: string;
+    };
+    // categories?: string[];
     email?: string;
     phone?: string;
     cell_phone?: string;

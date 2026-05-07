@@ -99,21 +99,4 @@ class ContactService
             }
         });
     }
-
-    public function findById(string $id)
-    {
-        return Contact::with(['client', 'address'])->find($id);
-    }
-
-    public function findAll()
-    {
-        return Contact::with('client')->get()->map(function ($contact) {
-            return [
-                'id'       => $contact->id,
-                'name'     => $contact->name_corporatereason,
-                'email'    => $contact->email,
-                'cpf_cnpj' => $contact->cpf_cnpj,
-            ];
-        });
-    }
 }
