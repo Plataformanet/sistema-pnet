@@ -12,26 +12,12 @@ defineOptions({ layout: TenantLayout });
 export interface Category {
     id: string;
     name: string;
-    active: boolean;
+    status: boolean;
 }
 
-const categories: Category[] = [
-    {
-        id: "1",
-        name: "Informática / Computadores",
-        active: true,
-    },
-    {
-        id: "2",
-        name: "Periféricos",
-        active: true,
-    },
-    {
-        id: "3",
-        name: "Suprimentos e Papelaria",
-        active: false,
-    },
-];
+defineProps<{
+    categories: Category[];
+}>();
 </script>
 
 <template>

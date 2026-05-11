@@ -47,9 +47,9 @@ function onSubmit() {
                 </Field>
 
                 <Field class="md:col-span-2 md:w-1/2">
-                    <FieldLabel for="active">Status</FieldLabel>
-                    <Select :model-value="form.active ? '1' : '0'" @update:model-value="form.active = $event === '1'">
-                        <SelectTrigger id="active">
+                    <FieldLabel for="status">Status</FieldLabel>
+                    <Select :model-value="form.status ? '1' : '0'" @update:model-value="form.status = $event === '1'">
+                        <SelectTrigger id="status">
                             <SelectValue placeholder="Status" />
                         </SelectTrigger>
                         <SelectContent>
@@ -59,8 +59,8 @@ function onSubmit() {
                             </SelectGroup>
                         </SelectContent>
                     </Select>
-                    <FieldError v-if="form.errors.active">{{
-                        form.errors.active
+                    <FieldError v-if="form.errors.status">{{
+                        form.errors.status
                     }}</FieldError>
                 </Field>
             </div>

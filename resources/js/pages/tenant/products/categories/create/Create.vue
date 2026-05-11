@@ -10,12 +10,12 @@ defineOptions({ layout: TenantLayout });
 
 const form = useForm({
     name: "",
-    active: true,
+    status: true,
 });
 
 function submit() {
-    console.log("Enviando dados do formulário:", form.data());
-    // form.post(route('tenant.products.categories.store'))
+    // console.log("Enviando dados do formulário:", form.data());
+    form.post(route('tenant.products.categories.store'))
 }
 </script>
 

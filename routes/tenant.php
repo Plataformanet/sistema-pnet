@@ -83,12 +83,14 @@ Route::middleware([
         // Service Categories
         Route::get('/services/categories/list', [TenantServiceCategoryController::class, 'categoryList'])->name('tenant.services.categories.list')->middleware('permission:services.categories.view');
         Route::get('/services/categories/create', [TenantServiceCategoryController::class, 'categoryCreate'])->name('tenant.services.categories.create')->middleware('permission:services.categories.create');
+        Route::post('/services/categories/store', [TenantServiceCategoryController::class, 'categoryStore'])->name('tenant.services.categories.store')->middleware('permission:services.categories.create');
         Route::get('/services/categories/{id}/edit', [TenantServiceCategoryController::class, 'categoryEdit'])->name('tenant.services.categories.edit')->middleware('permission:services.categories.update');
         Route::put('/services/categories/{id}', [TenantServiceCategoryController::class, 'categoryUpdate'])->name('tenant.services.categories.update')->middleware('permission:services.categories.update');
 
         // Products
         Route::get('/products/products/list', [TenantProductController::class, 'index'])->name('tenant.products.products.list')->middleware('permission:products.products.view');
         Route::get('/products/products/create', [TenantProductController::class, 'create'])->name('tenant.products.products.create')->middleware('permission:products.products.create');
+        Route::post('/products/products/store', [TenantProductController::class, 'store'])->name('tenant.products.products.store')->middleware('permission:products.products.create');
         Route::get('/products/products/{id}/edit', [TenantProductController::class, 'edit'])->name('tenant.products.products.edit')->middleware('permission:products.products.update');
         Route::put('/products/products/{id}', [TenantProductController::class, 'update'])->name('tenant.products.products.update')->middleware('permission:products.products.update');
         Route::delete('/products/products/{id}', [TenantProductController::class, 'destroy'])->name('tenant.products.products.delete')->middleware('permission:products.products.delete');
@@ -96,6 +98,7 @@ Route::middleware([
         // Product Categories
         Route::get('/products/categories/list', [TenantProductCategoryController::class, 'index'])->name('tenant.products.categories.list')->middleware('permission:products.categories.view');
         Route::get('/products/categories/create', [TenantProductCategoryController::class, 'create'])->name('tenant.products.categories.create')->middleware('permission:products.categories.create');
+        Route::post('/products/categories/store', [TenantProductCategoryController::class, 'store'])->name('tenant.products.categories.store')->middleware('permission:products.categories.create');
         Route::get('/products/categories/{id}/edit', [TenantProductCategoryController::class, 'edit'])->name('tenant.products.categories.edit')->middleware('permission:products.categories.update');
         Route::put('/products/categories/{id}', [TenantProductCategoryController::class, 'update'])->name('tenant.products.categories.update')->middleware('permission:products.categories.update');
         Route::delete('/products/categories/{id}', [TenantProductCategoryController::class, 'destroy'])->name('tenant.products.categories.destroy')->middleware('permission:products.categories.delete');
