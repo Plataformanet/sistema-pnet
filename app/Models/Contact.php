@@ -23,16 +23,16 @@ class Contact extends Model
 
     public function employee()
     {
-        return $this->hasOne(Employees::class);
+        return $this->hasOne(Employee::class);
     }
 
     public function supplier()
     {
-        return $this->hasOne(Suppliers::class);
+        return $this->hasOne(Supplier::class);
     }
 
     public function client()
     {
-        return $this->hasOne(Clients::class);
+        return $this->hasOne(Client::class);
     }
 }

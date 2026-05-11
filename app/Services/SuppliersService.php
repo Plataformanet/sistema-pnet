@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Contact;
+use App\Models\Supplier;
 use App\Models\Suppliers;
 use App\Models\Tenant;
 use DB;
@@ -57,12 +58,12 @@ class SuppliersService
 
     public function findById(string $id)
     {
-        return Contact::with(['supplier', 'address'])->find($id);
+        return Supplier::with(['contact', 'contact.address'])->where('contact_id', $id)->firstOrFail();
     }
 
     public function findAll()
     {
-        return Suppliers::with(['contact'])->get()->map(function ($supplier) {
+        return Supplier::with(['contact'])->get()->map(function ($supplier) {
             return [
                 'id'       => $supplier->contact->id,
                 'name'     => $supplier->contact->name_corporatereason,

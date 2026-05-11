@@ -50,6 +50,7 @@ Route::middleware([
         Route::post('/registrations/clients/store', [TenantClientController::class, 'store'])->name('tenant.registrations.clients.store')->middleware('permission:registrations.clients.create');
         Route::get('/registrations/clients/{id}/edit', [TenantClientController::class, 'edit'])->name('tenant.registrations.clients.edit')->middleware('permission:registrations.clients.update');
         Route::put('/registrations/clients/{id}', [TenantClientController::class, 'update'])->name('tenant.registrations.clients.update')->middleware('permission:registrations.clients.update');
+        Route::delete('/registrations/clients/{id}', [TenantClientController::class, 'destroy'])->name('tenant.registrations.clients.destroy')->middleware('permission:registrations.clients.destroy');
 
         // Suppliers
         Route::get('/registrations/suppliers/list', [TenantSupplierController::class, 'index'])->name('tenant.registrations.suppliers.list')->middleware('permission:registrations.suppliers.view');
@@ -57,6 +58,7 @@ Route::middleware([
         Route::post('/registrations/suppliers/store', [TenantSupplierController::class, 'store'])->name('tenant.registrations.suppliers.store')->middleware('permission:registrations.suppliers.create');
         Route::get('/registrations/suppliers/{id}/edit', [TenantSupplierController::class, 'edit'])->name('tenant.registrations.suppliers.edit')->middleware('permission:registrations.suppliers.update');
         Route::put('/registrations/suppliers/{id}', [TenantSupplierController::class, 'update'])->name('tenant.registrations.suppliers.update')->middleware('permission:registrations.suppliers.update');
+        Route::delete('/registrations/suppliers/{id}', [TenantSupplierController::class, 'destroy'])->name('tenant.registrations.suppliers.destroy')->middleware('permission:registrations.suppliers.destroy');
 
         // Employees
         Route::get('/registrations/employees/list', [TenantEmployeeController::class, 'index'])->name('tenant.registrations.employees.list')->middleware('permission:registrations.employees.view');
@@ -64,6 +66,7 @@ Route::middleware([
         Route::post('/registrations/employees/store', [TenantEmployeeController::class, 'store'])->name('tenant.registrations.employees.store')->middleware('permission:registrations.employees.create');
         Route::get('/registrations/employees/{id}/edit', [TenantEmployeeController::class, 'edit'])->name('tenant.registrations.employees.edit')->middleware('permission:registrations.employees.update');
         Route::put('/registrations/employees/{id}', [TenantEmployeeController::class, 'update'])->name('tenant.registrations.employees.update')->middleware('permission:registrations.employees.update');
+        Route::delete('/registrations/employees/{id}', [TenantEmployeeController::class, 'destroy'])->name('tenant.registrations.employees.destroy')->middleware('permission:registrations.employees.destroy');
 
         // Configurações - Usuários
         Route::get('/settings/users/list', [TenantUserController::class, 'userList'])->name('tenant.settings.users.list');

@@ -15,27 +15,27 @@ const props = defineProps<{
 }>();
 
 const form = useForm({
-    name_corporatereason: props.employee.name_corporatereason ?? "",
-    cpf_cnpj: props.employee.cpf_cnpj ?? "",
-    rg: props.employee.employee?.rg ?? "",
-    birth_date: props.employee.employee?.birth_date ?? "",
-    position: props.employee.employee?.position ?? "",
-    salary: props.employee.employee?.salary ?? "",
-    hire_date: props.employee.employee?.hire_date ?? "",
-    email: props.employee.email ?? "",
-    phone: props.employee.phone ?? "",
-    cell_phone: props.employee.cell_phone ?? "",
-    zip_code: props.employee.address?.zip_code ?? "",
-    street: props.employee.address?.street ?? "",
-    number: props.employee.address?.number ?? "",
-    complement: props.employee.address?.complement ?? "",
-    neighborhood: props.employee.address?.neighborhood ?? "",
-    city: props.employee.address?.city ?? "",
-    state: props.employee.address?.state ?? "",
+    name_corporatereason: props.employee.contact?.name_corporatereason ?? "",
+    cpf_cnpj: props.employee.contact?.cpf_cnpj ?? "",
+    rg: props.employee.rg ?? "",
+    birth_date: props.employee.birth_date ?? "",
+    position: props.employee.position ?? "",
+    salary: props.employee.salary ?? "",
+    hire_date: props.employee.hire_date ?? "",
+    email: props.employee.contact?.email ?? "",
+    phone: props.employee.contact?.phone ?? "",
+    cell_phone: props.employee.contact?.cell_phone ?? "",
+    zip_code: props.employee.contact?.address?.zip_code ?? "",
+    street: props.employee.contact?.address?.street ?? "",
+    number: props.employee.contact?.address?.number ?? "",
+    complement: props.employee.contact?.address?.complement ?? "",
+    neighborhood: props.employee.contact?.address?.neighborhood ?? "",
+    city: props.employee.contact?.address?.city ?? "",
+    state: props.employee.contact?.address?.state ?? "",
 });
 
 function submit() {
-    form.put(route("tenant.registrations.employees.update", props.employee.id));
+    form.put(route("tenant.registrations.employees.update", props.employee.contact?.id));
 }
 </script>
 

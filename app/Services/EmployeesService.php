@@ -62,7 +62,7 @@ class EmployeesService
 
     public function findById(string $id)
     {
-        return Contact::with(['employee', 'address'])->find($id);
+        return Employee::with(['contact', 'contact.address'])->where('contact_id', $id)->firstOrFail();
     }
 
     public function findAll()

@@ -15,28 +15,28 @@ const props = defineProps<{
 }>();
 
 const form = useForm({
-    type: props.supplier.type,
-    name_corporatereason: props.supplier.name_corporatereason ?? "",
-    cpf_cnpj: props.supplier.cpf_cnpj ?? "",
-    fantasy_name: props.supplier.fantasy_name ?? "",
-    responsible_person: props.supplier.supplier?.responsible_person ?? "",
-    description: props.supplier.supplier?.description ?? "",
+    type: props.supplier.contact?.type ?? "",
+    name_corporatereason: props.supplier.contact?.name_corporatereason ?? "",
+    cpf_cnpj: props.supplier.contact?.cpf_cnpj ?? "",
+    fantasy_name: props.supplier.contact?.fantasy_name ?? "",
+    responsible_person: props.supplier?.responsible_person ?? "",
+    description: props.supplier?.description ?? "",
     // categories: [] as string[],
-    supply_category: props.supplier.supplier?.supply_category ?? "",
-    email: props.supplier.email ?? "",
-    phone: props.supplier.phone ?? "",
-    cell_phone: props.supplier.cell_phone ?? "",
-    zip_code: props.supplier.address?.zip_code ?? "",
-    street: props.supplier.address?.street ?? "",
-    number: props.supplier.address?.number ?? "",
-    complement: props.supplier.address?.complement ?? "",
-    neighborhood: props.supplier.address?.neighborhood ?? "",
-    city: props.supplier.address?.city ?? "",
-    state: props.supplier.address?.state ?? "",
+    supply_category: props.supplier?.supply_category ?? "",
+    email: props.supplier.contact?.email ?? "",
+    phone: props.supplier.contact?.phone ?? "",
+    cell_phone: props.supplier.contact?.cell_phone ?? "",
+    zip_code: props.supplier.contact?.address?.zip_code ?? "",
+    street: props.supplier.contact?.address?.street ?? "",
+    number: props.supplier.contact?.address?.number ?? "",
+    complement: props.supplier.contact?.address?.complement ?? "",
+    neighborhood: props.supplier.contact?.address?.neighborhood ?? "",
+    city: props.supplier.contact?.address?.city ?? "",
+    state: props.supplier.contact?.address?.state ?? "",
 });
 
 function submit() {
-    form.put(route("tenant.registrations.suppliers.update", props.supplier.id));
+    form.put(route("tenant.registrations.suppliers.update", props.supplier.contact?.id));
 }
 </script>
 
