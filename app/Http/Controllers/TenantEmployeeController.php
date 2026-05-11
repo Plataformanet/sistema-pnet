@@ -20,7 +20,7 @@ class TenantEmployeeController extends Controller
 
     public function index()
     {
-        $employees = $this->employeesService->findAll();
+        $employees = $this->employeesService->findAll(tenant());
 
         return Inertia::render('tenant/registrations/employees/list/List', [
             'employees' => $employees
@@ -34,12 +34,10 @@ class TenantEmployeeController extends Controller
 
     public function store(StoreContactRequest $request)
     {
-        $tenant = tenant();
-
         try {
-            $contact = $this->contactService->store($request->validated(), $tenant);
+            $contact = $this->contactService->store($request->validated(), tenant());
 
-            $this->employeesService->store($contact, $request->validated(), $tenant);
+            $this->employeesService->store($contact, $request->validated(), tenant());
 
             return redirect()->route('tenant.registrations.employees.list')->with('success', 'Funcionário criado com sucesso!');
 
@@ -51,7 +49,7 @@ class TenantEmployeeController extends Controller
 
     public function show($id)
     {
-        $employee = $this->employeesService->findById($id);
+        $employee = $this->employeesService->findById($id, tenant());
 
         return Inertia::render('tenant/registrations/employees/show/Show', [
             'employee' => $employee
@@ -60,7 +58,7 @@ class TenantEmployeeController extends Controller
 
     public function edit($id)
     {
-        $employee = $this->employeesService->findById($id);
+        $employee = $this->employeesService->findById($id, tenant());
 
         return Inertia::render('tenant/registrations/employees/edit/Edit', [
             'employee' => $employee->toArray()
@@ -69,12 +67,10 @@ class TenantEmployeeController extends Controller
 
     public function update(UpdateContactRequest $request, $id)
     {
-        $tenant = tenant();
-
         try {
-            $contact = $this->contactService->update($request->validated(), $tenant, $id);
+            $contact = $this->contactService->update($request->validated(), tenant(), $id);
 
-            $this->employeesService->update($contact, $request->validated(), $tenant);
+            $this->employeesService->update($contact, $request->validated(), tenant());
 
             return redirect()->route('tenant.registrations.employees.list')->with('success', 'Funcionário atualizado com sucesso!');
         } catch (\Throwable $th) {
@@ -85,10 +81,8 @@ class TenantEmployeeController extends Controller
 
     public function destroy($id)
     {
-        $tenant = tenant();
-
         try {
-            $this->contactService->destroy($tenant, $id);
+            $this->contactService->destroy(tenant(), $id);
 
             return redirect()->route('tenant.registrations.employees.list')->with('success', 'Funcionário excluído com sucesso!');
         } catch (\Throwable $th) {

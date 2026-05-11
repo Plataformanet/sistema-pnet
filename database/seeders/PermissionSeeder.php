@@ -41,58 +41,58 @@ class PermissionSeeder extends Seeder
 
             'sales'         => [
                 'sales.sales.view',
-                'sales.sales.edit',
+                'sales.sales.update',
                 'sales.sales.create',
                 'sales.sales.delete',
 
                 'sales.quotations.view',
-                'sales.quotations.edit',
+                'sales.quotations.update',
                 'sales.quotations.create',
                 'sales.quotations.delete',
             ],
 
             'services'      => [
                 'services.services.view',
-                'services.services.edit',
+                'services.services.update',
                 'services.services.create',
                 'services.services.delete',
 
                 'services.categories.view',
-                'services.categories.edit',
+                'services.categories.update',
                 'services.categories.create',
                 'services.categories.delete',
             ],
 
             'products'      => [
                 'products.products.view',
-                'products.products.edit',
+                'products.products.update',
                 'products.products.create',
                 'products.products.delete',
 
                 'products.categories.view',
-                'products.categories.edit',
+                'products.categories.update',
                 'products.categories.create',
                 'products.categories.delete',
             ],
 
             'finance'       => [
                 'finance.categories.view',
-                'finance.categories.edit',
+                'finance.categories.update',
                 'finance.categories.create',
                 'finance.categories.delete',
 
                 'finance.accounts.view',
-                'finance.accounts.edit',
+                'finance.accounts.update',
                 'finance.accounts.create',
                 'finance.accounts.delete',
 
                 'finance.accounts_payable.view',
-                'finance.accounts_payable.edit',
+                'finance.accounts_payable.update',
                 'finance.accounts_payable.create',
                 'finance.accounts_payable.delete',
 
                 'finance.accounts_receivable.view',
-                'finance.accounts_receivable.edit',
+                'finance.accounts_receivable.update',
                 'finance.accounts_receivable.create',
                 'finance.accounts_receivable.delete',
 
@@ -105,17 +105,17 @@ class PermissionSeeder extends Seeder
 
             'documents'     => [
                 'documents.proposals.view',
-                'documents.proposals.edit',
+                'documents.proposals.update',
                 'documents.proposals.create',
                 'documents.proposals.delete',
 
                 'documents.itbi_calculator.view',
-                'documents.itbi_calculator.edit',
+                'documents.itbi_calculator.update',
                 'documents.itbi_calculator.create',
                 'documents.itbi_calculator.delete',
 
                 'documents.contracts.view',
-                'documents.contracts.edit',
+                'documents.contracts.update',
                 'documents.contracts.create',
                 'documents.contracts.delete',
             ],

@@ -20,7 +20,7 @@ class TenantSupplierController extends Controller
 
     public function index()
     {
-        $suppliers = $this->supplierService->findAll();
+        $suppliers = $this->supplierService->findAll(tenant());
 
         return Inertia::render('tenant/registrations/suppliers/list/List', [
             'suppliers' => $suppliers,
@@ -34,12 +34,10 @@ class TenantSupplierController extends Controller
 
     public function store(StoreContactRequest $request)
     {
-        $tenant = tenant();
-
         try {
-            $contact = $this->contactService->store($request->validated(), $tenant);
+            $contact = $this->contactService->store($request->validated(), tenant());
 
-            $this->supplierService->store($contact, $request->validated(), $tenant);
+            $this->supplierService->store($contact, $request->validated(), tenant());
 
             return redirect()->route('tenant.registrations.suppliers.list')->with('success', 'Fornecedor criado com sucesso!');
 
@@ -51,7 +49,7 @@ class TenantSupplierController extends Controller
 
     public function show($id)
     {
-        $supplier = $this->supplierService->findById($id);
+        $supplier = $this->supplierService->findById($id, tenant());
 
         return Inertia::render('tenant/registrations/suppliers/show/Show', [
             'supplier' => $supplier
@@ -60,7 +58,7 @@ class TenantSupplierController extends Controller
 
     public function edit($id)
     {
-        $supplier = $this->supplierService->findById($id);
+        $supplier = $this->supplierService->findById($id, tenant());
 
         return Inertia::render('tenant/registrations/suppliers/edit/Edit', [
             'supplier' => $supplier
@@ -69,12 +67,10 @@ class TenantSupplierController extends Controller
 
     public function update(UpdateContactRequest $request, $id)
     {
-        $tenant = tenant();
-
         try {
-            $contact = $this->contactService->update($request->validated(), $tenant, $id);
+            $contact = $this->contactService->update($request->validated(), tenant(), $id);
 
-            $this->supplierService->update($contact, $request->validated(), $tenant);
+            $this->supplierService->update($contact, $request->validated(), tenant());
 
             return redirect()->route('tenant.registrations.suppliers.list')->with('success', 'Fornecedor atualizado com sucesso!');
         } catch (\Throwable $th) {
@@ -85,10 +81,8 @@ class TenantSupplierController extends Controller
 
     public function destroy($id)
     {
-        $tenant = tenant();
-
         try {
-            $this->contactService->destroy($tenant, $id);
+            $this->contactService->destroy(tenant(), $id);
 
             return redirect()->route('tenant.registrations.suppliers.list')->with('success', 'Fornecedor excluído com sucesso!');
         } catch (\Throwable $th) {

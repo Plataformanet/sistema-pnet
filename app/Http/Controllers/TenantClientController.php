@@ -20,7 +20,7 @@ class TenantClientController extends Controller
 
     public function index()
     {
-        $clients = $this->clientService->findAll();
+        $clients = $this->clientService->findAll(tenant());
 
         return Inertia::render('tenant/registrations/clients/list/List', [
             'clients' => $clients,
@@ -34,12 +34,10 @@ class TenantClientController extends Controller
 
     public function store(StoreContactRequest $request)
     {
-        $tenant = tenant();
-
         try {
-            $contact = $this->contactService->store($request->validated(), $tenant);
+            $contact = $this->contactService->store($request->validated(), tenant());
 
-            $this->clientService->store($contact, $request->validated(), $tenant);
+            $this->clientService->store($contact, $request->validated(), tenant());
 
             return redirect()->route('tenant.registrations.clients.list')->with('success', 'Cliente criado com sucesso!');
 
@@ -51,7 +49,7 @@ class TenantClientController extends Controller
 
     public function show($id)
     {
-        $client = $this->clientService->findById($id);
+        $client = $this->clientService->findById($id, tenant());
 
         return Inertia::render('tenant/registrations/clients/show/Show', [
             'client' => $client
@@ -60,7 +58,7 @@ class TenantClientController extends Controller
 
     public function edit($id)
     {
-        $client = $this->clientService->findById($id);
+        $client = $this->clientService->findById($id, tenant());
 
         return Inertia::render('tenant/registrations/clients/edit/Edit', [
             'client' => $client
@@ -69,12 +67,10 @@ class TenantClientController extends Controller
 
     public function update(UpdateContactRequest $request, $id)
     {
-        $tenant = tenant();
-
         try {
-            $contact = $this->contactService->update($request->validated(), $tenant, $id);
+            $contact = $this->contactService->update($request->validated(), tenant(), $id);
 
-            $this->clientService->update($contact, $request->validated(), $tenant);
+            $this->clientService->update($contact, $request->validated(), tenant());
 
             return redirect()->route('tenant.registrations.clients.list')->with('success', 'Cliente atualizado com sucesso!');
         } catch (\Throwable $th) {
@@ -85,10 +81,8 @@ class TenantClientController extends Controller
 
     public function destroy($id)
     {
-        $tenant = tenant();
-
         try {
-            $this->contactService->destroy($tenant, $id);
+            $this->contactService->destroy(tenant(), $id);
 
             return redirect()->route('tenant.registrations.clients.list')->with('success', 'Cliente excluído com sucesso!');
         } catch (\Throwable $th) {

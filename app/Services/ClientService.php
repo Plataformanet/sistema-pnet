@@ -50,20 +50,24 @@ class ClientService
         });
     }
 
-    public function findById(string $id)
+    public function findById(string $id, Tenant $tenant)
     {
-        return Client::with(['contact', 'contact.address'])->where('contact_id', $id)->firstOrFail();
+        return $tenant->run(function () use ($id) {
+            return Client::with(['contact', 'contact.address'])->where('contact_id', $id)->firstOrFail();
+        });
     }
 
-    public function findAll()
+    public function findAll(Tenant $tenant)
     {
-        return Client::with(['contact'])->get()->map(function ($client) {
-            return [
-                'id'       => $client->contact->id,
-                'name'     => $client->contact->name_corporatereason,
-                'email'    => $client->contact->email,
-                'cpf_cnpj' => $client->contact->cpf_cnpj,
-            ];
+        return $tenant->run(function () {
+            return Client::with(['contact'])->get()->map(function ($client) {
+                return [
+                    'id'       => $client->contact->id,
+                    'name'     => $client->contact->name_corporatereason,
+                    'email'    => $client->contact->email,
+                    'cpf_cnpj' => $client->contact->cpf_cnpj,
+                ];
+            });
         });
     }
 }

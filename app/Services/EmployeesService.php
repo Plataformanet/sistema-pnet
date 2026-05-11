@@ -60,20 +60,24 @@ class EmployeesService
         });
     }
 
-    public function findById(string $id)
+    public function findById(string $id, Tenant $tenant)
     {
-        return Employee::with(['contact', 'contact.address'])->where('contact_id', $id)->firstOrFail();
+        return $tenant->run(function () use ($id) {
+            return Employee::with(['contact', 'contact.address'])->where('contact_id', $id)->firstOrFail();
+        });
     }
 
-    public function findAll()
+    public function findAll(Tenant $tenant)
     {
-        return Employee::with(['contact'])->get()->map(function ($employee) {
-            return [
-                'id'       => $employee->contact->id,
-                'name'     => $employee->contact->name_corporatereason,
-                'email'    => $employee->contact->email,
-                'cpf_cnpj' => $employee->contact->cpf_cnpj,
-            ];
+        return $tenant->run(function () {
+            return Employee::with(['contact'])->get()->map(function ($employee) {
+                return [
+                    'id'       => $employee->contact->id,
+                    'name'     => $employee->contact->name_corporatereason,
+                    'email'    => $employee->contact->email,
+                    'cpf_cnpj' => $employee->contact->cpf_cnpj,
+                ];
+            });
         });
     }
 }
