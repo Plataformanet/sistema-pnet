@@ -15,12 +15,10 @@ class CategoryProductService
         });
     }
 
-    public function update(string $id, array $data, Tenant $tenant): CategoryProduct
+    public function update(string $id, array $data, Tenant $tenant): bool
     {
         return $tenant->run(function () use ($id, $data) {
-            $category = CategoryProduct::findOrFail($id);
-            $category->update($data);
-            return $category->fresh();
+            return CategoryProduct::findOrFail($id)->update($data);
         });
     }
 

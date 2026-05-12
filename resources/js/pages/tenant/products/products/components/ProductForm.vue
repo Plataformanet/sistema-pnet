@@ -17,6 +17,7 @@ import { useForm } from "@inertiajs/vue3";
 
 const props = withDefaults(defineProps<{
     form: ReturnType<typeof useForm>;
+    categories: Array<{ id: string; name: string }>;
     submitText?: string;
 }>(), {
     submitText: "Salvar Produto",
@@ -67,29 +68,25 @@ function onSubmit() {
                 </Field>
 
                 <Field>
-                    <FieldLabel for="category_id"
+                    <FieldLabel for="category_product_id"
                         >Categoria do Produto</FieldLabel
                     >
-                    <Select v-model="form.category_id">
-                        <SelectTrigger id="category_id">
+                    <Select v-model="form.category_product_id">
+                        <SelectTrigger id="category_product_id">
                             <SelectValue
                                 placeholder="Selecione uma categoria"
                             />
                         </SelectTrigger>
                         <SelectContent>
                             <SelectGroup>
-                                <SelectItem value="1"
-                                    >Informática / Computadores</SelectItem
-                                >
-                                <SelectItem value="2">Periféricos</SelectItem>
-                                <SelectItem value="3"
-                                    >Suprimentos e Papelaria</SelectItem
+                                <SelectItem v-for="category in categories" :key="category.id" :value="category.id"
+                                    >{{ category.name }}</SelectItem
                                 >
                             </SelectGroup>
                         </SelectContent>
                     </Select>
-                    <FieldError v-if="form.errors.category_id">{{
-                        form.errors.category_id
+                    <FieldError v-if="form.errors.category_product_id">{{
+                        form.errors.category_product_id
                     }}</FieldError>
                 </Field>
 
@@ -241,12 +238,12 @@ function onSubmit() {
                 </Field>
 
                 <Field class="md:w-1/2">
-                    <FieldLabel for="active">Status</FieldLabel>
+                    <FieldLabel for="status">Status</FieldLabel>
                     <Select
-                        :model-value="form.active ? '1' : '0'"
-                        @update:model-value="form.active = $event === '1'"
+                        :model-value="form.status ? '1' : '0'"
+                        @update:model-value="form.status = $event === '1'"
                     >
-                        <SelectTrigger id="active">
+                        <SelectTrigger id="status">
                             <SelectValue placeholder="Status" />
                         </SelectTrigger>
                         <SelectContent>
@@ -256,8 +253,8 @@ function onSubmit() {
                             </SelectGroup>
                         </SelectContent>
                     </Select>
-                    <FieldError v-if="form.errors.active">{{
-                        form.errors.active
+                    <FieldError v-if="form.errors.status">{{
+                        form.errors.status
                     }}</FieldError>
                 </Field>
             </div>

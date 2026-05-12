@@ -25,6 +25,8 @@ return new class extends Migration {
             $table->text('description')->nullable();
             $table->boolean('status')->default(true);
             $table->timestamps();
+
+            $table->unique(['sku', 'barcode']);
         });
     }
 

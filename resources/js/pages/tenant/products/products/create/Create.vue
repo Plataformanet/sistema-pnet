@@ -13,7 +13,7 @@ const form = useForm({
     name: "",
     sku: "",
     barcode: "",
-    category_id: "",
+    category_product_id: "",
     cost_value: "",
     sell_value: "",
     manage_stock: true,
@@ -21,8 +21,13 @@ const form = useForm({
     min_stock: "",
     unit_of_measure: "un",
     description: "",
-    active: true,
+    status: true,
 });
+
+defineProps<{ categories: Array<{
+    id: string;
+    name: string;
+}> }>();
 
 function submit() {
     const payload = {
@@ -30,8 +35,7 @@ function submit() {
         cost_value: parseCurrencyToCents(form.cost_value as string),
         sell_value: parseCurrencyToCents(form.sell_value as string),
     };
-    console.log("Enviando dados do formulário:", payload);
-    // form.transform((data) => payload).post(route('tenant.products.products.store'))
+    form.transform((data) => payload).post(route('tenant.products.products.store'))
 }
 </script>
 
@@ -52,6 +56,6 @@ function submit() {
     </div>
 
     <div class="mx-auto mb-20 max-w-6xl py-4">
-        <ProductForm :form="form" @submit="submit" />
+        <ProductForm :form="form" :categories="categories" @submit="submit" />
     </div>
 </template>

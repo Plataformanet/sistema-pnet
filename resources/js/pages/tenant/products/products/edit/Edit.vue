@@ -14,13 +14,17 @@ const props = defineProps({
         type: Object,
         required: true,
     },
+    categories: Array<{
+        id: string;
+        name: string;
+    }>,
 });
 
 const form = useForm({
     name: props.product.name || "",
     sku: props.product.sku || "",
     barcode: props.product.barcode || "",
-    category_id: props.product.category_id || "",
+    category_product_id: props.product.category_product_id || "",
     cost_value: props.product.cost_value !== undefined ? maskCurrency(String(props.product.cost_value)) : "",
     sell_value: props.product.sell_value !== undefined ? maskCurrency(String(props.product.sell_value)) : "",
     manage_stock: props.product.manage_stock ?? true,
@@ -28,7 +32,7 @@ const form = useForm({
     min_stock: props.product.min_stock || "",
     unit_of_measure: props.product.unit_of_measure || "un",
     description: props.product.description || "",
-    active: props.product.active ?? true,
+    status: props.product.status ?? true,
 });
 
 function submit() {
@@ -37,8 +41,7 @@ function submit() {
         cost_value: parseCurrencyToCents(form.cost_value as string),
         sell_value: parseCurrencyToCents(form.sell_value as string),
     };
-    console.log("Atualizando dados do formulário:", payload);
-    // form.transform((data) => payload).put(route('tenant.products.products.update', props.product.id))
+    form.transform((data) => payload).put(route('tenant.products.products.update', props.product.id))
 }
 </script>
 
@@ -59,6 +62,6 @@ function submit() {
     </div>
 
     <div class="mx-auto mb-20 max-w-6xl py-4">
-        <ProductForm :form="form" @submit="submit" submitText="Atualizar Produto" />
+        <ProductForm :form="form" :categories="categories" @submit="submit" submitText="Atualizar Produto" />
     </div>
 </template>

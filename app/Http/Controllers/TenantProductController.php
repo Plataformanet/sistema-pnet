@@ -2,60 +2,86 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
+use App\Http\Requests\StoreProductRequest;
+use App\Http\Requests\UpdateProductRequest;
+use App\Services\CategoryProductService;
+use App\Services\ProductService;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 
 class TenantProductController extends Controller
 {
+
+    public function __construct(
+        protected ProductService $productService,
+        protected CategoryProductService $categoryProductService
+    ) {
+    }
+
     public function index()
     {
-        return Inertia::render('tenant/products/products/list/List');
+        $products = $this->productService->findAll(tenant());
+
+        return Inertia::render('tenant/products/products/list/List', compact('products'));
     }
 
     public function create()
     {
-        return Inertia::render('tenant/products/products/create/Create');
-    }
+        $categories = $this->categoryProductService->findAll(tenant());
 
-    public function store(Request $request)
-    {
-        // Placeholder
-        return redirect()->route('tenant.products.products.list');
-    }
-
-    public function edit($id)
-    {
-        // Mock product
-        $product = [
-            'id'              => $id,
-            'name'            => 'Mouse Óptico Sem Fio',
-            'sku'             => 'INFO-MOU-001',
-            'barcode'         => '7891234567890',
-            'category_id'     => '1',
-            'cost_value'      => 2550, // cents
-            'sell_value'      => 6000,
-            'manage_stock'    => true,
-            'current_stock'   => 150,
-            'min_stock'       => 20,
-            'unit_of_measure' => 'un',
-            'description'     => 'Mouse ergonômico infravermelho de 2.4GHz.',
-            'active'          => true,
-        ];
-
-        return Inertia::render('tenant/products/products/edit/Edit', [
-            'product' => $product
+        return Inertia::render('tenant/products/products/create/Create', [
+            'categories' => $categories->toArray(),
         ]);
     }
 
-    public function update(Request $request, $id)
+    public function store(StoreProductRequest $request)
     {
-        // Placeholder
-        return redirect()->route('tenant.products.products.list');
+        try {
+            $this->productService->store($request->validated(), tenant());
+
+            return redirect()->route('tenant.products.products.list')->with('success', 'Produto criado com sucesso!');
+
+        } catch (\Throwable $th) {
+            Log::error('Erro ao criar produto: ' . $th->getMessage());
+            return redirect()->back()->with('error', 'Erro ao criar produto!');
+        }
     }
 
-    public function destroy($id)
+    public function edit(string $id)
     {
-        // Placeholder
-        return redirect()->route('tenant.products.products.list');
+        $categories = $this->categoryProductService->findAll(tenant());
+
+        $product = $this->productService->findById($id, tenant());
+
+        return Inertia::render('tenant/products/products/edit/Edit', [
+            'product'    => $product,
+            'categories' => $categories->toArray(),
+        ]);
+    }
+
+    public function update(UpdateProductRequest $request, string $id)
+    {
+        try {
+            $this->productService->update($request->validated(), $id, tenant());
+
+            return redirect()->route('tenant.products.products.list')->with('success', 'Produto atualizado com sucesso!');
+
+        } catch (\Throwable $th) {
+            Log::error('Erro ao atualizar produto: ' . $th->getMessage());
+            return redirect()->back()->with('error', 'Erro ao atualizar produto!');
+        }
+    }
+
+    public function destroy(string $id)
+    {
+        try {
+            $this->productService->delete($id, tenant());
+
+            return redirect()->route('tenant.products.products.list')->with('success', 'Produto excluído com sucesso!');
+
+        } catch (\Throwable $th) {
+            Log::error('Erro ao excluir produto: ' . $th->getMessage());
+            return redirect()->back()->with('error', 'Erro ao excluir produto!');
+        }
     }
 }
