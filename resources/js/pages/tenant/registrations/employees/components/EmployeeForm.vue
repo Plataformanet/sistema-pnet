@@ -39,7 +39,7 @@ function onSubmit() {
                 </Field>
 
                 <Field>
-                    <FieldLabel for="cpf">CPF *</FieldLabel>
+                    <FieldLabel for="cpf_cnpj">CPF *</FieldLabel>
                     <Input
                         id="cpf_cnpj"
                         :model-value="form.cpf_cnpj"

@@ -23,7 +23,7 @@ class TenantEmployeeController extends Controller
         $employees = $this->employeesService->findAll(tenant());
 
         return Inertia::render('tenant/registrations/employees/list/List', [
-            'employees' => $employees
+            'employees' => $employees->toArray(),
         ]);
     }
 
