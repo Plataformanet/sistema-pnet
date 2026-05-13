@@ -13,9 +13,8 @@ export interface Supplier {
     id: string;
     name: string;
     email: string;
-    category?: string;
-    cpf?: string;
-    cnpj?: string;
+    supply_category?: string;
+    cpf_cnpj?: string;
 }
 
 defineProps<{

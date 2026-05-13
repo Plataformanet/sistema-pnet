@@ -14,10 +14,10 @@ const props = defineProps({
         type: Object,
         required: true,
     },
-    categories: Array<{
-        id: string;
-        name: string;
-    }>,
+    categories: {
+        type: Array as () => { id: string; name: string }[],
+        required: true,
+    },
 });
 
 const form = useForm({

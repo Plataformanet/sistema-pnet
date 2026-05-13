@@ -10,43 +10,31 @@ class CategoryProductService
 {
     public function store(array $data, Tenant $tenant): CategoryProduct
     {
-        return $tenant->run(function () use ($data) {
-            return CategoryProduct::create($data);
-        });
+        return $tenant->run(fn() => CategoryProduct::create($data));
     }
 
     public function update(string $id, array $data, Tenant $tenant): bool
     {
-        return $tenant->run(function () use ($id, $data) {
-            return CategoryProduct::findOrFail($id)->update($data);
-        });
+        return $tenant->run(fn() => CategoryProduct::findOrFail($id)->update($data));
     }
 
     public function destroy(string $id, Tenant $tenant): bool
     {
-        return $tenant->run(function () use ($id) {
-            return CategoryProduct::findOrFail($id)->delete();
-        });
+        return $tenant->run(fn() => CategoryProduct::findOrFail($id)->delete());
     }
 
     public function findById(string $id, Tenant $tenant): CategoryProduct
     {
-        return $tenant->run(function () use ($id) {
-            return CategoryProduct::findOrFail($id);
-        });
+        return $tenant->run(fn() => CategoryProduct::findOrFail($id));
     }
 
     public function findAll(Tenant $tenant): Collection
     {
-        return $tenant->run(function () {
-            return CategoryProduct::all();
-        });
+        return $tenant->run(fn() => CategoryProduct::all());
     }
 
     public function findAllActive(Tenant $tenant): Collection
     {
-        return $tenant->run(function () {
-            return CategoryProduct::where('status', true)->get();
-        });
+        return $tenant->run(fn() => CategoryProduct::where('status', true)->get());
     }
 }

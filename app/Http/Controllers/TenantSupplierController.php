@@ -23,7 +23,7 @@ class TenantSupplierController extends Controller
         $suppliers = $this->supplierService->findAll(tenant());
 
         return Inertia::render('tenant/registrations/suppliers/list/List', [
-            'suppliers' => $suppliers,
+            'suppliers' => $suppliers->toArray(),
         ]);
     }
 

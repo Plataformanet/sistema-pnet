@@ -47,7 +47,7 @@ class TenantClientController extends Controller
         }
     }
 
-    public function show($id)
+    public function show(string $id)
     {
         $client = $this->clientService->findById($id, tenant());
 
@@ -56,7 +56,7 @@ class TenantClientController extends Controller
         ]);
     }
 
-    public function edit($id)
+    public function edit(string $id)
     {
         $client = $this->clientService->findById($id, tenant());
 
@@ -65,7 +65,7 @@ class TenantClientController extends Controller
         ]);
     }
 
-    public function update(UpdateContactRequest $request, $id)
+    public function update(UpdateContactRequest $request, string $id)
     {
         try {
             $contact = $this->contactService->update($request->validated(), tenant(), $id);
@@ -79,7 +79,7 @@ class TenantClientController extends Controller
         }
     }
 
-    public function destroy($id)
+    public function destroy(string $id)
     {
         try {
             $this->contactService->destroy(tenant(), $id);

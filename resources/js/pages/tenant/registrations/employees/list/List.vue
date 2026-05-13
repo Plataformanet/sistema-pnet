@@ -12,7 +12,7 @@ defineOptions({ layout: TenantLayout });
 export interface Employee {
     id: string;
     name: string;
-    cpf?: string;
+    cpf_cnpj?: string;
     position?: string;
     email: string;
 }

@@ -44,7 +44,7 @@ export const columns: ColumnDef<Supplier>[] = [
         },
     },
     {
-        accessorKey: "category",
+        accessorKey: "supply_category",
         header: ({ column }) => {
             return h(
                 Button,
@@ -59,7 +59,7 @@ export const columns: ColumnDef<Supplier>[] = [
             )
         },
         cell: ({ row }) => {
-            return row.getValue("category") ?? "-----";
+            return row.getValue("supply_category") ?? "-----";
         },
     },
     {

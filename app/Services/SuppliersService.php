@@ -58,22 +58,19 @@ class SuppliersService
 
     public function findById(string $id, Tenant $tenant)
     {
-        return $tenant->run(function () use ($id) {
-            return Supplier::with(['contact', 'contact.address'])->where('contact_id', $id)->firstOrFail();
-        });
+        return $tenant->run(fn() => Supplier::with(['contact', 'contact.address'])->where('contact_id', $id)->firstOrFail());
     }
 
     public function findAll(Tenant $tenant)
     {
-        return $tenant->run(function () {
-            return Supplier::with(['contact'])->get()->map(function ($supplier) {
-                return [
-                    'id'       => $supplier->contact->id,
-                    'name'     => $supplier->contact->name_corporatereason,
-                    'email'    => $supplier->contact->email,
-                    'cpf_cnpj' => $supplier->contact->cpf_cnpj,
-                ];
-            });
-        });
+        return $tenant->run(fn() => Supplier::with(['contact'])->get()->map(function ($supplier) {
+            return [
+                'id'              => $supplier->contact->id,
+                'name'            => $supplier->contact->name_corporatereason,
+                'email'           => $supplier->contact->email,
+                'cpf_cnpj'        => $supplier->contact->cpf_cnpj,
+                'supply_category' => $supplier->supply_category,
+            ];
+        }));
     }
 }
