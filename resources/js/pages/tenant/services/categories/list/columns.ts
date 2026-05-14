@@ -23,15 +23,15 @@ export const columns: ColumnDef<Category>[] = [
         },
     },
     {
-        accessorKey: "active",
+        accessorKey: "status",
         header: "Status",
         cell: ({ row }) => {
-            const isActive = row.original.active;
+            const isActive = row.original.status;
             return h(
                 "span",
                 {
-                    class: isActive 
-                        ? "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold bg-green-100 text-green-800" 
+                    class: isActive
+                        ? "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold bg-green-100 text-green-800"
                         : "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold bg-red-100 text-red-800"
                 },
                 isActive ? "Ativa" : "Inativa"

@@ -15,11 +15,16 @@ const form = useForm({
     cost_value: "",
     sell_value: "",
     fees: "",
-    category_id: "",
+    category_service_id: "",
     description: "",
     duration: "",
-    active: true,
+    status: true,
 });
+
+defineProps<{ categories: Array<{
+    id: string;
+    name: string;
+}> }>();
 
 function submit() {
     const payload = {
@@ -28,8 +33,7 @@ function submit() {
         sell_value: parseCurrencyToCents(form.sell_value as string),
         fees: parseCurrencyToCents(form.fees as string),
     };
-    console.log("Enviando dados do formulário:", payload);
-    // form.transform((data) => payload).post(route('tenant.services.services.store'))
+    form.transform((data) => payload).post(route('tenant.services.services.store'))
 }
 </script>
 
@@ -50,6 +54,6 @@ function submit() {
     </div>
 
     <div class="mx-auto mb-20 max-w-6xl py-4">
-        <ServiceForm :form="form" @submit="submit" />
+        <ServiceForm :form="form" :categories="categories" @submit="submit" />
     </div>
 </template>
