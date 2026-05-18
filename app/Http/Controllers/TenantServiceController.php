@@ -37,8 +37,6 @@ class TenantServiceController extends Controller
 
     public function store(StoreServiceRequest $request)
     {
-        dd($request->validated());
-
         try {
             $this->servicesService->store($request->validated(), tenant());
 

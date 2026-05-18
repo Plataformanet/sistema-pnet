@@ -22,44 +22,9 @@ export interface Service {
     active: boolean;
 }
 
-const services: Service[] = [
-    {
-        id: "1",
-        name: "Consultoria Inicial",
-        sku: "SRV-001",
-        cost_value: 0,
-        sell_value: 15000,
-        fees: 0,
-        category_id: "1",
-        description: "Reunião de alinhamento com o cliente para entender a demanda.",
-        duration: "60",
-        active: true,
-    },
-    {
-        id: "2",
-        name: "Desenvolvimento de Projeto",
-        sku: "SRV-002",
-        cost_value: 50000,
-        sell_value: 250000,
-        fees: 10000,
-        category_id: "2",
-        description: "Elaboração de um projeto completo com base no escopo definido.",
-        duration: "1800",
-        active: true,
-    },
-    {
-        id: "3",
-        name: "Suporte Técnico Mensal",
-        sku: "SRV-003",
-        cost_value: 15000,
-        sell_value: 60000,
-        fees: 5000,
-        category_id: "3",
-        description: "Pacote de suporte técnico com até 10 horas mensais.",
-        duration: "600",
-        active: false,
-    },
-];
+const props = defineProps<{
+    services: Service[];
+}>();
 </script>
 
 <template>
