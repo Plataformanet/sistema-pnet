@@ -23,7 +23,7 @@ class TenantClientController extends Controller
         $clients = $this->clientService->findAll(tenant());
 
         return Inertia::render('tenant/registrations/clients/list/List', [
-            'clients' => $clients,
+            'clients' => $clients->toArray(),
         ]);
     }
 
