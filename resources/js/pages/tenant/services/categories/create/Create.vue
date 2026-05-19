@@ -1,3 +1,4 @@
+
 <script setup lang="ts">
 import { Head, Link, useForm } from "@inertiajs/vue3";
 import TenantLayout from "@/layouts/tenant-layout/TenantLayout.vue";
@@ -10,12 +11,11 @@ defineOptions({ layout: TenantLayout });
 
 const form = useForm({
     name: "",
-    active: true,
+    status: true,
 });
 
 function submit() {
-    console.log("Enviando dados do formulário:", form.data());
-    // form.post(route('tenant.services.categories.store'))
+    form.post(route('tenant.services.categories.store'))
 }
 </script>
 

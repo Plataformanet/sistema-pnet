@@ -17,12 +17,11 @@ const props = defineProps({
 
 const form = useForm({
     name: props.category.name || "",
-    active: props.category.active ?? true,
+    status: props.category.active ?? true,
 });
 
 function submit() {
-    console.log("Atualizando dados do formulário:", form.data());
-    // form.put(route('tenant.services.categories.update', props.category.id))
+    form.put(route('tenant.services.categories.update', props.category.id))
 }
 </script>
 

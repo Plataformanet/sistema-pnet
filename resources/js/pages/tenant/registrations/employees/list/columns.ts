@@ -40,7 +40,7 @@ export const columns: ColumnDef<Employee>[] = [
     },
     {
         id: "document",
-        accessorKey: "cpf_cnpj",
+        accessorFn: (row) => row.cpf_cnpj,
         header: ({ column }) => {
             return h(
                 Button,
@@ -55,8 +55,8 @@ export const columns: ColumnDef<Employee>[] = [
             )
         },
         cell: ({ row }) => {
-            const cpf_cnpj = row.getValue("cpf_cnpj");
-            return cpf_cnpj ?? "-----";
+            const cpf_cnpj = row.original.cpf_cnpj;
+            return cpf_cnpj ? cpf_cnpj : "-----";
         },
     },
     {

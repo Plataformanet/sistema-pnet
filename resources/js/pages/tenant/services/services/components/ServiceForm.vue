@@ -17,6 +17,7 @@ import { useForm } from "@inertiajs/vue3";
 
 const props = withDefaults(defineProps<{
     form: ReturnType<typeof useForm>;
+    categories: Array<{ id: string; name: string }>;
     submitText?: string;
 }>(), {
     submitText: "Salvar Serviço",
@@ -56,29 +57,25 @@ function onSubmit() {
                 </Field>
 
                 <Field>
-                    <FieldLabel for="category_id"
+                    <FieldLabel for="category_service_id"
                         >Categoria de Serviço</FieldLabel
                     >
-                    <Select v-model="form.category_id">
-                        <SelectTrigger id="category_id">
+                    <Select v-model="form.category_service_id">
+                        <SelectTrigger id="category_service_id">
                             <SelectValue
                                 placeholder="Selecione uma categoria"
                             />
                         </SelectTrigger>
                         <SelectContent>
                             <SelectGroup>
-                                <SelectItem value="1">Consultoria</SelectItem>
-                                <SelectItem value="2"
-                                    >Desenvolvimento</SelectItem
-                                >
-                                <SelectItem value="3"
-                                    >Suporte e Manutenção</SelectItem
-                                >
+                                <SelectItem v-for="category in categories" :key="category.id" :value="category.id">
+                                    {{ category.name }}
+                                </SelectItem>
                             </SelectGroup>
                         </SelectContent>
                     </Select>
-                    <FieldError v-if="form.errors.category_id">{{
-                        form.errors.category_id
+                    <FieldError v-if="form.errors.category_service_id">{{
+                        form.errors.category_service_id
                     }}</FieldError>
                 </Field>
             </div>

@@ -19,80 +19,80 @@ class PermissionSeeder extends Seeder
 
             'registrations' => [
                 'registrations.clients.view',
-                'registrations.clients.update',
+                'registrations.clients.edit',
                 'registrations.clients.create',
                 'registrations.clients.delete',
 
                 'registrations.suppliers.view',
-                'registrations.suppliers.update',
+                'registrations.suppliers.edit',
                 'registrations.suppliers.create',
                 'registrations.suppliers.delete',
 
                 'registrations.employees.view',
-                'registrations.employees.update',
+                'registrations.employees.edit',
                 'registrations.employees.create',
                 'registrations.employees.delete',
 
                 'registrations.users.view',
-                'registrations.users.update',
+                'registrations.users.edit',
                 'registrations.users.create',
                 'registrations.users.delete',
             ],
 
             'sales'         => [
                 'sales.sales.view',
-                'sales.sales.update',
+                'sales.sales.edit',
                 'sales.sales.create',
                 'sales.sales.delete',
 
                 'sales.quotations.view',
-                'sales.quotations.update',
+                'sales.quotations.edit',
                 'sales.quotations.create',
                 'sales.quotations.delete',
             ],
 
             'services'      => [
                 'services.services.view',
-                'services.services.update',
+                'services.services.edit',
                 'services.services.create',
                 'services.services.delete',
 
                 'services.categories.view',
-                'services.categories.update',
+                'services.categories.edit',
                 'services.categories.create',
                 'services.categories.delete',
             ],
 
             'products'      => [
                 'products.products.view',
-                'products.products.update',
+                'products.products.edit',
                 'products.products.create',
                 'products.products.delete',
 
                 'products.categories.view',
-                'products.categories.update',
+                'products.categories.edit',
                 'products.categories.create',
                 'products.categories.delete',
             ],
 
             'finance'       => [
                 'finance.categories.view',
-                'finance.categories.update',
+                'finance.categories.edit',
                 'finance.categories.create',
                 'finance.categories.delete',
 
                 'finance.accounts.view',
-                'finance.accounts.update',
+                'finance.accounts.edit',
                 'finance.accounts.create',
                 'finance.accounts.delete',
 
                 'finance.accounts_payable.view',
-                'finance.accounts_payable.update',
+                'finance.accounts_payable.edit',
                 'finance.accounts_payable.create',
                 'finance.accounts_payable.delete',
 
                 'finance.accounts_receivable.view',
-                'finance.accounts_receivable.update',
+                'finance.accounts_receivable.edit',
                 'finance.accounts_receivable.create',
                 'finance.accounts_receivable.delete',
 
@@ -105,17 +105,17 @@ class PermissionSeeder extends Seeder
 
             'documents'     => [
                 'documents.proposals.view',
-                'documents.proposals.update',
+                'documents.proposals.edit',
                 'documents.proposals.create',
                 'documents.proposals.delete',
 
                 'documents.itbi_calculator.view',
-                'documents.itbi_calculator.update',
+                'documents.itbi_calculator.edit',
                 'documents.itbi_calculator.create',
                 'documents.itbi_calculator.delete',
 
                 'documents.contracts.view',
-                'documents.contracts.update',
+                'documents.contracts.edit',
                 'documents.contracts.create',
                 'documents.contracts.delete',
             ],

@@ -13,6 +13,10 @@ const props = defineProps({
     service: {
         type: Object,
         required: true,
+        },
+    categories: {
+        type: Array as () => { id: string; name: string }[],
+        required: true,
     },
 });
 
@@ -22,10 +26,10 @@ const form = useForm({
     cost_value: props.service.cost_value !== undefined ? maskCurrency(String(props.service.cost_value)) : "",
     sell_value: props.service.sell_value !== undefined ? maskCurrency(String(props.service.sell_value)) : "",
     fees: props.service.fees !== undefined ? maskCurrency(String(props.service.fees)) : "",
-    category_id: props.service.category_id || "",
+    category_service_id: props.service.category_service_id || "",
     description: props.service.description || "",
     duration: props.service.duration || "",
-    active: props.service.active ?? true,
+    status: props.service.status ?? true,
 });
 
 function submit() {
@@ -35,8 +39,7 @@ function submit() {
         sell_value: parseCurrencyToCents(form.sell_value as string),
         fees: parseCurrencyToCents(form.fees as string),
     };
-    console.log("Atualizando dados do formulário:", payload);
-    // form.transform((data) => payload).put(route('tenant.services.services.update', props.service.id))
+    form.transform((data) => payload).put(route('tenant.services.services.update', props.service.id))
 }
 </script>
 
@@ -57,6 +60,6 @@ function submit() {
     </div>
 
     <div class="mx-auto mb-20 max-w-6xl py-4">
-        <ServiceForm :form="form" @submit="submit" submitText="Atualizar Serviço" />
+        <ServiceForm :form="form" :categories="categories" @submit="submit" submitText="Atualizar Serviço" />
     </div>
 </template>
