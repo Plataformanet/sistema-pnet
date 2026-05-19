@@ -29,13 +29,18 @@ const props = defineProps<{
         <DropdownMenuContent align="end">
             <DropdownMenuLabel>Ações</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem @click="console.log('Visualizar', client.id)">
+            <DropdownMenuItem
+                @click="console.log('Visualizar', client.contact?.id)"
+            >
                 <Eye class="mr-2 h-4 w-4" /> Visualizar
             </DropdownMenuItem>
             <DropdownMenuItem as-child>
                 <Link
                     :href="
-                        route('tenant.registrations.clients.edit', client.id)
+                        route(
+                            'tenant.registrations.clients.edit',
+                            client.contact?.id,
+                        )
                     "
                     class="flex w-full cursor-pointer items-center"
                 >
@@ -44,7 +49,7 @@ const props = defineProps<{
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
-                @click="console.log('Excluir', client.id)"
+                @click="console.log('Excluir', client.contact?.id)"
                 class="text-red-600"
             >
                 <Trash class="mr-2 h-4 w-4" /> Excluir

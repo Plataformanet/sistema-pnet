@@ -59,10 +59,12 @@ class ClientService
     {
         return $tenant->run(fn() => Client::with(['contact'])->get()->map(function ($client) {
             return [
-                'id'       => $client->contact->id,
-                'name'     => $client->contact->name_corporatereason,
-                'email'    => $client->contact->email,
-                'cpf_cnpj' => $client->contact->cpf_cnpj,
+                'contact' => [
+                    'id' => $client->contact->id,
+                    'name_corporatereason' => $client->contact->name_corporatereason,
+                    'email' => $client->contact->email,
+                    'cpf_cnpj' => $client->contact->cpf_cnpj,
+                ]
             ];
         }));
     }

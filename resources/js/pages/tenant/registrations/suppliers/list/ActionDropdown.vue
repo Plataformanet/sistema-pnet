@@ -29,7 +29,9 @@ const props = defineProps<{
         <DropdownMenuContent align="end">
             <DropdownMenuLabel>Ações</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem @click="console.log('Visualizar', supplier.id)">
+            <DropdownMenuItem
+                @click="console.log('Visualizar', supplier.contact.id)"
+            >
                 <Eye class="mr-2 h-4 w-4" /> Visualizar
             </DropdownMenuItem>
             <DropdownMenuItem as-child>
@@ -37,7 +39,7 @@ const props = defineProps<{
                     :href="
                         route(
                             'tenant.registrations.suppliers.edit',
-                            supplier.id,
+                            supplier.contact.id,
                         )
                     "
                     class="flex w-full cursor-pointer items-center"
@@ -47,7 +49,7 @@ const props = defineProps<{
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
-                @click="console.log('Excluir', supplier.id)"
+                @click="console.log('Excluir', supplier.contact.id)"
                 class="text-red-600"
             >
                 <Trash class="mr-2 h-4 w-4" /> Excluir

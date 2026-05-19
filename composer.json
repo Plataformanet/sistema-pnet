@@ -73,6 +73,13 @@
         ],
         "pre-package-uninstall": [
             "Illuminate\\Foundation\\ComposerScripts::prePackageUninstall"
+        ],
+        "tenants-migrate-fresh": [
+            "@php artisan tenants:migrate-fresh"
+        ],
+        "central-migrate-fresh-seed": [
+            "@php artisan migrate:fresh",
+            "@php artisan migrate --path=database/migrations/central --seed"
         ]
     },
     "extra": {

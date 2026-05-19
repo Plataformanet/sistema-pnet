@@ -6,20 +6,15 @@ import { columns } from "@/pages/tenant/registrations/clients/list/columns";
 import { route } from "ziggy-js";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-vue-next";
+import { Client } from "@/types";
 
 defineOptions({ layout: TenantLayout });
 
-export interface Client {
-    id: string;
-    name: string;
-    email: string;
-    cpf_cnpj?: string;
-    // cnpj?: string;
-}
-
-defineProps<{
+const props = defineProps<{
     clients: Client[];
 }>();
+
+console.log(props.clients);
 </script>
 
 <template>

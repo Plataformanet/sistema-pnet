@@ -1,5 +1,5 @@
 import { h } from "vue";
-import { Client } from "./List.vue";
+import { Client } from "@/types";
 import { ArrowUpDown, ChevronDown } from 'lucide-vue-next'
 import { ColumnDef } from "@tanstack/vue-table";
 import { Button } from "@/components/ui/button";
@@ -7,7 +7,7 @@ import ActionDropdown from "./ActionDropdown.vue";
 
 export const columns: ColumnDef<Client>[] = [
     {
-        accessorKey: "name",
+        accessorKey: "contact.name_corporatereason",
         header: ({ column }) => {
             return h(
                 Button,
@@ -24,7 +24,7 @@ export const columns: ColumnDef<Client>[] = [
     },
     {
         id: "document",
-        accessorFn: (row) => row.cpf_cnpj,
+        accessorFn: (row) => row.contact?.cpf_cnpj,
         header: ({ column }) => {
             return h(
                 Button,
@@ -39,12 +39,12 @@ export const columns: ColumnDef<Client>[] = [
             )
         },
         cell: ({ row }) => {
-            const cpf_cnpj = row.original.cpf_cnpj;
+            const cpf_cnpj = row.original.contact?.cpf_cnpj;
             return cpf_cnpj ? cpf_cnpj : "-----";
         },
     },
     {
-        accessorKey: "email",
+        accessorKey: "contact.email",
         header: ({ column }) => {
             return h(
                 Button,
