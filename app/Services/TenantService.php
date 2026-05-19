@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\RolesEnum;
 use App\Models\Module;
 use App\Models\Plan;
 use App\Models\Tenant;
@@ -45,13 +46,7 @@ class TenantService
 
             }
 
-            $roles = [
-                'Admin',
-                'Seller',
-                'Manager',
-                'Financial',
-                'Partner'
-            ];
+            $roles = RolesEnum::all();
 
             $tenant->run(function () use ($data, $arrayOfPermissionNames, $roles) {
                 DB::beginTransaction();
@@ -138,44 +133,5 @@ class TenantService
         }
 
         return true;
-    }
-
-    /**
-     * Provisionar novo tenant
-     */
-    public function provision(array $data)
-    {
-        DB::transaction(function () use ($data) {
-            // 1. Criar tenant
-            $tenant = Tenant::create([
-                'name'          => $data['company_name'],
-                'plan_id'       => $data['plan_id'],
-                'is_active'     => true,
-                'trial_ends_at' => now()->addDays(30),
-            ]);
-
-            // 2. Criar domínio
-            $tenant->domains()->create([
-                'domain'      => $data['subdomain'] . '.seuapp.com',
-                'is_primary'  => true,
-                'verified_at' => now(),
-            ]);
-
-            // 3. Ativar módulos incluídos no plano
-            $plan            = Plan::find($data['plan_id']);
-            $includedModules = $plan->includedModules;
-
-            foreach ($includedModules as $module) {
-                $tenant->modules()->attach($module->id, [
-                    'is_active'    => true,
-                    'activated_at' => now(),
-                ]);
-            }
-
-            // 4. Criar banco de dados do tenant
-            // (stancl/tenancy faz isso automaticamente)
-
-            return $tenant;
-        });
     }
 }

@@ -23,4 +23,15 @@ enum RolesEnum: string
             static::PARTNER => 'Parceiro',
         };
     }
+
+    public static function all()
+    {
+        return [
+            self::ADMIN->label(),
+            self::SELLER->label(),
+            self::MANAGER->label(),
+            self::FINANCIAL->label(),
+            self::PARTNER->label(),
+        ];
+    }
 }
