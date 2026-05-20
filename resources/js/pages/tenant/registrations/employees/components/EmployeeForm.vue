@@ -3,7 +3,7 @@ import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import FieldError from "@/components/ui/field/FieldError.vue";
-import { maskCPF, maskPhone, maskCEP } from "@/lib/masks";
+import { maskCPF, maskPhone, maskCEP, maskRG, maskCurrency, handleMask, onRGKeypress } from "@/lib/masks";
 
 import { useForm } from "@inertiajs/vue3";
 
@@ -43,7 +43,7 @@ function onSubmit() {
                     <Input
                         id="cpf_cnpj"
                         :model-value="form.cpf_cnpj"
-                        @update:model-value="form.cpf_cnpj = maskCPF($event as string)"
+                        @input="handleMask($event, maskCPF, val => form.cpf_cnpj = val)"
                         required
                         placeholder="000.000.000-00"
                         maxlength="14"
@@ -53,7 +53,14 @@ function onSubmit() {
 
                 <Field>
                     <FieldLabel for="rg">RG</FieldLabel>
-                    <Input id="rg" v-model="form.rg" placeholder="00.000.000-0" />
+                    <Input
+                        id="rg"
+                        :model-value="form.rg"
+                        @input="handleMask($event, maskRG, val => form.rg = val)"
+                        @keypress="onRGKeypress"
+                        placeholder="00.000.000-0"
+                        maxlength="12"
+                    />
                     <FieldError v-if="form.errors.rg">{{ form.errors.rg }}</FieldError>
                 </Field>
 
@@ -80,8 +87,12 @@ function onSubmit() {
 
                 <Field>
                     <FieldLabel for="salary">Salário Bruto</FieldLabel>
-                    <!-- In a real app we might want a mask for money, simplified here -->
-                    <Input id="salary" v-model="form.salary" placeholder="R$ 0,00" />
+                    <Input
+                        id="salary"
+                        :model-value="form.salary"
+                        @input="handleMask($event, maskCurrency, val => form.salary = val)"
+                        placeholder="R$ 0,00"
+                    />
                     <FieldError v-if="form.errors.salary">{{ form.errors.salary }}</FieldError>
                 </Field>
 
@@ -109,7 +120,7 @@ function onSubmit() {
                     <Input
                         id="phone"
                         :model-value="form.phone"
-                        @update:model-value="form.phone = maskPhone($event as string)"
+                        @input="handleMask($event, maskPhone, val => form.phone = val)"
                         placeholder="(00) 0000-0000"
                         maxlength="15"
                     />
@@ -121,7 +132,7 @@ function onSubmit() {
                     <Input
                         id="cell_phone"
                         :model-value="form.cell_phone"
-                        @update:model-value="form.cell_phone = maskPhone($event as string)"
+                        @input="handleMask($event, maskPhone, val => form.cell_phone = val)"
                         placeholder="(00) 00000-0000"
                         maxlength="15"
                     />
@@ -140,7 +151,7 @@ function onSubmit() {
                     <Input
                         id="zip_code"
                         :model-value="form.zip_code"
-                        @update:model-value="form.zip_code = maskCEP($event as string)"
+                        @input="handleMask($event, maskCEP, val => form.zip_code = val)"
                         placeholder="00000-000"
                         maxlength="9"
                     />

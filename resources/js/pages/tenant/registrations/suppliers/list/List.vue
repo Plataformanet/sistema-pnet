@@ -6,16 +6,10 @@ import { columns } from "@/pages/tenant/registrations/suppliers/list/columns";
 import { route } from "ziggy-js";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-vue-next";
+import { Supplier } from "@/types";
 
 defineOptions({ layout: TenantLayout });
 
-export interface Supplier {
-    id: string;
-    name: string;
-    email: string;
-    supply_category?: string;
-    cpf_cnpj?: string;
-}
 
 defineProps<{
     suppliers: Supplier[];

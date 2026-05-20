@@ -36,10 +36,10 @@ export const columns: ColumnDef<Service>[] = [
         }
     },
     {
-        accessorKey: "status",
+        accessorKey: "active",
         header: "Status",
         cell: ({ row }) => {
-            const isActive = row.original.status;
+            const isActive = row.original.active;
             return h(
                 "span",
                 {

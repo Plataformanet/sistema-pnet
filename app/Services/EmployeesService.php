@@ -18,11 +18,11 @@ class EmployeesService
             try {
 
                 $contact->employee()->create([
-                    'rg'         => $data['rg'],
+                    'rg' => $data['rg'],
                     'birth_date' => $data['birth_date'],
-                    'position'   => $data['position'],
-                    'salary'     => $data['salary'],
-                    'hire_date'  => $data['hire_date'],
+                    'position' => $data['position'],
+                    'salary' => $data['salary'],
+                    'hire_date' => $data['hire_date'],
                 ]);
 
                 DB::commit();
@@ -43,11 +43,11 @@ class EmployeesService
 
             try {
                 $contact->employee()->update([
-                    'rg'         => $data['rg'],
+                    'rg' => $data['rg'],
                     'birth_date' => $data['birth_date'],
-                    'position'   => $data['position'],
-                    'salary'     => $data['salary'],
-                    'hire_date'  => $data['hire_date'],
+                    'position' => $data['position'],
+                    'salary' => $data['salary'],
+                    'hire_date' => $data['hire_date'],
                 ]);
 
                 DB::commit();
@@ -62,17 +62,19 @@ class EmployeesService
 
     public function findById(string $id, Tenant $tenant)
     {
-        return $tenant->run(fn() => Employee::with(['contact', 'contact.address'])->where('contact_id', $id)->firstOrFail());
+        return $tenant->run(fn () => Employee::with(['contact', 'contact.address'])->where('contact_id', $id)->firstOrFail());
     }
 
     public function findAll(Tenant $tenant)
     {
-        return $tenant->run(fn() => Employee::with(['contact'])->get()->map(function ($employee) {
+        return $tenant->run(fn () => Employee::with(['contact'])->get()->map(function ($employee) {
             return [
-                'id'       => $employee->contact->id,
-                'name'     => $employee->contact->name_corporatereason,
-                'email'    => $employee->contact->email,
-                'cpf_cnpj' => $employee->contact->cpf_cnpj,
+                'contact' => [
+                    'id' => $employee->contact->id,
+                    'name_corporatereason' => $employee->contact->name_corporatereason,
+                    'email' => $employee->contact->email,
+                    'cpf_cnpj' => $employee->contact->cpf_cnpj,
+                ],
                 'position' => $employee->position,
             ];
         }));

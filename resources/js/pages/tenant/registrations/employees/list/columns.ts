@@ -8,22 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 
 export const columns: ColumnDef<Employee>[] = [
     {
-        id: "select",
-        header: ({ table }) => h(Checkbox, {
-            "checked": table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && "indeterminate"),
-            "onUpdate:checked": (value: boolean) => table.toggleAllPageRowsSelected(!!value),
-            "ariaLabel": "Select all",
-        }),
-        cell: ({ row }) => h(Checkbox, {
-            "checked": row.getIsSelected(),
-            "onUpdate:checked": (value: boolean) => row.toggleSelected(!!value),
-            "ariaLabel": "Select row",
-        }),
-        enableSorting: false,
-        enableHiding: false,
-    },
-    {
-        accessorKey: "name",
+        accessorKey: "contact.name_corporatereason",
         header: ({ column }) => {
             return h(
                 Button,
@@ -40,7 +25,7 @@ export const columns: ColumnDef<Employee>[] = [
     },
     {
         id: "document",
-        accessorFn: (row) => row.cpf_cnpj,
+        accessorFn: (row) => row.contact?.cpf_cnpj,
         header: ({ column }) => {
             return h(
                 Button,
@@ -55,7 +40,7 @@ export const columns: ColumnDef<Employee>[] = [
             )
         },
         cell: ({ row }) => {
-            const cpf_cnpj = row.original.cpf_cnpj;
+            const cpf_cnpj = row.original?.contact?.cpf_cnpj;
             return cpf_cnpj ? cpf_cnpj : "-----";
         },
     },
@@ -79,7 +64,7 @@ export const columns: ColumnDef<Employee>[] = [
         },
     },
     {
-        accessorKey: "email",
+        accessorKey: "contact.email",
         header: ({ column }) => {
             return h(
                 Button,

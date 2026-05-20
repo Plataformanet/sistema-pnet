@@ -4,7 +4,7 @@ import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import FieldError from "@/components/ui/field/FieldError.vue";
-import { maskCPF, maskCNPJ, maskPhone, maskCEP } from "@/lib/masks";
+import { maskCPF, maskCNPJ, maskPhone, maskCEP, handleMask } from "@/lib/masks";
 
 import { useForm } from "@inertiajs/vue3";
 
@@ -85,9 +85,7 @@ function onSubmit() {
                         <Input
                             id="cpf_cnpj"
                             :model-value="form.cpf_cnpj"
-                            @update:model-value="
-                                form.cpf_cnpj = maskCPF($event as string)
-                            "
+                            @input="handleMask($event, maskCPF, val => form.cpf_cnpj = val)"
                             required
                             placeholder="000.000.000-00"
                             maxlength="14"
@@ -116,9 +114,7 @@ function onSubmit() {
                         <Input
                             id="cpf_cnpj"
                             :model-value="form.cpf_cnpj"
-                            @update:model-value="
-                                form.cpf_cnpj = maskCNPJ($event as string)
-                            "
+                            @input="handleMask($event, maskCNPJ, val => form.cpf_cnpj = val)"
                             required
                             placeholder="00.000.000/0001-00"
                             maxlength="18"
@@ -160,9 +156,7 @@ function onSubmit() {
                     <Input
                         id="phone"
                         :model-value="form.phone"
-                        @update:model-value="
-                            form.phone = maskPhone($event as string)
-                        "
+                        @input="handleMask($event, maskPhone, val => form.phone = val)"
                         placeholder="(00) 0000-0000"
                         maxlength="15"
                     />
@@ -176,9 +170,7 @@ function onSubmit() {
                     <Input
                         id="cell_phone"
                         :model-value="form.cell_phone"
-                        @update:model-value="
-                            form.cell_phone = maskPhone($event as string)
-                        "
+                        @input="handleMask($event, maskPhone, val => form.cell_phone = val)"
                         placeholder="(00) 00000-0000"
                         maxlength="15"
                     />
@@ -199,9 +191,7 @@ function onSubmit() {
                     <Input
                         id="zip_code"
                         :model-value="form.zip_code"
-                        @update:model-value="
-                            form.zip_code = maskCEP($event as string)
-                        "
+                        @input="handleMask($event, maskCEP, val => form.zip_code = val)"
                         placeholder="00000-000"
                         maxlength="9"
                     />

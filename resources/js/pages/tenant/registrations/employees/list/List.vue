@@ -6,16 +6,9 @@ import { columns } from "@/pages/tenant/registrations/employees/list/columns";
 import { route } from "ziggy-js";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-vue-next";
+import { Employee } from "@/types";
 
 defineOptions({ layout: TenantLayout });
-
-export interface Employee {
-    id: string;
-    name: string;
-    cpf_cnpj?: string;
-    position?: string;
-    email: string;
-}
 
 defineProps<{
     employees: Employee[];

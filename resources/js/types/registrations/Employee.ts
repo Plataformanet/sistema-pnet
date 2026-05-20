@@ -1,26 +1,12 @@
+import { Contact } from "./Contact";
+
 export interface Employee {
     rg?: string;
     birth_date?: string;
     position?: string;
     salary?: string;
     hire_date?: string;
-    contact?: {
-        id: string | number;
-        name_corporatereason?: string;
-        cpf_cnpj?: string;
-        email?: string;
-        phone?: string;
-        cell_phone?: string;
-        address?: {
-            zip_code?: string;
-            street?: string;
-            number?: string;
-            complement?: string;
-            neighborhood?: string;
-            city?: string;
-            state?: string;
-        };
-    };
+    contact?: Contact;
     status?: string;
     role?: string;
     created_at?: string;
