@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Models\Contact;
 use App\Models\Supplier;
-use App\Models\Suppliers;
 use App\Models\Tenant;
 use DB;
 
@@ -19,8 +18,8 @@ class SuppliersService
 
                 $contact->supplier()->create([
                     'responsible_person' => $data['responsible_person'],
-                    'description'        => $data['description'],
-                    'supply_category'    => $data['supply_category'],
+                    'description' => $data['description'],
+                    'supply_category' => $data['supply_category'],
                 ]);
 
                 DB::commit();
@@ -42,8 +41,8 @@ class SuppliersService
 
                 $contact->supplier()->update([
                     'responsible_person' => $data['responsible_person'],
-                    'description'        => $data['description'],
-                    'supply_category'    => $data['supply_category'],
+                    'description' => $data['description'],
+                    'supply_category' => $data['supply_category'],
                 ]);
 
                 DB::commit();
@@ -58,17 +57,19 @@ class SuppliersService
 
     public function findById(string $id, Tenant $tenant)
     {
-        return $tenant->run(fn() => Supplier::with(['contact', 'contact.address'])->where('contact_id', $id)->firstOrFail());
+        return $tenant->run(fn () => Supplier::with(['contact', 'contact.address'])->where('contact_id', $id)->firstOrFail());
     }
 
     public function findAll(Tenant $tenant)
     {
-        return $tenant->run(fn() => Supplier::with(['contact'])->get()->map(function ($supplier) {
+        return $tenant->run(fn () => Supplier::with(['contact'])->get()->map(function ($supplier) {
             return [
-                'id'              => $supplier->contact->id,
-                'name'            => $supplier->contact->name_corporatereason,
-                'email'           => $supplier->contact->email,
-                'cpf_cnpj'        => $supplier->contact->cpf_cnpj,
+                'contact' => [
+                    'id' => $supplier->contact->id,
+                    'name_corporatereason' => $supplier->contact->name_corporatereason,
+                    'email' => $supplier->contact->email,
+                    'cpf_cnpj' => $supplier->contact->cpf_cnpj,
+                ],
                 'supply_category' => $supplier->supply_category,
             ];
         }));
