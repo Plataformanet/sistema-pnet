@@ -35,4 +35,9 @@ class Contact extends Model
     {
         return $this->hasOne(Client::class);
     }
+
+    public function proponent()
+    {
+        return $this->hasOne(Proponents::class);
+    }
 }

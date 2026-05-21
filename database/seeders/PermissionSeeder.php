@@ -18,106 +18,241 @@ class PermissionSeeder extends Seeder
         $permissions = [
 
             'registrations' => [
-                'registrations.clients.view',
-                'registrations.clients.edit',
-                'registrations.clients.create',
-                'registrations.clients.delete',
 
-                'registrations.suppliers.view',
-                'registrations.suppliers.edit',
-                'registrations.suppliers.create',
-                'registrations.suppliers.delete',
+                'clients' => [
+                    'name' => [
+                        'registrations.clients.view',
+                        'registrations.clients.edit',
+                        'registrations.clients.create',
+                        'registrations.clients.delete',
+                    ],
 
-                'registrations.employees.view',
-                'registrations.employees.edit',
-                'registrations.employees.create',
-                'registrations.employees.delete',
+                    'display_name' => [
+                        'Clientes (Visualizar)',
+                        'Clientes (Editar)',
+                        'Clientes (Criar)',
+                        'Clientes (Excluir)',
+                    ],
+                ],
 
-                'registrations.users.view',
-                'registrations.users.edit',
-                'registrations.users.create',
-                'registrations.users.delete',
+                'suppliers' => [
+                    'name' => [
+                        'registrations.suppliers.view',
+                        'registrations.suppliers.edit',
+                        'registrations.suppliers.create',
+                        'registrations.suppliers.delete',
+                    ],
+                    'display_name' => [
+                        'Fornecedores (Visualizar)',
+                        'Fornecedores (Editar)',
+                        'Fornecedores (Criar)',
+                        'Fornecedores (Excluir)',
+                    ],
+                ],
+
+                'employees' => [
+                    'name' => [
+                        'registrations.employees.view',
+                        'registrations.employees.edit',
+                        'registrations.employees.create',
+                        'registrations.employees.delete',
+                    ],
+                    'display_name' => [
+                        'Funcionários (Visualizar)',
+                        'Funcionários (Editar)',
+                        'Funcionários (Criar)',
+                        'Funcionários (Excluir)',
+                    ],
+                ],
             ],
 
-            'sales'         => [
-                'sales.sales.view',
-                'sales.sales.edit',
-                'sales.sales.create',
-                'sales.sales.delete',
-
-                'sales.quotations.view',
-                'sales.quotations.edit',
-                'sales.quotations.create',
-                'sales.quotations.delete',
+            'sales' => [
+                'names' => [
+                    'sales.sales.view',
+                    'sales.sales.edit',
+                    'sales.sales.create',
+                    'sales.sales.delete',
+                ],
+                'display_name' => [
+                    'Vendas (Visualizar)',
+                    'Vendas (Editar)',
+                    'Vendas (Criar)',
+                    'Vendas (Excluir)',
+                ],
             ],
 
-            'services'      => [
-                'services.services.view',
-                'services.services.edit',
-                'services.services.create',
-                'services.services.delete',
+            'services' => [
+                'name' => [
+                    'services.services.view',
+                    'services.services.edit',
+                    'services.services.create',
+                    'services.services.delete',
+                ],
 
-                'services.categories.view',
-                'services.categories.edit',
-                'services.categories.create',
-                'services.categories.delete',
+                'display_name' => [
+                    'Serviços (Visualizar)',
+                    'Serviços (Editar)',
+                    'Serviços (Criar)',
+                    'Serviços (Excluir)',
+                ],
             ],
 
-            'products'      => [
-                'products.products.view',
-                'products.products.edit',
-                'products.products.create',
-                'products.products.delete',
-
-                'products.categories.view',
-                'products.categories.edit',
-                'products.categories.create',
-                'products.categories.delete',
+            'products' => [
+                'name' => [
+                    'products.products.view',
+                    'products.products.edit',
+                    'products.products.create',
+                    'products.products.delete',
+                ],
+                'display_name' => [
+                    'Produtos (Visualizar)',
+                    'Produtos (Editar)',
+                    'Produtos (Criar)',
+                    'Produtos (Excluir)',
+                ],
             ],
 
-            'finance'       => [
-                'finance.categories.view',
-                'finance.categories.edit',
-                'finance.categories.create',
-                'finance.categories.delete',
-
-                'finance.accounts.view',
-                'finance.accounts.edit',
-                'finance.accounts.create',
-                'finance.accounts.delete',
-
-                'finance.accounts_payable.view',
-                'finance.accounts_payable.edit',
-                'finance.accounts_payable.create',
-                'finance.accounts_payable.delete',
-
-                'finance.accounts_receivable.view',
-                'finance.accounts_receivable.edit',
-                'finance.accounts_receivable.create',
-                'finance.accounts_receivable.delete',
-
-                'finance.cash_flow.view',
-
-                'finance.expenses_flow.view',
-
-                'finance.billing.view',
+            'finance' => [
+                'categories' => [
+                    'name' => [
+                        'finance.categories.view',
+                        'finance.categories.edit',
+                        'finance.categories.create',
+                        'finance.categories.delete',
+                    ],
+                    'display_name' => [
+                        'Categorias (Visualizar)',
+                        'Categorias (Editar)',
+                        'Categorias (Criar)',
+                        'Categorias (Excluir)',
+                    ],
+                ],
+                'accounts' => [
+                    'name' => [
+                        'finance.accounts.view',
+                        'finance.accounts.edit',
+                        'finance.accounts.create',
+                        'finance.accounts.delete',
+                    ],
+                    'display_name' => [
+                        'Contas (Visualizar)',
+                        'Contas (Editar)',
+                        'Contas (Criar)',
+                        'Contas (Excluir)',
+                    ],
+                ],
+                'accounts_payable' => [
+                    'name' => [
+                        'finance.accounts_payable.view',
+                        'finance.accounts_payable.edit',
+                        'finance.accounts_payable.create',
+                        'finance.accounts_payable.delete',
+                    ],
+                    'display_name' => [
+                        'Contas a Pagar (Visualizar)',
+                        'Contas a Pagar (Editar)',
+                        'Contas a Pagar (Criar)',
+                        'Contas a Pagar (Excluir)',
+                    ],
+                ],
+                'accounts_receivable' => [
+                    'name' => [
+                        'finance.accounts_receivable.view',
+                        'finance.accounts_receivable.edit',
+                        'finance.accounts_receivable.create',
+                        'finance.accounts_receivable.delete',
+                    ],
+                    'display_name' => [
+                        'Contas a Receber (Visualizar)',
+                        'Contas a Receber (Editar)',
+                        'Contas a Receber (Criar)',
+                        'Contas a Receber (Excluir)',
+                    ],
+                ],
+                'cash_flow' => [
+                    'name' => [
+                        'finance.cash_flow.view',
+                    ],
+                    'display_name' => [
+                        'Fluxo de Caixa (Visualizar)',
+                    ],
+                ],
+                'expenses_flow' => [
+                    'name' => [
+                        'finance.expenses_flow.view',
+                    ],
+                    'display_name' => [
+                        'Fluxo de Despesas (Visualizar)',
+                    ],
+                ],
+                'billing' => [
+                    'name' => [
+                        'finance.billing.view',
+                    ],
+                    'display_name' => [
+                        'Faturamento (Visualizar)',
+                    ],
+                ],
             ],
 
-            'documents'     => [
-                'documents.proposals.view',
-                'documents.proposals.edit',
-                'documents.proposals.create',
-                'documents.proposals.delete',
+            'documents' => [
+                'proposals' => [
+                    'name' => [
+                        'documents.proposals.view',
+                        'documents.proposals.edit',
+                        'documents.proposals.create',
+                        'documents.proposals.delete',
+                    ],
+                    'display_name' => [
+                        'Propostas (Visualizar)',
+                        'Propostas (Editar)',
+                        'Propostas (Criar)',
+                        'Propostas (Excluir)',
+                    ],
+                ],
+                'itbi_calculator' => [
+                    'name' => [
+                        'documents.itbi_calculator.view',
+                        'documents.itbi_calculator.edit',
+                        'documents.itbi_calculator.create',
+                        'documents.itbi_calculator.delete',
+                    ],
+                    'display_name' => [
+                        'Calculadora de ITBI (Visualizar)',
+                        'Calculadora de ITBI (Editar)',
+                        'Calculadora de ITBI (Criar)',
+                        'Calculadora de ITBI (Excluir)',
+                    ],
+                ],
+                'contracts' => [
+                    'name' => [
+                        'documents.contracts.view',
+                        'documents.contracts.edit',
+                        'documents.contracts.create',
+                        'documents.contracts.delete',
+                    ],
+                    'display_name' => [
+                        'Contratos (Visualizar)',
+                        'Contratos (Editar)',
+                        'Contratos (Criar)',
+                        'Contratos (Excluir)',
+                    ],
+                ],
+            ],
 
-                'documents.itbi_calculator.view',
-                'documents.itbi_calculator.edit',
-                'documents.itbi_calculator.create',
-                'documents.itbi_calculator.delete',
-
-                'documents.contracts.view',
-                'documents.contracts.edit',
-                'documents.contracts.create',
-                'documents.contracts.delete',
+            'users' => [
+                'name' => [
+                    'settings.users.view',
+                    'settings.users.edit',
+                    'settings.users.create',
+                    'settings.users.delete',
+                ],
+                'display_name' => [
+                    'Usuários (Visualizar)',
+                    'Usuários (Editar)',
+                    'Usuários (Criar)',
+                    'Usuários (Excluir)',
+                ],
             ],
         ];
 
@@ -128,7 +263,8 @@ class PermissionSeeder extends Seeder
                 $slug = explode('.', $permission);
                 if ($slug[0] == $module->slug) {
                     Permission::insert([
-                        'name'      => $permission,
+                        'name' => $permission['name'],
+                        'display_name' => $permission['display_name'],
                         'module_id' => $module->id,
                     ]);
                 }
@@ -138,7 +274,8 @@ class PermissionSeeder extends Seeder
                 $slug = explode('.', $permission);
                 if ($slug[0] == $module->slug) {
                     Permission::insert([
-                        'name'      => $permission,
+                        'name' => $permission['name'],
+                        'display_name' => $permission['display_name'],
                         'module_id' => $module->id,
                     ]);
                 }
@@ -148,7 +285,8 @@ class PermissionSeeder extends Seeder
                 $slug = explode('.', $permission);
                 if ($slug[0] == $module->slug) {
                     Permission::insert([
-                        'name'      => $permission,
+                        'name' => $permission['name'],
+                        'display_name' => $permission['display_name'],
                         'module_id' => $module->id,
                     ]);
                 }
@@ -158,7 +296,8 @@ class PermissionSeeder extends Seeder
                 $slug = explode('.', $permission);
                 if ($slug[0] == $module->slug) {
                     Permission::insert([
-                        'name'      => $permission,
+                        'name' => $permission['name'],
+                        'display_name' => $permission['display_name'],
                         'module_id' => $module->id,
                     ]);
                 }
@@ -168,7 +307,8 @@ class PermissionSeeder extends Seeder
                 $slug = explode('.', $permission);
                 if ($slug[0] == $module->slug) {
                     Permission::insert([
-                        'name'      => $permission,
+                        'name' => $permission['name'],
+                        'display_name' => $permission['display_name'],
                         'module_id' => $module->id,
                     ]);
                 }
@@ -178,7 +318,8 @@ class PermissionSeeder extends Seeder
                 $slug = explode('.', $permission);
                 if ($slug[0] == $module->slug) {
                     Permission::insert([
-                        'name'      => $permission,
+                        'name' => $permission['name'],
+                        'display_name' => $permission['display_name'],
                         'module_id' => $module->id,
                     ]);
                 }

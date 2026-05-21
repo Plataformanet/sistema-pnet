@@ -69,10 +69,11 @@ Route::middleware([
         Route::delete('/registrations/employees/{id}', [TenantEmployeeController::class, 'destroy'])->name('tenant.registrations.employees.destroy')->middleware('permission:registrations.employees.delete');
 
         // Configurações - Usuários
-        Route::get('/settings/users/list', [TenantUserController::class, 'userList'])->name('tenant.settings.users.list');
-        Route::get('/settings/users/create', [TenantUserController::class, 'userCreate'])->name('tenant.settings.users.create');
-        Route::get('/settings/users/{id}/edit', [TenantUserController::class, 'userEdit'])->name('tenant.settings.users.update');
-        Route::put('/settings/users/{id}', [TenantUserController::class, 'userUpdate'])->name('tenant.settings.users.update');
+        Route::get('/settings/users/list', [TenantUserController::class, 'index'])->name('tenant.settings.users.list');
+        Route::get('/settings/users/create', [TenantUserController::class, 'create'])->name('tenant.settings.users.create');
+        Route::post('/settings/users/store', [TenantUserController::class, 'store'])->name('tenant.settings.users.store');
+        Route::get('/settings/users/{id}/edit', [TenantUserController::class, 'edit'])->name('tenant.settings.users.edit');
+        Route::put('/settings/users/{id}', [TenantUserController::class, 'update'])->name('tenant.settings.users.update');
 
         // Services
         Route::get('/services/services/list', [TenantServiceController::class, 'index'])->name('tenant.services.services.list')->middleware('permission:services.services.view');

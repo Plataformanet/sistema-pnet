@@ -16,6 +16,7 @@ import { useForm } from "@inertiajs/vue3";
 
 const props = withDefaults(defineProps<{
     form: ReturnType<typeof useForm>;
+    roles: string[];
     submitText?: string;
 }>(), {
     submitText: "Salvar Usuário",
@@ -59,11 +60,9 @@ function onSubmit() {
                         </SelectTrigger>
                         <SelectContent>
                             <SelectGroup>
-                                <SelectItem value="Administrador">Administrador</SelectItem>
-                                <SelectItem value="Gerente">Gerente</SelectItem>
-                                <SelectItem value="Financeiro">Financeiro</SelectItem>
-                                <SelectItem value="Vendedor">Vendedor</SelectItem>
-                                <SelectItem value="Suporte">Suporte</SelectItem>
+                                <SelectItem v-for="role in roles" :key="role" :value="role">
+                                    {{ role }}
+                                </SelectItem>
                             </SelectGroup>
                         </SelectContent>
                     </Select>
@@ -71,11 +70,11 @@ function onSubmit() {
                     <FieldError v-if="form.errors.role">{{ form.errors.role }}</FieldError>
                 </Field>
 
-                
+
                 <div class="flex items-center space-x-2 pt-8">
                     <!-- Placeholder UI that could be a Checkbox or Switch component later, using native for simplicity to avoid import issues without inspecting UI folder -->
-                    <input type="checkbox" id="active" v-model="form.active" class="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary" />
-                    <label for="active" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                    <input type="checkbox" id="status" v-model="form.status" class="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary" />
+                    <label for="status" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                         Usuário Ativo
                     </label>
                 </div>

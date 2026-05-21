@@ -14,32 +14,12 @@ export interface User {
     name: string;
     email: string;
     role: string;
-    active: boolean;
+    status: boolean;
 }
 
-const users: User[] = [
-    {
-        id: "u1a2b3c4",
-        name: "Administrador do Sistema",
-        email: "admin@sistema.com",
-        role: "Administrador",
-        active: true,
-    },
-    {
-        id: "v5x6y7z8",
-        name: "João Silva",
-        email: "joao.vendas@sistema.com",
-        role: "Vendedor",
-        active: true,
-    },
-    {
-        id: "w9k0p1o2",
-        name: "Maria Oliveira",
-        email: "maria.fin@sistema.com",
-        role: "Financeiro",
-        active: false,
-    },
-];
+defineProps<{
+    users: User[];
+}>();
 </script>
 
 <template>

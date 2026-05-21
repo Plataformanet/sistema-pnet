@@ -12,13 +12,15 @@ defineOptions({ layout: TenantLayout });
 
 const props = defineProps<{
     user: User;
+    roles: string[];
+    role: string;
 }>();
 
 const form = useForm({
     name: props.user.name ?? "",
     email: props.user.email ?? "",
-    role: props.user.role ?? "",
-    active: props.user.active ?? true,
+    role: props.role ?? "",
+    status: props.user.status ?? true,
     password: "",
     password_confirmation: "",
 });
@@ -49,6 +51,7 @@ function submit() {
     <div class="mx-auto mb-20 max-w-6xl py-4">
         <UserForm
             :form="form"
+            :roles="roles"
             submitText="Atualizar Usuário"
             @submit="submit"
         />

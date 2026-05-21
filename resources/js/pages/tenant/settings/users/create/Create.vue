@@ -12,14 +12,15 @@ const form = useForm({
     name: "",
     email: "",
     role: "",
-    active: true,
+    status: true,
     password: "",
     password_confirmation: "",
 });
 
+defineProps<{ roles: string[] }>();
+
 function submit() {
-    console.log("Enviando dados do formulário de usuário:", form.data());
-    // form.post(route('tenant.registrations.users.store'))
+    form.post(route('tenant.settings.users.store'))
 }
 </script>
 
@@ -42,6 +43,6 @@ function submit() {
     </div>
 
     <div class="mx-auto mb-20 max-w-6xl py-4">
-        <UserForm :form="form" @submit="submit" />
+        <UserForm :form="form" :roles="roles" @submit="submit" />
     </div>
 </template>
