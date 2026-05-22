@@ -4,7 +4,6 @@ namespace Database\Seeders;
 
 use App\Models\Module;
 use App\Models\Permission;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class PermissionSeeder extends Seeder
@@ -67,17 +66,25 @@ class PermissionSeeder extends Seeder
             ],
 
             'sales' => [
-                'names' => [
+                'name' => [
                     'sales.sales.view',
                     'sales.sales.edit',
                     'sales.sales.create',
                     'sales.sales.delete',
+                    'sales.quotations.view',
+                    'sales.quotations.edit',
+                    'sales.quotations.create',
+                    'sales.quotations.delete',
                 ],
                 'display_name' => [
                     'Vendas (Visualizar)',
                     'Vendas (Editar)',
                     'Vendas (Criar)',
                     'Vendas (Excluir)',
+                    'Orçamentos (Visualizar)',
+                    'Orçamentos (Editar)',
+                    'Orçamentos (Criar)',
+                    'Orçamentos (Excluir)',
                 ],
             ],
 
@@ -87,6 +94,10 @@ class PermissionSeeder extends Seeder
                     'services.services.edit',
                     'services.services.create',
                     'services.services.delete',
+                    'services.categories.view',
+                    'services.categories.edit',
+                    'services.categories.create',
+                    'services.categories.delete'
                 ],
 
                 'display_name' => [
@@ -94,6 +105,10 @@ class PermissionSeeder extends Seeder
                     'Serviços (Editar)',
                     'Serviços (Criar)',
                     'Serviços (Excluir)',
+                    'Categoria de Serviços (Visualizar)',
+                    'Categoria de Serviços (Editar)',
+                    'Categoria de Serviços (Criar)',
+                    'Categoria de Serviços (Excluir)',
                 ],
             ],
 
@@ -103,12 +118,20 @@ class PermissionSeeder extends Seeder
                     'products.products.edit',
                     'products.products.create',
                     'products.products.delete',
+                    'products.categories.view',
+                    'products.categories.edit',
+                    'products.categories.create',
+                    'products.categories.delete'
                 ],
                 'display_name' => [
                     'Produtos (Visualizar)',
                     'Produtos (Editar)',
                     'Produtos (Criar)',
                     'Produtos (Excluir)',
+                    'Categoria de Produtos (Visualizar)',
+                    'Categoria de Produtos (Editar)',
+                    'Categoria de Produtos (Criar)',
+                    'Categoria de Produtos (Excluir)',
                 ],
             ],
 
@@ -260,68 +283,74 @@ class PermissionSeeder extends Seeder
 
         foreach ($modules as $module) {
             foreach ($permissions['registrations'] as $permission) {
+                foreach ($permission['name'] as $key => $name) {
+                    $slug = explode('.', $name);
+                    if ($slug[0] == $module->slug) {
+                        Permission::insert([
+                            'name' => $name,
+                            'display_name' => $permission['display_name'][$key],
+                            'module_id' => $module->id,
+                        ]);
+                    }
+                }
+            }
+
+            foreach ($permissions['sales']['name'] as $key => $permission) {
                 $slug = explode('.', $permission);
                 if ($slug[0] == $module->slug) {
                     Permission::insert([
-                        'name' => $permission['name'],
-                        'display_name' => $permission['display_name'],
+                        'name' => $permission,
+                        'display_name' => $permissions['sales']['display_name'][$key],
                         'module_id' => $module->id,
                     ]);
                 }
             }
 
-            foreach ($permissions['sales'] as $permission) {
+            foreach ($permissions['services']['name'] as $key => $permission) {
                 $slug = explode('.', $permission);
                 if ($slug[0] == $module->slug) {
                     Permission::insert([
-                        'name' => $permission['name'],
-                        'display_name' => $permission['display_name'],
+                        'name' => $permission,
+                        'display_name' => $permissions['services']['display_name'][$key],
                         'module_id' => $module->id,
                     ]);
                 }
             }
 
-            foreach ($permissions['services'] as $permission) {
+            foreach ($permissions['products']['name'] as $key => $permission) {
                 $slug = explode('.', $permission);
                 if ($slug[0] == $module->slug) {
                     Permission::insert([
-                        'name' => $permission['name'],
-                        'display_name' => $permission['display_name'],
-                        'module_id' => $module->id,
-                    ]);
-                }
-            }
-
-            foreach ($permissions['products'] as $permission) {
-                $slug = explode('.', $permission);
-                if ($slug[0] == $module->slug) {
-                    Permission::insert([
-                        'name' => $permission['name'],
-                        'display_name' => $permission['display_name'],
+                        'name' => $permission,
+                        'display_name' => $permissions['products']['display_name'][$key],
                         'module_id' => $module->id,
                     ]);
                 }
             }
 
             foreach ($permissions['finance'] as $permission) {
-                $slug = explode('.', $permission);
-                if ($slug[0] == $module->slug) {
-                    Permission::insert([
-                        'name' => $permission['name'],
-                        'display_name' => $permission['display_name'],
-                        'module_id' => $module->id,
-                    ]);
+                foreach ($permission['name'] as $key => $name) {
+                    $slug = explode('.', $name);
+                    if ($slug[0] == $module->slug) {
+                        Permission::insert([
+                            'name' => $name,
+                            'display_name' => $permission['display_name'][$key],
+                            'module_id' => $module->id,
+                        ]);
+                    }
                 }
             }
 
             foreach ($permissions['documents'] as $permission) {
-                $slug = explode('.', $permission);
-                if ($slug[0] == $module->slug) {
-                    Permission::insert([
-                        'name' => $permission['name'],
-                        'display_name' => $permission['display_name'],
-                        'module_id' => $module->id,
-                    ]);
+                foreach ($permission['name'] as $key => $name) {
+                    $slug = explode('.', $name);
+                    if ($slug[0] == $module->slug) {
+                        Permission::insert([
+                            'name' => $name,
+                            'display_name' => $permission['display_name'][$key],
+                            'module_id' => $module->id,
+                        ]);
+                    }
                 }
             }
         }

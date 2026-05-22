@@ -15,23 +15,9 @@ export interface Role {
     users_count: number;
 }
 
-const roles: Role[] = [
-    {
-        id: 1,
-        name: "Administrador",
-        users_count: 3
-    },
-    {
-        id: 2,
-        name: "Vendedor",
-        users_count: 15
-    },
-    {
-        id: 3,
-        name: "Financeiro",
-        users_count: 2
-    },
-];
+defineProps<{
+    roles: Role[];
+}>();
 </script>
 
 <template>

@@ -108,10 +108,12 @@ Route::middleware([
         Route::delete('/products/categories/{id}', [TenantProductCategoryController::class, 'destroy'])->name('tenant.products.categories.destroy')->middleware('permission:products.categories.delete');
 
         // Configurações - Cargos (Roles)
-        Route::get('/settings/roles/list', [TenantRoleController::class, 'roleList'])->name('tenant.settings.roles.list');
-        Route::get('/settings/roles/create', [TenantRoleController::class, 'roleCreate'])->name('tenant.settings.roles.create');
-        Route::get('/settings/roles/{id}/edit', [TenantRoleController::class, 'roleEdit'])->name('tenant.settings.roles.edit');
-        Route::put('/settings/roles/{id}', [TenantRoleController::class, 'roleUpdate'])->name('tenant.settings.roles.update');
+        Route::get('/settings/roles/list', [TenantRoleController::class, 'index'])->name('tenant.settings.roles.list');
+        Route::get('/settings/roles/create', [TenantRoleController::class, 'create'])->name('tenant.settings.roles.create');
+        Route::post('/settings/roles/store', [TenantRoleController::class, 'store'])->name('tenant.settings.roles.store');
+        Route::get('/settings/roles/{id}/edit', [TenantRoleController::class, 'edit'])->name('tenant.settings.roles.edit');
+        Route::put('/settings/roles/{id}', [TenantRoleController::class, 'update'])->name('tenant.settings.roles.update');
+        Route::delete('/settings/roles/{id}', [TenantRoleController::class, 'destroy'])->name('tenant.settings.roles.destroy');
 
     });
 });

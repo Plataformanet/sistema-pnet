@@ -2,43 +2,82 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
+use App\Http\Requests\StoreRoleRequest;
+use App\Http\Requests\UpdateRoleRequest;
+use App\Services\RoleService;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
+use Spatie\Permission\Models\Permission;
 
 class TenantRoleController extends Controller
 {
-    public function roleList()
+    public function __construct(protected RoleService $roleService)
     {
-        return Inertia::render('tenant/settings/roles/list/List');
-    }
-    
-    public function roleCreate()
-    {
-        return Inertia::render('tenant/settings/roles/create/Create');
     }
 
-    public function roleEdit($id)
+    public function index()
     {
-        // Mock role data
-        $role = [
-            'id' => $id,
-            'name' => 'Administrador',
-            // Mocking permissions that are already checked
-            'permissions' => [
-                'registrations.clients.view',
-                'registrations.clients.edit',
-                'sales.sales.view'
-            ]
-        ];
+        $roles = $this->roleService->findAll(tenant());
 
-        return Inertia::render('tenant/settings/roles/edit/Edit', [
-            'role' => $role
+        return Inertia::render('tenant/settings/roles/list/List', [
+            'roles' => $roles
         ]);
     }
 
-    public function roleUpdate(Request $request, $id)
+    public function create()
     {
-        // Placeholder for update logic
-        return redirect()->route('tenant.settings.roles.list');
+        $permissions = Permission::select('name', 'display_name')->get()->toArray();
+
+        return Inertia::render('tenant/settings/roles/create/Create', [
+            'permissions' => $permissions
+        ]);
+    }
+
+    public function store(StoreRoleRequest $request)
+    {
+        try {
+            $this->roleService->store($request->validated(), tenant());
+
+            return redirect()->route('tenant.settings.roles.list')->with('success', 'Cargo criado com sucesso!');
+        } catch (\Throwable $th) {
+            Log::error('Erro ao criar cargo: ' . $th->getMessage());
+            return redirect()->back()->with('error', 'Erro ao criar cargo!');
+        }
+    }
+
+    public function edit(string $id)
+    {
+        $role = $this->roleService->findById($id, tenant());
+
+        $permissions = Permission::select('name', 'display_name')->get()->toArray();
+
+        return Inertia::render('tenant/settings/roles/edit/Edit', [
+            'role'        => $role,
+            'permissions' => $permissions
+        ]);
+    }
+
+    public function update(UpdateRoleRequest $request, string $id)
+    {
+        try {
+            $this->roleService->update($request->validated(), $id, tenant());
+
+            return redirect()->route('tenant.settings.roles.list')->with('success', 'Cargo atualizado com sucesso!');
+        } catch (\Throwable $th) {
+            Log::error('Erro ao atualizar cargo: ' . $th->getMessage());
+            return redirect()->back()->with('error', 'Erro ao atualizar cargo!');
+        }
+    }
+
+    public function destroy(string $id)
+    {
+        try {
+            $this->roleService->delete($id, tenant());
+
+            return redirect()->route('tenant.settings.roles.list')->with('success', 'Cargo deletado com sucesso!');
+        } catch (\Throwable $th) {
+            Log::error('Erro ao deletar cargo: ' . $th->getMessage());
+            return redirect()->back()->with('error', 'Erro ao deletar cargo!');
+        }
     }
 }

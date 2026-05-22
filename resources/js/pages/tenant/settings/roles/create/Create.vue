@@ -13,9 +13,15 @@ const form = useForm({
     permissions: [] as string[],
 });
 
+defineProps({
+    permissions: {
+        type: Array as () => { name: string; display_name: string }[],
+        required: true,
+    },
+});
+
 function submit() {
-    console.log("Enviando dados do formulário:", form.data());
-    // form.post(route('tenant.settings.roles.store'))
+    form.post(route('tenant.settings.roles.store'))
 }
 </script>
 
@@ -36,6 +42,6 @@ function submit() {
     </div>
 
     <div class="mx-auto mb-20 max-w-6xl py-4">
-        <RoleForm :form="form" @submit="submit" />
+        <RoleForm :form="form" :permissions="permissions" @submit="submit" />
     </div>
 </template>
