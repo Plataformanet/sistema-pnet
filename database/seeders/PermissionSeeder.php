@@ -263,18 +263,34 @@ class PermissionSeeder extends Seeder
                 ],
             ],
 
-            'users' => [
-                'name' => [
-                    'settings.users.view',
-                    'settings.users.edit',
-                    'settings.users.create',
-                    'settings.users.delete',
+            'settings' => [
+                'roles' => [
+                    'name' => [
+                        'settings.roles.view',
+                        'settings.roles.edit',
+                        'settings.roles.create',
+                        'settings.roles.delete',
+                    ],
+                    'display_name' => [
+                        'Cargos (Visualizar)',
+                        'Cargos (Editar)',
+                        'Cargos (Criar)',
+                        'Cargos (Excluir)',
+                    ],
                 ],
-                'display_name' => [
-                    'Usuários (Visualizar)',
-                    'Usuários (Editar)',
-                    'Usuários (Criar)',
-                    'Usuários (Excluir)',
+                'users' => [
+                    'name' => [
+                        'settings.users.view',
+                        'settings.users.edit',
+                        'settings.users.create',
+                        'settings.users.delete',
+                    ],
+                    'display_name' => [
+                        'Usuários (Visualizar)',
+                        'Usuários (Editar)',
+                        'Usuários (Criar)',
+                        'Usuários (Excluir)',
+                    ],
                 ],
             ],
         ];
@@ -342,6 +358,19 @@ class PermissionSeeder extends Seeder
             }
 
             foreach ($permissions['documents'] as $permission) {
+                foreach ($permission['name'] as $key => $name) {
+                    $slug = explode('.', $name);
+                    if ($slug[0] == $module->slug) {
+                        Permission::insert([
+                            'name' => $name,
+                            'display_name' => $permission['display_name'][$key],
+                            'module_id' => $module->id,
+                        ]);
+                    }
+                }
+            }
+
+            foreach ($permissions['settings'] as $permission) {
                 foreach ($permission['name'] as $key => $name) {
                     $slug = explode('.', $name);
                     if ($slug[0] == $module->slug) {

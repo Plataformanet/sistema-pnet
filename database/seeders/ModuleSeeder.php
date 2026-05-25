@@ -67,6 +67,15 @@ class ModuleSeeder extends Seeder
                 'requires_modules' => null,
                 'route_prefix'     => 'documents',
             ],
+            [
+                'name'             => 'Configurações',
+                'slug'             => 'settings',
+                'description'      => 'Configurações do sistema',
+                'icon'             => '',
+                'is_core'          => true,
+                'requires_modules' => null,
+                'route_prefix'     => 'settings',
+            ],
         ];
 
         foreach ($modules as $module) {
