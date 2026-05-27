@@ -6,6 +6,7 @@ import { columns } from "@/pages/tenant/settings/roles/list/columns";
 import { route } from "ziggy-js";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-vue-next";
+import { usePermission } from "@/composables/usePermission";
 
 defineOptions({ layout: TenantLayout });
 
@@ -18,6 +19,9 @@ export interface Role {
 defineProps<{
     roles: Role[];
 }>();
+
+const { permissions } = usePermission();
+
 </script>
 
 <template>
@@ -32,7 +36,7 @@ defineProps<{
                     Gerencie os cargos e as permissões de acesso dos usuários.
                 </p>
             </div>
-            <Button class="cursor-pointer" as-child variant="outline">
+            <Button v-if="permissions.includes('settings.roles.create')" class="cursor-pointer" as-child variant="outline">
                 <Link :href="route('tenant.settings.roles.create')">
                     <Plus /> Novo cargo
                 </Link>

@@ -7,6 +7,7 @@ import { route } from "ziggy-js";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-vue-next";
 import { Client } from "@/types";
+import { usePermission } from "@/composables/usePermission";
 
 defineOptions({ layout: TenantLayout });
 
@@ -14,7 +15,8 @@ const props = defineProps<{
     clients: Client[];
 }>();
 
-console.log(props.clients);
+const { permissions } = usePermission();
+
 </script>
 
 <template>
@@ -29,10 +31,8 @@ console.log(props.clients);
                 </h2>
             </div>
 
-            <Button class="cursor-pointer" as-child variant="outline">
-                <Link :href="route('tenant.registrations.clients.create')"
-                    ><Plus /> Novo cliente</Link
-                >
+            <Button v-if="permissions.includes('registrations.clients.create')" class="cursor-pointer" as-child variant="outline">
+                <Link :href="route('tenant.registrations.clients.create')"><Plus /> Novo cliente</Link>
             </Button>
         </div>
         <DataTable :columns="columns" :data="clients" />

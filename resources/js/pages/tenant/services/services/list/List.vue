@@ -6,6 +6,7 @@ import { columns } from "@/pages/tenant/services/services/list/columns";
 import { route } from "ziggy-js";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-vue-next";
+import { usePermission } from "@/composables/usePermission";
 
 defineOptions({ layout: TenantLayout });
 
@@ -25,6 +26,8 @@ export interface Service {
 const props = defineProps<{
     services: Service[];
 }>();
+
+const { permissions } = usePermission();
 </script>
 
 <template>
@@ -39,10 +42,10 @@ const props = defineProps<{
                 </h2>
             </div>
 
-            <Button class="cursor-pointer" as-child variant="outline">
-                <Link :href="route('tenant.services.services.create')"
-                    ><Plus /> Novo serviço</Link
-                >
+            <Button v-if="permissions.includes('services.services.create')" class="cursor-pointer" as-child variant="outline">
+                <Link :href="route('tenant.services.services.create')">
+                    <Plus /> Novo serviço
+                </Link>
             </Button>
         </div>
         <DataTable :columns="columns" :data="services" />

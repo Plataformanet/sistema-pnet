@@ -7,12 +7,15 @@ import { route } from "ziggy-js";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-vue-next";
 import { Employee } from "@/types";
+import { usePermission } from "@/composables/usePermission";
 
 defineOptions({ layout: TenantLayout });
 
 defineProps<{
     employees: Employee[];
 }>();
+
+const {permissions} = usePermission();
 
 </script>
 
@@ -25,7 +28,7 @@ defineProps<{
                     Lista de funcionários
                 </h2>
             </div>
-            <Button class="cursor-pointer" as-child variant="outline">
+            <Button v-if="permissions.includes('registrations.employees.create')" class="cursor-pointer" as-child variant="outline">
                 <Link :href="route('tenant.registrations.employees.create')">
                     <Plus /> Novo funcionário
                 </Link>
