@@ -4,7 +4,8 @@
     "type": "module",
     "scripts": {
         "build": "vue-tsc --noEmit && vite build",
-        "dev": "vite"
+        "dev": "vite",
+        "pretty": "prettier --write \"./**/*.{js,jsx,mjs,cjs,ts,tsx,json}\""
     },
     "devDependencies": {
         "@tailwindcss/vite": "^4.0.0",

@@ -1,9 +1,9 @@
 import { h } from "vue";
-import { User } from "./List.vue";
-import { ArrowUpDown } from 'lucide-vue-next';
+import { ArrowUpDown } from "lucide-vue-next";
 import { ColumnDef } from "@tanstack/vue-table";
 import { Button } from "@/components/ui/button";
 import ActionDropdown from "./ActionDropdown.vue";
+import { User } from "@/types";
 
 export const columns: ColumnDef<User>[] = [
     {
@@ -13,13 +13,11 @@ export const columns: ColumnDef<User>[] = [
                 Button,
                 {
                     variant: "ghost",
-                    onClick: () => column.toggleSorting(column.getIsSorted() === "asc"),
+                    onClick: () =>
+                        column.toggleSorting(column.getIsSorted() === "asc"),
                 },
-                () => [
-                    "Nome",
-                    h(ArrowUpDown, { class: "ml-2 h-4 w-4" }),
-                ]
-            )
+                () => ["Nome", h(ArrowUpDown, { class: "ml-2 h-4 w-4" })],
+            );
         },
     },
     {
@@ -29,13 +27,11 @@ export const columns: ColumnDef<User>[] = [
                 Button,
                 {
                     variant: "ghost",
-                    onClick: () => column.toggleSorting(column.getIsSorted() === "asc"),
+                    onClick: () =>
+                        column.toggleSorting(column.getIsSorted() === "asc"),
                 },
-                () => [
-                    "E-mail",
-                    h(ArrowUpDown, { class: "ml-2 h-4 w-4" }),
-                ]
-            )
+                () => ["E-mail", h(ArrowUpDown, { class: "ml-2 h-4 w-4" })],
+            );
         },
     },
     {
@@ -45,13 +41,14 @@ export const columns: ColumnDef<User>[] = [
                 Button,
                 {
                     variant: "ghost",
-                    onClick: () => column.toggleSorting(column.getIsSorted() === "asc"),
+                    onClick: () =>
+                        column.toggleSorting(column.getIsSorted() === "asc"),
                 },
                 () => [
                     "Cargo / Perfil",
                     h(ArrowUpDown, { class: "ml-2 h-4 w-4" }),
-                ]
-            )
+                ],
+            );
         },
         cell: ({ row }) => {
             return row.getValue("role") ?? "-----";
@@ -64,13 +61,11 @@ export const columns: ColumnDef<User>[] = [
                 Button,
                 {
                     variant: "ghost",
-                    onClick: () => column.toggleSorting(column.getIsSorted() === "asc"),
+                    onClick: () =>
+                        column.toggleSorting(column.getIsSorted() === "asc"),
                 },
-                () => [
-                    "Status",
-                    h(ArrowUpDown, { class: "ml-2 h-4 w-4" }),
-                ]
-            )
+                () => ["Status", h(ArrowUpDown, { class: "ml-2 h-4 w-4" })],
+            );
         },
         cell: ({ row }) => {
             const isActive = row.getValue("status");
@@ -79,9 +74,9 @@ export const columns: ColumnDef<User>[] = [
                 {
                     class: isActive
                         ? "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold bg-green-100 text-green-800"
-                        : "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold bg-red-100 text-red-800"
+                        : "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold bg-red-100 text-red-800",
                 },
-                isActive ? "Ativo" : "Inativo"
+                isActive ? "Ativo" : "Inativo",
             );
         },
     },
@@ -90,9 +85,13 @@ export const columns: ColumnDef<User>[] = [
         enableHiding: false,
         cell: ({ row }) => {
             const user = row.original;
-            return h("div", { class: "relative flex justify-end" }, h(ActionDropdown, {
-                user,
-            }));
+            return h(
+                "div",
+                { class: "relative flex justify-end" },
+                h(ActionDropdown, {
+                    user,
+                }),
+            );
         },
     },
 ];

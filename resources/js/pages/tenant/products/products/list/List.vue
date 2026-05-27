@@ -8,24 +8,9 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-vue-next";
 import { computed, ref } from "vue";
 import { usePermission } from "@/composables/usePermission";
+import { Product } from "@/types";
 
 defineOptions({ layout: TenantLayout });
-
-export interface Product {
-    id: string;
-    name: string;
-    sku: string;
-    barcode?: string;
-    category_id: string;
-    cost_value?: number;
-    sell_value?: number;
-    manage_stock: boolean;
-    current_stock?: number;
-    min_stock?: number;
-    unit_of_measure: string;
-    description?: string;
-    status: boolean;
-}
 
 defineProps<{
     products: Product[];
@@ -46,7 +31,12 @@ const { permissions } = usePermission();
                 </h2>
             </div>
 
-            <Button v-if="permissions.includes('products.products.create')" class="cursor-pointer" as-child variant="outline">
+            <Button
+                v-if="permissions.includes('products.products.create')"
+                class="cursor-pointer"
+                as-child
+                variant="outline"
+            >
                 <Link :href="route('tenant.products.products.create')"
                     ><Plus /> Novo produto</Link
                 >

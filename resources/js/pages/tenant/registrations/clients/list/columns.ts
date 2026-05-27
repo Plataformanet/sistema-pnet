@@ -1,6 +1,6 @@
 import { h } from "vue";
 import { Client } from "@/types";
-import { ArrowUpDown, ChevronDown } from 'lucide-vue-next'
+import { ArrowUpDown, ChevronDown } from "lucide-vue-next";
 import { ColumnDef } from "@tanstack/vue-table";
 import { Button } from "@/components/ui/button";
 import ActionDropdown from "./ActionDropdown.vue";
@@ -13,13 +13,11 @@ export const columns: ColumnDef<Client>[] = [
                 Button,
                 {
                     variant: "ghost",
-                    onClick: () => column.toggleSorting(column.getIsSorted() === "asc"),
+                    onClick: () =>
+                        column.toggleSorting(column.getIsSorted() === "asc"),
                 },
-                () => [
-                    "Nome",
-                    h(ArrowUpDown, { class: "ml-2 h-4 w-4" }),
-                ]
-            )
+                () => ["Nome", h(ArrowUpDown, { class: "ml-2 h-4 w-4" })],
+            );
         },
     },
     {
@@ -30,13 +28,11 @@ export const columns: ColumnDef<Client>[] = [
                 Button,
                 {
                     variant: "ghost",
-                    onClick: () => column.toggleSorting(column.getIsSorted() === "asc"),
+                    onClick: () =>
+                        column.toggleSorting(column.getIsSorted() === "asc"),
                 },
-                () => [
-                    "CPF / CNPJ",
-                    h(ArrowUpDown, { class: "ml-2 h-4 w-4" }),
-                ]
-            )
+                () => ["CPF / CNPJ", h(ArrowUpDown, { class: "ml-2 h-4 w-4" })],
+            );
         },
         cell: ({ row }) => {
             const cpf_cnpj = row.original.contact?.cpf_cnpj;
@@ -50,13 +46,11 @@ export const columns: ColumnDef<Client>[] = [
                 Button,
                 {
                     variant: "ghost",
-                    onClick: () => column.toggleSorting(column.getIsSorted() === "asc"),
+                    onClick: () =>
+                        column.toggleSorting(column.getIsSorted() === "asc"),
                 },
-                () => [
-                    "E-mail",
-                    h(ArrowUpDown, { class: "ml-2 h-4 w-4" }),
-                ]
-            )
+                () => ["E-mail", h(ArrowUpDown, { class: "ml-2 h-4 w-4" })],
+            );
         },
     },
     {
@@ -64,9 +58,13 @@ export const columns: ColumnDef<Client>[] = [
         enableHiding: false,
         cell: ({ row }) => {
             const client = row.original;
-            return h("div", { class: "relative flex justify-end" }, h(ActionDropdown, {
-                client,
-            }));
+            return h(
+                "div",
+                { class: "relative flex justify-end" },
+                h(ActionDropdown, {
+                    client,
+                }),
+            );
         },
     },
 ];

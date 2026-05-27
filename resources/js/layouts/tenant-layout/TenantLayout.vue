@@ -44,7 +44,6 @@ export interface TenantNavItem {
     items?: TenantNavItem[];
 }
 
-// This is sample data.
 const data: TenantNav = {
     navMain: [
         {
@@ -274,19 +273,16 @@ const flash = computed(() => page.props.flash as any);
 watch(
     flash,
     (newFlash) => {
-        console.log("[DEBUG] Inertia Flash Alterado:", newFlash);
         if (!newFlash) return;
-        
+
         if (newFlash.success) {
-            console.log("[DEBUG] Disparando Toast de Sucesso:", newFlash.success);
             toast.success(newFlash.success);
         }
         if (newFlash.error) {
-            console.log("[DEBUG] Disparando Toast de Erro:", newFlash.error);
             toast.error(newFlash.error);
         }
     },
-    { deep: true, immediate: true }
+    { deep: true, immediate: true },
 );
 </script>
 

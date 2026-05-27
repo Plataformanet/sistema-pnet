@@ -25,8 +25,14 @@ const form = useForm({
     sku: props.product.sku || "",
     barcode: props.product.barcode || "",
     category_product_id: props.product.category_product_id || "",
-    cost_value: props.product.cost_value !== undefined ? maskCurrency(String(props.product.cost_value)) : "",
-    sell_value: props.product.sell_value !== undefined ? maskCurrency(String(props.product.sell_value)) : "",
+    cost_value:
+        props.product.cost_value !== undefined
+            ? maskCurrency(String(props.product.cost_value))
+            : "",
+    sell_value:
+        props.product.sell_value !== undefined
+            ? maskCurrency(String(props.product.sell_value))
+            : "",
     manage_stock: props.product.manage_stock ?? true,
     current_stock: props.product.current_stock || "",
     min_stock: props.product.min_stock || "",
@@ -41,14 +47,18 @@ function submit() {
         cost_value: parseCurrencyToCents(form.cost_value as string),
         sell_value: parseCurrencyToCents(form.sell_value as string),
     };
-    form.transform((data) => payload).put(route('tenant.products.products.update', props.product.id))
+    form.transform((data) => payload).put(
+        route("tenant.products.products.update", props.product.id),
+    );
 }
 </script>
 
 <template>
     <Head title="Editar Produto" />
 
-    <div class="mb-6 flex items-center justify-between border-b border-border pb-4">
+    <div
+        class="mb-6 flex items-center justify-between border-b border-border pb-4"
+    >
         <div>
             <h2 class="text-3xl font-bold tracking-tight text-foreground">
                 Editar Produto
@@ -62,6 +72,11 @@ function submit() {
     </div>
 
     <div class="mx-auto mb-20 max-w-6xl py-4">
-        <ProductForm :form="form" :categories="categories" @submit="submit" submitText="Atualizar Produto" />
+        <ProductForm
+            :form="form"
+            :categories="categories"
+            @submit="submit"
+            submitText="Atualizar Produto"
+        />
     </div>
 </template>

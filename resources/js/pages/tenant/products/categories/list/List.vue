@@ -8,17 +8,12 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-vue-next";
 import { computed, ref } from "vue";
 import { usePermission } from "@/composables/usePermission";
+import { ProductCategory } from "@/types";
 
 defineOptions({ layout: TenantLayout });
 
-export interface Category {
-    id: string;
-    name: string;
-    status: boolean;
-}
-
 defineProps<{
-    categories: Category[];
+    categories: ProductCategory[];
 }>();
 
 const { permissions } = usePermission();
@@ -36,7 +31,12 @@ const { permissions } = usePermission();
                 </h2>
             </div>
 
-            <Button v-if="permissions.includes('products.categories.create')" class="cursor-pointer" as-child variant="outline">
+            <Button
+                v-if="permissions.includes('products.categories.create')"
+                class="cursor-pointer"
+                as-child
+                variant="outline"
+            >
                 <Link :href="route('tenant.products.categories.create')"
                     ><Plus /> Nova categoria</Link
                 >

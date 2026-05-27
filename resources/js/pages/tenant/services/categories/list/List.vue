@@ -7,17 +7,12 @@ import { route } from "ziggy-js";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-vue-next";
 import { usePermission } from "@/composables/usePermission";
+import { ServiceCategory } from "@/types";
 
 defineOptions({ layout: TenantLayout });
 
-export interface Category {
-    id: string;
-    name: string;
-    status: boolean;
-}
-
 defineProps<{
-    categories: Category[];
+    categories: ServiceCategory[];
 }>();
 
 const { permissions } = usePermission();
@@ -35,8 +30,15 @@ const { permissions } = usePermission();
                 </h2>
             </div>
 
-            <Button v-if="permissions.includes('services.categories.create')" class="cursor-pointer" as-child variant="outline">
-                <Link :href="route('tenant.services.categories.create')"><Plus /> Nova categoria</Link>
+            <Button
+                v-if="permissions.includes('services.categories.create')"
+                class="cursor-pointer"
+                as-child
+                variant="outline"
+            >
+                <Link :href="route('tenant.services.categories.create')"
+                    ><Plus /> Nova categoria</Link
+                >
             </Button>
         </div>
         <DataTable :columns="columns" :data="categories" />
