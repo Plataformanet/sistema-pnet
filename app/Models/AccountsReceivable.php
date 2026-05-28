@@ -59,8 +59,8 @@ class AccountsReceivable extends Model
         return $this->belongsTo(ContactFinancial::class);
     }
 
-    public function quotas(): MorphMany
+    public function installments(): MorphMany
     {
-        return $this->morphMany(Quota::class, 'quotable');
+        return $this->morphMany(Installment::class, 'installmentable');
     }
 }

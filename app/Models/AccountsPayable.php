@@ -29,10 +29,17 @@ class AccountsPayable extends Model
 
     protected $casts = [
         'total'              => 'integer',
-        'payment_method'     => 'integer',
         'total_installments' => 'integer',
         'bank_account_out'   => 'integer',
+        'payment_method'     => FinancialCategoryEnum::class,
     ];
+
+    protected $appends = ['type'];
+
+    public function getTypeAttribute()
+    {
+        return 'accounts_payable';
+    }
 
     public function categoryFinancial(): BelongsTo
     {
@@ -59,8 +66,8 @@ class AccountsPayable extends Model
         return $this->belongsTo(ContactFinancial::class);
     }
 
-    public function quotas(): MorphMany
+    public function installments(): MorphMany
     {
-        return $this->morphMany(Quota::class, 'quotable');
+        return $this->morphMany(Installment::class, 'installmentable');
     }
 }

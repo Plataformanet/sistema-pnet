@@ -6,13 +6,13 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Quota extends Model
+class Installment extends Model
 {
     use SoftDeletes;
     protected $fillable = [
-        'quotable_type',
-        'quotable_id',
-        'quota_number',
+        'installmentable_type',
+        'installmentable_id',
+        'installment_number',
         'value',
         'description',
         'due_date',
@@ -21,14 +21,14 @@ class Quota extends Model
     ];
 
     protected $casts = [
-        'quota_number' => 'integer',
-        'value'        => 'integer',
-        'status'       => 'integer',
-        'due_date'     => 'date',
-        'payment_date' => 'date',
+        'installment_number' => 'integer',
+        'value'              => 'integer',
+        'status'             => 'integer',
+        'due_date'           => 'date',
+        'payment_date'       => 'date',
     ];
 
-    public function quotable(): MorphTo
+    public function installmentable(): MorphTo
     {
         return $this->morphTo();
     }

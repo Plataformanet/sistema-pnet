@@ -10,10 +10,10 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        Schema::create('quotas', function (Blueprint $table) {
+        Schema::create('installments', function (Blueprint $table) {
             $table->id();
-            $table->morphs('quotable');
-            $table->integer('quota_number')->index();
+            $table->morphs('installmentable');
+            $table->integer('installment_number')->index();
             $table->integer('value');
             $table->text('description')->nullable();
             $table->date('due_date')->index();
@@ -29,6 +29,6 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        Schema::dropIfExists('quotas');
+        Schema::dropIfExists('installments');
     }
 };
