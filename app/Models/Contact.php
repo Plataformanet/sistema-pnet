@@ -40,4 +40,9 @@ class Contact extends Model
     {
         return $this->hasOne(Proponents::class);
     }
+
+    public function contactFinancial()
+    {
+        return $this->hasOne(ContactFinancial::class);
+    }
 }
