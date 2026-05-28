@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-class MercadoPagoService
+class PaidMarketService
 {
     // Aqui você pode implementar métodos para interagir com a API do MercadoPago,
     // como criar assinaturas, processar pagamentos, etc.
