@@ -8,7 +8,9 @@ export interface PermissionsProps {
 export function usePermission() {
     const page = usePage();
 
-    const permissions = computed(() => (page.props.permissions ?? []) as string[]);
+    const permissions = computed(
+        () => (page.props.permissions ?? []) as string[],
+    );
     const hasPermissions = computed(() => permissions.value.length > 0);
 
     return {

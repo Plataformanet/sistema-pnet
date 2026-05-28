@@ -6,20 +6,16 @@ import { columns } from "@/pages/tenant/settings/users/list/columns";
 import { route } from "ziggy-js";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-vue-next";
+import { usePermission } from "@/composables/usePermission";
+import { User } from "@/types";
 
 defineOptions({ layout: TenantLayout });
-
-export interface User {
-    id: string;
-    name: string;
-    email: string;
-    role: string;
-    status: boolean;
-}
 
 defineProps<{
     users: User[];
 }>();
+
+const { permissions } = usePermission();
 </script>
 
 <template>
@@ -33,7 +29,12 @@ defineProps<{
                     Lista de usuários
                 </h2>
             </div>
-            <Button class="cursor-pointer" as-child variant="outline">
+            <Button
+                v-if="permissions.includes('settings.users.create')"
+                class="cursor-pointer"
+                as-child
+                variant="outline"
+            >
                 <Link :href="route('tenant.settings.users.create')">
                     <Plus /> Novo usuário
                 </Link>

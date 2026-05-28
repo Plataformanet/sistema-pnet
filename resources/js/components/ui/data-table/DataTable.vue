@@ -60,7 +60,7 @@ const table = useVueTable({
         <Input class="max-w-sm" placeholder="Pesquisar..."
             :model-value="globalFilter"
             @update:model-value="globalFilter = $event as string" />
-        
+
         <Button variant="outline" @click="$emit('export')">
             <Download class="mr-2 h-4 w-4" />
             Exportar lista
@@ -92,7 +92,7 @@ const table = useVueTable({
           <template v-else>
             <TableRow>
               <TableCell :colspan="columns.length" class="h-24 text-center">
-                No results.
+                Nenhum resultado encontrado.
               </TableCell>
             </TableRow>
           </template>

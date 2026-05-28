@@ -23,9 +23,10 @@ import { Button } from "@/components/ui/button";
 import { Link, router } from "@inertiajs/vue3";
 import { route } from "ziggy-js";
 import { usePermission } from "@/composables/usePermission";
+import type { Service } from "@/types";
 
 const props = defineProps<{
-    service: { id: string };
+    service: Service;
 }>();
 
 const { permissions } = usePermission();
@@ -34,12 +35,15 @@ const showDeleteDialog = ref(false);
 
 const deleteItem = () => {
     if (props.service.id) {
-        router.delete(route('tenant.services.services.destroy', props.service.id), {
-            preserveScroll: true,
-            onSuccess: () => {
-                showDeleteDialog.value = false;
-            }
-        });
+        router.delete(
+            route("tenant.services.services.destroy", props.service.id),
+            {
+                preserveScroll: true,
+                onSuccess: () => {
+                    showDeleteDialog.value = false;
+                },
+            },
+        );
     }
 };
 </script>
@@ -67,7 +71,9 @@ const deleteItem = () => {
                     v-if="permissions.includes('services.services.edit')"
                 >
                     <Link
-                        :href="route('tenant.services.services.edit', service.id)"
+                        :href="
+                            route('tenant.services.services.edit', service.id)
+                        "
                         class="flex w-full cursor-pointer items-center"
                     >
                         <Pencil class="mr-2 h-4 w-4" /> Editar
@@ -84,18 +90,29 @@ const deleteItem = () => {
             </DropdownMenuContent>
         </DropdownMenu>
 
-        <AlertDialog :open="showDeleteDialog" @update:open="showDeleteDialog = $event">
+        <AlertDialog
+            :open="showDeleteDialog"
+            @update:open="showDeleteDialog = $event"
+        >
             <AlertDialogContent>
                 <AlertDialogHeader>
-                    <AlertDialogTitle>Você tem certeza absoluta?</AlertDialogTitle>
+                    <AlertDialogTitle
+                        >Você tem certeza absoluta?</AlertDialogTitle
+                    >
                     <AlertDialogDescription>
-                        Esta ação não pode ser desfeita. Isso excluirá permanentemente o
-                        serviço e removerá os dados de nossos servidores.
+                        Esta ação não pode ser desfeita. Isso excluirá
+                        permanentemente o serviço e removerá os dados de nossos
+                        servidores.
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                    <AlertDialogCancel @click="showDeleteDialog = false">Cancelar</AlertDialogCancel>
-                    <AlertDialogAction class="bg-red-600 hover:bg-red-700 text-white" @click="deleteItem">
+                    <AlertDialogCancel @click="showDeleteDialog = false"
+                        >Cancelar</AlertDialogCancel
+                    >
+                    <AlertDialogAction
+                        class="bg-red-600 text-white hover:bg-red-700"
+                        @click="deleteItem"
+                    >
                         Continuar
                     </AlertDialogAction>
                 </AlertDialogFooter>

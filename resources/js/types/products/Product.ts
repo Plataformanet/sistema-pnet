@@ -2,7 +2,7 @@ export interface Product {
     id: string | number;
     name: string;
     description?: string;
-    price: number;
+    sell_value: number;
     stock: number;
     category_id: string | number;
     status?: string;

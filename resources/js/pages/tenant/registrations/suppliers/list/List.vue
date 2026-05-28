@@ -7,6 +7,7 @@ import { route } from "ziggy-js";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-vue-next";
 import { Supplier } from "@/types";
+import { usePermission } from "@/composables/usePermission";
 
 defineOptions({ layout: TenantLayout });
 
@@ -14,6 +15,8 @@ defineOptions({ layout: TenantLayout });
 defineProps<{
     suppliers: Supplier[];
 }>();
+
+const { permissions } = usePermission();
 
 </script>
 
@@ -26,7 +29,7 @@ defineProps<{
                     Lista de fornecedores
                 </h2>
             </div>
-            <Button class="cursor-pointer" as-child variant="outline">
+            <Button v-if="permissions.includes('registrations.suppliers.create')" class="cursor-pointer" as-child variant="outline">
                 <Link :href="route('tenant.registrations.suppliers.create')">
                     <Plus /> Novo fornecedor
                 </Link>

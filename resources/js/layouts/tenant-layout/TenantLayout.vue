@@ -16,7 +16,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Link, usePage } from "@inertiajs/vue3";
 import { route } from "ziggy-js";
-import { computed } from "vue";
+import { computed, watch } from "vue";
 import { useTenant } from "@/composables/useTenant";
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import AvatarFallback from "@/components/ui/avatar/AvatarFallback.vue";
@@ -29,6 +29,8 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { LogOut, User } from "lucide-vue-next";
+import { Toaster } from "@/components/ui/sonner";
+import { toast } from "vue-sonner";
 
 export interface TenantNav {
     navMain: TenantNavItem[];
@@ -42,7 +44,6 @@ export interface TenantNavItem {
     items?: TenantNavItem[];
 }
 
-// This is sample data.
 const data: TenantNav = {
     navMain: [
         {
@@ -266,6 +267,23 @@ const breadcrumbs = computed(() => {
 });
 
 const { tenant } = useTenant();
+
+const flash = computed(() => page.props.flash as any);
+
+watch(
+    flash,
+    (newFlash) => {
+        if (!newFlash) return;
+
+        if (newFlash.success) {
+            toast.success(newFlash.success);
+        }
+        if (newFlash.error) {
+            toast.error(newFlash.error);
+        }
+    },
+    { deep: true, immediate: true },
+);
 </script>
 
 <template>
@@ -333,6 +351,7 @@ const { tenant } = useTenant();
             </main>
         </SidebarInset>
     </SidebarProvider>
+    <Toaster richColors closeButton position="bottom-right" />
 </template>
 
 <style scoped></style>

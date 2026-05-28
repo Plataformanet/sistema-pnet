@@ -1,6 +1,6 @@
 import { h } from "vue";
 import { Employee } from "@/types";
-import { ArrowUpDown } from 'lucide-vue-next';
+import { ArrowUpDown } from "lucide-vue-next";
 import { ColumnDef } from "@tanstack/vue-table";
 import { Button } from "@/components/ui/button";
 import ActionDropdown from "./ActionDropdown.vue";
@@ -14,13 +14,11 @@ export const columns: ColumnDef<Employee>[] = [
                 Button,
                 {
                     variant: "ghost",
-                    onClick: () => column.toggleSorting(column.getIsSorted() === "asc"),
+                    onClick: () =>
+                        column.toggleSorting(column.getIsSorted() === "asc"),
                 },
-                () => [
-                    "Nome",
-                    h(ArrowUpDown, { class: "ml-2 h-4 w-4" }),
-                ]
-            )
+                () => ["Nome", h(ArrowUpDown, { class: "ml-2 h-4 w-4" })],
+            );
         },
     },
     {
@@ -31,13 +29,11 @@ export const columns: ColumnDef<Employee>[] = [
                 Button,
                 {
                     variant: "ghost",
-                    onClick: () => column.toggleSorting(column.getIsSorted() === "asc"),
+                    onClick: () =>
+                        column.toggleSorting(column.getIsSorted() === "asc"),
                 },
-                () => [
-                    "CPF",
-                    h(ArrowUpDown, { class: "ml-2 h-4 w-4" }),
-                ]
-            )
+                () => ["CPF", h(ArrowUpDown, { class: "ml-2 h-4 w-4" })],
+            );
         },
         cell: ({ row }) => {
             const cpf_cnpj = row.original?.contact?.cpf_cnpj;
@@ -51,13 +47,11 @@ export const columns: ColumnDef<Employee>[] = [
                 Button,
                 {
                     variant: "ghost",
-                    onClick: () => column.toggleSorting(column.getIsSorted() === "asc"),
+                    onClick: () =>
+                        column.toggleSorting(column.getIsSorted() === "asc"),
                 },
-                () => [
-                    "Cargo",
-                    h(ArrowUpDown, { class: "ml-2 h-4 w-4" }),
-                ]
-            )
+                () => ["Cargo", h(ArrowUpDown, { class: "ml-2 h-4 w-4" })],
+            );
         },
         cell: ({ row }) => {
             return row.getValue("position") ?? "-----";
@@ -70,13 +64,11 @@ export const columns: ColumnDef<Employee>[] = [
                 Button,
                 {
                     variant: "ghost",
-                    onClick: () => column.toggleSorting(column.getIsSorted() === "asc"),
+                    onClick: () =>
+                        column.toggleSorting(column.getIsSorted() === "asc"),
                 },
-                () => [
-                    "E-mail",
-                    h(ArrowUpDown, { class: "ml-2 h-4 w-4" }),
-                ]
-            )
+                () => ["E-mail", h(ArrowUpDown, { class: "ml-2 h-4 w-4" })],
+            );
         },
     },
     {
@@ -84,9 +76,13 @@ export const columns: ColumnDef<Employee>[] = [
         enableHiding: false,
         cell: ({ row }) => {
             const employee = row.original;
-            return h("div", { class: "relative flex justify-end" }, h(ActionDropdown, {
-                employee,
-            }));
+            return h(
+                "div",
+                { class: "relative flex justify-end" },
+                h(ActionDropdown, {
+                    employee,
+                }),
+            );
         },
     },
 ];

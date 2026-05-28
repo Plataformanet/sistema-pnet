@@ -1,5 +1,5 @@
 import { h } from "vue";
-import { ArrowUpDown } from 'lucide-vue-next';
+import { ArrowUpDown } from "lucide-vue-next";
 import { ColumnDef } from "@tanstack/vue-table";
 import { Button } from "@/components/ui/button";
 import ActionDropdown from "./ActionDropdown.vue";
@@ -13,13 +13,14 @@ export const columns: ColumnDef<Supplier>[] = [
                 Button,
                 {
                     variant: "ghost",
-                    onClick: () => column.toggleSorting(column.getIsSorted() === "asc"),
+                    onClick: () =>
+                        column.toggleSorting(column.getIsSorted() === "asc"),
                 },
                 () => [
                     "Nome/Razão Social",
                     h(ArrowUpDown, { class: "ml-2 h-4 w-4" }),
-                ]
-            )
+                ],
+            );
         },
     },
     {
@@ -30,13 +31,11 @@ export const columns: ColumnDef<Supplier>[] = [
                 Button,
                 {
                     variant: "ghost",
-                    onClick: () => column.toggleSorting(column.getIsSorted() === "asc"),
+                    onClick: () =>
+                        column.toggleSorting(column.getIsSorted() === "asc"),
                 },
-                () => [
-                    "CNPJ / CPF",
-                    h(ArrowUpDown, { class: "ml-2 h-4 w-4" }),
-                ]
-            )
+                () => ["CNPJ / CPF", h(ArrowUpDown, { class: "ml-2 h-4 w-4" })],
+            );
         },
         cell: ({ row }) => {
             const cpf_cnpj = row.original.contact.cpf_cnpj;
@@ -50,13 +49,11 @@ export const columns: ColumnDef<Supplier>[] = [
                 Button,
                 {
                     variant: "ghost",
-                    onClick: () => column.toggleSorting(column.getIsSorted() === "asc"),
+                    onClick: () =>
+                        column.toggleSorting(column.getIsSorted() === "asc"),
                 },
-                () => [
-                    "Categoria",
-                    h(ArrowUpDown, { class: "ml-2 h-4 w-4" }),
-                ]
-            )
+                () => ["Categoria", h(ArrowUpDown, { class: "ml-2 h-4 w-4" })],
+            );
         },
         cell: ({ row }) => {
             return row.getValue("supply_category") ?? "-----";
@@ -69,13 +66,11 @@ export const columns: ColumnDef<Supplier>[] = [
                 Button,
                 {
                     variant: "ghost",
-                    onClick: () => column.toggleSorting(column.getIsSorted() === "asc"),
+                    onClick: () =>
+                        column.toggleSorting(column.getIsSorted() === "asc"),
                 },
-                () => [
-                    "E-mail",
-                    h(ArrowUpDown, { class: "ml-2 h-4 w-4" }),
-                ]
-            )
+                () => ["E-mail", h(ArrowUpDown, { class: "ml-2 h-4 w-4" })],
+            );
         },
     },
     {
@@ -83,9 +78,13 @@ export const columns: ColumnDef<Supplier>[] = [
         enableHiding: false,
         cell: ({ row }) => {
             const supplier = row.original;
-            return h("div", { class: "relative flex justify-end" }, h(ActionDropdown, {
-                supplier,
-            }));
+            return h(
+                "div",
+                { class: "relative flex justify-end" },
+                h(ActionDropdown, {
+                    supplier,
+                }),
+            );
         },
     },
 ];

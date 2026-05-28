@@ -72,7 +72,7 @@ const dataFiltered = computed(() => {
                 alt="Logo PlataformaNet"
                 class="mx-auto block h-16 max-w-full"
             />
-            <SearchForm />
+            <!-- <SearchForm /> -->
         </SidebarHeader>
         <SidebarContent class="gap-0">
             <template v-for="item in dataFiltered" :key="item.title">
@@ -116,6 +116,12 @@ const dataFiltered = computed(() => {
                                         <SidebarMenuButton
                                             as-child
                                             :is-active="isActive(childItem.url)"
+                                            v-if="
+                                                !childItem.permission ||
+                                                permissions.includes(
+                                                    childItem.permission,
+                                                )
+                                            "
                                         >
                                             <Link :href="childItem.url">{{
                                                 childItem.title

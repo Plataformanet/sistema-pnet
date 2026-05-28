@@ -23,9 +23,10 @@ import { Button } from "@/components/ui/button";
 import { Link, router } from "@inertiajs/vue3";
 import { route } from "ziggy-js";
 import { usePermission } from "@/composables/usePermission";
+import { Role } from "@/types";
 
 const props = defineProps<{
-    role: { id: string | number };
+    role: Role;
 }>();
 
 const { permissions } = usePermission();
@@ -34,11 +35,11 @@ const showDeleteDialog = ref(false);
 
 const deleteItem = () => {
     if (props.role.id) {
-        router.delete(route('tenant.settings.roles.destroy', props.role.id), {
+        router.delete(route("tenant.settings.roles.destroy", props.role.id), {
             preserveScroll: true,
             onSuccess: () => {
                 showDeleteDialog.value = false;
-            }
+            },
         });
     }
 };
@@ -84,18 +85,29 @@ const deleteItem = () => {
             </DropdownMenuContent>
         </DropdownMenu>
 
-        <AlertDialog :open="showDeleteDialog" @update:open="showDeleteDialog = $event">
+        <AlertDialog
+            :open="showDeleteDialog"
+            @update:open="showDeleteDialog = $event"
+        >
             <AlertDialogContent>
                 <AlertDialogHeader>
-                    <AlertDialogTitle>Você tem certeza absoluta?</AlertDialogTitle>
+                    <AlertDialogTitle
+                        >Você tem certeza absoluta?</AlertDialogTitle
+                    >
                     <AlertDialogDescription>
-                        Esta ação não pode ser desfeita. Isso excluirá permanentemente o
-                        cargo e removerá os dados de nossos servidores.
+                        Esta ação não pode ser desfeita. Isso excluirá
+                        permanentemente o cargo e removerá os dados de nossos
+                        servidores.
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                    <AlertDialogCancel @click="showDeleteDialog = false">Cancelar</AlertDialogCancel>
-                    <AlertDialogAction class="bg-red-600 hover:bg-red-700 text-white" @click="deleteItem">
+                    <AlertDialogCancel @click="showDeleteDialog = false"
+                        >Cancelar</AlertDialogCancel
+                    >
+                    <AlertDialogAction
+                        class="bg-red-600 text-white hover:bg-red-700"
+                        @click="deleteItem"
+                    >
                         Continuar
                     </AlertDialogAction>
                 </AlertDialogFooter>
