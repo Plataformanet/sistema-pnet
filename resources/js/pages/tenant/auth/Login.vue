@@ -83,7 +83,7 @@ function submit() {
                     }}</FieldError>
                 </Field>
                 <Field>
-                    <Button type="submit" class="cursor-pointer">Login</Button>
+                    <Button type="submit" :loading="form.processing" :disabled="form.processing">Login</Button>
                 </Field>
 
                 <!-- <FieldDescription class="text-center">

@@ -8,16 +8,26 @@ import UserForm from "../components/UserForm.vue";
 
 defineOptions({ layout: TenantLayout });
 
+interface Permission {
+    name: string;
+    display_name: string;
+}
+
+defineProps<{
+    roles: string[];
+    systemPermissions?: Permission[];
+    rolesWithPermissions?: Record<string, string[]>;
+}>();
+
 const form = useForm({
     name: "",
     email: "",
     role: "",
+    permissions: [] as string[],
     status: true,
     password: "",
     password_confirmation: "",
 });
-
-defineProps<{ roles: string[] }>();
 
 function submit() {
     form.post(route('tenant.settings.users.store'))
@@ -43,6 +53,12 @@ function submit() {
     </div>
 
     <div class="mx-auto mb-20 max-w-6xl py-4">
-        <UserForm :form="form" :roles="roles" @submit="submit" />
+        <UserForm
+            :form="form"
+            :roles="roles"
+            :system-permissions="systemPermissions"
+            :roles-with-permissions="rolesWithPermissions"
+            @submit="submit"
+        />
     </div>
 </template>

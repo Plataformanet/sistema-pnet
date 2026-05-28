@@ -26,10 +26,10 @@ class TenantRoleController extends Controller
 
     public function create()
     {
-        $permissions = Permission::select('name', 'display_name')->get()->toArray();
+        $systemPermissions = Permission::select('name', 'display_name')->get()->toArray();
 
         return Inertia::render('tenant/settings/roles/create/Create', [
-            'permissions' => $permissions
+            'systemPermissions' => $systemPermissions
         ]);
     }
 
@@ -49,11 +49,11 @@ class TenantRoleController extends Controller
     {
         $role = $this->roleService->findById($id, tenant());
 
-        $permissions = Permission::select('name', 'display_name')->get()->toArray();
+        $systemPermissions = Permission::select('name', 'display_name')->get()->toArray();
 
         return Inertia::render('tenant/settings/roles/edit/Edit', [
-            'role'        => $role,
-            'permissions' => $permissions
+            'role' => $role,
+            'systemPermissions' => $systemPermissions
         ]);
     }
 

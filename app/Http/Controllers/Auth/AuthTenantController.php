@@ -22,7 +22,7 @@ class AuthTenantController extends Controller
 
             $request->session()->regenerate();
 
-            return redirect()->route('tenant.dashboard');
+            return redirect()->route('tenant.dashboard')->with('success', 'Login realizado com sucesso!');
         }
 
         return back()->withErrors([
