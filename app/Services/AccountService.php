@@ -9,9 +9,9 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 
-abstract class AccountsService
+abstract class AccountService
 {
-    protected string $model; // Ex: ContaAPagar::class ou ContaAReceber::class
+    protected string $model; // Ex: AccountPayable::class ou AccountReceivable::class
 
     public function __construct()
     {
@@ -109,7 +109,7 @@ abstract class AccountsService
                 $bankAccount->save();
             }
 
-            $installment->payment_date = $installment->payment_date;
+            $installment->payment_date = Carbon::now();
 
             $installment->status = AccountsEnum::PAID->value;
 
