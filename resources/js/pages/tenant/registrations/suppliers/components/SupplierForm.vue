@@ -304,6 +304,7 @@ function onSubmit() {
             <Button
                 type="submit"
                 class="text-md w-full px-10 font-bold md:w-auto"
+                :loading="form.processing"
                 :disabled="form.processing"
             >
                 {{ submitText }}

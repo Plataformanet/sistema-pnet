@@ -10,16 +10,25 @@ import { User } from "@/types";
 
 defineOptions({ layout: TenantLayout });
 
+interface Permission {
+    name: string;
+    display_name: string;
+}
+
 const props = defineProps<{
     user: User;
     roles: string[];
     role: string;
+    systemPermissions?: Permission[];
+    rolesWithPermissions?: Record<string, string[]>;
+    userPermissions?: string[];
 }>();
 
 const form = useForm({
     name: props.user.name ?? "",
     email: props.user.email ?? "",
     role: props.role ?? "",
+    permissions: props.userPermissions ?? [] as string[],
     status: props.user.status ?? true,
     password: "",
     password_confirmation: "",
@@ -52,6 +61,8 @@ function submit() {
         <UserForm
             :form="form"
             :roles="roles"
+            :system-permissions="systemPermissions"
+            :roles-with-permissions="rolesWithPermissions"
             submitText="Atualizar Usuário"
             @submit="submit"
         />

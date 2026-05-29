@@ -197,7 +197,7 @@ function onSubmit() {
         </div>
 
         <div class="flex justify-end border-t border-border pt-6">
-            <Button type="submit" class="text-md w-full px-10 font-bold md:w-auto" :disabled="form.processing">
+            <Button type="submit" class="text-md w-full px-10 font-bold md:w-auto" :loading="form.processing" :disabled="form.processing">
                 {{ submitText }}
             </Button>
         </div>

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { ChevronLeft } from "lucide-vue-next";
 import { route } from "ziggy-js";
 import RoleForm from "../components/RoleForm.vue";
+import { Permission } from "@/types";
 
 defineOptions({ layout: TenantLayout });
 
@@ -13,22 +14,21 @@ const form = useForm({
     permissions: [] as string[],
 });
 
-defineProps({
-    permissions: {
-        type: Array as () => { name: string; display_name: string }[],
-        required: true,
-    },
-});
+defineProps<{
+    systemPermissions: Permission[];
+}>();
 
 function submit() {
-    form.post(route('tenant.settings.roles.store'))
+    form.post(route("tenant.settings.roles.store"));
 }
 </script>
 
 <template>
     <Head title="Novo Cargo" />
 
-    <div class="mb-6 flex items-center justify-between border-b border-border pb-4">
+    <div
+        class="mb-6 flex items-center justify-between border-b border-border pb-4"
+    >
         <div>
             <h2 class="text-3xl font-bold tracking-tight text-foreground">
                 Novo Cargo
@@ -42,6 +42,10 @@ function submit() {
     </div>
 
     <div class="mx-auto mb-20 max-w-6xl py-4">
-        <RoleForm :form="form" :permissions="permissions" @submit="submit" />
+        <RoleForm
+            :form="form"
+            :permissions="systemPermissions"
+            @submit="submit"
+        />
     </div>
 </template>

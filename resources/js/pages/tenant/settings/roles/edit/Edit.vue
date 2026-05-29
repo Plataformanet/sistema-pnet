@@ -5,16 +5,13 @@ import { Button } from "@/components/ui/button";
 import { ChevronLeft } from "lucide-vue-next";
 import { route } from "ziggy-js";
 import RoleForm from "../components/RoleForm.vue";
+import type { Role, Permission } from "@/types";
 
 defineOptions({ layout: TenantLayout });
 
 const props = defineProps<{
-    role: {
-        id: number;
-        name: string;
-        permissions: string[];
-    };
-    permissions: { name: string; display_name: string }[];
+    role: Role;
+    systemPermissions: Permission[];
 }>();
 
 const form = useForm({
@@ -23,14 +20,16 @@ const form = useForm({
 });
 
 function submit() {
-    form.put(route('tenant.settings.roles.update', props.role.id))
+    form.put(route("tenant.settings.roles.update", props.role.id));
 }
 </script>
 
 <template>
     <Head title="Editar Cargo" />
 
-    <div class="mb-6 flex items-center justify-between border-b border-border pb-4">
+    <div
+        class="mb-6 flex items-center justify-between border-b border-border pb-4"
+    >
         <div>
             <h2 class="text-3xl font-bold tracking-tight text-foreground">
                 Editar Cargo: {{ role.name }}
@@ -44,6 +43,10 @@ function submit() {
     </div>
 
     <div class="mx-auto mb-20 max-w-6xl py-4">
-        <RoleForm :form="form" :permissions="permissions" @submit="submit" />
+        <RoleForm
+            :form="form"
+            :permissions="systemPermissions"
+            @submit="submit"
+        />
     </div>
 </template>

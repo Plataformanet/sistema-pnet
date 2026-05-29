@@ -16,7 +16,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Link, usePage } from "@inertiajs/vue3";
 import { route } from "ziggy-js";
-import { computed, watch } from "vue";
+import { computed, watch, nextTick } from "vue";
 import { useTenant } from "@/composables/useTenant";
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import AvatarFallback from "@/components/ui/avatar/AvatarFallback.vue";
@@ -272,8 +272,10 @@ const flash = computed(() => page.props.flash as any);
 
 watch(
     flash,
-    (newFlash) => {
+    async (newFlash) => {
         if (!newFlash) return;
+
+        await nextTick();
 
         if (newFlash.success) {
             toast.success(newFlash.success);

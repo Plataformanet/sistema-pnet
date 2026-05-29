@@ -6,6 +6,7 @@ export * from "./registrations/Employee";
 // Settings
 export * from "./settings/User";
 export * from "./settings/Role";
+export * from "./settings/Permission";
 
 // Sales
 export * from "./sales/Sale";
