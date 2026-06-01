@@ -29,11 +29,11 @@ class FinancialSubcategory extends Model
 
     public function accountsPayable(): HasMany
     {
-        return $this->hasMany(AccountsPayable::class);
+        return $this->hasMany(AccountPayable::class);
     }
 
     public function accountsReceivable(): HasMany
     {
-        return $this->hasMany(AccountsReceivable::class);
+        return $this->hasMany(AccountReceivable::class);
     }
 }
