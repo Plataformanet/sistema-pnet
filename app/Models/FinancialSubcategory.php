@@ -22,9 +22,9 @@ class FinancialSubcategory extends Model
         'active' => 'boolean',
     ];
 
-    public function categoryFinancial(): BelongsTo
+    public function financialCategory(): BelongsTo
     {
-        return $this->belongsTo(CategoryFinancial::class);
+        return $this->belongsTo(FinancialCategory::class);
     }
 
     public function accountsPayable(): HasMany

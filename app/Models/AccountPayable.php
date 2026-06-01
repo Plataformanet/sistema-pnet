@@ -41,9 +41,9 @@ class AccountPayable extends Model
         return 'accounts_payable';
     }
 
-    public function categoryFinancial(): BelongsTo
+    public function financialCategory(): BelongsTo
     {
-        return $this->belongsTo(CategoryFinancial::class);
+        return $this->belongsTo(FinancialCategory::class);
     }
 
     public function financialSubcategory(): BelongsTo
