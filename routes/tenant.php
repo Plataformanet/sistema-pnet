@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Http\Controllers\Auth\AuthTenantController;
 use App\Http\Controllers\TenantClientController;
+use App\Http\Controllers\TenantFinancialCategoryController;
 use App\Http\Controllers\TenantProductCategoryController;
 use App\Http\Controllers\TenantProductController;
 use App\Http\Controllers\TenantRoleController;
@@ -106,6 +107,14 @@ Route::middleware([
         Route::get('/products/categories/{id}/edit', [TenantProductCategoryController::class, 'edit'])->name('tenant.products.categories.edit')->middleware('permission:products.categories.edit');
         Route::put('/products/categories/{id}', [TenantProductCategoryController::class, 'update'])->name('tenant.products.categories.update')->middleware('permission:products.categories.edit');
         Route::delete('/products/categories/{id}', [TenantProductCategoryController::class, 'destroy'])->name('tenant.products.categories.destroy')->middleware('permission:products.categories.delete');
+
+        // Finance Categories
+        Route::get('/finance/categories/list', [TenantFinancialCategoryController::class, 'index'])->name('tenant.finance.categories.list')->middleware('permission:finance.categories.view');
+        Route::get('/finance/categories/create', [TenantFinancialCategoryController::class, 'create'])->name('tenant.finance.categories.create')->middleware('permission:finance.categories.create');
+        Route::post('/finance/categories/store', [TenantFinancialCategoryController::class, 'store'])->name('tenant.finance.categories.store')->middleware('permission:finance.categories.create');
+        Route::get('/finance/categories/{id}/edit', [TenantFinancialCategoryController::class, 'edit'])->name('tenant.finance.categories.edit')->middleware('permission:finance.categories.edit');
+        Route::put('/finance/categories/{id}', [TenantFinancialCategoryController::class, 'update'])->name('tenant.finance.categories.update')->middleware('permission:finance.categories.edit');
+        Route::delete('/finance/categories/{id}', [TenantFinancialCategoryController::class, 'destroy'])->name('tenant.finance.categories.destroy')->middleware('permission:finance.categories.delete');
 
         // Configurações - Cargos (Roles)
         Route::get('/settings/roles/list', [TenantRoleController::class, 'index'])->name('tenant.settings.roles.list')->middleware('permission:settings.roles.view');

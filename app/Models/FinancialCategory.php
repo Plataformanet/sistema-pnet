@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class CategoryFinancial extends Model
+class FinancialCategory extends Model
 {
     use SoftDeletes;
 
@@ -29,11 +29,11 @@ class CategoryFinancial extends Model
 
     public function accountsPayable(): HasMany
     {
-        return $this->hasMany(AccountsPayable::class);
+        return $this->hasMany(AccountPayable::class);
     }
 
     public function accountsReceivable(): HasMany
     {
-        return $this->hasMany(AccountsReceivable::class);
+        return $this->hasMany(AccountReceivable::class);
     }
 }

@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class AccountsReceivable extends Model
+class AccountReceivable extends Model
 {
     use SoftDeletes;
 
@@ -34,9 +34,9 @@ class AccountsReceivable extends Model
         'bank_account_out'   => 'integer',
     ];
 
-    public function categoryFinancial(): BelongsTo
+    public function financialCategory(): BelongsTo
     {
-        return $this->belongsTo(CategoryFinancial::class);
+        return $this->belongsTo(FinancialCategory::class);
     }
 
     public function financialSubcategory(): BelongsTo
