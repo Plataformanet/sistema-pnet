@@ -7,7 +7,6 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Module extends Model
 {
-
     protected $fillable = [
         'id',
         'name',
@@ -20,7 +19,7 @@ class Module extends Model
     ];
 
     protected $casts = [
-        'is_core'          => 'boolean',
+        'is_core' => 'boolean',
         'requires_modules' => 'array',
     ];
 
@@ -65,7 +64,7 @@ class Module extends Model
         $activatedModules = $tenant->activeModules()->pluck('id')->toArray();
 
         foreach ($this->requires_modules as $requiredId) {
-            if (!in_array($requiredId, $activatedModules)) {
+            if (! in_array($requiredId, $activatedModules)) {
                 return false;
             }
         }

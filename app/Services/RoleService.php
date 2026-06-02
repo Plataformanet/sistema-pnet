@@ -76,8 +76,8 @@ class RoleService
             $role = Role::with('permissions')->findOrFail($id);
 
             return [
-                'id'          => $role->id,
-                'name'        => $role->name,
+                'id' => $role->id,
+                'name' => $role->name,
                 'permissions' => $role->permissions->pluck('name')->toArray(),
             ];
         });
@@ -85,9 +85,9 @@ class RoleService
 
     public function findAll(Tenant $tenant)
     {
-        return $tenant->run(fn() => Role::withCount('users')->get()->map(fn(Role $role) => [
-            'id'          => $role->id,
-            'name'        => $role->name,
+        return $tenant->run(fn () => Role::withCount('users')->get()->map(fn (Role $role) => [
+            'id' => $role->id,
+            'name' => $role->name,
             'users_count' => $role->users_count,
         ]));
     }

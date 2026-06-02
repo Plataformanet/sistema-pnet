@@ -4,14 +4,13 @@ namespace App\Services;
 
 use App\Enums\AccountsEnum;
 use App\Models\AccountPayable;
-
 use App\Models\AccountReceivable;
 use App\Models\Installment;
 use App\Models\Tenant;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
-use \Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class CashFlowService
 {
@@ -43,12 +42,12 @@ class CashFlowService
             }
 
             // Junta tudo em uma Collection
-            if (!$request->has('status')) {
+            if (! $request->has('status')) {
                 $accounts = $payableAccounts->concat($receivableAccounts);
             }
 
-            $perPage   = $request->query('quantity', 10);
-            $page      = $request->query('page', 1);
+            $perPage = $request->query('quantity', 10);
+            $page = $request->query('page', 1);
             $paginated = new LengthAwarePaginator(
                 $accounts->forPage($page, $perPage),
                 $accounts->count(),
@@ -61,13 +60,13 @@ class CashFlowService
         });
     }
 
-    static public function getAccounts(string $model, string $start, string $end, $request)
+    public static function getAccounts(string $model, string $start, string $end, $request)
     {
         return $model::with([
             'installments' => function (MorphMany $query) use ($start, $end) {
                 $query->whereBetween('due_date', [$start, $end])
                     ->whereIn('status', [AccountsEnum::PAID, AccountsEnum::OPEN]);
-            }
+            },
         ])->when($request->query('account_id') !== null, function (Builder $query) use ($request) {
             $query->whereHas('accountBank', function (Builder $query) use ($request) {
                 $query->where('account_bank_id', $request->query('account_id'));
@@ -164,7 +163,6 @@ class CashFlowService
             return $query->sum('value');
         });
     }
-
 
     public function calculateAccounts($request, string $period, Tenant $tenant, ?int $accountBankId = null)
     {

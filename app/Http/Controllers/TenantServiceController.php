@@ -14,15 +14,14 @@ class TenantServiceController extends Controller
     public function __construct(
         protected ServicesService $servicesService,
         protected CategoryServicesService $categoryServicesService
-    ) {
-    }
+    ) {}
 
     public function index()
     {
         $services = $this->servicesService->findAll(tenant());
 
         return Inertia::render('tenant/services/services/list/List', [
-            'services' => $services
+            'services' => $services,
         ]);
     }
 
@@ -43,7 +42,8 @@ class TenantServiceController extends Controller
             return redirect()->route('tenant.services.services.list')->with('success', 'Serviço criado com sucesso!');
 
         } catch (\Throwable $th) {
-            Log::error('Erro ao criar serviço: ' . $th->getMessage());
+            Log::error('Erro ao criar serviço: '.$th->getMessage());
+
             return redirect()->back()->with('error', 'Erro ao criar serviço!');
         }
     }
@@ -55,7 +55,7 @@ class TenantServiceController extends Controller
         $service = $this->servicesService->findById($id, tenant());
 
         return Inertia::render('tenant/services/services/edit/Edit', [
-            'service'    => $service,
+            'service' => $service,
             'categories' => $categories->toArray(),
         ]);
     }
@@ -68,7 +68,8 @@ class TenantServiceController extends Controller
             return redirect()->route('tenant.services.services.list')->with('success', 'Serviço atualizado com sucesso!');
 
         } catch (\Throwable $th) {
-            Log::error('Erro ao atualizar serviço: ' . $th->getMessage());
+            Log::error('Erro ao atualizar serviço: '.$th->getMessage());
+
             return redirect()->back()->with('error', 'Erro ao atualizar serviço!');
         }
     }
@@ -81,7 +82,8 @@ class TenantServiceController extends Controller
             return redirect()->route('tenant.services.services.list')->with('success', 'Serviço excluído com sucesso!');
 
         } catch (\Throwable $th) {
-            Log::error('Erro ao excluir serviço: ' . $th->getMessage());
+            Log::error('Erro ao excluir serviço: '.$th->getMessage());
+
             return redirect()->back()->with('error', 'Erro ao excluir serviço!');
         }
     }

@@ -10,11 +10,9 @@ use Inertia\Inertia;
 
 class TenantProductCategoryController extends Controller
 {
-
     public function __construct(
         protected CategoryProductService $categoryProductService,
-    ) {
-    }
+    ) {}
 
     public function index()
     {
@@ -38,7 +36,8 @@ class TenantProductCategoryController extends Controller
             return redirect()->route('tenant.products.categories.list')->with('success', 'Categoria criada com sucesso!');
 
         } catch (\Throwable $th) {
-            Log::error('Erro ao criar categoria: ' . $th->getMessage());
+            Log::error('Erro ao criar categoria: '.$th->getMessage());
+
             return redirect()->back()->with('error', 'Erro ao criar categoria!');
         }
     }
@@ -48,7 +47,7 @@ class TenantProductCategoryController extends Controller
         $category = $this->categoryProductService->findById($id, tenant());
 
         return Inertia::render('tenant/products/categories/edit/Edit', [
-            'category' => $category
+            'category' => $category,
         ]);
     }
 
@@ -59,7 +58,8 @@ class TenantProductCategoryController extends Controller
 
             return redirect()->route('tenant.products.categories.list')->with('success', 'Categoria atualizada com sucesso!');
         } catch (\Throwable $th) {
-            Log::error('Erro ao atualizar categoria: ' . $th->getMessage());
+            Log::error('Erro ao atualizar categoria: '.$th->getMessage());
+
             return redirect()->back()->with('error', 'Erro ao atualizar categoria!');
         }
     }
@@ -71,7 +71,8 @@ class TenantProductCategoryController extends Controller
 
             return redirect()->route('tenant.products.categories.list')->with('success', 'Categoria excluída com sucesso!');
         } catch (\Throwable $th) {
-            Log::error('Erro ao excluir categoria: ' . $th->getMessage());
+            Log::error('Erro ao excluir categoria: '.$th->getMessage());
+
             return redirect()->back()->with('error', 'Erro ao excluir categoria!');
         }
     }

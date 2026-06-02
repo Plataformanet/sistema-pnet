@@ -15,23 +15,23 @@ class ContactService
 
             try {
                 $contact = Contact::create([
-                    'type'                 => $data['type'] ?? 'PF',
+                    'type' => $data['type'] ?? 'PF',
                     'name_corporatereason' => $data['name_corporatereason'],
-                    'fantasy_name'         => $data['fantasy_name'] ?? null,
-                    'cpf_cnpj'             => $data['cpf_cnpj'],
-                    'email'                => $data['email'],
-                    'phone'                => $data['phone'],
-                    'cell_phone'           => $data['cell_phone'],
+                    'fantasy_name' => $data['fantasy_name'] ?? null,
+                    'cpf_cnpj' => $data['cpf_cnpj'],
+                    'email' => $data['email'],
+                    'phone' => $data['phone'],
+                    'cell_phone' => $data['cell_phone'],
                 ]);
 
                 $contact->address()->create([
-                    'zip_code'     => $data['zip_code'],
-                    'street'       => $data['street'],
-                    'number'       => $data['number'],
-                    'complement'   => $data['complement'],
+                    'zip_code' => $data['zip_code'],
+                    'street' => $data['street'],
+                    'number' => $data['number'],
+                    'complement' => $data['complement'],
                     'neighborhood' => $data['neighborhood'],
-                    'city'         => $data['city'],
-                    'state'        => $data['state'],
+                    'city' => $data['city'],
+                    'state' => $data['state'],
                 ]);
 
                 DB::commit();
@@ -54,23 +54,23 @@ class ContactService
                 $contact = Contact::findOrFail($id);
 
                 $contact->update([
-                    'type'                 => $data['type'] ?? 'PF',
+                    'type' => $data['type'] ?? 'PF',
                     'name_corporatereason' => $data['name_corporatereason'],
-                    'fantasy_name'         => $data['fantasy_name'] ?? null,
-                    'cpf_cnpj'             => $data['cpf_cnpj'],
-                    'email'                => $data['email'],
-                    'phone'                => $data['phone'],
-                    'cell_phone'           => $data['cell_phone'],
+                    'fantasy_name' => $data['fantasy_name'] ?? null,
+                    'cpf_cnpj' => $data['cpf_cnpj'],
+                    'email' => $data['email'],
+                    'phone' => $data['phone'],
+                    'cell_phone' => $data['cell_phone'],
                 ]);
 
                 $contact->address()->update([
-                    'zip_code'     => $data['zip_code'],
-                    'street'       => $data['street'],
-                    'number'       => $data['number'],
-                    'complement'   => $data['complement'],
+                    'zip_code' => $data['zip_code'],
+                    'street' => $data['street'],
+                    'number' => $data['number'],
+                    'complement' => $data['complement'],
                     'neighborhood' => $data['neighborhood'],
-                    'city'         => $data['city'],
-                    'state'        => $data['state'],
+                    'city' => $data['city'],
+                    'state' => $data['state'],
                 ]);
 
                 DB::commit();

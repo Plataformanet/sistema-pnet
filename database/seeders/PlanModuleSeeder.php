@@ -4,7 +4,6 @@ namespace Database\Seeders;
 
 use App\Models\Module;
 use App\Models\Plan;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class PlanModuleSeeder extends Seeder

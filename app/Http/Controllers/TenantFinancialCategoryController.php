@@ -13,8 +13,7 @@ class TenantFinancialCategoryController extends Controller
 {
     public function __construct(
         protected FinancialCategoryService $financialCategoryService,
-    ) {
-    }
+    ) {}
 
     public function index()
     {
@@ -39,7 +38,8 @@ class TenantFinancialCategoryController extends Controller
         } catch (ValidationException $th) {
             throw $th;
         } catch (\Throwable $th) {
-            Log::error('Erro ao criar categoria financeira: ' . $th->getMessage());
+            Log::error('Erro ao criar categoria financeira: '.$th->getMessage());
+
             return redirect()->back()->with('error', 'Erro ao criar categoria!');
         }
     }
@@ -62,7 +62,8 @@ class TenantFinancialCategoryController extends Controller
         } catch (ValidationException $th) {
             throw $th;
         } catch (\Throwable $th) {
-            Log::error('Erro ao atualizar categoria financeira: ' . $th->getMessage());
+            Log::error('Erro ao atualizar categoria financeira: '.$th->getMessage());
+
             return redirect()->back()->with('error', 'Erro ao atualizar categoria!');
         }
     }
@@ -74,7 +75,8 @@ class TenantFinancialCategoryController extends Controller
 
             return redirect()->route('tenant.finance.categories.list')->with('success', 'Categoria excluída com sucesso!');
         } catch (\Throwable $th) {
-            Log::error('Erro ao excluir categoria financeira: ' . $th->getMessage());
+            Log::error('Erro ao excluir categoria financeira: '.$th->getMessage());
+
             return redirect()->back()->with('error', 'Erro ao excluir categoria!');
         }
     }

@@ -15,10 +15,10 @@ enum PermissionsEnum: string
     public function label(): string
     {
         return match ($this) {
-            static::ADMIN => 'Admin',
-            static::SELLER => 'Vendedor',
-            static::MANAGER => 'Gestor',
-            static::FINANCIAL => 'Financeiro',
+            self::ADMIN => 'Admin',
+            self::SELLER => 'Vendedor',
+            self::MANAGER => 'Gestor',
+            self::FINANCIAL => 'Financeiro',
         };
     }
 }

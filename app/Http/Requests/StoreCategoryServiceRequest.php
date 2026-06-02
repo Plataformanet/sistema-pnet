@@ -23,7 +23,7 @@ class StoreCategoryServiceRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name'   => 'required|string|max:191',
+            'name' => 'required|string|max:191',
             'status' => 'required|boolean',
         ];
     }
@@ -31,8 +31,8 @@ class StoreCategoryServiceRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'name.required'   => 'O nome é obrigatório.',
-            'name.max'        => 'O nome deve ter no máximo 191 caracteres.',
+            'name.required' => 'O nome é obrigatório.',
+            'name.max' => 'O nome deve ter no máximo 191 caracteres.',
             'status.required' => 'O status é obrigatório.',
         ];
     }

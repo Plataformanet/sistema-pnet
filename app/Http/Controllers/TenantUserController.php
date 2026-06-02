@@ -2,25 +2,23 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Support\Facades\Log;
-use Inertia\Inertia;
 use App\Http\Requests\StoreUserRequest;
 use App\Http\Requests\UpdateUserRequest;
 use App\Services\UserService;
+use Illuminate\Support\Facades\Log;
+use Inertia\Inertia;
 use Spatie\Permission\Models\Role;
 
 class TenantUserController extends Controller
 {
-    public function __construct(protected UserService $userService)
-    {
-    }
+    public function __construct(protected UserService $userService) {}
 
     public function index()
     {
         $users = $this->userService->findAll(tenant());
 
         return Inertia::render('tenant/settings/users/list/List', [
-            'users' => $users
+            'users' => $users,
         ]);
     }
 
@@ -29,7 +27,7 @@ class TenantUserController extends Controller
         $roles = Role::all()->pluck('name')->toArray();
 
         return Inertia::render('tenant/settings/users/create/Create', [
-            'roles' => $roles
+            'roles' => $roles,
         ]);
     }
 
@@ -40,7 +38,8 @@ class TenantUserController extends Controller
 
             return redirect()->route('tenant.settings.users.list')->with('success', 'Usuário criado com sucesso!');
         } catch (\Throwable $th) {
-            Log::error('Erro ao criar usuário: ' . $th->getMessage());
+            Log::error('Erro ao criar usuário: '.$th->getMessage());
+
             return redirect()->back()->with('error', 'Erro ao criar usuário!');
         }
     }
@@ -54,7 +53,7 @@ class TenantUserController extends Controller
         return Inertia::render('tenant/settings/users/edit/Edit', [
             'user' => $user,
             'roles' => $roles,
-            'role' => $user->getRoleNames()->first()
+            'role' => $user->getRoleNames()->first(),
         ]);
     }
 
@@ -65,7 +64,8 @@ class TenantUserController extends Controller
 
             return redirect()->route('tenant.settings.users.list')->with('success', 'Usuário atualizado com sucesso!');
         } catch (\Throwable $th) {
-            Log::error('Erro ao atualizar usuário: ' . $th->getMessage());
+            Log::error('Erro ao atualizar usuário: '.$th->getMessage());
+
             return redirect()->back()->with('error', 'Erro ao atualizar usuário!');
         }
     }
@@ -77,7 +77,8 @@ class TenantUserController extends Controller
 
             return redirect()->route('tenant.settings.users.list')->with('success', 'Usuário deletado com sucesso!');
         } catch (\Throwable $th) {
-            Log::error('Erro ao deletar usuário: ' . $th->getMessage());
+            Log::error('Erro ao deletar usuário: '.$th->getMessage());
+
             return redirect()->back()->with('error', 'Erro ao deletar usuário!');
         }
     }

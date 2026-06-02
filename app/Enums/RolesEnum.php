@@ -16,11 +16,11 @@ enum RolesEnum: string
     public function label(): string
     {
         return match ($this) {
-            static::ADMIN => 'Administrador',
-            static::SELLER => 'Vendedor',
-            static::MANAGER => 'Gestor',
-            static::FINANCIAL => 'Financeiro',
-            static::PARTNER => 'Parceiro',
+            self::ADMIN => 'Administrador',
+            self::SELLER => 'Vendedor',
+            self::MANAGER => 'Gestor',
+            self::FINANCIAL => 'Financeiro',
+            self::PARTNER => 'Parceiro',
         };
     }
 

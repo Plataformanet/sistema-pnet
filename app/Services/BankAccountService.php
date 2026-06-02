@@ -33,7 +33,7 @@ class BankAccountService
 
             $getAccountBankMain = AccountBank::where('main_account', true)->first();
 
-            if (!$getAccountBankMain) {
+            if (! $getAccountBankMain) {
                 throw ValidationException::withMessages([
                     'error' => 'É necessário ter pelo menos uma conta principal.',
                 ]);
@@ -54,7 +54,7 @@ class BankAccountService
             return DB::transaction(function () use ($id) {
                 $accountBank = AccountBank::findOrFail($id);
 
-                $accountPayable    = $accountBank->accountsPayable()->exists();
+                $accountPayable = $accountBank->accountsPayable()->exists();
                 $accountReceivable = $accountBank->accountsReceivable()->exists();
 
                 $accountBank->delete();
@@ -74,11 +74,11 @@ class BankAccountService
 
     public function findAll(Tenant $tenant)
     {
-        return $tenant->run(fn() => AccountBank::all());
+        return $tenant->run(fn () => AccountBank::all());
     }
 
     public function findById(string $id, Tenant $tenant)
     {
-        return $tenant->run(fn() => AccountBank::findOrFail($id));
+        return $tenant->run(fn () => AccountBank::findOrFail($id));
     }
 }

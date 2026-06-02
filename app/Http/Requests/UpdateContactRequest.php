@@ -2,6 +2,4 @@
 
 namespace App\Http\Requests;
 
-class UpdateContactRequest extends StoreContactRequest
-{
-}
+class UpdateContactRequest extends StoreContactRequest {}
