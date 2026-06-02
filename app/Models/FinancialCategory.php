@@ -10,6 +10,8 @@ class FinancialCategory extends Model
 {
     use SoftDeletes;
 
+    protected $table = "category_financials";
+
     protected $fillable = [
         'name',
         'type',
