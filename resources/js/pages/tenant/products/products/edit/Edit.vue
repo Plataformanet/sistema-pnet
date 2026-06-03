@@ -24,7 +24,7 @@ const form = useForm({
     name: props.product.name || "",
     sku: props.product.sku || "",
     barcode: props.product.barcode || "",
-    category_product_id: props.product.category_product_id || "",
+    product_category_id: props.product.product_category_id || "",
     cost_value:
         props.product.cost_value !== undefined
             ? maskCurrency(String(props.product.cost_value))

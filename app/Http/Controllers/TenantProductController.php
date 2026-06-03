@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreProductRequest;
 use App\Http\Requests\UpdateProductRequest;
-use App\Services\CategoryProductService;
+use App\Services\ProductCategoryService;
 use App\Services\ProductService;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
@@ -13,7 +13,7 @@ class TenantProductController extends Controller
 {
     public function __construct(
         protected ProductService $productService,
-        protected CategoryProductService $categoryProductService
+        protected ProductCategoryService $productCategoryService
     ) {}
 
     public function index()
@@ -25,7 +25,7 @@ class TenantProductController extends Controller
 
     public function create()
     {
-        $categories = $this->categoryProductService->findAll(tenant());
+        $categories = $this->productCategoryService->findAll(tenant());
 
         return Inertia::render('tenant/products/products/create/Create', [
             'categories' => $categories->toArray(),
@@ -48,7 +48,7 @@ class TenantProductController extends Controller
 
     public function edit(string $id)
     {
-        $categories = $this->categoryProductService->findAll(tenant());
+        $categories = $this->productCategoryService->findAll(tenant());
 
         $product = $this->productService->findById($id, tenant());
 

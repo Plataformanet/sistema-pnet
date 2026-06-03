@@ -12,22 +12,22 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ```bash
 # Start dev server (PHP + queue + Vite concurrently)
-composer run dev
+sail composer run dev
 
 # Run tests
-composer run test
+sail pest
 
 # Reset central DB and seed
-composer run central-migrate-fresh-seed
+sail composer run central-migrate-fresh-seed
 
 # Reset all tenant DBs
-composer run tenants-migrate-fresh
+sail composer run tenants-migrate-fresh
 
 # PHP code style (Pint)
 sail pint
 
 # TypeScript check + frontend build
-npm run build
+sail npm run build
 ```
 
 Single test: `sail php artisan test --filter=TestClassName`
@@ -55,8 +55,12 @@ All tenant DB operations must run inside `$tenant->run(fn() => ...)` to switch t
 
 Controllers inject services and delegate all logic to them. Services:
 - Always accept `Tenant $tenant` as a parameter
-- Wrap DB writes in `DB::beginTransaction()` / `DB::commit()` / `DB::rollBack()` inside `$tenant->run()`
+- Run all DB writes inside `$tenant->run()` to switch to the tenant connection
 - Throw exceptions on failure (controllers catch and redirect with flash messages)
+
+**Transactions:** for regular tenant-scoped methods, wrap writes in `DB::transaction(fn() => ...)` **inside** `$tenant->run()`. The connection is already switched and stable before the closure runs, so the transaction begins and commits on the same tenant connection — `DB::transaction()` here is safe and preferred (auto-rollback on exception + deadlock retry).
+
+The manual `DB::beginTransaction()` / `DB::commit()` / `DB::rollBack()` (with try/catch) is **only** for `TenantService::store` (tenant creation). There, `Tenant::create` triggers the `CreateDatabase` / `MigrateDatabase` / `SeedDatabase` job pipeline, which reconnects the database mid-flow. Wrapping that in `DB::transaction()` throws `PDOException: There is no active transaction`, because the connection is purged between `begin` and `commit`. So the manual transaction must be opened **inside `$tenant->run()`** (after the connection has stabilized on the tenant), around only the tenant-side inserts.
 
 ### Permissions & Roles (Spatie)
 

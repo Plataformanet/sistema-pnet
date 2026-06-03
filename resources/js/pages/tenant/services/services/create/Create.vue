@@ -15,7 +15,7 @@ const form = useForm({
     cost_value: "",
     sell_value: "",
     fees: "",
-    category_service_id: "",
+    service_category_id: "",
     description: "",
     duration: "",
     status: true,

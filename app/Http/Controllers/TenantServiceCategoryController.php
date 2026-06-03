@@ -2,21 +2,21 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\StoreCategoryServiceRequest;
-use App\Http\Requests\UpdateCategoryServiceRequest;
-use App\Services\CategoryServicesService;
+use App\Http\Requests\StoreServiceCategoryRequest;
+use App\Http\Requests\UpdateServiceCategoryRequest;
+use App\Services\ServiceCategoryService;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 
 class TenantServiceCategoryController extends Controller
 {
     public function __construct(
-        protected CategoryServicesService $categoryServicesService,
+        protected ServiceCategoryService $serviceCategoryService,
     ) {}
 
     public function index()
     {
-        $categories = $this->categoryServicesService->findAll(tenant());
+        $categories = $this->serviceCategoryService->findAll(tenant());
 
         return Inertia::render('tenant/services/categories/list/List', [
             'categories' => $categories,
@@ -28,10 +28,10 @@ class TenantServiceCategoryController extends Controller
         return Inertia::render('tenant/services/categories/create/Create');
     }
 
-    public function store(StoreCategoryServiceRequest $request)
+    public function store(StoreServiceCategoryRequest $request)
     {
         try {
-            $this->categoryServicesService->store($request->validated(), tenant());
+            $this->serviceCategoryService->store($request->validated(), tenant());
 
             return redirect()->route('tenant.services.categories.list')->with('success', 'Categoria criada com sucesso!');
 
@@ -44,17 +44,17 @@ class TenantServiceCategoryController extends Controller
 
     public function edit($id)
     {
-        $category = $this->categoryServicesService->findById($id, tenant());
+        $category = $this->serviceCategoryService->findById($id, tenant());
 
         return Inertia::render('tenant/services/categories/edit/Edit', [
             'category' => $category,
         ]);
     }
 
-    public function update(UpdateCategoryServiceRequest $request, $id)
+    public function update(UpdateServiceCategoryRequest $request, $id)
     {
         try {
-            $this->categoryServicesService->update($id, $request->validated(), tenant());
+            $this->serviceCategoryService->update($id, $request->validated(), tenant());
 
             return redirect()->route('tenant.services.categories.list')->with('success', 'Categoria atualizada com sucesso!');
         } catch (\Throwable $th) {
@@ -67,7 +67,7 @@ class TenantServiceCategoryController extends Controller
     public function destroy($id)
     {
         try {
-            $this->categoryServicesService->destroy($id, tenant());
+            $this->serviceCategoryService->destroy($id, tenant());
 
             return redirect()->route('tenant.services.categories.list')->with('success', 'Categoria excluída com sucesso!');
         } catch (\Throwable $th) {

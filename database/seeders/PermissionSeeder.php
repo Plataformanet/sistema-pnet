@@ -150,6 +150,20 @@ class PermissionSeeder extends Seeder
                         'Categorias (Excluir)',
                     ],
                 ],
+                'subcategories' => [
+                    'name' => [
+                        'finance.subcategories.view',
+                        'finance.subcategories.edit',
+                        'finance.subcategories.create',
+                        'finance.subcategories.delete',
+                    ],
+                    'display_name' => [
+                        'Subcategorias (Visualizar)',
+                        'Subcategorias (Editar)',
+                        'Subcategorias (Criar)',
+                        'Subcategorias (Excluir)',
+                    ],
+                ],
                 'accounts' => [
                     'name' => [
                         'finance.accounts.view',

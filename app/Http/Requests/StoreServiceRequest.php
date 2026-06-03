@@ -24,7 +24,7 @@ class StoreServiceRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'category_service_id' => ['required', 'integer', 'exists:category_services,id'],
+            'service_category_id' => ['required', 'integer', 'exists:service_categories,id'],
             'name' => ['required', 'string', 'min:3', 'max:100'],
             'sku' => ['required', Rule::unique('services', 'sku')],
             'cost_value' => ['required', 'numeric', 'min:0'],
@@ -39,8 +39,8 @@ class StoreServiceRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'category_service_id.required' => 'A categoria é obrigatória.',
-            'category_service_id.exists' => 'A categoria selecionada é inválida.',
+            'service_category_id.required' => 'A categoria é obrigatória.',
+            'service_category_id.exists' => 'A categoria selecionada é inválida.',
             'name.required' => 'O nome é obrigatório.',
             'name.min' => 'O nome deve ter pelo menos 3 caracteres.',
             'name.max' => 'O nome deve ter no máximo 100 caracteres.',

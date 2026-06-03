@@ -24,7 +24,7 @@ class StoreProductRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'category_product_id' => ['required', 'integer', 'exists:category_products,id'],
+            'product_category_id' => ['required', 'integer', 'exists:product_categories,id'],
             'name' => ['required', 'string', 'min:3', 'max:100'],
             'sku' => ['required', Rule::unique('products', 'sku')],
             'barcode' => ['required', Rule::unique('products', 'barcode')],
@@ -46,8 +46,8 @@ class StoreProductRequest extends FormRequest
             'name.min' => 'O nome deve ter pelo menos 3 caracteres.',
             'name.max' => 'O nome deve ter no máximo 100 caracteres.',
             'description.max' => 'A descrição deve ter no máximo 255 caracteres.',
-            'category_product_id.required' => 'A categoria é obrigatória.',
-            'category_product_id.exists' => 'A categoria selecionada é inválida.',
+            'product_category_id.required' => 'A categoria é obrigatória.',
+            'product_category_id.exists' => 'A categoria selecionada é inválida.',
             'sku.required' => 'O SKU é obrigatório.',
             'sku.unique' => 'O SKU já está cadastrado.',
             'barcode.required' => 'O código de barras é obrigatório.',

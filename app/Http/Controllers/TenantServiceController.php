@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreServiceRequest;
 use App\Http\Requests\UpdateServiceRequest;
-use App\Services\CategoryServicesService;
+use App\Services\ServiceCategoryService;
 use App\Services\ServicesService;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
@@ -13,7 +13,7 @@ class TenantServiceController extends Controller
 {
     public function __construct(
         protected ServicesService $servicesService,
-        protected CategoryServicesService $categoryServicesService
+        protected ServiceCategoryService $serviceCategoryService
     ) {}
 
     public function index()
@@ -27,7 +27,7 @@ class TenantServiceController extends Controller
 
     public function create()
     {
-        $categories = $this->categoryServicesService->findAll(tenant());
+        $categories = $this->serviceCategoryService->findAll(tenant());
 
         return Inertia::render('tenant/services/services/create/Create', [
             'categories' => $categories->toArray(),
@@ -50,7 +50,7 @@ class TenantServiceController extends Controller
 
     public function edit(string $id)
     {
-        $categories = $this->categoryServicesService->findAll(tenant());
+        $categories = $this->serviceCategoryService->findAll(tenant());
 
         $service = $this->servicesService->findById($id, tenant());
 

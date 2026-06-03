@@ -11,16 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('financial_subcategory', function (Blueprint $table) {
+        Schema::create('service_categories', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('category_financial_id')->constrained('category_financials')->cascadeOnDelete();
             $table->string('name');
-            $table->text('observations')->nullable();
-            $table->boolean('active')->default(1);
-            $table->softDeletes();
+            $table->boolean('status')->default(true);
             $table->timestamps();
-
-            $table->unique('name');
         });
     }
 
@@ -29,6 +24,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('financial_subcategory');
+        Schema::dropIfExists('service_categories');
     }
 };

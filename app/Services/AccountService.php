@@ -3,7 +3,7 @@
 namespace App\Services;
 
 use App\Enums\AccountsEnum;
-use App\Models\AccountBank;
+use App\Models\BankAccount;
 use App\Models\Installment;
 use App\Models\Tenant;
 use Carbon\Carbon;
@@ -48,12 +48,12 @@ abstract class AccountService
             }
 
             return $this->model::when($request->query('conta_id') !== null, function (Builder $query) use ($request) {
-                $query->whereHas('accountBank', function (Builder $query) use ($request) {
-                    $query->where('account_bank_id', $request->query('conta_id'));
+                $query->whereHas('bankAccount', function (Builder $query) use ($request) {
+                    $query->where('bank_account_id', $request->query('conta_id'));
                 });
             })
                 ->when($request->query('conta_id') === null && $request->query('categoria_id') === null, function (Builder $query) {
-                    $query->whereHas('accountBank', function (Builder $query) {
+                    $query->whereHas('bankAccount', function (Builder $query) {
                         $query->where('main_account', 1);
                     });
                 })->whereHas('installments', function (Builder $query) use ($inicio, $fim, $request, $hoje) {
@@ -99,9 +99,9 @@ abstract class AccountService
 
                 $model = $installment->installmentable_type;
 
-                $bankAccountId = $model::select('account_bank_id')->where('id', $installment->installmentable_id)->first()->account_bank_id;
+                $bankAccountId = $model::select('bank_account_id')->where('id', $installment->installmentable_id)->first()->bank_account_id;
 
-                $bankAccount = AccountBank::findOrFail($bankAccountId);
+                $bankAccount = BankAccount::findOrFail($bankAccountId);
 
                 if (class_basename($model) === 'AccountPayable') {
                     $bankAccount->current_balance -= $installment->value;
@@ -166,13 +166,13 @@ abstract class AccountService
             })->whereHasMorph('installmentable', [$this->model], function (Builder $query) use ($start, $end, $request, $bankAccountId) {
                 $query->whereBetween('due_date', [$start, $end])
                     ->when($request->query('categoria_id'), function (Builder $query) use ($request) {
-                        $query->where('category_financial_id', $request->query('categoria_id'));
+                        $query->where('financial_category_id', $request->query('categoria_id'));
                     })
                     ->when($request->query('conta_id') !== null, function (Builder $query) use ($request) {
-                        $query->where('account_bank_id', $request->query('conta_id'));
+                        $query->where('bank_account_id', $request->query('conta_id'));
                     })
                     ->when($bankAccountId !== null, function (Builder $query) use ($bankAccountId) {
-                        $query->where('account_bank_id', $bankAccountId);
+                        $query->where('bank_account_id', $bankAccountId);
                     });
             });
 
@@ -207,13 +207,13 @@ abstract class AccountService
                 $query->whereBetween('due_date', [$start, $end])
                     ->where('status', AccountsEnum::PAID->value)
                     ->when($request->query('categoria_id'), function (Builder $query) use ($request) {
-                        $query->where('category_financial_id', $request->query('categoria_id'));
+                        $query->where('financial_category_id', $request->query('categoria_id'));
                     })
                     ->when($request->query('conta_id') !== null, function (Builder $query) use ($request) {
-                        $query->where('account_bank_id', $request->query('conta_id'));
+                        $query->where('bank_account_id', $request->query('conta_id'));
                     })
                     ->when($bankAccountId !== null, function (Builder $query) use ($bankAccountId) {
-                        $query->where('account_bank_id', $bankAccountId);
+                        $query->where('bank_account_id', $bankAccountId);
                     })
                     ->when($request->query('search'), function (Builder $query) use ($request) {
                         $query->where(function ($query) use ($request) {
@@ -278,13 +278,13 @@ abstract class AccountService
                 $query->where('status', $statusOpen)
                     ->whereBetween('due_date', [$start, $end])
                     ->when($request->filled('categoria_id'), function (Builder $query) use ($request) {
-                        $query->where('category_financial_id', $request->query('categoria_id'));
+                        $query->where('financial_category_id', $request->query('categoria_id'));
                     })
                     ->when($request->query('conta_id') !== null, function (Builder $query) use ($request) {
-                        $query->where('account_bank_id', $request->query('conta_id'));
+                        $query->where('bank_account_id', $request->query('conta_id'));
                     })
                     ->when($bankAccountId !== null, function (Builder $query) use ($bankAccountId) {
-                        $query->where('account_bank_id', $bankAccountId);
+                        $query->where('bank_account_id', $bankAccountId);
                     });
             });
 
@@ -328,13 +328,13 @@ abstract class AccountService
                 $query->whereDate('due_date', $today)
                     ->where('status', $statusOpen)
                     ->when($request->query('categoria_id'), function (Builder $query) use ($request) {
-                        $query->where('category_financial_id', $request->query('categoria_id'));
+                        $query->where('financial_category_id', $request->query('categoria_id'));
                     })
                     ->when($request->query('conta_id') !== null, function (Builder $query) use ($request) {
-                        $query->where('account_bank_id', $request->query('conta_id'));
+                        $query->where('bank_account_id', $request->query('conta_id'));
                     })
                     ->when($bankAccountId !== null, function (Builder $query) use ($bankAccountId) {
-                        $query->where('account_bank_id', $bankAccountId);
+                        $query->where('bank_account_id', $bankAccountId);
                     });
             });
 
@@ -373,13 +373,13 @@ abstract class AccountService
                     ->whereDate('due_date', '<', $today)
                     ->where('status', $statusOpen)
                     ->when($request->query('categoria_id'), function (Builder $query) use ($request) {
-                        $query->where('category_financial_id', $request->query('categoria_id'));
+                        $query->where('financial_category_id', $request->query('categoria_id'));
                     })
                     ->when($request->query('conta_id') !== null, function (Builder $query) use ($request) {
-                        $query->where('account_bank_id', $request->query('conta_id'));
+                        $query->where('bank_account_id', $request->query('conta_id'));
                     })
                     ->when($bankAccountId !== null, function (Builder $query) use ($bankAccountId) {
-                        $query->where('account_bank_id', $bankAccountId);
+                        $query->where('bank_account_id', $bankAccountId);
                     });
             });
 
