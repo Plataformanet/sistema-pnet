@@ -68,11 +68,11 @@ function onSubmit() {
                 </Field>
 
                 <Field>
-                    <FieldLabel for="category_product_id"
+                    <FieldLabel for="product_category_id"
                         >Categoria do Produto</FieldLabel
                     >
-                    <Select v-model="form.category_product_id">
-                        <SelectTrigger id="category_product_id">
+                    <Select v-model="form.product_category_id">
+                        <SelectTrigger id="product_category_id">
                             <SelectValue
                                 placeholder="Selecione uma categoria"
                             />
@@ -85,8 +85,8 @@ function onSubmit() {
                             </SelectGroup>
                         </SelectContent>
                     </Select>
-                    <FieldError v-if="form.errors.category_product_id">{{
-                        form.errors.category_product_id
+                    <FieldError v-if="form.errors.product_category_id">{{
+                        form.errors.product_category_id
                     }}</FieldError>
                 </Field>
 

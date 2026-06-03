@@ -3,8 +3,8 @@
 namespace App\Services;
 
 use App\Enums\AccountsEnum;
-use App\Models\AccountBank;
 use App\Models\AccountReceivable;
+use App\Models\BankAccount;
 use App\Models\Tenant;
 use DateTime;
 use Illuminate\Support\Facades\DB;
@@ -57,9 +57,9 @@ class AccountReceivableService extends AccountService
                 }
 
                 if ($data['status'] === AccountsEnum::PAID->value) {
-                    $accountBank = AccountBank::find($data['account_bank_id']);
-                    $accountBank->current_balance += $data['value'];
-                    $accountBank->save();
+                    $bankAccount = BankAccount::find($data['bank_account_id']);
+                    $bankAccount->current_balance += $data['value'];
+                    $bankAccount->save();
                 }
 
                 return $accountReceivable;

@@ -2,21 +2,21 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\StoreCategoryProductRequest;
-use App\Http\Requests\UpdateCategoryProductRequest;
-use App\Services\CategoryProductService;
+use App\Http\Requests\StoreProductCategoryRequest;
+use App\Http\Requests\UpdateProductCategoryRequest;
+use App\Services\ProductCategoryService;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 
 class TenantProductCategoryController extends Controller
 {
     public function __construct(
-        protected CategoryProductService $categoryProductService,
+        protected ProductCategoryService $productCategoryService,
     ) {}
 
     public function index()
     {
-        $categories = $this->categoryProductService->findAll(tenant());
+        $categories = $this->productCategoryService->findAll(tenant());
 
         return Inertia::render('tenant/products/categories/list/List', [
             'categories' => $categories,
@@ -28,10 +28,10 @@ class TenantProductCategoryController extends Controller
         return Inertia::render('tenant/products/categories/create/Create');
     }
 
-    public function store(StoreCategoryProductRequest $request)
+    public function store(StoreProductCategoryRequest $request)
     {
         try {
-            $this->categoryProductService->store($request->validated(), tenant());
+            $this->productCategoryService->store($request->validated(), tenant());
 
             return redirect()->route('tenant.products.categories.list')->with('success', 'Categoria criada com sucesso!');
 
@@ -44,17 +44,17 @@ class TenantProductCategoryController extends Controller
 
     public function edit($id)
     {
-        $category = $this->categoryProductService->findById($id, tenant());
+        $category = $this->productCategoryService->findById($id, tenant());
 
         return Inertia::render('tenant/products/categories/edit/Edit', [
             'category' => $category,
         ]);
     }
 
-    public function update(UpdateCategoryProductRequest $request, $id)
+    public function update(UpdateProductCategoryRequest $request, $id)
     {
         try {
-            $this->categoryProductService->update($id, $request->validated(), tenant());
+            $this->productCategoryService->update($id, $request->validated(), tenant());
 
             return redirect()->route('tenant.products.categories.list')->with('success', 'Categoria atualizada com sucesso!');
         } catch (\Throwable $th) {
@@ -67,7 +67,7 @@ class TenantProductCategoryController extends Controller
     public function destroy($id)
     {
         try {
-            $this->categoryProductService->destroy($id, tenant());
+            $this->productCategoryService->destroy($id, tenant());
 
             return redirect()->route('tenant.products.categories.list')->with('success', 'Categoria excluída com sucesso!');
         } catch (\Throwable $th) {

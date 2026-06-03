@@ -12,10 +12,10 @@ class AccountReceivable extends Model
     use SoftDeletes;
 
     protected $fillable = [
-        'category_financial_id',
+        'financial_category_id',
         'financial_subcategory_id',
         'cost_id',
-        'account_bank_id',
+        'bank_account_id',
         'contact_financial_id',
         'description',
         'total',
@@ -49,9 +49,9 @@ class AccountReceivable extends Model
         return $this->belongsTo(Cost::class);
     }
 
-    public function accountBank(): BelongsTo
+    public function bankAccount(): BelongsTo
     {
-        return $this->belongsTo(AccountBank::class);
+        return $this->belongsTo(BankAccount::class);
     }
 
     public function contactFinancial(): BelongsTo

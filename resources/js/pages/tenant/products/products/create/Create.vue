@@ -13,7 +13,7 @@ const form = useForm({
     name: "",
     sku: "",
     barcode: "",
-    category_product_id: "",
+    product_category_id: "",
     cost_value: "",
     sell_value: "",
     manage_stock: true,

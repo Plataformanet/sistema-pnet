@@ -2,19 +2,19 @@
 
 namespace App\Services;
 
-use App\Models\AccountBank;
+use App\Models\BankAccount;
 use App\Models\Tenant;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class BankAccountService
 {
-    public function create(array $data, Tenant $tenant): AccountBank
+    public function create(array $data, Tenant $tenant): BankAccount
     {
         return $tenant->run(function () use ($data) {
-            $getAccountBank = AccountBank::all();
+            $getBankAccount = BankAccount::all();
 
-            foreach ($getAccountBank as $account) {
+            foreach ($getBankAccount as $account) {
                 if ($account->main_account == 1 && $data['main_account'] == 1) {
                     throw ValidationException::withMessages([
                         'error' => 'Já existe uma conta definida como principal.',
@@ -22,29 +22,29 @@ class BankAccountService
                 }
             }
 
-            return AccountBank::create($data);
+            return BankAccount::create($data);
         });
     }
 
     public function update(string $id, array $data, Tenant $tenant)
     {
         return $tenant->run(function () use ($id, $data) {
-            $accountBank = AccountBank::findOrFail($id);
+            $bankAccount = BankAccount::findOrFail($id);
 
-            $getAccountBankMain = AccountBank::where('main_account', true)->first();
+            $getBankAccountMain = BankAccount::where('main_account', true)->first();
 
-            if (! $getAccountBankMain) {
+            if (! $getBankAccountMain) {
                 throw ValidationException::withMessages([
                     'error' => 'É necessário ter pelo menos uma conta principal.',
                 ]);
             }
 
-            if ($getAccountBankMain->id != $id && $data['main_account'] == 1) {
-                $getAccountBankMain->main_account = 0;
-                $getAccountBankMain->save();
+            if ($getBankAccountMain->id != $id && $data['main_account'] == 1) {
+                $getBankAccountMain->main_account = 0;
+                $getBankAccountMain->save();
             }
 
-            return $accountBank->update($data);
+            return $bankAccount->update($data);
         });
     }
 
@@ -52,33 +52,33 @@ class BankAccountService
     {
         return $tenant->run(function () use ($id) {
             return DB::transaction(function () use ($id) {
-                $accountBank = AccountBank::findOrFail($id);
+                $bankAccount = BankAccount::findOrFail($id);
 
-                $accountPayable = $accountBank->accountsPayable()->exists();
-                $accountReceivable = $accountBank->accountsReceivable()->exists();
+                $accountPayable = $bankAccount->accountsPayable()->exists();
+                $accountReceivable = $bankAccount->accountsReceivable()->exists();
 
-                $accountBank->delete();
+                $bankAccount->delete();
 
-                if ($accountBank && $accountPayable) {
-                    $accountBank->accountsPayable()->delete();
+                if ($bankAccount && $accountPayable) {
+                    $bankAccount->accountsPayable()->delete();
                 }
 
-                if ($accountBank && $accountReceivable) {
-                    $accountBank->accountsReceivable()->delete();
+                if ($bankAccount && $accountReceivable) {
+                    $bankAccount->accountsReceivable()->delete();
                 }
 
-                return $accountBank;
+                return $bankAccount;
             });
         });
     }
 
     public function findAll(Tenant $tenant)
     {
-        return $tenant->run(fn () => AccountBank::all());
+        return $tenant->run(fn () => BankAccount::all());
     }
 
     public function findById(string $id, Tenant $tenant)
     {
-        return $tenant->run(fn () => AccountBank::findOrFail($id));
+        return $tenant->run(fn () => BankAccount::findOrFail($id));
     }
 }

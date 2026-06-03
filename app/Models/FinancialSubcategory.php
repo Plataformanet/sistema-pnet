@@ -12,7 +12,7 @@ class FinancialSubcategory extends Model
     use SoftDeletes;
 
     protected $fillable = [
-        'category_financial_id',
+        'financial_category_id',
         'name',
         'observations',
         'active',

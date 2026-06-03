@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Product extends Model
 {
     protected $fillable = [
-        'category_product_id',
+        'product_category_id',
         'name',
         'sku',
         'barcode',
@@ -30,8 +30,8 @@ class Product extends Model
         'status' => 'boolean',
     ];
 
-    public function categoryProduct()
+    public function productCategory()
     {
-        return $this->belongsTo(CategoryProduct::class);
+        return $this->belongsTo(ProductCategory::class);
     }
 }

@@ -68,15 +68,15 @@ class CashFlowService
                     ->whereIn('status', [AccountsEnum::PAID, AccountsEnum::OPEN]);
             },
         ])->when($request->query('account_id') !== null, function (Builder $query) use ($request) {
-            $query->whereHas('accountBank', function (Builder $query) use ($request) {
-                $query->where('account_bank_id', $request->query('account_id'));
+            $query->whereHas('bankAccount', function (Builder $query) use ($request) {
+                $query->where('bank_account_id', $request->query('account_id'));
             });
         })->when($request->query('category_id') !== null, function (Builder $query) use ($request) {
             $query->whereHas('financialCategory', function (Builder $query) use ($request) {
-                $query->where('category_financial_id', $request->query('category_id'));
+                $query->where('financial_category_id', $request->query('category_id'));
             });
         })->when($request->query('account_id') === null && $request->query('category_id') === null, function (Builder $query) {
-            $query->whereHas('accountBank', function (Builder $query) {
+            $query->whereHas('bankAccount', function (Builder $query) {
                 $query->where('main_account', 1);
             });
         })->whereHas('installments', function (Builder $query) use ($start, $end) {
@@ -85,9 +85,9 @@ class CashFlowService
         })->get();
     }
 
-    public function totalPeriod($request, string $period, Tenant $tenant, ?int $accountBankId = null)
+    public function totalPeriod($request, string $period, Tenant $tenant, ?int $bankAccountId = null)
     {
-        return $tenant->run(function () use ($request, $period, $accountBankId) {
+        return $tenant->run(function () use ($request, $period, $bankAccountId) {
             $start = $request->query('start')
                 ? Carbon::parse($request->query('start'))->startOfDay()
                 : Carbon::createFromFormat('Y-m', $period)->startOfMonth();
@@ -98,11 +98,11 @@ class CashFlowService
 
             $query = Installment::whereBetween('due_date', [$start, $end])
                 // ->where('status', ContasEnum::PAGO)
-                ->whereHasMorph('installmentable', [AccountPayable::class, AccountReceivable::class], function (Builder $query) use ($request, $accountBankId) {
+                ->whereHasMorph('installmentable', [AccountPayable::class, AccountReceivable::class], function (Builder $query) use ($request, $bankAccountId) {
                     $query->when($request->query('account_id') !== null, function (Builder $query) use ($request) {
-                        $query->where('account_bank_id', $request->query('account_id'));
-                    })->when($accountBankId !== null, function (Builder $query) use ($accountBankId) {
-                        $query->where('account_bank_id', $accountBankId);
+                        $query->where('bank_account_id', $request->query('account_id'));
+                    })->when($bankAccountId !== null, function (Builder $query) use ($bankAccountId) {
+                        $query->where('bank_account_id', $bankAccountId);
                     });
                 });
 
@@ -110,9 +110,9 @@ class CashFlowService
         });
     }
 
-    public function expenses($request, string $period, Tenant $tenant, ?int $accountBankId = null)
+    public function expenses($request, string $period, Tenant $tenant, ?int $bankAccountId = null)
     {
-        return $tenant->run(function () use ($request, $period, $accountBankId) {
+        return $tenant->run(function () use ($request, $period, $bankAccountId) {
             $start = $request->query('start')
                 ? Carbon::parse($request->query('start'))->startOfDay()
                 : Carbon::createFromFormat('Y-m', $period)->startOfMonth();
@@ -121,15 +121,15 @@ class CashFlowService
                 ? Carbon::parse($request->query('end'))->endOfDay()
                 : Carbon::createFromFormat('Y-m', $period)->endOfMonth();
 
-            $query = Installment::whereHasMorph('installmentable', [AccountPayable::class], function (Builder $query) use ($start, $end, $request, $accountBankId) {
+            $query = Installment::whereHasMorph('installmentable', [AccountPayable::class], function (Builder $query) use ($start, $end, $request, $bankAccountId) {
                 $query->whereBetween('due_date', [$start, $end])
                     ->where('status', AccountsEnum::PAID)
                     ->when($request->query('category_id'), function (Builder $query) use ($request) {
-                        $query->where('category_financial_id', $request->query('category_id'));
+                        $query->where('financial_category_id', $request->query('category_id'));
                     })->when($request->query('account_id') !== null, function (Builder $query) use ($request) {
-                        $query->where('account_bank_id', $request->query('account_id'));
-                    })->when($accountBankId !== null, function (Builder $query) use ($accountBankId) {
-                        $query->where('account_bank_id', $accountBankId);
+                        $query->where('bank_account_id', $request->query('account_id'));
+                    })->when($bankAccountId !== null, function (Builder $query) use ($bankAccountId) {
+                        $query->where('bank_account_id', $bankAccountId);
                     });
             });
 
@@ -137,9 +137,9 @@ class CashFlowService
         });
     }
 
-    public function revenues($request, string $period, Tenant $tenant, ?int $accountBankId = null)
+    public function revenues($request, string $period, Tenant $tenant, ?int $bankAccountId = null)
     {
-        return $tenant->run(function () use ($request, $period, $accountBankId) {
+        return $tenant->run(function () use ($request, $period, $bankAccountId) {
             $start = $request->query('start')
                 ? Carbon::parse($request->query('start'))->startOfDay()
                 : Carbon::createFromFormat('Y-m', $period)->startOfMonth();
@@ -148,15 +148,15 @@ class CashFlowService
                 ? Carbon::parse($request->query('end'))->endOfDay()
                 : Carbon::createFromFormat('Y-m', $period)->endOfMonth();
 
-            $query = Installment::whereHasMorph('installmentable', [AccountReceivable::class], function (Builder $query) use ($start, $end, $request, $accountBankId) {
+            $query = Installment::whereHasMorph('installmentable', [AccountReceivable::class], function (Builder $query) use ($start, $end, $request, $bankAccountId) {
                 $query->whereBetween('due_date', [$start, $end])
                     ->where('status', AccountsEnum::PAID)
                     ->when($request->query('category_id'), function (Builder $query) use ($request) {
-                        $query->where('category_financial_id', $request->query('category_id'));
+                        $query->where('financial_category_id', $request->query('category_id'));
                     })->when($request->query('account_id') !== null, function (Builder $query) use ($request) {
-                        $query->where('account_bank_id', $request->query('account_id'));
-                    })->when($accountBankId !== null, function (Builder $query) use ($accountBankId) {
-                        $query->where('account_bank_id', $accountBankId);
+                        $query->where('bank_account_id', $request->query('account_id'));
+                    })->when($bankAccountId !== null, function (Builder $query) use ($bankAccountId) {
+                        $query->where('bank_account_id', $bankAccountId);
                     });
             });
 
@@ -164,9 +164,9 @@ class CashFlowService
         });
     }
 
-    public function calculateAccounts($request, string $period, Tenant $tenant, ?int $accountBankId = null)
+    public function calculateAccounts($request, string $period, Tenant $tenant, ?int $bankAccountId = null)
     {
-        return $tenant->run(function () use ($request, $period, $accountBankId) {
+        return $tenant->run(function () use ($request, $period, $bankAccountId) {
             $start = $request->query('start')
                 ? Carbon::parse($request->query('start'))->startOfDay()
                 : Carbon::createFromFormat('Y-m', $period)->startOfMonth();
@@ -175,10 +175,10 @@ class CashFlowService
                 ? Carbon::parse($request->query('end'))->endOfDay()
                 : Carbon::createFromFormat('Y-m', $period)->endOfMonth();
 
-            $query = Installment::whereHasMorph('installmentable', [AccountPayable::class, AccountReceivable::class], function (Builder $query) use ($start, $end, $accountBankId) {
+            $query = Installment::whereHasMorph('installmentable', [AccountPayable::class, AccountReceivable::class], function (Builder $query) use ($start, $end, $bankAccountId) {
                 $query->whereBetween('due_date', [$start, $end])
                     ->where('status', AccountsEnum::OPEN)
-                    ->where('account_bank_id', $accountBankId);
+                    ->where('bank_account_id', $bankAccountId);
             });
 
             return $query->get();

@@ -5,7 +5,7 @@ namespace App\Http\Requests;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
-class StoreCategoryProductRequest extends FormRequest
+class StoreServiceCategoryRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -24,15 +24,16 @@ class StoreCategoryProductRequest extends FormRequest
     {
         return [
             'name' => 'required|string|max:191',
-            'status' => 'required',
+            'status' => 'required|boolean',
         ];
     }
 
-    public function messages()
+    public function messages(): array
     {
         return [
             'name.required' => 'O nome é obrigatório.',
             'name.max' => 'O nome deve ter no máximo 191 caracteres.',
+            'status.required' => 'O status é obrigatório.',
         ];
     }
 }

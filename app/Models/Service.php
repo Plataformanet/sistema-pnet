@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Service extends Model
 {
     protected $fillable = [
-        'category_service_id',
+        'service_category_id',
         'name',
         'sku',
         'cost_value',
@@ -18,8 +18,8 @@ class Service extends Model
         'status',
     ];
 
-    public function categoryService()
+    public function serviceCategory()
     {
-        return $this->belongsTo(CategoryService::class);
+        return $this->belongsTo(ServiceCategory::class);
     }
 }

@@ -11,12 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('accounts_receivables', function (Blueprint $table) {
+        Schema::create('account_payables', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('category_financial_id')->constrained('category_financials');
-            $table->foreignId('financial_subcategory_id')->nullable()->constrained('financial_subcategory');
+            $table->foreignId('financial_category_id')->constrained('financial_categories');
+            $table->foreignId('financial_subcategory_id')->nullable()->constrained('financial_subcategories');
             $table->foreignId('cost_id')->nullable()->constrained('costs');
-            $table->foreignId('account_bank_id')->constrained('account_banks');
+            $table->foreignId('bank_account_id')->constrained('bank_accounts');
             $table->foreignId('contact_financial_id')->constrained('contact_financials');
             $table->text('description');
             $table->integer('total')->nullable();
@@ -36,6 +36,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('accounts_receivables');
+        Schema::dropIfExists('account_payables');
     }
 };

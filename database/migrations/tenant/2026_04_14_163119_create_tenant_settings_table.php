@@ -12,13 +12,13 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('tenant_settings', function (Blueprint $table) {
-            $table->id()->primary();
+            $table->id();
             $table->string('key');
             $table->string('value');
             $table->integer('type');
             $table->string('module')->nullable();
-            $table->timestamp('updated_at')->nullable();
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
+            $table->timestamps();
         });
     }
 

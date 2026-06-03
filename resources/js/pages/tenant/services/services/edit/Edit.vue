@@ -26,7 +26,7 @@ const form = useForm({
     cost_value: props.service.cost_value !== undefined ? maskCurrency(String(props.service.cost_value)) : "",
     sell_value: props.service.sell_value !== undefined ? maskCurrency(String(props.service.sell_value)) : "",
     fees: props.service.fees !== undefined ? maskCurrency(String(props.service.fees)) : "",
-    category_service_id: props.service.category_service_id || "",
+    service_category_id: props.service.service_category_id || "",
     description: props.service.description || "",
     duration: props.service.duration || "",
     status: props.service.status ?? true,
