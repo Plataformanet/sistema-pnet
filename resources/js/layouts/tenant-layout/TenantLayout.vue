@@ -169,42 +169,42 @@ const data: TenantNav = {
         {
             title: "Financeiro",
             module: "finance",
-            url: "/financeiro/dashboard",
+            url: "/finance/dashboard",
             items: [
                 {
                     title: "Categorias/Subcategorias",
                     permission: "finance.categories.view",
-                    url: "/financeiro/categorias/lista",
+                    url: "/finance/categories/list",
                 },
                 {
                     title: "Contas Bancárias",
                     permission: "finance.accounts.view",
-                    url: "/financeiro/contas-bancarias",
+                    url: "/finance/bank-accounts",
                 },
                 {
                     title: "Contas a pagar",
                     permission: "finance.accounts_payable.view",
-                    url: "/financeiro/contas-pagar",
+                    url: "/finance/accounts-payable",
                 },
                 {
                     title: "Contas a receber",
                     permission: "finance.accounts_receivable.view",
-                    url: "/financeiro/contas-receber",
+                    url: "/finance/accounts-receivable",
                 },
                 {
                     title: "Fluxo de caixa",
                     permission: "finance.cash_flow.view",
-                    url: "/financeiro/fluxo-caixa",
+                    url: "/finance/cash-flow",
                 },
                 {
                     title: "Fluxo de gastos",
                     permission: "finance.expenses_flow.view",
-                    url: "/financeiro/fluxo-gastos",
+                    url: "/finance/expenses-flow",
                 },
                 {
                     title: "Faturamentos",
                     permission: "finance.billing.view",
-                    url: "/financeiro/faturamentos",
+                    url: "/finance/billing",
                 },
             ],
         },
