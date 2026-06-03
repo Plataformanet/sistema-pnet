@@ -74,6 +74,8 @@ class TenantFinancialCategoryController extends Controller
             $this->financialCategoryService->delete($id, tenant());
 
             return redirect()->route('tenant.finance.categories.list')->with('success', 'Categoria excluída com sucesso!');
+        } catch (ValidationException $th) {
+            return redirect()->back()->with('error', $th->validator->errors()->first());
         } catch (\Throwable $th) {
             Log::error('Erro ao excluir categoria financeira: '.$th->getMessage());
 

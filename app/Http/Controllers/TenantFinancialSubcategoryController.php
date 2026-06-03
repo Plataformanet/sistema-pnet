@@ -82,6 +82,8 @@ class TenantFinancialSubcategoryController extends Controller
             $this->financialSubcategoryService->delete($id, tenant());
 
             return redirect()->route('tenant.finance.subcategories.list')->with('success', 'Subcategoria excluída com sucesso!');
+        } catch (ValidationException $th) {
+            return redirect()->back()->with('error', $th->validator->errors()->first());
         } catch (\Throwable $th) {
             Log::error('Erro ao excluir subcategoria financeira: '.$th->getMessage());
 
