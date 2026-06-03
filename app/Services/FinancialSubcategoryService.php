@@ -48,7 +48,7 @@ class FinancialSubcategoryService
 
     public function findAll(Tenant $tenant): Collection
     {
-        return $tenant->run(fn () => FinancialSubcategory::all());
+        return $tenant->run(fn () => FinancialSubcategory::with('financialCategory')->get());
     }
 
     public function findById(string $id, Tenant $tenant): FinancialSubcategory

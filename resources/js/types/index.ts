@@ -22,6 +22,7 @@ export * from "./products/ProductCategory";
 
 // Finance
 export * from "./finance/FinanceCategory";
+export * from "./finance/FinanceSubcategory";
 export * from "./finance/BankAccount";
 export * from "./finance/AccountPayable";
 export * from "./finance/AccountReceivable";
