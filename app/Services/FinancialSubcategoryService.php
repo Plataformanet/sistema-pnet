@@ -38,22 +38,32 @@ class FinancialSubcategoryService
 
     public function update(string $id, array $data, Tenant $tenant): bool
     {
-        return $tenant->run(fn () => FinancialSubcategory::findOrFail($id)->update($data));
+        return $tenant->run(fn() => FinancialSubcategory::findOrFail($id)->update($data));
     }
 
     public function delete(string $id, Tenant $tenant): bool
     {
-        return $tenant->run(fn () => FinancialSubcategory::findOrFail($id)->delete());
+        return $tenant->run(function () use ($id) {
+            $subcategory = FinancialSubcategory::findOrFail($id);
+
+            if ($subcategory->accountsPayable()->exists() || $subcategory->accountsReceivable()->exists()) {
+                throw ValidationException::withMessages([
+                    'message' => 'Não é possível excluir esta subcategoria pois existem contas vinculadas a ela.',
+                ]);
+            }
+
+            return $subcategory->delete();
+        });
     }
 
     public function findAll(Tenant $tenant): Collection
     {
-        return $tenant->run(fn () => FinancialSubcategory::all());
+        return $tenant->run(fn() => FinancialSubcategory::all());
     }
 
     public function findById(string $id, Tenant $tenant): FinancialSubcategory
     {
-        return $tenant->run(fn () => FinancialSubcategory::findOrFail($id));
+        return $tenant->run(fn() => FinancialSubcategory::findOrFail($id));
     }
 
     public function findByCategoriaId(string $id, Tenant $tenant): Collection

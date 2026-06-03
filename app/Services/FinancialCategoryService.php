@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\FinancialCategory;
 use App\Models\Tenant;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class FinancialCategoryService
@@ -34,31 +35,45 @@ class FinancialCategoryService
 
     public function update(string $id, array $data, Tenant $tenant): bool
     {
-        return $tenant->run(fn () => FinancialCategory::findOrFail($id)->update($data));
+        return $tenant->run(fn() => FinancialCategory::findOrFail($id)->update($data));
     }
 
     public function delete(string $id, Tenant $tenant): bool
     {
-        return $tenant->run(fn () => FinancialCategory::findOrFail($id)->delete());
+        return $tenant->run(function () use ($id) {
+            $category = FinancialCategory::findOrFail($id);
+
+            if ($category->accountsPayable()->exists() || $category->accountsReceivable()->exists()) {
+                throw ValidationException::withMessages([
+                    'message' => 'Não é possível excluir esta categoria pois existem contas vinculadas a ela.',
+                ]);
+            }
+
+            return DB::transaction(function () use ($category) {
+                $category->subcategories()->delete();
+
+                return $category->delete();
+            });
+        });
     }
 
     public function findAll(Tenant $tenant): Collection
     {
-        return $tenant->run(fn () => FinancialCategory::all());
+        return $tenant->run(fn() => FinancialCategory::all());
     }
 
     public function findCategoriaContasAPagar(Tenant $tenant): Collection
     {
-        return $tenant->run(fn () => FinancialCategory::select('id', 'name', 'active')->where('type', 1)->get());
+        return $tenant->run(fn() => FinancialCategory::select('id', 'name', 'active')->where('type', 1)->get());
     }
 
     public function findCategoriaContasAReceber(Tenant $tenant): Collection
     {
-        return $tenant->run(fn () => FinancialCategory::select('id', 'name', 'active')->where('type', 2)->get());
+        return $tenant->run(fn() => FinancialCategory::select('id', 'name', 'active')->where('type', 2)->get());
     }
 
     public function findById(string $id, Tenant $tenant): FinancialCategory
     {
-        return $tenant->run(fn () => FinancialCategory::findOrFail($id));
+        return $tenant->run(fn() => FinancialCategory::findOrFail($id));
     }
 }
