@@ -142,7 +142,7 @@ class AccountPayableService extends AccountService
     {
         return $tenant->run(fn () => AccountPayable::with(
             [
-                'contactFinancial:id,name_corporatereason',
+                'financialContact:id,name_corporatereason',
                 'financialCategory:id,name',
                 'financialSubcategory:id,name',
                 'cost:id,type',

@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class ContactFinancial extends Model
+class FinancialContact extends Model
 {
     use SoftDeletes;
 
@@ -23,11 +23,11 @@ class ContactFinancial extends Model
 
     public function accountsPayable(): HasMany
     {
-        return $this->hasMany(AccountsPayable::class);
+        return $this->hasMany(AccountPayable::class);
     }
 
     public function accountsReceivable(): HasMany
     {
-        return $this->hasMany(AccountsReceivable::class);
+        return $this->hasMany(AccountReceivable::class);
     }
 }

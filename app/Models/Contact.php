@@ -41,8 +41,8 @@ class Contact extends Model
         return $this->hasOne(Proponents::class);
     }
 
-    public function contactFinancial()
+    public function financialContact()
     {
-        return $this->hasOne(ContactFinancial::class);
+        return $this->hasOne(FinancialContact::class);
     }
 }
