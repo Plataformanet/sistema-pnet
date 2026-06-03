@@ -147,7 +147,7 @@ const data: TenantNav = {
         {
             title: "Documentações",
             module: "documents",
-            url: "/documentation/dashboard",
+            url: "#",
             items: [
                 {
                     title: "Propostas",
@@ -169,17 +169,22 @@ const data: TenantNav = {
         {
             title: "Financeiro",
             module: "finance",
-            url: "/finance/dashboard",
+            url: "#",
             items: [
                 {
-                    title: "Categorias/Subcategorias",
+                    title: "Categorias",
                     permission: "finance.categories.view",
                     url: "/finance/categories/list",
                 },
                 {
+                    title: "Subcategorias",
+                    permission: "finance.subcategories.view",
+                    url: "/finance/subcategories/list",
+                },
+                {
                     title: "Contas Bancárias",
                     permission: "finance.accounts.view",
-                    url: "/finance/bank-accounts",
+                    url: "/finance/bank-accounts/list",
                 },
                 {
                     title: "Contas a pagar",

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreFinancialSubcategoryRequest;
 use App\Http\Requests\UpdateFinancialSubcategoryRequest;
+use App\Services\FinancialCategoryService;
 use App\Services\FinancialSubcategoryService;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
@@ -13,6 +14,7 @@ class TenantFinancialSubcategoryController extends Controller
 {
     public function __construct(
         protected FinancialSubcategoryService $financialSubcategoryService,
+        protected FinancialCategoryService $financialCategoryService,
     ) {
     }
 
@@ -27,7 +29,11 @@ class TenantFinancialSubcategoryController extends Controller
 
     public function create()
     {
-        return Inertia::render('tenant/finance/subcategories/create/Create');
+        $categories = $this->financialCategoryService->findAll(tenant());
+
+        return Inertia::render('tenant/finance/subcategories/create/Create', [
+            'categories' => $categories,
+        ]);
     }
 
     public function store(StoreFinancialSubcategoryRequest $request)
@@ -48,9 +54,11 @@ class TenantFinancialSubcategoryController extends Controller
     public function edit($id)
     {
         $subcategory = $this->financialSubcategoryService->findById($id, tenant());
+        $categories  = $this->financialCategoryService->findAll(tenant());
 
         return Inertia::render('tenant/finance/subcategories/edit/Edit', [
             'subcategory' => $subcategory,
+            'categories'  => $categories,
         ]);
     }
 
