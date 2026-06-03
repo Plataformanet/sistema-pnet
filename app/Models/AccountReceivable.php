@@ -16,7 +16,7 @@ class AccountReceivable extends Model
         'financial_subcategory_id',
         'cost_id',
         'bank_account_id',
-        'contact_financial_id',
+        'financial_contact_id',
         'description',
         'total',
         'payment_method',
@@ -54,9 +54,9 @@ class AccountReceivable extends Model
         return $this->belongsTo(BankAccount::class);
     }
 
-    public function contactFinancial(): BelongsTo
+    public function financialContact(): BelongsTo
     {
-        return $this->belongsTo(ContactFinancial::class);
+        return $this->belongsTo(FinancialContact::class);
     }
 
     public function installments(): MorphMany

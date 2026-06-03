@@ -17,7 +17,7 @@ return new class extends Migration
             $table->foreignId('financial_subcategory_id')->nullable()->constrained('financial_subcategories');
             $table->foreignId('cost_id')->nullable()->constrained('costs');
             $table->foreignId('bank_account_id')->constrained('bank_accounts');
-            $table->foreignId('contact_financial_id')->constrained('contact_financials');
+            $table->foreignId('financial_contact_id')->constrained('financial_contacts');
             $table->text('description');
             $table->integer('total')->nullable();
             $table->integer('payment_method');
