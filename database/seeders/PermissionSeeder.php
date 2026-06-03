@@ -97,7 +97,7 @@ class PermissionSeeder extends Seeder
                     'services.categories.view',
                     'services.categories.edit',
                     'services.categories.create',
-                    'services.categories.delete'
+                    'services.categories.delete',
                 ],
 
                 'display_name' => [
@@ -121,7 +121,7 @@ class PermissionSeeder extends Seeder
                     'products.categories.view',
                     'products.categories.edit',
                     'products.categories.create',
-                    'products.categories.delete'
+                    'products.categories.delete',
                 ],
                 'display_name' => [
                     'Produtos (Visualizar)',

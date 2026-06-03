@@ -12,8 +12,7 @@ class TenantServiceCategoryController extends Controller
 {
     public function __construct(
         protected CategoryServicesService $categoryServicesService,
-    ) {
-    }
+    ) {}
 
     public function index()
     {
@@ -37,7 +36,8 @@ class TenantServiceCategoryController extends Controller
             return redirect()->route('tenant.services.categories.list')->with('success', 'Categoria criada com sucesso!');
 
         } catch (\Throwable $th) {
-            Log::error('Erro ao criar categoria: ' . $th->getMessage());
+            Log::error('Erro ao criar categoria: '.$th->getMessage());
+
             return redirect()->back()->with('error', 'Erro ao criar categoria!');
         }
     }
@@ -47,7 +47,7 @@ class TenantServiceCategoryController extends Controller
         $category = $this->categoryServicesService->findById($id, tenant());
 
         return Inertia::render('tenant/services/categories/edit/Edit', [
-            'category' => $category
+            'category' => $category,
         ]);
     }
 
@@ -58,7 +58,8 @@ class TenantServiceCategoryController extends Controller
 
             return redirect()->route('tenant.services.categories.list')->with('success', 'Categoria atualizada com sucesso!');
         } catch (\Throwable $th) {
-            Log::error('Erro ao atualizar categoria: ' . $th->getMessage());
+            Log::error('Erro ao atualizar categoria: '.$th->getMessage());
+
             return redirect()->back()->with('error', 'Erro ao atualizar categoria!');
         }
     }
@@ -70,7 +71,8 @@ class TenantServiceCategoryController extends Controller
 
             return redirect()->route('tenant.services.categories.list')->with('success', 'Categoria excluída com sucesso!');
         } catch (\Throwable $th) {
-            Log::error('Erro ao excluir categoria: ' . $th->getMessage());
+            Log::error('Erro ao excluir categoria: '.$th->getMessage());
+
             return redirect()->back()->with('error', 'Erro ao excluir categoria!');
         }
     }

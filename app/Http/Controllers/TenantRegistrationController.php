@@ -5,14 +5,11 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreTenantRegistrationRequest;
 use App\Services\TenantService;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Session;
 use Inertia\Inertia;
 
 class TenantRegistrationController extends Controller
 {
-    public function __construct(protected TenantService $tenantService)
-    {
-    }
+    public function __construct(protected TenantService $tenantService) {}
 
     public function create()
     {
@@ -33,7 +30,7 @@ class TenantRegistrationController extends Controller
             return Inertia::location($loginUrl);
 
         } catch (\Throwable $th) {
-            Log::error('Error creating user for tenant: ' . $th);
+            Log::error('Error creating user for tenant: '.$th);
 
             return Inertia::render('central/Register');
         }

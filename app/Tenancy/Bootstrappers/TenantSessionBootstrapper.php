@@ -2,9 +2,9 @@
 
 namespace App\Tenancy\Bootstrappers;
 
+use Illuminate\Support\Facades\Config;
 use Stancl\Tenancy\Contracts\TenancyBootstrapper;
 use Stancl\Tenancy\Contracts\Tenant;
-use Illuminate\Support\Facades\Config;
 
 class TenantSessionBootstrapper implements TenancyBootstrapper
 {

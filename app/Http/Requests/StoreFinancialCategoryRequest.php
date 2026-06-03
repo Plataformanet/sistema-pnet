@@ -23,22 +23,22 @@ class StoreFinancialCategoryRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name'         => 'required|string|max:191',
-            'type'         => 'required|integer|in:1,2',
+            'name' => 'required|string|max:191',
+            'type' => 'required|integer|in:1,2',
             'observations' => 'nullable|string',
-            'active'       => 'sometimes',
+            'active' => 'sometimes',
         ];
     }
 
     public function messages(): array
     {
         return [
-            'name.required'       => 'O nome é obrigatório.',
-            'name.string'         => 'O nome deve ser um texto válido.',
-            'name.max'            => 'O nome deve ter no máximo 191 caracteres.',
-            'type.required'       => 'O tipo é obrigatório.',
-            'type.integer'        => 'O tipo deve ser um número inteiro.',
-            'type.in'             => 'O tipo selecionado é inválido.',
+            'name.required' => 'O nome é obrigatório.',
+            'name.string' => 'O nome deve ser um texto válido.',
+            'name.max' => 'O nome deve ter no máximo 191 caracteres.',
+            'type.required' => 'O tipo é obrigatório.',
+            'type.integer' => 'O tipo deve ser um número inteiro.',
+            'type.in' => 'O tipo selecionado é inválido.',
             'observations.string' => 'As observações devem ser um texto válido.',
         ];
     }

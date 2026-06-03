@@ -4,7 +4,8 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration {
+return new class extends Migration
+{
     /**
      * Run the migrations.
      */
@@ -22,7 +23,7 @@ return new class extends Migration {
                 'past_due',
                 'paused',
                 'cancelled',
-                'expired'
+                'expired',
             ])->default('active');
             $table->timestamp('current_period_start');
             $table->timestamp('current_period_end');

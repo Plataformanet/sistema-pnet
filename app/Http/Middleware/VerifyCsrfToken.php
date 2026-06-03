@@ -9,7 +9,7 @@ use Symfony\Component\HttpFoundation\Response;
 class VerifyCsrfToken
 {
     protected $except = [
-    '/cadastro', // apenas para confirmar que é CSRF e não outro problema
+        '/cadastro', // apenas para confirmar que é CSRF e não outro problema
     ];
 
     /**

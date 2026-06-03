@@ -28,10 +28,10 @@ class AccountPayable extends Model
     ];
 
     protected $casts = [
-        'total'              => 'integer',
+        'total' => 'integer',
         'total_installments' => 'integer',
-        'bank_account_out'   => 'integer',
-        'payment_method'     => FinancialCategoryEnum::class,
+        'bank_account_out' => 'integer',
+        'payment_method' => FinancialCategoryEnum::class,
     ];
 
     protected $appends = ['type'];

@@ -47,13 +47,13 @@ class UserService
                     'email' => $data['email'],
                 ];
 
-                if (!empty($data['password'])) {
+                if (! empty($data['password'])) {
                     $fields['password'] = Hash::make($data['password']);
                 }
 
                 $user->update($fields);
 
-                if (!empty($data['role'])) {
+                if (! empty($data['role'])) {
                     $user->syncRoles([$data['role']]);
                 }
 
@@ -69,12 +69,12 @@ class UserService
 
     public function findById(string $id, Tenant $tenant): User
     {
-        return $tenant->run(fn() => User::with('roles')->findOrFail($id));
+        return $tenant->run(fn () => User::with('roles')->findOrFail($id));
     }
 
     public function findAll(Tenant $tenant)
     {
-        return $tenant->run(fn() => User::with('roles')->get()->map(fn(User $user) => [
+        return $tenant->run(fn () => User::with('roles')->get()->map(fn (User $user) => [
             'id' => $user->id,
             'name' => $user->name,
             'email' => $user->email,

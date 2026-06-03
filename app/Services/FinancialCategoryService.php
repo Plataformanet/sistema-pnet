@@ -34,31 +34,31 @@ class FinancialCategoryService
 
     public function update(string $id, array $data, Tenant $tenant): bool
     {
-        return $tenant->run(fn() => FinancialCategory::findOrFail($id)->update($data));
+        return $tenant->run(fn () => FinancialCategory::findOrFail($id)->update($data));
     }
 
     public function delete(string $id, Tenant $tenant): bool
     {
-        return $tenant->run(fn() => FinancialCategory::findOrFail($id)->delete());
+        return $tenant->run(fn () => FinancialCategory::findOrFail($id)->delete());
     }
 
     public function findAll(Tenant $tenant): Collection
     {
-        return $tenant->run(fn() => FinancialCategory::all());
+        return $tenant->run(fn () => FinancialCategory::all());
     }
 
     public function findCategoriaContasAPagar(Tenant $tenant): Collection
     {
-        return $tenant->run(fn() => FinancialCategory::select('id', 'name', 'active')->where('type', 1)->get());
+        return $tenant->run(fn () => FinancialCategory::select('id', 'name', 'active')->where('type', 1)->get());
     }
 
     public function findCategoriaContasAReceber(Tenant $tenant): Collection
     {
-        return $tenant->run(fn() => FinancialCategory::select('id', 'name', 'active')->where('type', 2)->get());
+        return $tenant->run(fn () => FinancialCategory::select('id', 'name', 'active')->where('type', 2)->get());
     }
 
     public function findById(string $id, Tenant $tenant): FinancialCategory
     {
-        return $tenant->run(fn() => FinancialCategory::findOrFail($id));
+        return $tenant->run(fn () => FinancialCategory::findOrFail($id));
     }
 }

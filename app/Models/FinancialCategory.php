@@ -10,7 +10,7 @@ class FinancialCategory extends Model
 {
     use SoftDeletes;
 
-    protected $table = "category_financials";
+    protected $table = 'category_financials';
 
     protected $fillable = [
         'name',
@@ -20,7 +20,7 @@ class FinancialCategory extends Model
     ];
 
     protected $casts = [
-        'type'   => 'integer',
+        'type' => 'integer',
         'active' => 'boolean',
     ];
 

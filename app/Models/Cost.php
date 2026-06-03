@@ -11,7 +11,7 @@ class Cost extends Model
     use SoftDeletes;
 
     protected $fillable = [
-        "type",
+        'type',
     ];
 
     public function accountsPayable(): HasMany

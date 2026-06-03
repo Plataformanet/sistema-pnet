@@ -9,10 +9,9 @@ use DB;
 
 class ClientService
 {
-
     public function store(Contact $contact, array $data, Tenant $tenant)
     {
-        return $tenant->run(function () use ($contact, $data) {
+        return $tenant->run(function () use ($contact) {
             DB::beginTransaction();
 
             try {
@@ -32,7 +31,7 @@ class ClientService
 
     public function update(Contact $contact, array $data, Tenant $tenant)
     {
-        return $tenant->run(function () use ($contact, $data) {
+        return $tenant->run(function () use ($contact) {
             DB::beginTransaction();
 
             try {
@@ -52,19 +51,19 @@ class ClientService
 
     public function findById(string $id, Tenant $tenant)
     {
-        return $tenant->run(fn() => Client::with(['contact', 'contact.address'])->where('contact_id', $id)->firstOrFail());
+        return $tenant->run(fn () => Client::with(['contact', 'contact.address'])->where('contact_id', $id)->firstOrFail());
     }
 
     public function findAll(Tenant $tenant)
     {
-        return $tenant->run(fn() => Client::with(['contact'])->get()->map(function ($client) {
+        return $tenant->run(fn () => Client::with(['contact'])->get()->map(function ($client) {
             return [
                 'contact' => [
-                    'id'                   => $client->contact->id,
+                    'id' => $client->contact->id,
                     'name_corporatereason' => $client->contact->name_corporatereason,
-                    'email'                => $client->contact->email,
-                    'cpf_cnpj'             => $client->contact->cpf_cnpj,
-                ]
+                    'email' => $client->contact->email,
+                    'cpf_cnpj' => $client->contact->cpf_cnpj,
+                ],
             ];
         }));
     }

@@ -25,8 +25,8 @@ class AccountBank extends Model
     protected $casts = [
         'initial_balance' => 'integer',
         'current_balance' => 'integer',
-        'active'          => 'boolean',
-        'main_account'    => 'boolean',
+        'active' => 'boolean',
+        'main_account' => 'boolean',
     ];
 
     public function accountsPayable(): HasMany

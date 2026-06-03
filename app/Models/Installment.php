@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Installment extends Model
 {
     use SoftDeletes;
+
     protected $fillable = [
         'installmentable_type',
         'installmentable_id',
@@ -22,10 +23,10 @@ class Installment extends Model
 
     protected $casts = [
         'installment_number' => 'integer',
-        'value'              => 'integer',
-        'status'             => 'integer',
-        'due_date'           => 'date',
-        'payment_date'       => 'date',
+        'value' => 'integer',
+        'status' => 'integer',
+        'due_date' => 'date',
+        'payment_date' => 'date',
     ];
 
     public function installmentable(): MorphTo

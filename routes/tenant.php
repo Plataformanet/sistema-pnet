@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 use App\Http\Controllers\Auth\AuthTenantController;
 use App\Http\Controllers\TenantClientController;
+use App\Http\Controllers\TenantController;
+use App\Http\Controllers\TenantEmployeeController;
 use App\Http\Controllers\TenantFinancialCategoryController;
 use App\Http\Controllers\TenantProductCategoryController;
 use App\Http\Controllers\TenantProductController;
@@ -11,8 +13,6 @@ use App\Http\Controllers\TenantRoleController;
 use App\Http\Controllers\TenantServiceCategoryController;
 use App\Http\Controllers\TenantServiceController;
 use App\Http\Controllers\TenantSupplierController;
-use App\Http\Controllers\TenantEmployeeController;
-use App\Http\Controllers\TenantController;
 use App\Http\Controllers\TenantUserController;
 use App\Http\Middleware\Authenticate;
 use Illuminate\Support\Facades\Route;

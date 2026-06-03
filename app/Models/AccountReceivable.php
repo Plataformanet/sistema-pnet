@@ -28,10 +28,10 @@ class AccountReceivable extends Model
     ];
 
     protected $casts = [
-        'total'              => 'integer',
-        'payment_method'     => 'integer',
+        'total' => 'integer',
+        'payment_method' => 'integer',
         'total_installments' => 'integer',
-        'bank_account_out'   => 'integer',
+        'bank_account_out' => 'integer',
     ];
 
     public function financialCategory(): BelongsTo

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
@@ -137,21 +138,22 @@ class TenancyServiceProvider extends ServiceProvider
             Middleware\PreventAccessFromCentralDomains::class,
 
             Middleware\InitializeTenancyByDomain::class,
-            Middleware\InitializeTenancyBySubdomain::class,
+            InitializeTenancyBySubdomain::class,
             Middleware\InitializeTenancyByDomainOrSubdomain::class,
             Middleware\InitializeTenancyByPath::class,
             Middleware\InitializeTenancyByRequestData::class,
         ];
 
         foreach (array_reverse($tenancyMiddleware) as $middleware) {
-            $this->app[\Illuminate\Contracts\Http\Kernel::class]->prependToMiddlewarePriority($middleware);
+            $this->app[Kernel::class]->prependToMiddlewarePriority($middleware);
         }
     }
 
-    protected function verifyExistTenant(){
+    protected function verifyExistTenant()
+    {
         InitializeTenancyBySubdomain::$onFail = function ($exception, $request, $next) {
-        //  return redirect('https://meuapp.com/nao-encontrado');
-         return 'https://meuapp.com/nao-encontrado';
+            //  return redirect('https://meuapp.com/nao-encontrado');
+            return 'https://meuapp.com/nao-encontrado';
         };
     }
 }

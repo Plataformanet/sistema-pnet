@@ -32,7 +32,7 @@ class SettingsService
     {
         $setting = TenantSetting::firstOrNew(['key' => $key]);
 
-        if (!$setting->exists && $type) {
+        if (! $setting->exists && $type) {
             $setting->type = $type;
         }
 
@@ -67,7 +67,7 @@ class SettingsService
         return Cache::remember('settings.public', now()->addDay(), function () {
             return TenantSetting::public()
                 ->get()
-                ->mapWithKeys(fn($s) => [$s->key => $s->getCastedValue()])
+                ->mapWithKeys(fn ($s) => [$s->key => $s->getCastedValue()])
                 ->toArray();
         });
     }
@@ -79,7 +79,7 @@ class SettingsService
     {
         return TenantSetting::module($module)
             ->get()
-            ->mapWithKeys(fn($s) => [$s->key => $s->getCastedValue()])
+            ->mapWithKeys(fn ($s) => [$s->key => $s->getCastedValue()])
             ->toArray();
     }
 

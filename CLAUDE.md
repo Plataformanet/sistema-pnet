@@ -24,13 +24,13 @@ composer run central-migrate-fresh-seed
 composer run tenants-migrate-fresh
 
 # PHP code style (Pint)
-./vendor/bin/pint
+sail pint
 
 # TypeScript check + frontend build
 npm run build
 ```
 
-Single test: `php artisan test --filter=TestClassName`
+Single test: `sail php artisan test --filter=TestClassName`
 
 ## Architecture
 

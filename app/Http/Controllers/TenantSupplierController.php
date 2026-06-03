@@ -6,7 +6,6 @@ use App\Http\Requests\StoreContactRequest;
 use App\Http\Requests\UpdateContactRequest;
 use App\Services\ContactService;
 use App\Services\SuppliersService;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 
@@ -15,8 +14,7 @@ class TenantSupplierController extends Controller
     public function __construct(
         protected ContactService $contactService,
         protected SuppliersService $supplierService,
-    ) {
-    }
+    ) {}
 
     public function index()
     {
@@ -42,7 +40,8 @@ class TenantSupplierController extends Controller
             return redirect()->route('tenant.registrations.suppliers.list')->with('success', 'Fornecedor criado com sucesso!');
 
         } catch (\Throwable $th) {
-            Log::error('Erro ao criar fornecedor: ' . $th->getMessage());
+            Log::error('Erro ao criar fornecedor: '.$th->getMessage());
+
             return redirect()->back()->with('error', 'Erro ao criar fornecedor!');
         }
     }
@@ -52,7 +51,7 @@ class TenantSupplierController extends Controller
         $supplier = $this->supplierService->findById($id, tenant());
 
         return Inertia::render('tenant/registrations/suppliers/show/Show', [
-            'supplier' => $supplier
+            'supplier' => $supplier,
         ]);
     }
 
@@ -61,7 +60,7 @@ class TenantSupplierController extends Controller
         $supplier = $this->supplierService->findById($id, tenant());
 
         return Inertia::render('tenant/registrations/suppliers/edit/Edit', [
-            'supplier' => $supplier
+            'supplier' => $supplier,
         ]);
     }
 
@@ -74,7 +73,8 @@ class TenantSupplierController extends Controller
 
             return redirect()->route('tenant.registrations.suppliers.list')->with('success', 'Fornecedor atualizado com sucesso!');
         } catch (\Throwable $th) {
-            Log::error('Erro ao atualizar fornecedor: ' . $th->getMessage());
+            Log::error('Erro ao atualizar fornecedor: '.$th->getMessage());
+
             return redirect()->back()->with('error', 'Erro ao atualizar fornecedor!');
         }
     }
@@ -86,7 +86,8 @@ class TenantSupplierController extends Controller
 
             return redirect()->route('tenant.registrations.suppliers.list')->with('success', 'Fornecedor excluído com sucesso!');
         } catch (\Throwable $th) {
-            Log::error('Erro ao excluir fornecedor: ' . $th->getMessage());
+            Log::error('Erro ao excluir fornecedor: '.$th->getMessage());
+
             return redirect()->back()->with('error', 'Erro ao excluir fornecedor!');
         }
     }

@@ -14,13 +14,12 @@ use Spatie\Permission\Models\Role;
 
 class TenantService
 {
-
     public function store(array $data): Tenant
     {
 
         $tenant = Tenant::create([
             'name' => $data['name'],
-            'plan_id' => 1, //$data['plan_id'],
+            'plan_id' => 1, // $data['plan_id'],
             'is_active' => true,
             'trial_ends_at' => now()->addDays(30),
         ]);
@@ -118,19 +117,19 @@ class TenantService
             ->where('modules.id', $module->id)
             ->exists();
 
-        if (!$planHasModule) {
-            throw new \Exception("Módulo não disponível no plano atual");
+        if (! $planHasModule) {
+            throw new \Exception('Módulo não disponível no plano atual');
         }
 
         // 2. Verificar dependências
-        if (!$module->canBeActivatedFor($tenant)) {
+        if (! $module->canBeActivatedFor($tenant)) {
             $dependencies = $module->dependencies()->pluck('name')->join(', ');
             throw new \Exception("Requer módulos: {$dependencies}");
         }
 
         // 3. Verificar se não está bloqueado
-        if (!$tenant->is_active) {
-            throw new \Exception("Tenant bloqueado");
+        if (! $tenant->is_active) {
+            throw new \Exception('Tenant bloqueado');
         }
 
         return true;

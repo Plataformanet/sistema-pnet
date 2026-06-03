@@ -11,12 +11,10 @@ use Inertia\Inertia;
 
 class TenantProductController extends Controller
 {
-
     public function __construct(
         protected ProductService $productService,
         protected CategoryProductService $categoryProductService
-    ) {
-    }
+    ) {}
 
     public function index()
     {
@@ -42,7 +40,8 @@ class TenantProductController extends Controller
             return redirect()->route('tenant.products.products.list')->with('success', 'Produto criado com sucesso!');
 
         } catch (\Throwable $th) {
-            Log::error('Erro ao criar produto: ' . $th->getMessage());
+            Log::error('Erro ao criar produto: '.$th->getMessage());
+
             return redirect()->back()->with('error', 'Erro ao criar produto!');
         }
     }
@@ -54,7 +53,7 @@ class TenantProductController extends Controller
         $product = $this->productService->findById($id, tenant());
 
         return Inertia::render('tenant/products/products/edit/Edit', [
-            'product'    => $product,
+            'product' => $product,
             'categories' => $categories->toArray(),
         ]);
     }
@@ -67,7 +66,8 @@ class TenantProductController extends Controller
             return redirect()->route('tenant.products.products.list')->with('success', 'Produto atualizado com sucesso!');
 
         } catch (\Throwable $th) {
-            Log::error('Erro ao atualizar produto: ' . $th->getMessage());
+            Log::error('Erro ao atualizar produto: '.$th->getMessage());
+
             return redirect()->back()->with('error', 'Erro ao atualizar produto!');
         }
     }
@@ -80,7 +80,8 @@ class TenantProductController extends Controller
             return redirect()->route('tenant.products.products.list')->with('success', 'Produto excluído com sucesso!');
 
         } catch (\Throwable $th) {
-            Log::error('Erro ao excluir produto: ' . $th->getMessage());
+            Log::error('Erro ao excluir produto: '.$th->getMessage());
+
             return redirect()->back()->with('error', 'Erro ao excluir produto!');
         }
     }

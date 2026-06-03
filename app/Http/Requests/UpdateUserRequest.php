@@ -27,5 +27,4 @@ class UpdateUserRequest extends StoreUserRequest
             'password' => ['sometimes', 'confirmed'],
         ]);
     }
-
 }

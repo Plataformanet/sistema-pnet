@@ -14,12 +14,6 @@ class BillingFlowService
 {
     /**
      * Calcula o faturamento por conta bancária e período
-     *
-     * @param int $startYear
-     * @param int $endYear
-     * @param Tenant $tenant
-     * @param int|null $accountBankId
-     * @return array
      */
     public function calculateBilling(int $startYear, int $endYear, Tenant $tenant, ?int $accountBankId = null): array
     {
@@ -35,16 +29,16 @@ class BillingFlowService
             $accountBanks = $query->get();
 
             $result = [
-                'data_by_account'    => [],
+                'data_by_account' => [],
                 'monthly_comparison' => $this->calculateComparativeMonthly($startYear, $endYear, $accountBankId),
-                'general_summary'    => []
+                'general_summary' => [],
             ];
 
             foreach ($accountBanks as $accountBank) {
-                $data                                        = $this->processAccountBank($accountBank, $startYear, $endYear);
+                $data = $this->processAccountBank($accountBank, $startYear, $endYear);
                 $result['data_by_account'][$accountBank->id] = [
-                    'account'   => $accountBank,
-                    'invoicing' => $data
+                    'account' => $accountBank,
+                    'invoicing' => $data,
                 ];
             }
 
@@ -56,11 +50,6 @@ class BillingFlowService
 
     /**
      * Processa os dados de faturamento de uma conta bancária específica
-     *
-     * @param AccountBank $accountBank
-     * @param int $startYear
-     * @param int $endYear
-     * @return array
      */
     private function processAccountBank(AccountBank $accountBank, int $startYear, int $endYear): array
     {
@@ -68,9 +57,9 @@ class BillingFlowService
 
         for ($year = $startYear; $year <= $endYear; $year++) {
             $billingByYear[$year] = [
-                'months'               => $this->calculateMonthlyBilling($accountBank, $year),
-                'annual_value'         => 0,
-                'percentage_variation' => 0
+                'months' => $this->calculateMonthlyBilling($accountBank, $year),
+                'annual_value' => 0,
+                'percentage_variation' => 0,
             ];
 
             $billingByYear[$year]['annual_total'] = array_sum($billingByYear[$year]['months']);
@@ -90,10 +79,6 @@ class BillingFlowService
 
     /**
      * Calcula o faturamento mensal (contas a receber - contas a pagar)
-     *
-     * @param AccountBank $accountBank
-     * @param int $year
-     * @return array
      */
     private function calculateMonthlyBilling(AccountBank $accountBank, int $year): array
     {
@@ -138,28 +123,23 @@ class BillingFlowService
 
     /**
      * Calcula a comparação mensal consolidada de todas as contas
-     *
-     * @param int $startYear
-     * @param int $endYear
-     * @param int|null $accountBankId
-     * @return array
      */
     private function calculateComparativeMonthly(int $startYear, int $endYear, ?int $accountBankId = null): array
     {
         $comparison = [];
-        $months     = [
-            1  => 'January',
-            2  => 'February',
-            3  => 'March',
-            4  => 'April',
-            5  => 'May',
-            6  => 'June',
-            7  => 'July',
-            8  => 'August',
-            9  => 'September',
+        $months = [
+            1 => 'January',
+            2 => 'February',
+            3 => 'March',
+            4 => 'April',
+            5 => 'May',
+            6 => 'June',
+            7 => 'July',
+            8 => 'August',
+            9 => 'September',
             10 => 'October',
             11 => 'November',
-            12 => 'December'
+            12 => 'December',
         ];
 
         foreach ($months as $monthNumber => $monthName) {
@@ -171,7 +151,7 @@ class BillingFlowService
 
             $comparison[$monthName] = [
                 'totals_by_year' => $totalsByYear,
-                'total_period'   => array_sum($totalsByYear)
+                'total_period' => array_sum($totalsByYear),
             ];
         }
 
@@ -180,11 +160,6 @@ class BillingFlowService
 
     /**
      * Calcula o total de um mês específico em um ano
-     *
-     * @param int $month
-     * @param int $year
-     * @param int|null $accountBankId
-     * @return float
      */
     private function calculateTotalMonthYear(int $month, int $year, ?int $accountBankId = null): float
     {
@@ -213,42 +188,39 @@ class BillingFlowService
 
     /**
      * Calcula resumo geral consolidado
-     *
-     * @param array $dataByAccount
-     * @return array
      */
     private function calculateGeneralSummary(array $dataByAccount): array
     {
         $summary = [
             'total_active_accounts' => count($dataByAccount),
-            'total_period_billing'  => 0,
-            'best_year'             => null,
-            'worst_year'            => null,
-            'monthly_average'       => 0
+            'total_period_billing' => 0,
+            'best_year' => null,
+            'worst_year' => null,
+            'monthly_average' => 0,
         ];
 
         $totalsByYear = [];
 
         foreach ($dataByAccount as $data) {
             foreach ($data['invoicing'] as $year => $yearData) {
-                if (!isset($totalsByYear[$year])) {
+                if (! isset($totalsByYear[$year])) {
                     $totalsByYear[$year] = 0;
                 }
                 $totalsByYear[$year] += $yearData['annual_total'];
             }
         }
 
-        if (!empty($totalsByYear)) {
+        if (! empty($totalsByYear)) {
             $summary['total_period_billing'] = array_sum($totalsByYear);
-            $summary['best_year']            = [
-                'year'  => array_keys($totalsByYear, max($totalsByYear))[0],
-                'value' => max($totalsByYear)
+            $summary['best_year'] = [
+                'year' => array_keys($totalsByYear, max($totalsByYear))[0],
+                'value' => max($totalsByYear),
             ];
-            $summary['worst_year']           = [
-                'year'  => array_keys($totalsByYear, min($totalsByYear))[0],
-                'value' => min($totalsByYear)
+            $summary['worst_year'] = [
+                'year' => array_keys($totalsByYear, min($totalsByYear))[0],
+                'value' => min($totalsByYear),
             ];
-            $summary['monthly_average']      = $summary['total_period_billing'] / (count($totalsByYear) * 12);
+            $summary['monthly_average'] = $summary['total_period_billing'] / (count($totalsByYear) * 12);
         }
 
         return $summary;
@@ -256,23 +228,20 @@ class BillingFlowService
 
     /**
      * Exporta dados para formato adequado para gráficos
-     *
-     * @param array $data
-     * @return array
      */
     public function formatForChart(array $data): array
     {
-        $labels   = [];
+        $labels = [];
         $datasets = [];
 
         foreach ($data['monthly_comparison'] as $month => $monthData) {
             $labels[] = $month;
 
             foreach ($monthData['totals_by_year'] as $year => $value) {
-                if (!isset($datasets[$year])) {
+                if (! isset($datasets[$year])) {
                     $datasets[$year] = [
                         'label' => $year,
-                        'data'  => []
+                        'data' => [],
                     ];
                 }
                 $datasets[$year]['data'][] = round($value, 2);
@@ -280,8 +249,8 @@ class BillingFlowService
         }
 
         return [
-            'labels'   => $labels,
-            'datasets' => array_values($datasets)
+            'labels' => $labels,
+            'datasets' => array_values($datasets),
         ];
     }
 }

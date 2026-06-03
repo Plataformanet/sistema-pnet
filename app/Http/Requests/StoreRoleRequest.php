@@ -23,8 +23,8 @@ class StoreRoleRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name'          => 'required|string|max:255|unique:roles,name',
-            'permissions'   => 'nullable|array',
+            'name' => 'required|string|max:255|unique:roles,name',
+            'permissions' => 'nullable|array',
             'permissions.*' => 'string|exists:permissions,name',
         ];
     }
@@ -32,11 +32,11 @@ class StoreRoleRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'name.required'         => 'O nome do cargo é obrigatório.',
-            'name.max'              => 'O nome do cargo deve ter no máximo 255 caracteres.',
-            'name.unique'           => 'Já existe um cargo com este nome.',
-            'permissions.array'     => 'As permissões devem ser uma lista válida.',
-            'permissions.*.exists'  => 'Uma das permissões selecionadas é inválida.',
+            'name.required' => 'O nome do cargo é obrigatório.',
+            'name.max' => 'O nome do cargo deve ter no máximo 255 caracteres.',
+            'name.unique' => 'Já existe um cargo com este nome.',
+            'permissions.array' => 'As permissões devem ser uma lista válida.',
+            'permissions.*.exists' => 'Uma das permissões selecionadas é inválida.',
         ];
     }
 }

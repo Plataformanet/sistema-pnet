@@ -71,7 +71,7 @@ class Subscription extends Model
     public function isActive(): bool
     {
         return $this->status->isActive()
-            && (!$this->ends_at || $this->ends_at->isFuture());
+            && (! $this->ends_at || $this->ends_at->isFuture());
     }
 
     public function onTrial(): bool
@@ -117,7 +117,7 @@ class Subscription extends Model
      */
     public function resume(): void
     {
-        if (!$this->onGracePeriod()) {
+        if (! $this->onGracePeriod()) {
             throw new \Exception('Assinatura não pode ser reativada');
         }
 

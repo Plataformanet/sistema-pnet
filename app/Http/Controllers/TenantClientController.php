@@ -6,7 +6,6 @@ use App\Http\Requests\StoreContactRequest;
 use App\Http\Requests\UpdateContactRequest;
 use App\Services\ClientService;
 use App\Services\ContactService;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 
@@ -15,8 +14,7 @@ class TenantClientController extends Controller
     public function __construct(
         protected ContactService $contactService,
         protected ClientService $clientService,
-    ) {
-    }
+    ) {}
 
     public function index()
     {
@@ -42,7 +40,8 @@ class TenantClientController extends Controller
             return redirect()->route('tenant.registrations.clients.list')->with('success', 'Cliente criado com sucesso!');
 
         } catch (\Throwable $th) {
-            Log::error('Erro ao criar cliente: ' . $th->getMessage());
+            Log::error('Erro ao criar cliente: '.$th->getMessage());
+
             return redirect()->back()->with('error', 'Erro ao criar cliente!');
         }
     }
@@ -52,7 +51,7 @@ class TenantClientController extends Controller
         $client = $this->clientService->findById($id, tenant());
 
         return Inertia::render('tenant/registrations/clients/show/Show', [
-            'client' => $client
+            'client' => $client,
         ]);
     }
 
@@ -61,7 +60,7 @@ class TenantClientController extends Controller
         $client = $this->clientService->findById($id, tenant());
 
         return Inertia::render('tenant/registrations/clients/edit/Edit', [
-            'client' => $client
+            'client' => $client,
         ]);
     }
 
@@ -74,7 +73,8 @@ class TenantClientController extends Controller
 
             return redirect()->route('tenant.registrations.clients.list')->with('success', 'Cliente atualizado com sucesso!');
         } catch (\Throwable $th) {
-            Log::error('Erro ao atualizar cliente: ' . $th->getMessage());
+            Log::error('Erro ao atualizar cliente: '.$th->getMessage());
+
             return redirect()->back()->with('error', 'Erro ao atualizar cliente!');
         }
     }
@@ -86,7 +86,8 @@ class TenantClientController extends Controller
 
             return redirect()->route('tenant.registrations.clients.list')->with('success', 'Cliente excluído com sucesso!');
         } catch (\Throwable $th) {
-            Log::error('Erro ao excluir cliente: ' . $th->getMessage());
+            Log::error('Erro ao excluir cliente: '.$th->getMessage());
+
             return redirect()->back()->with('error', 'Erro ao excluir cliente!');
         }
     }

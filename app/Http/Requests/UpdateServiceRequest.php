@@ -6,7 +6,6 @@ use Illuminate\Validation\Rule;
 
 class UpdateServiceRequest extends StoreServiceRequest
 {
-
     public function rules(): array
     {
         $id = $this->route('id');
@@ -15,5 +14,4 @@ class UpdateServiceRequest extends StoreServiceRequest
             'sku' => ['required', Rule::unique('services', 'sku')->ignore($id)],
         ]);
     }
-
 }

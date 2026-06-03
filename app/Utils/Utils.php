@@ -7,38 +7,38 @@ use Illuminate\Support\Str;
 
 class Utils
 {
-
-
-    static function format_coin_real($number)
+    public static function format_coin_real($number)
     {
         return number_format($number, 2, ',', '.');
     }
 
-    static function format_coin_sql($number)
+    public static function format_coin_sql($number)
     {
-        return (str_replace(',', '.', str_replace('.', '', $number)));
+        return str_replace(',', '.', str_replace('.', '', $number));
     }
 
-    static function data_sql($d)
+    public static function data_sql($d)
     {
-        $data1    = explode('/', $d);
+        $data1 = explode('/', $d);
         $data2[0] = $data1[2];
         $data2[1] = $data1[1];
         $data2[2] = $data1[0];
-        $data3    = implode('-', $data2);
+        $data3 = implode('-', $data2);
+
         return $data3;
     }
 
-    static function data_brasil($data)
+    public static function data_brasil($data)
     {
-        $ano         = substr($data, -10, 4);
-        $mes         = substr($data, -5, 2);
-        $dia         = substr($data, -2, 2);
+        $ano = substr($data, -10, 4);
+        $mes = substr($data, -5, 2);
+        $dia = substr($data, -2, 2);
         $data_brasil = "$dia/$mes/$ano";
+
         return $data_brasil;
     }
 
-    static function status_timeline($concluido, $etapa_iniciada)
+    public static function status_timeline($concluido, $etapa_iniciada)
     {
         if ($concluido === 1) {
             $status = 'success';
@@ -51,7 +51,7 @@ class Utils
         return $status;
     }
 
-    static function status_timeline_pdf($concluido, $etapa_iniciada)
+    public static function status_timeline_pdf($concluido, $etapa_iniciada)
     {
         if ($concluido === 1) {
             $status = 'Etapa Concluída';
@@ -64,7 +64,7 @@ class Utils
         return $status;
     }
 
-    static function status_timeline_pdf_icon($concluido, $etapa_iniciada)
+    public static function status_timeline_pdf_icon($concluido, $etapa_iniciada)
     {
         if ($concluido === 1) {
             $status = 'fas fa-check';
@@ -77,7 +77,7 @@ class Utils
         return $status;
     }
 
-    static function mes_por_extenso($m)
+    public static function mes_por_extenso($m)
     {
         switch ((int) $m) {
             case 1:
@@ -121,30 +121,31 @@ class Utils
         }
     }
 
-    static function formatCpfCnpj($value)
+    public static function formatCpfCnpj($value)
     {
         $CPF_LENGTH = 11;
-        $cnpj_cpf   = preg_replace("/\D/", '', $value);
+        $cnpj_cpf = preg_replace("/\D/", '', $value);
 
         if (strlen($cnpj_cpf) === $CPF_LENGTH) {
-            return preg_replace("/(\d{3})(\d{3})(\d{3})(\d{2})/", "\$1.\$2.\$3-\$4", $cnpj_cpf);
+            return preg_replace("/(\d{3})(\d{3})(\d{3})(\d{2})/", '$1.$2.$3-$4', $cnpj_cpf);
         }
 
-        return preg_replace("/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/", "\$1.\$2.\$3/\$4-\$5", $cnpj_cpf);
+        return preg_replace("/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/", '$1.$2.$3/$4-$5', $cnpj_cpf);
     }
 
-    static function resumeName($name)
+    public static function resumeName($name)
     {
-        $new_name  = explode(" ", $name);
-        $nome      = $new_name[0];
+        $new_name = explode(' ', $name);
+        $nome = $new_name[0];
         $sobrenome = '';
         if (isset($new_name[1])) {
             $sobrenome = $new_name[1];
         }
-        return $nome . ' ' . $sobrenome;
+
+        return $nome.' '.$sobrenome;
     }
 
-    static function getSubtraiData($value, $prazo)
+    public static function getSubtraiData($value, $prazo)
     {
         $data1 = date('Y/m/d H:i a');
         $data2 = $value;
@@ -161,7 +162,7 @@ class Utils
         return $prazos;
     }
 
-    static function formatarNumero($valor)
+    public static function formatarNumero($valor)
     {
         // Remove os pontos (separadores de milhares) e substitui a vírgula por ponto
         $numeroFormatado = str_replace(['.', ','], ['', '.'], $valor);
@@ -170,7 +171,7 @@ class Utils
         return (int) $numeroFormatado;
     }
 
-    static function normalizarNumero(string $valor)
+    public static function normalizarNumero(string $valor)
     {
         // Substitui vírgula por ponto
         $valor = str_replace(',', '.', $valor);
@@ -186,42 +187,44 @@ class Utils
         return $numero;
     }
 
-    function resumirTexto($texto, $limite = 100, $sufixo = '...')
+    public function resumirTexto($texto, $limite = 100, $sufixo = '...')
     {
-        if (mb_strlen($texto) <= $limite)
+        if (mb_strlen($texto) <= $limite) {
             return $texto;
+        }
 
         $textoCortado = mb_substr($texto, 0, $limite);
-        return mb_substr($textoCortado, 0, mb_strrpos($textoCortado, ' ')) . $sufixo;
+
+        return mb_substr($textoCortado, 0, mb_strrpos($textoCortado, ' ')).$sufixo;
     }
 
-    function anoAnterior()
+    public function anoAnterior()
     {
         return Carbon::now()->subYear()->year;
     }
 
-    function dataAtual()
+    public function dataAtual()
     {
         $data = Carbon::now();
 
         return $data->locale('pt_BR')->translatedFormat('F \d\e Y');
     }
 
-    function dataPeriodo(string $periodo, $inicio = null)
+    public function dataPeriodo(string $periodo, $inicio = null)
     {
         $data = Carbon::parse($inicio === null ? $periodo : $inicio);
 
         return ucfirst($data->locale('pt_BR')->translatedFormat('F \d\e Y'));
     }
 
-    function anoAtual()
+    public function anoAtual()
     {
         $data = now()->year;
 
         return $data;
     }
 
-    function converteSlug(?string $slug = null)
+    public function converteSlug(?string $slug = null)
     {
 
         // substitui o separador por espaço

@@ -6,7 +6,6 @@ use Illuminate\Database\Eloquent\Model;
 
 class Product extends Model
 {
-
     protected $fillable = [
         'category_product_id',
         'name',
@@ -23,12 +22,12 @@ class Product extends Model
     ];
 
     protected $casts = [
-        'cost_value'    => 'integer',
-        'sell_value'    => 'integer',
-        'manage_stock'  => 'boolean',
+        'cost_value' => 'integer',
+        'sell_value' => 'integer',
+        'manage_stock' => 'boolean',
         'current_stock' => 'integer',
-        'min_stock'     => 'integer',
-        'status'        => 'boolean',
+        'min_stock' => 'integer',
+        'status' => 'boolean',
     ];
 
     public function categoryProduct()

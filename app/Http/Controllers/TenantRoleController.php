@@ -11,16 +11,14 @@ use Spatie\Permission\Models\Permission;
 
 class TenantRoleController extends Controller
 {
-    public function __construct(protected RoleService $roleService)
-    {
-    }
+    public function __construct(protected RoleService $roleService) {}
 
     public function index()
     {
         $roles = $this->roleService->findAll(tenant());
 
         return Inertia::render('tenant/settings/roles/list/List', [
-            'roles' => $roles
+            'roles' => $roles,
         ]);
     }
 
@@ -29,7 +27,7 @@ class TenantRoleController extends Controller
         $systemPermissions = Permission::select('name', 'display_name')->get()->toArray();
 
         return Inertia::render('tenant/settings/roles/create/Create', [
-            'systemPermissions' => $systemPermissions
+            'systemPermissions' => $systemPermissions,
         ]);
     }
 
@@ -40,7 +38,8 @@ class TenantRoleController extends Controller
 
             return redirect()->route('tenant.settings.roles.list')->with('success', 'Cargo criado com sucesso!');
         } catch (\Throwable $th) {
-            Log::error('Erro ao criar cargo: ' . $th->getMessage());
+            Log::error('Erro ao criar cargo: '.$th->getMessage());
+
             return redirect()->back()->with('error', 'Erro ao criar cargo!');
         }
     }
@@ -53,7 +52,7 @@ class TenantRoleController extends Controller
 
         return Inertia::render('tenant/settings/roles/edit/Edit', [
             'role' => $role,
-            'systemPermissions' => $systemPermissions
+            'systemPermissions' => $systemPermissions,
         ]);
     }
 
@@ -64,7 +63,8 @@ class TenantRoleController extends Controller
 
             return redirect()->route('tenant.settings.roles.list')->with('success', 'Cargo atualizado com sucesso!');
         } catch (\Throwable $th) {
-            Log::error('Erro ao atualizar cargo: ' . $th->getMessage());
+            Log::error('Erro ao atualizar cargo: '.$th->getMessage());
+
             return redirect()->back()->with('error', 'Erro ao atualizar cargo!');
         }
     }
@@ -76,7 +76,8 @@ class TenantRoleController extends Controller
 
             return redirect()->route('tenant.settings.roles.list')->with('success', 'Cargo deletado com sucesso!');
         } catch (\Throwable $th) {
-            Log::error('Erro ao deletar cargo: ' . $th->getMessage());
+            Log::error('Erro ao deletar cargo: '.$th->getMessage());
+
             return redirect()->back()->with('error', 'Erro ao deletar cargo!');
         }
     }

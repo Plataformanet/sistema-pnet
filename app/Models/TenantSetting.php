@@ -39,7 +39,7 @@ class TenantSetting extends Model
      */
     public function getCastedValue(): mixed
     {
-        return match($this->type) {
+        return match ($this->type) {
             SettingType::INTEGER => (int) $this->value,
             SettingType::BOOLEAN => filter_var($this->value, FILTER_VALIDATE_BOOLEAN),
             SettingType::DECIMAL => (float) $this->value,
@@ -55,7 +55,7 @@ class TenantSetting extends Model
      */
     public function setCastedValue(mixed $value): void
     {
-        $this->value = match($this->type) {
+        $this->value = match ($this->type) {
             SettingType::BOOLEAN => $value ? 'true' : 'false',
             SettingType::JSON, SettingType::ARRAY => json_encode($value),
             SettingType::DATE, SettingType::DATETIME => $value instanceof Carbon
@@ -101,7 +101,7 @@ class TenantSetting extends Model
             $setting->validateValue();
 
             // Registrar quem está salvando
-            if (!$setting->updated_by && auth()->check()) {
+            if (! $setting->updated_by && auth()->check()) {
                 $setting->updated_by = auth()->id();
             }
         });
@@ -113,15 +113,15 @@ class TenantSetting extends Model
     public function validateValue(): void
     {
         $validators = [
-            'email' => fn($v) => filter_var($v, FILTER_VALIDATE_EMAIL),
-            'url' => fn($v) => filter_var($v, FILTER_VALIDATE_URL),
-            'integer' => fn($v) => is_numeric($v),
-            'boolean' => fn($v) => in_array(strtolower($v), ['true', 'false', '1', '0']),
-            'json' => fn($v) => json_decode($v) !== null,
+            'email' => fn ($v) => filter_var($v, FILTER_VALIDATE_EMAIL),
+            'url' => fn ($v) => filter_var($v, FILTER_VALIDATE_URL),
+            'integer' => fn ($v) => is_numeric($v),
+            'boolean' => fn ($v) => in_array(strtolower($v), ['true', 'false', '1', '0']),
+            'json' => fn ($v) => json_decode($v) !== null,
         ];
 
         if (isset($validators[$this->type])) {
-            if (!$validators[$this->type]($this->value)) {
+            if (! $validators[$this->type]($this->value)) {
                 throw new \InvalidArgumentException(
                     "Valor inválido para tipo {$this->type}"
                 );

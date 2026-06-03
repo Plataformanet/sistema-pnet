@@ -20,5 +20,4 @@ class CentralUser extends Model
         'is_active' => 'boolean',
         'last_login_at' => 'datetime',
     ];
-
 }
