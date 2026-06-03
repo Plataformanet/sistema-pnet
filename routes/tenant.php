@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\Auth\AuthTenantController;
+use App\Http\Controllers\TenantBankAccountController;
 use App\Http\Controllers\TenantClientController;
 use App\Http\Controllers\TenantController;
 use App\Http\Controllers\TenantEmployeeController;
@@ -124,6 +125,14 @@ Route::middleware([
         Route::get('/finance/subcategories/{id}/edit', [TenantFinancialSubcategoryController::class, 'edit'])->name('tenant.finance.subcategories.edit')->middleware('permission:finance.subcategories.edit');
         Route::put('/finance/subcategories/{id}', [TenantFinancialSubcategoryController::class, 'update'])->name('tenant.finance.subcategories.update')->middleware('permission:finance.subcategories.edit');
         Route::delete('/finance/subcategories/{id}', [TenantFinancialSubcategoryController::class, 'destroy'])->name('tenant.finance.subcategories.destroy')->middleware('permission:finance.subcategories.delete');
+
+        // Contas Bancárias
+        Route::get('/finance/bank-accounts/list', [TenantBankAccountController::class, 'index'])->name('tenant.finance.bank-accounts.list')->middleware('permission:finance.accounts.view');
+        Route::get('/finance/bank-accounts/create', [TenantBankAccountController::class, 'create'])->name('tenant.finance.bank-accounts.create')->middleware('permission:finance.accounts.create');
+        Route::post('/finance/bank-accounts/store', [TenantBankAccountController::class, 'store'])->name('tenant.finance.bank-accounts.store')->middleware('permission:finance.accounts.create');
+        Route::get('/finance/bank-accounts/{id}/edit', [TenantBankAccountController::class, 'edit'])->name('tenant.finance.bank-accounts.edit')->middleware('permission:finance.accounts.edit');
+        Route::put('/finance/bank-accounts/{id}', [TenantBankAccountController::class, 'update'])->name('tenant.finance.bank-accounts.update')->middleware('permission:finance.accounts.edit');
+        Route::delete('/finance/bank-accounts/{id}', [TenantBankAccountController::class, 'destroy'])->name('tenant.finance.bank-accounts.destroy')->middleware('permission:finance.accounts.delete');
 
         // Configurações - Cargos (Roles)
         Route::get('/settings/roles/list', [TenantRoleController::class, 'index'])->name('tenant.settings.roles.list')->middleware('permission:settings.roles.view');

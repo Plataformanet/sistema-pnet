@@ -184,7 +184,7 @@ const data: TenantNav = {
                 {
                     title: "Contas Bancárias",
                     permission: "finance.accounts.view",
-                    url: "/finance/bank-accounts",
+                    url: "/finance/bank-accounts/list",
                 },
                 {
                     title: "Contas a pagar",
