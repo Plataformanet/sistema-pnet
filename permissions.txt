@@ -64,11 +64,17 @@ products.categories.delete
 
 //MÓDULO: Financeiro (Finance)
 
-//Categorias/Subcategorias
+//Categorias
 finance.categories.view
 finance.categories.edit
 finance.categories.create
 finance.categories.delete
+
+//Subcategorias
+finance.subcategories.view
+finance.subcategories.edit
+finance.subcategories.create
+finance.subcategories.delete
 
 //Contas Bancárias
 finance.accounts.view
