@@ -6,6 +6,7 @@ use App\Http\Controllers\Auth\AuthTenantController;
 use App\Http\Controllers\TenantAccountPayableController;
 use App\Http\Controllers\TenantAccountReceivableController;
 use App\Http\Controllers\TenantBankAccountController;
+use App\Http\Controllers\TenantCashFlowController;
 use App\Http\Controllers\TenantClientController;
 use App\Http\Controllers\TenantController;
 use App\Http\Controllers\TenantEmployeeController;
@@ -157,6 +158,9 @@ Route::middleware([
         Route::delete('/finance/accounts-receivable/{id}', [TenantAccountReceivableController::class, 'destroy'])->name('tenant.finance.accounts-receivable.destroy')->middleware('permission:finance.accounts_receivable.delete');
         Route::patch('/finance/accounts-receivable/installments/update', [TenantAccountReceivableController::class, 'updateInstallments'])->name('tenant.finance.accounts-receivable.installments.update')->middleware('permission:finance.accounts_receivable.edit');
         Route::patch('/finance/accounts-receivable/installments/value', [TenantAccountReceivableController::class, 'updateInstallmentValue'])->name('tenant.finance.accounts-receivable.installments.value')->middleware('permission:finance.accounts_receivable.edit');
+
+        // Fluxo de Caixa
+        Route::get('/finance/cash-flow', TenantCashFlowController::class)->name('tenant.finance.cash-flow.index')->middleware('permission:finance.cash_flow.view');
 
         // Configurações - Cargos (Roles)
         Route::get('/settings/roles/list', [TenantRoleController::class, 'index'])->name('tenant.settings.roles.list')->middleware('permission:settings.roles.view');
