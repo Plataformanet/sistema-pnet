@@ -2,8 +2,10 @@
 
 namespace App\Http\Requests;
 
+use App\Enums\FinancialCategoryEnum;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreFinancialCategoryRequest extends FormRequest
 {
@@ -24,7 +26,7 @@ class StoreFinancialCategoryRequest extends FormRequest
     {
         return [
             'name' => 'required|string|max:191',
-            'type' => 'required|integer|in:1,2',
+            'type' => ['required', Rule::enum(FinancialCategoryEnum::class)],
             'observations' => 'nullable|string',
             'active' => 'sometimes',
         ];
@@ -37,8 +39,7 @@ class StoreFinancialCategoryRequest extends FormRequest
             'name.string' => 'O nome deve ser um texto válido.',
             'name.max' => 'O nome deve ter no máximo 191 caracteres.',
             'type.required' => 'O tipo é obrigatório.',
-            'type.integer' => 'O tipo deve ser um número inteiro.',
-            'type.in' => 'O tipo selecionado é inválido.',
+            'type.enum' => 'O tipo selecionado é inválido.',
             'observations.string' => 'As observações devem ser um texto válido.',
         ];
     }

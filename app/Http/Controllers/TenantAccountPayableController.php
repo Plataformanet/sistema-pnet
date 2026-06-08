@@ -3,6 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Exceptions\UpdateInstallmentException;
+use App\Http\Requests\StoreAccountPayableRequest;
+use App\Http\Requests\UpdateAccountPayableRequest;
+use App\Http\Requests\UpdateInstallmentValueRequest;
 use App\Models\BankAccount;
 use App\Models\Contact;
 use App\Models\Cost;
@@ -14,7 +17,7 @@ use App\Services\FinancialCategoryService;
 use App\Services\FinancialSubcategoryService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Illuminate\Support\Facades\Auth;
+use Inertia\Inertia;
 
 class TenantAccountPayableController extends Controller
 {
@@ -32,49 +35,47 @@ class TenantAccountPayableController extends Controller
      */
     public function index(Request $request)
     {
+        $period = $request->input('periodo', now()->format('Y-m'));
+        $days   = 7;
 
-
-        $periodo = $request->get('periodo', now()->format('Y-m'));
-        $dias    = 7;
-
-        $contasAPagar = $this->accountPayableService->findAll($request, $periodo, tenant());
+        $accountsPayable = $this->accountPayableService->findAll($request, $period, tenant());
 
         if (!$request->has('conta_id')) {
-            $contaBancaria = BankAccount::select('id', 'nome', 'banco', 'saldo_atual')->where('conta_principal', 1)->first();
+            $bankAccount = BankAccount::select('id', 'name', 'bank', 'current_balance')->where('main_account', 1)->first();
         }
 
         if ($request->has('conta_id')) {
-            $contaBancaria = BankAccount::select('id', 'nome', 'banco', 'saldo_atual')->where('id', $request->query('conta_id'))->first();
+            $bankAccount = BankAccount::select('id', 'name', 'bank', 'current_balance')->where('id', $request->query('conta_id'))->first();
         }
 
-        $totalPeriodo    = $this->accountPayableService->totalPeriod($request, $periodo, $contaBancaria?->id);
-        $totalPagos      = $this->accountPayableService->totalPaid($request, $periodo, $contaBancaria?->id);
-        $totalVencemHoje = $this->accountPayableService->totalDueToday($request, $periodo, $contaBancaria?->id);
-        $totalAVencer    = $this->accountPayableService->totalToDue($request, $dias, $periodo, $contaBancaria?->id);
-        $totalVencidos   = $this->accountPayableService->totalOverdue($request, $periodo, $contaBancaria?->id);
+        $totalPeriod   = $this->accountPayableService->totalPeriod($request, $period, tenant(), $bankAccount?->id);
+        $totalPaid     = $this->accountPayableService->totalPaid($request, $period, tenant(), $bankAccount?->id);
+        $totalDueToday = $this->accountPayableService->totalDueToday($request, $period, tenant(), $bankAccount?->id);
+        $totalToDue    = $this->accountPayableService->totalToDue($request, $days, $period, tenant(), $bankAccount?->id);
+        $totalOverdue  = $this->accountPayableService->totalOverdue($request, $period, tenant(), $bankAccount?->id);
 
-        $categoriasFinanceira = $this->financialCategoryService->findAll(tenant());
+        $financialCategories = $this->financialCategoryService->findAll(tenant());
 
-        $categoriaBuscada = FinancialCategory::select('nome')->find($request->get('categoria_id'));
+        $searchedCategory = FinancialCategory::select('name')->find($request->input('categoria_id'));
 
-        $contaBancarias = BankAccount::select('id', 'nome', 'banco', 'saldo_atual', 'conta_principal')->get();
+        $bankAccounts = BankAccount::select('id', 'name', 'bank', 'current_balance', 'main_account')->get();
 
-        return view('app.financeiro.conta_a_pagar.index', [
-            'contasAPagar'         => $contasAPagar,
-            'totalPeriodo'         => $totalPeriodo,
-            'totalPagos'           => $totalPagos,
-            'totalVencemHoje'      => $totalVencemHoje,
-            'totalAVencer'         => $totalAVencer,
-            'totalVencidos'        => $totalVencidos,
-            'periodo'              => $periodo,
-            'quantidade'           => $request->get('quantidade'),
-            'inicio'               => $request->get('inicio'),
-            'fim'                  => $request->get('fim'),
-            'categoria_id'         => $request->get('categoria_id'),
-            'categoriasFinanceira' => $categoriasFinanceira,
-            'categoriaBuscada'     => $categoriaBuscada,
-            'contaBancarias'       => $contaBancarias,
-            'contaBancaria'        => $contaBancaria,
+        return Inertia::render('tenant/finance/accounts-payable/list/List', [
+            'accountsPayable'     => $accountsPayable,
+            'totalPeriod'         => $totalPeriod,
+            'totalPaid'           => $totalPaid,
+            'totalDueToday'       => $totalDueToday,
+            'totalToDue'          => $totalToDue,
+            'totalOverdue'        => $totalOverdue,
+            'period'              => $period,
+            'perPage'             => $request->input('quantidade'),
+            'start'               => $request->input('inicio'),
+            'end'                 => $request->input('fim'),
+            'categoryId'          => $request->input('categoria_id'),
+            'financialCategories' => $financialCategories,
+            'searchedCategory'    => $searchedCategory,
+            'bankAccounts'        => $bankAccounts,
+            'bankAccount'         => $bankAccount,
         ]);
     }
 
@@ -83,35 +84,33 @@ class TenantAccountPayableController extends Controller
      */
     public function create()
     {
+        $financialCategories    = $this->financialCategoryService->findCategoryAccountsPayable(tenant());
+        $financialSubcategories = $this->financialSubcategoryService->findAll(tenant());
+        $costs                  = Cost::select('id', 'type')->get();
 
-
-        $categoriasFinanceira    = $this->financialCategoryService->findCategoriaContasAPagar(tenant());
-        $subcategoriasFinanceira = $this->financialSubcategoryService->findAll(tenant());
-        $custos                  = Cost::select('id', 'tipo')->get();
-
-        $subcategoriasFinanceira = $subcategoriasFinanceira->map(function ($item) {
-            if ($item->ativo === 1) {
-                return $item->nome;
+        $financialSubcategories = $financialSubcategories->map(function ($item) {
+            if ($item->active) {
+                return $item->name;
             }
         });
 
-        $contatos = collect();
-        Contact::select('id', 'nome_razaosocial')
-            ->chunkById(500, function ($chunk) use (&$contatos) {
-                $contatos = $contatos->merge($chunk);
+        $contacts = collect();
+        Contact::select('id', 'name_corporatereason')
+            ->chunkById(500, function ($chunk) use (&$contacts) {
+                $contacts = $contacts->merge($chunk);
             });
 
-        $condicoesPagamento = $this->accountPayableService->condicoesPagamento();
+        $paymentConditions = $this->accountPayableService->paymentConditions();
 
-        $contasBancarias = $this->contaBancariaService->findAll();
+        $bankAccounts = $this->bankAccountService->findAll(tenant());
 
-        return view('app.financeiro.conta_a_pagar.create', [
-            'categoriasFinanceira'    => $categoriasFinanceira,
-            'subcategoriasFinanceira' => $subcategoriasFinanceira,
-            'custos'                  => $custos,
-            'contatos'                => $contatos,
-            'condicoesPagamento'      => $condicoesPagamento,
-            'contasBancarias'         => $contasBancarias,
+        return Inertia::render('tenant/finance/accounts-payable/create/Create', [
+            'financialCategories'    => $financialCategories,
+            'financialSubcategories' => $financialSubcategories,
+            'costs'                  => $costs,
+            'contacts'               => $contacts,
+            'paymentConditions'      => $paymentConditions,
+            'bankAccounts'           => $bankAccounts,
         ]);
     }
 
@@ -120,15 +119,13 @@ class TenantAccountPayableController extends Controller
      */
     public function store(StoreAccountPayableRequest $request)
     {
+        $accountPayable = $this->accountPayableService->create($request->validated(), tenant());
 
-
-        $contaAPagar = $this->accountPayableService->create($request->validated());
-
-        if ($contaAPagar) {
-            return redirect()->route('contas-a-pagar.index')->with('msg', 'Conta a pagar cadastrada com sucesso!');
+        if ($accountPayable) {
+            return redirect()->route('tenant.finance.accounts-payable.list')->with('success', 'Account payable created successfully!');
         }
 
-        return redirect()->route('contas-a-pagar.index')->with('msg_erro', 'Erro ao tentar fazer cadastro!');
+        return redirect()->route('tenant.finance.accounts-payable.list')->with('error', 'Error creating account payable!');
     }
 
     /**
@@ -136,16 +133,11 @@ class TenantAccountPayableController extends Controller
      */
     public function show(string $id)
     {
+        $accountPayable = $this->accountPayableService->showById($id, tenant());
 
-
-        $contaAPagar = $this->accountPayableService->showById($id, tenant());
-
-        return view(
-            'app.financeiro.conta_a_pagar.show',
-            [
-                'contaAPagar' => $contaAPagar
-            ]
-        );
+        return Inertia::render('tenant/finance/accounts-payable/show/Show', [
+            'accountPayable' => $accountPayable,
+        ]);
     }
 
     /**
@@ -153,38 +145,36 @@ class TenantAccountPayableController extends Controller
      */
     public function edit(string $id)
     {
+        $accountPayable = $this->accountPayableService->findById($id, tenant());
 
+        $financialCategories    = $this->financialCategoryService->findCategoryAccountsPayable(tenant());
+        $financialSubcategories = $this->financialSubcategoryService->findAll(tenant());
+        $costs                  = Cost::select('id', 'type')->get();
 
-        $contaAPagar = $this->accountPayableService->findById($id, tenant());
-
-        $categoriasFinanceira    = $this->financialCategoryService->findCategoriaContasAPagar(tenant());
-        $subcategoriasFinanceira = $this->financialSubcategoryService->findAll(tenant());
-        $custos                  = Cost::select('id', 'tipo')->get();
-
-        $subcategoriasFinanceira = $subcategoriasFinanceira->map(function ($item) {
-            if ($item->ativo === 1) {
-                return ['id' => $item->id, 'nome' => $item->nome];
+        $financialSubcategories = $financialSubcategories->map(function ($item) {
+            if ($item->active) {
+                return ['id' => $item->id, 'name' => $item->name];
             }
         });
 
-        $contatos = collect();
-        Contact::select('id', 'nome_razaosocial')
-            ->chunkById(500, function ($chunk) use (&$contatos) {
-                $contatos = $contatos->merge($chunk);
+        $contacts = collect();
+        Contact::select('id', 'name_corporatereason')
+            ->chunkById(500, function ($chunk) use (&$contacts) {
+                $contacts = $contacts->merge($chunk);
             });
 
-        $condicoesPagamento = $this->accountPayableService->condicoesPagamento();
+        $paymentConditions = $this->accountPayableService->paymentConditions();
 
-        $contasBancarias = $this->contaBancariaService->findAll();
+        $bankAccounts = $this->bankAccountService->findAll(tenant());
 
-        return view('app.financeiro.conta_a_pagar.edit', [
-            'contaAPagar'             => $contaAPagar,
-            'categoriasFinanceira'    => $categoriasFinanceira,
-            'subcategoriasFinanceira' => $subcategoriasFinanceira,
-            'custos'                  => $custos,
-            'contatos'                => $contatos,
-            'condicoesPagamento'      => $condicoesPagamento,
-            'contasBancarias'         => $contasBancarias,
+        return Inertia::render('tenant/finance/accounts-payable/edit/Edit', [
+            'accountPayable'         => $accountPayable,
+            'financialCategories'    => $financialCategories,
+            'financialSubcategories' => $financialSubcategories,
+            'costs'                  => $costs,
+            'contacts'               => $contacts,
+            'paymentConditions'      => $paymentConditions,
+            'bankAccounts'           => $bankAccounts,
         ]);
     }
 
@@ -193,59 +183,51 @@ class TenantAccountPayableController extends Controller
      */
     public function update(UpdateAccountPayableRequest $request, string $id)
     {
+        $accountPayable = $this->accountPayableService->update($id, $request->validated(), tenant());
 
-
-        $contaAPagar = $this->accountPayableService->update($id, $request->validated());
-
-        if ($contaAPagar) {
-            return redirect()->route('contas-a-pagar.edit', ['contas_a_pagar' => $contaAPagar->id])->with('msg', 'Conta a pagar atualizada com sucesso!');
+        if ($accountPayable) {
+            return redirect()->route('tenant.finance.accounts-payable.edit', ['id' => $accountPayable->id])->with('success', 'Account payable updated successfully!');
         }
 
-        return redirect()->route('contas-a-pagar.edit', ['contas_a_pagar' => $contaAPagar->id])->with('msg_erro', 'Erro ao tentar atualizar a conta a pagar!');
+        return redirect()->route('tenant.finance.accounts-payable.edit', ['id' => $accountPayable->id])->with('error', 'Error updating account payable!');
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Request $request, string $id)
+    public function destroy(string $id)
     {
+        $accountPayable = $this->accountPayableService->delete($id, tenant());
 
-
-        $contaAPagar = $this->accountPayableService->delete($id, $request);
-
-        if ($contaAPagar) {
-            return redirect()->route('contas-a-pagar.index')->with('msg', 'Conta a pagar excluída com sucesso!');
+        if ($accountPayable) {
+            return redirect()->route('tenant.finance.accounts-payable.list')->with('success', 'Account payable deleted successfully!');
         }
 
-        return redirect()->route('contas-a-pagar.index')->with('msg_erro', 'Erro ao tentar excluir a conta a pagar!');
+        return redirect()->route('tenant.finance.accounts-payable.list')->with('error', 'Error deleting account payable!');
     }
 
-    public function atualizarParcelas(Request $request)
+    public function updateInstallments(Request $request)
     {
-
-
         try {
-            $this->accountPayableService->atualizarParcelas($request->get('id'));
+            $this->accountPayableService->updateInstallment($request->input('id'), tenant());
 
             return response()->json([
                 'success' => true,
-                'message' => 'Parcelas atualizadas com sucesso!',
+                'message' => 'Installments updated successfully!',
             ], Response::HTTP_CREATED);
         } catch (\Throwable) {
-            throw new UpdateInstallmentException('Erro ao atualizar as parcelas!');
+            throw new UpdateInstallmentException('Error updating installments!');
         }
     }
 
-    public function atualizarValorParcela(UpdateValorParcelaRequest $request)
+    public function updateInstallmentValue(UpdateInstallmentValueRequest $request)
     {
+        $updatedInstallments = $this->accountPayableService->updateInstallmentValue($request->validated(), tenant());
 
-
-        $parcelasAtualizadas = $this->accountPayableService->atualizarValorParcela($request->validated());
-
-        if ($parcelasAtualizadas) {
-            return response()->json(['status' => 200, 'message' => 'Valor da parcela atualizada com sucesso!']);
+        if ($updatedInstallments) {
+            return response()->json(['status' => 200, 'message' => 'Installment value updated successfully!']);
         }
 
-        return response()->json(['status' => 500, 'message' => 'Erro ao atualizar a parcela!']);
+        return response()->json(['status' => 500, 'message' => 'Error updating installment!']);
     }
 }

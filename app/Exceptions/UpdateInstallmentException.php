@@ -12,7 +12,7 @@ class UpdateInstallmentException extends Exception
     {
         return response()->json([
             'success' => false,
-            'message' => $this->getMessage() ?? 'Erro ao atualizar parcela.'
+            'message' => $this->getMessage() ?? 'Erro ao atualizar parcela.',
         ], Response::HTTP_INTERNAL_SERVER_ERROR);
     }
 }

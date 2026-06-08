@@ -10,7 +10,7 @@ class UploadDocumentException extends Exception
     public function render(): JsonResponse
     {
         return response()->json([
-            'error' => $this->getMessage()
+            'error' => $this->getMessage(),
         ], $this->getCode());
     }
 }

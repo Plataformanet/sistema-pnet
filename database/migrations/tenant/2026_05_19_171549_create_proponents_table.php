@@ -23,6 +23,7 @@ return new class extends Migration
             $table->string('marital_status');
             $table->string('profession');
             $table->tinyInteger('out_of_obligation')->default(0);
+            $table->softDeletes();
             $table->timestamps();
         });
     }

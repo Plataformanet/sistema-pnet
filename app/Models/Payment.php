@@ -2,14 +2,17 @@
 
 namespace App\Models;
 
-use App\Enum\PaymentStatus;
-use App\Enum\SubscriptionStatus;
+use App\Enums\PaymentStatusEnum;
+use App\Enums\SubscriptionStatusEnum;
 use App\Service\MercadoPagoService;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Payment extends Model
 {
+    use SoftDeletes;
+
     protected $fillable = [
         'tenant_id',
         'subscription_id',
@@ -28,7 +31,7 @@ class Payment extends Model
     ];
 
     protected $casts = [
-        'status' => PaymentStatus::class,
+        'status' => PaymentStatusEnum::class,
         'amount' => 'decimal:2',
         'paid_at' => 'datetime',
         'refunded_at' => 'datetime',
@@ -51,29 +54,29 @@ class Payment extends Model
 
     public function scopeApproved($query)
     {
-        return $query->where('status', PaymentStatus::APPROVED);
+        return $query->where('status', PaymentStatusEnum::APPROVED);
     }
 
     public function scopePending($query)
     {
-        return $query->where('status', PaymentStatus::PENDING);
+        return $query->where('status', PaymentStatusEnum::PENDING);
     }
 
     // === MÉTODOS ===
 
     public function isPaid(): bool
     {
-        return $this->status === PaymentStatus::APPROVED;
+        return $this->status === PaymentStatusEnum::APPROVED;
     }
 
     public function isPending(): bool
     {
-        return $this->status === PaymentStatus::PENDING;
+        return $this->status === PaymentStatusEnum::PENDING;
     }
 
     public function isRejected(): bool
     {
-        return $this->status === PaymentStatus::REJECTED;
+        return $this->status === PaymentStatusEnum::REJECTED;
     }
 
     /**
@@ -82,14 +85,14 @@ class Payment extends Model
     public function markAsPaid(): void
     {
         $this->update([
-            'status' => PaymentStatus::APPROVED,
+            'status' => PaymentStatusEnum::APPROVED,
             'paid_at' => now(),
         ]);
 
         // Ativar/renovar assinatura
         if ($this->subscription) {
             $this->subscription->update([
-                'status' => SubscriptionStatus::ACTIVE,
+                'status' => SubscriptionStatusEnum::ACTIVE,
                 'current_period_start' => now(),
                 'current_period_end' => now()->addMonth(),
             ]);
@@ -105,7 +108,7 @@ class Payment extends Model
         app(MercadoPagoService::class)->refundPayment($this->mp_payment_id);
 
         $this->update([
-            'status' => PaymentStatus::REFUNDED,
+            'status' => PaymentStatusEnum::REFUNDED,
             'refunded_at' => now(),
         ]);
     }

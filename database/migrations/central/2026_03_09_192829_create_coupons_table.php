@@ -24,6 +24,7 @@ return new class extends Migration
             $table->timestamp('valid_until')->nullable();
             $table->boolean('is_active')->default(true);
             $table->json('applies_to_plans')->nullable();
+            $table->softDeletes();
             $table->timestamps();
         });
     }

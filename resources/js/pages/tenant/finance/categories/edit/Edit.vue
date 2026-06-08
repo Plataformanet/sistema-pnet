@@ -15,7 +15,7 @@ const props = defineProps<{
 
 const form = useForm({
     name: props.category.name || "",
-    type: props.category.type || 1,
+    type: props.category.type || "despesa",
     active: props.category.active ?? true,
     observations: props.category.observations || "",
 });

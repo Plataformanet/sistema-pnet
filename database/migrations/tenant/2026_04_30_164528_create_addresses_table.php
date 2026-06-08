@@ -21,6 +21,7 @@ return new class extends Migration
             $table->string('neighborhood');
             $table->string('city');
             $table->string('state');
+            $table->softDeletes();
             $table->timestamps();
 
             $table->unique('contact_id');

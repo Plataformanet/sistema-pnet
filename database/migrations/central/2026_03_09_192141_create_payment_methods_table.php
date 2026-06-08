@@ -22,6 +22,7 @@ return new class extends Migration
             $table->integer('expiration_month');
             $table->integer('expiration_year');
             $table->boolean('is_default')->default(false);
+            $table->softDeletes();
             $table->timestamps();
         });
     }

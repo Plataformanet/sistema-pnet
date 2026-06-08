@@ -33,9 +33,9 @@ class TenantBankAccountController extends Controller
     {
         try {
             $data = $request->validated();
-            
+
             // Set current_balance equal to initial_balance on creation if not explicitly set
-            if (!isset($data['current_balance']) || $data['current_balance'] === null) {
+            if (! isset($data['current_balance']) || $data['current_balance'] === null) {
                 $data['current_balance'] = $data['initial_balance'] ?? 0;
             }
 

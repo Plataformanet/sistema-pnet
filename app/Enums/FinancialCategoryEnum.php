@@ -2,29 +2,16 @@
 
 namespace App\Enums;
 
-enum FinancialCategoryEnum: int
+enum FinancialCategoryEnum: string
 {
-    case DESPESA = 1;
-    case RECEITA = 2;
+    case EXPENSE = 'despesa';
+    case INCOME = 'receita';
 
-    public function getStatus(): string
+    public function label(): string
     {
         return match ($this) {
-            self::DESPESA => 'Despesa',
-            self::RECEITA => 'Receita',
-            default => 'Tipo não encontrado',
+            self::EXPENSE => 'Despesa',
+            self::INCOME => 'Receita',
         };
-    }
-
-    public static function parse($status)
-    {
-        switch ($status) {
-            case 'Despesa':
-                return self::DESPESA;
-            case 'Receita':
-                return self::RECEITA;
-            default:
-                return null;
-        }
     }
 }

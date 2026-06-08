@@ -8,7 +8,7 @@ enum TypeContactEnum: string
     case SUPPLIER = 'fornecedor';
     case EMPLOYEE = 'funcionário';
 
-    public function type(): string
+    public function label(): string
     {
         return match ($this) {
             self::CLIENT => 'Cliente',

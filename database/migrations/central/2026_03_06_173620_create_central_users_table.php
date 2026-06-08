@@ -19,6 +19,7 @@ return new class extends Migration
             $table->integer('role')->default(1); // 0 = admin, 1 = manager
             $table->boolean('is_active')->default(true);
             $table->timestamp('last_login_at')->nullable();
+            $table->softDeletes();
             $table->timestamps();
         });
     }

@@ -17,6 +17,7 @@ return new class extends Migration
             $table->foreignId('module_id')->constrained('modules')->onDelete('cascade');
             $table->boolean('is_included')->default(true);
             $table->integer('additional_price')->default(0);
+            $table->softDeletes();
             $table->timestamps();
 
             $table->unique(['plan_id', 'module_id']); // Evita duplicatas para o mesmo plano e módulo

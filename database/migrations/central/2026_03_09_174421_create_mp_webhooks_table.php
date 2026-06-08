@@ -20,6 +20,7 @@ return new class extends Migration
             $table->timestamp('processed_at')->nullable();
             $table->text('error')->nullable();
             $table->integer('attempts')->default(0);
+            $table->softDeletes();
             $table->timestamps();
         });
     }

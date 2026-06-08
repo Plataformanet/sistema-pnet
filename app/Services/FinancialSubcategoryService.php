@@ -66,7 +66,7 @@ class FinancialSubcategoryService
         return $tenant->run(fn() => FinancialSubcategory::findOrFail($id));
     }
 
-    public function findByCategoriaId(string $id, Tenant $tenant): Collection
+    public function findByCategoryId(string $id, Tenant $tenant): Collection
     {
         return $tenant->run(function () use ($id) {
             return Cache::remember("subcategorias_cat_{$id}", 60, function () use ($id) {

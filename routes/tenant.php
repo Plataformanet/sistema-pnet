@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\Auth\AuthTenantController;
+use App\Http\Controllers\TenantAccountPayableController;
+use App\Http\Controllers\TenantAccountReceivableController;
 use App\Http\Controllers\TenantBankAccountController;
 use App\Http\Controllers\TenantClientController;
 use App\Http\Controllers\TenantController;
@@ -133,6 +135,28 @@ Route::middleware([
         Route::get('/finance/bank-accounts/{id}/edit', [TenantBankAccountController::class, 'edit'])->name('tenant.finance.bank-accounts.edit')->middleware('permission:finance.accounts.edit');
         Route::put('/finance/bank-accounts/{id}', [TenantBankAccountController::class, 'update'])->name('tenant.finance.bank-accounts.update')->middleware('permission:finance.accounts.edit');
         Route::delete('/finance/bank-accounts/{id}', [TenantBankAccountController::class, 'destroy'])->name('tenant.finance.bank-accounts.destroy')->middleware('permission:finance.accounts.delete');
+
+        // Contas a Pagar
+        Route::get('/finance/accounts-payable/list', [TenantAccountPayableController::class, 'index'])->name('tenant.finance.accounts-payable.list')->middleware('permission:finance.accounts_payable.view');
+        Route::get('/finance/accounts-payable/create', [TenantAccountPayableController::class, 'create'])->name('tenant.finance.accounts-payable.create')->middleware('permission:finance.accounts_payable.create');
+        Route::post('/finance/accounts-payable/store', [TenantAccountPayableController::class, 'store'])->name('tenant.finance.accounts-payable.store')->middleware('permission:finance.accounts_payable.create');
+        Route::get('/finance/accounts-payable/{id}', [TenantAccountPayableController::class, 'show'])->name('tenant.finance.accounts-payable.show')->middleware('permission:finance.accounts_payable.view');
+        Route::get('/finance/accounts-payable/{id}/edit', [TenantAccountPayableController::class, 'edit'])->name('tenant.finance.accounts-payable.edit')->middleware('permission:finance.accounts_payable.edit');
+        Route::put('/finance/accounts-payable/{id}', [TenantAccountPayableController::class, 'update'])->name('tenant.finance.accounts-payable.update')->middleware('permission:finance.accounts_payable.edit');
+        Route::delete('/finance/accounts-payable/{id}', [TenantAccountPayableController::class, 'destroy'])->name('tenant.finance.accounts-payable.destroy')->middleware('permission:finance.accounts_payable.delete');
+        Route::patch('/finance/accounts-payable/installments/update', [TenantAccountPayableController::class, 'updateInstallments'])->name('tenant.finance.accounts-payable.installments.update')->middleware('permission:finance.accounts_payable.edit');
+        Route::patch('/finance/accounts-payable/installments/value', [TenantAccountPayableController::class, 'updateInstallmentValue'])->name('tenant.finance.accounts-payable.installments.value')->middleware('permission:finance.accounts_payable.edit');
+
+        // Contas a Receber
+        Route::get('/finance/accounts-receivable/list', [TenantAccountReceivableController::class, 'index'])->name('tenant.finance.accounts-receivable.list')->middleware('permission:finance.accounts_receivable.view');
+        Route::get('/finance/accounts-receivable/create', [TenantAccountReceivableController::class, 'create'])->name('tenant.finance.accounts-receivable.create')->middleware('permission:finance.accounts_receivable.create');
+        Route::post('/finance/accounts-receivable/store', [TenantAccountReceivableController::class, 'store'])->name('tenant.finance.accounts-receivable.store')->middleware('permission:finance.accounts_receivable.create');
+        Route::get('/finance/accounts-receivable/{id}', [TenantAccountReceivableController::class, 'show'])->name('tenant.finance.accounts-receivable.show')->middleware('permission:finance.accounts_receivable.view');
+        Route::get('/finance/accounts-receivable/{id}/edit', [TenantAccountReceivableController::class, 'edit'])->name('tenant.finance.accounts-receivable.edit')->middleware('permission:finance.accounts_receivable.edit');
+        Route::put('/finance/accounts-receivable/{id}', [TenantAccountReceivableController::class, 'update'])->name('tenant.finance.accounts-receivable.update')->middleware('permission:finance.accounts_receivable.edit');
+        Route::delete('/finance/accounts-receivable/{id}', [TenantAccountReceivableController::class, 'destroy'])->name('tenant.finance.accounts-receivable.destroy')->middleware('permission:finance.accounts_receivable.delete');
+        Route::patch('/finance/accounts-receivable/installments/update', [TenantAccountReceivableController::class, 'updateInstallments'])->name('tenant.finance.accounts-receivable.installments.update')->middleware('permission:finance.accounts_receivable.edit');
+        Route::patch('/finance/accounts-receivable/installments/value', [TenantAccountReceivableController::class, 'updateInstallmentValue'])->name('tenant.finance.accounts-receivable.installments.value')->middleware('permission:finance.accounts_receivable.edit');
 
         // Configurações - Cargos (Roles)
         Route::get('/settings/roles/list', [TenantRoleController::class, 'index'])->name('tenant.settings.roles.list')->middleware('permission:settings.roles.view');

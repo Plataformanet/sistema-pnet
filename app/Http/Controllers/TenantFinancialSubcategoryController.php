@@ -15,8 +15,7 @@ class TenantFinancialSubcategoryController extends Controller
     public function __construct(
         protected FinancialSubcategoryService $financialSubcategoryService,
         protected FinancialCategoryService $financialCategoryService,
-    ) {
-    }
+    ) {}
 
     public function index()
     {
@@ -45,7 +44,7 @@ class TenantFinancialSubcategoryController extends Controller
         } catch (ValidationException $th) {
             throw $th;
         } catch (\Throwable $th) {
-            Log::error('Erro ao criar subcategoria financeira: ' . $th->getMessage());
+            Log::error('Erro ao criar subcategoria financeira: '.$th->getMessage());
 
             return redirect()->back()->with('error', 'Erro ao criar subcategoria!');
         }
@@ -54,11 +53,11 @@ class TenantFinancialSubcategoryController extends Controller
     public function edit($id)
     {
         $subcategory = $this->financialSubcategoryService->findById($id, tenant());
-        $categories  = $this->financialCategoryService->findAll(tenant());
+        $categories = $this->financialCategoryService->findAll(tenant());
 
         return Inertia::render('tenant/finance/subcategories/edit/Edit', [
             'subcategory' => $subcategory,
-            'categories'  => $categories,
+            'categories' => $categories,
         ]);
     }
 
@@ -71,7 +70,7 @@ class TenantFinancialSubcategoryController extends Controller
         } catch (ValidationException $th) {
             throw $th;
         } catch (\Throwable $th) {
-            Log::error('Erro ao atualizar subcategoria financeira: ' . $th->getMessage());
+            Log::error('Erro ao atualizar subcategoria financeira: '.$th->getMessage());
 
             return redirect()->back()->with('error', 'Erro ao atualizar subcategoria!');
         }
@@ -86,7 +85,7 @@ class TenantFinancialSubcategoryController extends Controller
         } catch (ValidationException $th) {
             return redirect()->back()->with('error', $th->validator->errors()->first());
         } catch (\Throwable $th) {
-            Log::error('Erro ao excluir subcategoria financeira: ' . $th->getMessage());
+            Log::error('Erro ao excluir subcategoria financeira: '.$th->getMessage());
 
             return redirect()->back()->with('error', 'Erro ao excluir subcategoria!');
         }
@@ -95,6 +94,7 @@ class TenantFinancialSubcategoryController extends Controller
     public function byCategoria($categoriaId)
     {
         $subcategorias = $this->financialSubcategoryService->findByCategoriaId($categoriaId, tenant());
+
         return response()->json($subcategorias);
     }
 }

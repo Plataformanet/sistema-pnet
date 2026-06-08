@@ -25,6 +25,7 @@ return new class extends Migration
             $table->string('unit_of_measure');
             $table->text('description')->nullable();
             $table->boolean('status')->default(true);
+            $table->softDeletes();
             $table->timestamps();
 
             $table->unique(['sku', 'barcode']);

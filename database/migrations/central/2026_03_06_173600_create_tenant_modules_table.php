@@ -18,6 +18,7 @@ return new class extends Migration
             $table->boolean('is_active')->default(true);
             $table->timestamp('activated_at');
             $table->timestamp('expires_at')->nullable();
+            $table->softDeletes();
             $table->timestamps();
         });
     }

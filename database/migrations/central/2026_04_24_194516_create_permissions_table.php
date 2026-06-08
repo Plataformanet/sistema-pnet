@@ -13,9 +13,10 @@ return new class extends Migration
     {
         Schema::create('permissions', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('module_id')->constrained('modules')->onDelete('cascade');
             $table->string('name');
             $table->string('display_name');
-            $table->foreignId('module_id')->constrained('modules')->onDelete('cascade');
+            $table->softDeletes();
             $table->timestamps();
         });
     }

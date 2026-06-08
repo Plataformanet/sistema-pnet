@@ -50,16 +50,16 @@ function onSubmit() {
                 <Field class="md:col-span-1">
                     <FieldLabel for="type">Tipo *</FieldLabel>
                     <Select
-                        :model-value="form.type ? String(form.type) : ''"
-                        @update:model-value="form.type = Number($event)"
+                        :model-value="form.type ?? ''"
+                        @update:model-value="form.type = $event"
                     >
                         <SelectTrigger id="type">
                             <SelectValue placeholder="Selecione o tipo" />
                         </SelectTrigger>
                         <SelectContent>
                             <SelectGroup>
-                                <SelectItem value="1">Saída / Despesa</SelectItem>
-                                <SelectItem value="2">Entrada / Receita</SelectItem>
+                                <SelectItem value="despesa">Saída / Despesa</SelectItem>
+                                <SelectItem value="receita">Entrada / Receita</SelectItem>
                             </SelectGroup>
                         </SelectContent>
                     </Select>

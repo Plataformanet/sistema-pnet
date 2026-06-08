@@ -27,6 +27,7 @@ return new class extends Migration
             $table->string('invoice_url')->nullable();
             $table->json('metadata')->nullable();
             $table->text('error_message')->nullable();
+            $table->softDeletes();
             $table->timestamps();
 
             $table->index(['tenant_id', 'status']);

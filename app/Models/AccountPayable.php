@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Enums\AccountsEnum;
+use App\Enums\FinancialPaymentMethodEnum;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
@@ -28,10 +30,10 @@ class AccountPayable extends Model
     ];
 
     protected $casts = [
-        'total' => 'integer',
+        'total'              => 'integer',
         'total_installments' => 'integer',
-        'bank_account_out' => 'integer',
-        'payment_method' => FinancialCategoryEnum::class,
+        'bank_account_out'   => 'integer',
+        'payment_method'     => FinancialPaymentMethodEnum::class,
     ];
 
     protected $appends = ['type'];

@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Enum\SettingType;
+use App\Enums\SettingTypeEnum;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
 
@@ -22,6 +22,7 @@ class TenantSetting extends Model
     ];
 
     protected $casts = [
+        'type' => SettingTypeEnum::class,
         'is_public' => 'boolean',
         'updated_at' => 'datetime',
     ];
@@ -40,12 +41,12 @@ class TenantSetting extends Model
     public function getCastedValue(): mixed
     {
         return match ($this->type) {
-            SettingType::INTEGER => (int) $this->value,
-            SettingType::BOOLEAN => filter_var($this->value, FILTER_VALIDATE_BOOLEAN),
-            SettingType::DECIMAL => (float) $this->value,
-            SettingType::JSON, SettingType::ARRAY => json_decode($this->value, true),
-            SettingType::DATE => Carbon::parse($this->value)->format('Y-m-d'),
-            SettingType::DATETIME => Carbon::parse($this->value),
+            SettingTypeEnum::INTEGER => (int) $this->value,
+            SettingTypeEnum::BOOLEAN => filter_var($this->value, FILTER_VALIDATE_BOOLEAN),
+            SettingTypeEnum::DECIMAL => (float) $this->value,
+            SettingTypeEnum::JSON, SettingTypeEnum::ARRAY => json_decode($this->value, true),
+            SettingTypeEnum::DATE => Carbon::parse($this->value)->format('Y-m-d'),
+            SettingTypeEnum::DATETIME => Carbon::parse($this->value),
             default => $this->value,
         };
     }
@@ -56,11 +57,11 @@ class TenantSetting extends Model
     public function setCastedValue(mixed $value): void
     {
         $this->value = match ($this->type) {
-            SettingType::BOOLEAN => $value ? 'true' : 'false',
-            SettingType::JSON, SettingType::ARRAY => json_encode($value),
-            SettingType::DATE, SettingType::DATETIME => $value instanceof Carbon
-                ? $value->toDateTimeString()
-                : $value,
+            SettingTypeEnum::BOOLEAN => $value ? 'true' : 'false',
+            SettingTypeEnum::JSON, SettingTypeEnum::ARRAY => json_encode($value),
+            SettingTypeEnum::DATE, SettingTypeEnum::DATETIME => $value instanceof Carbon
+            ? $value->toDateTimeString()
+            : $value,
             default => (string) $value,
         };
     }
@@ -120,10 +121,12 @@ class TenantSetting extends Model
             'json' => fn ($v) => json_decode($v) !== null,
         ];
 
-        if (isset($validators[$this->type])) {
-            if (! $validators[$this->type]($this->value)) {
+        $type = $this->type?->value;
+
+        if (isset($validators[$type])) {
+            if (! $validators[$type]($this->value)) {
                 throw new \InvalidArgumentException(
-                    "Valor inválido para tipo {$this->type}"
+                    "Valor inválido para tipo {$type}"
                 );
             }
         }

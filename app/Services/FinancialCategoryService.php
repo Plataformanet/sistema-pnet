@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\FinancialCategoryEnum;
 use App\Models\FinancialCategory;
 use App\Models\Tenant;
 use Illuminate\Support\Collection;
@@ -62,14 +63,14 @@ class FinancialCategoryService
         return $tenant->run(fn() => FinancialCategory::all());
     }
 
-    public function findCategoriaContasAPagar(Tenant $tenant): Collection
+    public function findCategoryAccountsPayable(Tenant $tenant): Collection
     {
-        return $tenant->run(fn() => FinancialCategory::select('id', 'name', 'active')->where('type', 1)->get());
+        return $tenant->run(fn() => FinancialCategory::select('id', 'name', 'active')->where('type', FinancialCategoryEnum::EXPENSE)->get());
     }
 
-    public function findCategoriaContasAReceber(Tenant $tenant): Collection
+    public function findCategoryAccountsReceivable(Tenant $tenant): Collection
     {
-        return $tenant->run(fn() => FinancialCategory::select('id', 'name', 'active')->where('type', 2)->get());
+        return $tenant->run(fn() => FinancialCategory::select('id', 'name', 'active')->where('type', FinancialCategoryEnum::INCOME)->get());
     }
 
     public function findById(string $id, Tenant $tenant): FinancialCategory

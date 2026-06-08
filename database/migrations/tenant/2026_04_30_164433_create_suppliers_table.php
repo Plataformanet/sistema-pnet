@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('responsible_person')->nullable();
             $table->text('description');
             $table->string('supply_category');
+            $table->softDeletes();
             $table->timestamps();
 
             $table->unique('contact_id');

@@ -30,6 +30,7 @@ return new class extends Migration
             $table->timestamp('trial_ends_at')->nullable();
             $table->timestamp('cancelled_at')->nullable();
             $table->timestamp('ends_at')->nullable();
+            $table->softDeletes();
             $table->timestamps();
 
             $table->index(['tenant_id', 'status']);

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\AccountsEnum;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -24,7 +25,7 @@ class Installment extends Model
     protected $casts = [
         'installment_number' => 'integer',
         'value' => 'integer',
-        'status' => 'integer',
+        'status' => AccountsEnum::class,
         'due_date' => 'date',
         'payment_date' => 'date',
     ];

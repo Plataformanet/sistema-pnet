@@ -28,7 +28,7 @@ export const columns: ColumnDef<FinanceCategory>[] = [
         header: "Tipo",
         cell: ({ row }) => {
             const type = row.original.type;
-            const isDespesa = type === 1;
+            const isDespesa = type === "despesa";
             return h(
                 "span",
                 {

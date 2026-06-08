@@ -1,7 +1,9 @@
+export type FinanceCategoryType = "despesa" | "receita";
+
 export interface FinanceCategory {
     id: string | number;
     name: string;
-    type: 1 | 2; // 1 = Saída / Despesa, 2 = Entrada / Receita
+    type: FinanceCategoryType; // despesa = Saída / Despesa, receita = Entrada / Receita
     observations?: string | null;
     active: boolean;
     created_at?: string;

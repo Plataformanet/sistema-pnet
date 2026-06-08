@@ -31,7 +31,7 @@ function onSubmit() {
 }
 
 function getCategoryLabel(category: FinanceCategory) {
-    return `${category.name} (${category.type === 1 ? 'Saída / Despesa' : 'Entrada / Receita'})`;
+    return `${category.name} (${category.type === 'despesa' ? 'Saída / Despesa' : 'Entrada / Receita'})`;
 }
 </script>
 

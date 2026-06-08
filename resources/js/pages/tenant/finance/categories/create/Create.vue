@@ -10,7 +10,7 @@ defineOptions({ layout: TenantLayout });
 
 const form = useForm({
     name: "",
-    type: 1, // 1 = Saída / Despesa
+    type: "despesa", // despesa = Saída / Despesa
     active: true,
     observations: "",
 });

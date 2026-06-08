@@ -2,14 +2,17 @@
 
 namespace App\Models;
 
-use App\Enum\SubscriptionStatus;
+use App\Enums\SubscriptionStatusEnum;
 use App\Service\MercadoPagoService;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Subscription extends Model
 {
+    use SoftDeletes;
+
     protected $fillable = [
         'tenant_id',
         'plan_id',
@@ -24,7 +27,7 @@ class Subscription extends Model
     ];
 
     protected $casts = [
-        'status' => SubscriptionStatus::class,
+        'status' => SubscriptionStatusEnum::class,
         'current_period_start' => 'datetime',
         'current_period_end' => 'datetime',
         'trial_ends_at' => 'datetime',
@@ -58,12 +61,12 @@ class Subscription extends Model
 
     public function scopeActive($query)
     {
-        return $query->where('status', SubscriptionStatus::ACTIVE);
+        return $query->where('status', SubscriptionStatusEnum::ACTIVE);
     }
 
     public function scopePastDue($query)
     {
-        return $query->where('status', SubscriptionStatus::PAST_DUE);
+        return $query->where('status', SubscriptionStatusEnum::PAST_DUE);
     }
 
     // === MÉTODOS DE VERIFICAÇÃO ===
@@ -76,7 +79,7 @@ class Subscription extends Model
 
     public function onTrial(): bool
     {
-        return $this->status === SubscriptionStatus::TRIALING
+        return $this->status === SubscriptionStatusEnum::TRIALING
             && $this->trial_ends_at
             && $this->trial_ends_at->isFuture();
     }
@@ -90,7 +93,7 @@ class Subscription extends Model
 
     public function pastDue(): bool
     {
-        return $this->status === SubscriptionStatus::PAST_DUE;
+        return $this->status === SubscriptionStatusEnum::PAST_DUE;
     }
 
     // === AÇÕES ===
@@ -101,7 +104,7 @@ class Subscription extends Model
     public function cancel(bool $immediately = false): void
     {
         $this->update([
-            'status' => SubscriptionStatus::CANCELLED,
+            'status' => SubscriptionStatusEnum::CANCELLED,
             'cancelled_at' => now(),
             'ends_at' => $immediately ? now() : $this->current_period_end,
         ]);
@@ -122,7 +125,7 @@ class Subscription extends Model
         }
 
         $this->update([
-            'status' => SubscriptionStatus::ACTIVE,
+            'status' => SubscriptionStatusEnum::ACTIVE,
             'cancelled_at' => null,
             'ends_at' => null,
         ]);
@@ -134,7 +137,7 @@ class Subscription extends Model
     public function pause(): void
     {
         $this->update([
-            'status' => SubscriptionStatus::PAUSED,
+            'status' => SubscriptionStatusEnum::PAUSED,
         ]);
     }
 

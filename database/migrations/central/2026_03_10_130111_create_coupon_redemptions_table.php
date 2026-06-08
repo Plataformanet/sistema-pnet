@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id()->primary();
             $table->foreignId('coupon_id')->constrained('coupons')->onDelete('cascade');
             $table->foreignUuid('tenant_id')->constrained('tenants')->onDelete('cascade');
+            $table->softDeletes();
             $table->timestamps();
         });
     }

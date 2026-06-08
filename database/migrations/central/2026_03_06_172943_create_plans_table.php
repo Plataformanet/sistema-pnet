@@ -22,6 +22,7 @@ return new class extends Migration
             $table->json('features')->nullable(); // Para recursos adicionais
             $table->boolean('is_active')->default(true);
             $table->integer('sort_order')->default(0);
+            $table->softDeletes();
             $table->timestamps();
         });
     }

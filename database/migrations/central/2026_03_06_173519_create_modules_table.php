@@ -20,6 +20,7 @@ return new class extends Migration
             $table->boolean('is_core')->default(false);
             $table->json('requires_modules')->nullable();
             $table->string('route_prefix')->nullable();
+            $table->softDeletes();
             $table->timestamps();
         });
     }

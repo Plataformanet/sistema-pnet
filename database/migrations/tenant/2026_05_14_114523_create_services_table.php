@@ -22,6 +22,7 @@ return new class extends Migration
             $table->integer('duration')->nullable();
             $table->text('description')->nullable();
             $table->boolean('status')->default(true);
+            $table->softDeletes();
             $table->timestamps();
         });
     }

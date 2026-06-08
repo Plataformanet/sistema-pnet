@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\FinancialCategoryEnum;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -18,7 +19,7 @@ class FinancialCategory extends Model
     ];
 
     protected $casts = [
-        'type' => 'integer',
+        'type' => FinancialCategoryEnum::class,
         'active' => 'boolean',
     ];
 
