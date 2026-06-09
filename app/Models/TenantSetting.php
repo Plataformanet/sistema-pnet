@@ -6,33 +6,44 @@ use App\Enums\SettingTypeEnum;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
 
+/**
+ * @property int $id
+ * @property string $key
+ * @property string $value
+ * @property SettingTypeEnum|null $type
+ * @property string|null $module
+ * @property bool $is_public
+ * @property string|null $description
+ * @property int|null $user_id
+ * @property Carbon|null $updated_at
+ */
 class TenantSetting extends Model
 {
     // Não usa created_at
     const CREATED_AT = null;
 
     protected $fillable = [
+        'user_id',
         'key',
         'value',
         'type',
         'module',
         'is_public',
         'description',
-        'updated_by',
     ];
 
     protected $casts = [
-        'type' => SettingTypeEnum::class,
-        'is_public' => 'boolean',
+        'type'       => SettingTypeEnum::class,
+        'is_public'  => 'boolean',
         'updated_at' => 'datetime',
     ];
 
     /**
      * Relacionamento com usuário que atualizou
      */
-    public function updatedBy()
+    public function user()
     {
-        return $this->belongsTo(User::class, 'updated_by');
+        return $this->belongsTo(User::class);
     }
 
     /**
@@ -102,8 +113,8 @@ class TenantSetting extends Model
             $setting->validateValue();
 
             // Registrar quem está salvando
-            if (! $setting->updated_by && auth()->check()) {
-                $setting->updated_by = auth()->id();
+            if (!$setting->user_id && auth()->check()) {
+                $setting->user_id = auth()->id();
             }
         });
     }
@@ -114,17 +125,17 @@ class TenantSetting extends Model
     public function validateValue(): void
     {
         $validators = [
-            'email' => fn ($v) => filter_var($v, FILTER_VALIDATE_EMAIL),
-            'url' => fn ($v) => filter_var($v, FILTER_VALIDATE_URL),
-            'integer' => fn ($v) => is_numeric($v),
-            'boolean' => fn ($v) => in_array(strtolower($v), ['true', 'false', '1', '0']),
-            'json' => fn ($v) => json_decode($v) !== null,
+            'email'   => fn($v) => filter_var($v, FILTER_VALIDATE_EMAIL),
+            'url'     => fn($v) => filter_var($v, FILTER_VALIDATE_URL),
+            'integer' => fn($v) => is_numeric($v),
+            'boolean' => fn($v) => in_array(strtolower($v), ['true', 'false', '1', '0']),
+            'json'    => fn($v) => json_decode($v) !== null,
         ];
 
         $type = $this->type?->value;
 
         if (isset($validators[$type])) {
-            if (! $validators[$type]($this->value)) {
+            if (!$validators[$type]($this->value)) {
                 throw new \InvalidArgumentException(
                     "Valor inválido para tipo {$type}"
                 );

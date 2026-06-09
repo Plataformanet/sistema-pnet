@@ -25,21 +25,21 @@ class StoreFinancialCategoryRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => 'required|string|max:191',
-            'type' => ['required', Rule::enum(FinancialCategoryEnum::class)],
+            'name'         => 'required|string|max:255',
+            'type'         => ['required', Rule::enum(FinancialCategoryEnum::class)],
             'observations' => 'nullable|string',
-            'active' => 'sometimes',
+            'active'       => 'sometimes',
         ];
     }
 
     public function messages(): array
     {
         return [
-            'name.required' => 'O nome é obrigatório.',
-            'name.string' => 'O nome deve ser um texto válido.',
-            'name.max' => 'O nome deve ter no máximo 191 caracteres.',
-            'type.required' => 'O tipo é obrigatório.',
-            'type.enum' => 'O tipo selecionado é inválido.',
+            'name.required'       => 'O nome é obrigatório.',
+            'name.string'         => 'O nome deve ser um texto válido.',
+            'name.max'            => 'O nome deve ter no máximo 255 caracteres.',
+            'type.required'       => 'O tipo é obrigatório.',
+            'type.enum'           => 'O tipo selecionado é inválido.',
             'observations.string' => 'As observações devem ser um texto válido.',
         ];
     }

@@ -42,12 +42,12 @@ class CashFlowService
             }
 
             // Junta tudo em uma Collection
-            if (! $request->has('status')) {
+            if (!$request->has('status')) {
                 $accounts = $payableAccounts->concat($receivableAccounts);
             }
 
-            $perPage = $request->query('quantity', 10);
-            $page = $request->query('page', 1);
+            $perPage   = $request->query('quantity', 10);
+            $page      = $request->query('page', 1);
             $paginated = new LengthAwarePaginator(
                 $accounts->forPage($page, $perPage),
                 $accounts->count(),
@@ -60,7 +60,7 @@ class CashFlowService
         });
     }
 
-    public static function getAccounts(string $model, string $start, string $end, $request)
+    private function getAccounts(string $model, string $start, string $end, $request)
     {
         return $model::with([
             'installments' => function (MorphMany $query) use ($start, $end) {

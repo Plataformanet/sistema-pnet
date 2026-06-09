@@ -17,6 +17,7 @@ use App\Http\Controllers\TenantProductController;
 use App\Http\Controllers\TenantRoleController;
 use App\Http\Controllers\TenantServiceCategoryController;
 use App\Http\Controllers\TenantServiceController;
+use App\Http\Controllers\TenantSpendingFlowController;
 use App\Http\Controllers\TenantSupplierController;
 use App\Http\Controllers\TenantUserController;
 use App\Http\Middleware\Authenticate;
@@ -161,6 +162,10 @@ Route::middleware([
 
         // Fluxo de Caixa
         Route::get('/finance/cash-flow', TenantCashFlowController::class)->name('tenant.finance.cash-flow.index')->middleware('permission:finance.cash_flow.view');
+
+        //Fluxo de Gastos
+        Route::get('/finance/spending-flow', [TenantSpendingFlowController::class, 'index'])->name('tenant.finance.spending-flow.index')->middleware('permission:finance.spending_flow.view');
+        Route::get('/finance/spending-flow/pdf', [TenantSpendingFlowController::class, 'geraPDF'])->name('tenant.finance.spending-flow.pdf')->middleware('permission:finance.spending_flow.view');
 
         // Configurações - Cargos (Roles)
         Route::get('/settings/roles/list', [TenantRoleController::class, 'index'])->name('tenant.settings.roles.list')->middleware('permission:settings.roles.view');
