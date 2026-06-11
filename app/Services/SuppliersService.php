@@ -57,12 +57,12 @@ class SuppliersService
 
     public function findById(string $id, Tenant $tenant)
     {
-        return $tenant->run(fn () => Supplier::with(['contact', 'contact.address'])->where('contact_id', $id)->firstOrFail());
+        return $tenant->run(fn() => Supplier::with(['contact', 'contact.address'])->where('contact_id', $id)->firstOrFail());
     }
 
     public function findAll(Tenant $tenant)
     {
-        return $tenant->run(fn () => Supplier::with(['contact'])->get()->map(function ($supplier) {
+        return $tenant->run(fn() => Supplier::with(['contact'])->get()->map(function ($supplier) {
             return [
                 'contact' => [
                     'id' => $supplier->contact->id,

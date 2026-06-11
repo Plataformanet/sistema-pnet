@@ -23,6 +23,7 @@
     },
     "dependencies": {
         "@inertiajs/vue3": "^2.3.18",
+        "@lucide/vue": "^1.17.0",
         "@tanstack/vue-table": "^8.21.3",
         "@unovis/ts": "^1.6.4",
         "@unovis/vue": "^1.6.4",
@@ -31,7 +32,7 @@
         "class-variance-authority": "^0.7.1",
         "clsx": "^2.1.1",
         "lucide-vue-next": "^1.0.0",
-        "reka-ui": "^2.9.7",
+        "reka-ui": "^2.9.9",
         "tailwind-merge": "^3.5.0",
         "vue": "^3.5.30",
         "vue-sonner": "^2.0.9"

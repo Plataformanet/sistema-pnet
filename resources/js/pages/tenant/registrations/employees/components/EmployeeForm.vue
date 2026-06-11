@@ -4,8 +4,22 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import FieldError from "@/components/ui/field/FieldError.vue";
 import { maskCPF, maskPhone, maskCEP, maskRG, maskCurrency, handleMask, onRGKeypress } from "@/lib/masks";
+import {
+    Select,
+    SelectContent,
+    SelectGroup,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 
 import { useForm } from "@inertiajs/vue3";
+import { useCepLookup } from "@/composables/useCepLookup";
+import { UFS_LIST } from "@/lib/constants";
+
+const ufs = UFS_LIST;
+
+
 
 const props = withDefaults(defineProps<{
     form: ReturnType<typeof useForm>;
@@ -15,6 +29,8 @@ const props = withDefaults(defineProps<{
 });
 
 const emit = defineEmits(["submit"]);
+
+useCepLookup(props.form as any);
 
 function onSubmit() {
     emit("submit");
@@ -176,7 +192,7 @@ function onSubmit() {
                     <FieldError v-if="form.errors.complement">{{ form.errors.complement }}</FieldError>
                 </Field>
 
-                <Field class="md:col-span-4">
+                <Field class="md:col-span-3">
                     <FieldLabel for="neighborhood">Bairro</FieldLabel>
                     <Input id="neighborhood" v-model="form.neighborhood" />
                     <FieldError v-if="form.errors.neighborhood">{{ form.errors.neighborhood }}</FieldError>
@@ -188,9 +204,20 @@ function onSubmit() {
                     <FieldError v-if="form.errors.city">{{ form.errors.city }}</FieldError>
                 </Field>
 
-                <Field class="md:col-span-1">
+                <Field class="md:col-span-2">
                     <FieldLabel for="state">UF</FieldLabel>
-                    <Input id="state" v-model="form.state" maxlength="2" placeholder="SP" />
+                    <Select :model-value="form.state" @update:model-value="form.state = $event">
+                        <SelectTrigger id="state">
+                            <SelectValue placeholder="UF" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectGroup>
+                                <SelectItem v-for="uf in ufs" :key="uf" :value="uf">
+                                    {{ uf }}
+                                </SelectItem>
+                            </SelectGroup>
+                        </SelectContent>
+                    </Select>
                     <FieldError v-if="form.errors.state">{{ form.errors.state }}</FieldError>
                 </Field>
             </div>

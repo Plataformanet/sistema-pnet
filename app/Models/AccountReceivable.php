@@ -34,6 +34,7 @@ class AccountReceivable extends Model
         'bank_account_out' => 'integer',
     ];
 
+
     public function financialCategory(): BelongsTo
     {
         return $this->belongsTo(FinancialCategory::class);

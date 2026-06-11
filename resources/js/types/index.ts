@@ -2,6 +2,7 @@
 export * from "./registrations/Client";
 export * from "./registrations/Supplier";
 export * from "./registrations/Employee";
+export * from "./registrations/Contact";
 
 // Settings
 export * from "./settings/User";

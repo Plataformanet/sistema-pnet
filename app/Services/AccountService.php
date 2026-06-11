@@ -68,16 +68,16 @@ abstract class AccountService
                             $query->where('status', AccountsEnum::OPEN->value);
                         })
                         ->when($request->query('status') === 'vencem-hoje', function (Builder $query) use ($hoje) {
-                            $query->whereDate('data_de_vencimento', $hoje)
+                            $query->whereDate('due_date', $hoje)
                                 ->where('status', AccountsEnum::OPEN->value);
                         })
                         ->when($request->query('status') === 'vencidos', function (Builder $query) use ($hoje) {
-                            $query->whereDate('data_de_vencimento', '<', $hoje)
+                            $query->whereDate('due_date', '<', $hoje)
                                 ->where('status', AccountsEnum::OPEN->value);
                         });
                 })->with([
-                    'installment' => function ($query) use ($inicio, $fim) {
-                        $query->whereBetween('data_de_vencimento', [$inicio, $fim]);
+                    'installments' => function ($query) use ($inicio, $fim) {
+                        $query->whereBetween('due_date', [$inicio, $fim]);
                     },
                 ])->orderByDesc('id')
                 ->paginate($request->query('quantidade', 10))
