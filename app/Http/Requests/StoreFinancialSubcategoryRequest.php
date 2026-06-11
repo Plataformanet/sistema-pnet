@@ -24,9 +24,9 @@ class StoreFinancialSubcategoryRequest extends FormRequest
     {
         return [
             'financial_category_id' => 'required|integer|exists:financial_categories,id',
-            'name' => 'required|string|max:191',
-            'observations' => 'nullable|string',
-            'active' => 'sometimes',
+            'name'                  => 'required|string|max:255',
+            'observations'          => 'nullable|string',
+            'active'                => 'sometimes',
         ];
     }
 
@@ -34,12 +34,12 @@ class StoreFinancialSubcategoryRequest extends FormRequest
     {
         return [
             'financial_category_id.required' => 'A categoria é obrigatória.',
-            'financial_category_id.integer' => 'A categoria selecionada é inválida.',
-            'financial_category_id.exists' => 'A categoria selecionada não existe.',
-            'name.required' => 'O nome é obrigatório.',
-            'name.string' => 'O nome deve ser um texto válido.',
-            'name.max' => 'O nome deve ter no máximo 191 caracteres.',
-            'observations.string' => 'As observações devem ser um texto válido.',
+            'financial_category_id.integer'  => 'A categoria selecionada é inválida.',
+            'financial_category_id.exists'   => 'A categoria selecionada não existe.',
+            'name.required'                  => 'O nome é obrigatório.',
+            'name.string'                    => 'O nome deve ser um texto válido.',
+            'name.max'                       => 'O nome deve ter no máximo 255 caracteres.',
+            'observations.string'            => 'As observações devem ser um texto válido.',
         ];
     }
 }

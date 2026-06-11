@@ -18,9 +18,9 @@ class TenantService
     {
 
         $tenant = Tenant::create([
-            'name' => $data['name'],
-            'plan_id' => 1, // $data['plan_id'],
-            'is_active' => true,
+            'name'          => $data['name'],
+            'plan_id'       => $data['plan_id'],
+            'is_active'     => true,
             'trial_ends_at' => now()->addDays(30),
         ]);
 
@@ -29,19 +29,19 @@ class TenantService
                 'domain' => $data['domain'],
             ]);
 
-            $plan = Plan::find($data['plan_id']);
+            $plan            = Plan::find($data['plan_id']);
             $includedModules = $plan->includedModules()->get();
 
             foreach ($includedModules as $module) {
 
-                // if ($this->canActivateModule($tenant, $module)) {
-                $tenant->modules()->attach($module->id, [
-                    'is_active' => true,
-                    'activated_at' => now(),
-                ]);
+                if ($this->canActivateModule($tenant, $module)) {
+                    $tenant->modules()->attach($module->id, [
+                        'is_active'    => true,
+                        'activated_at' => now(),
+                    ]);
 
-                $arrayOfPermissionNames[] = $module->permissions()->get()->toArray();
-                // }
+                    $arrayOfPermissionNames[] = $module->permissions()->get()->toArray();
+                }
 
             }
 
@@ -54,7 +54,7 @@ class TenantService
 
                     $roles = collect($roles)->map(function ($role) {
                         return [
-                            'name' => $role,
+                            'name'       => $role,
                             'guard_name' => 'web',
                             'created_at' => now(),
                             'updated_at' => now(),
@@ -69,11 +69,11 @@ class TenantService
                     foreach ($arrayOfPermissionNames as $permissions) {
                         foreach ($permissions as $permission) {
                             $getPermissions[] = [
-                                'name' => $permission['name'],
+                                'name'         => $permission['name'],
                                 'display_name' => $permission['display_name'],
-                                'guard_name' => 'web',
-                                'created_at' => now(),
-                                'updated_at' => now(),
+                                'guard_name'   => 'web',
+                                'created_at'   => now(),
+                                'updated_at'   => now(),
                             ];
                         }
                     }
@@ -83,8 +83,8 @@ class TenantService
                     $roleAdmin->givePermissionTo(Permission::all());
 
                     $user = User::create([
-                        'name' => $data['userName'],
-                        'email' => $data['email'],
+                        'name'     => $data['userName'],
+                        'email'    => $data['email'],
                         'password' => Hash::make($data['password']),
                     ]);
 
@@ -117,18 +117,18 @@ class TenantService
             ->where('modules.id', $module->id)
             ->exists();
 
-        if (! $planHasModule) {
+        if (!$planHasModule) {
             throw new \Exception('Módulo não disponível no plano atual');
         }
 
         // 2. Verificar dependências
-        if (! $module->canBeActivatedFor($tenant)) {
+        if (!$module->canBeActivatedFor($tenant)) {
             $dependencies = $module->dependencies()->pluck('name')->join(', ');
             throw new \Exception("Requer módulos: {$dependencies}");
         }
 
         // 3. Verificar se não está bloqueado
-        if (! $tenant->is_active) {
+        if (!$tenant->is_active) {
             throw new \Exception('Tenant bloqueado');
         }
 

@@ -1,6 +1,7 @@
 <?php
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use App\Models\Tenant;
+use Tests\Support\TenantRegistry;
 use Tests\TestCase;
 
 /*
@@ -15,7 +16,13 @@ use Tests\TestCase;
 */
 
 pest()->extend(TestCase::class)
- // ->use(RefreshDatabase::class)
+    ->afterEach(function () {
+        // Dropa os bancos físicos dos tenants criados durante o teste.
+        foreach (TenantRegistry::flush() as $tenant) {
+            tenancy()->end();
+            $tenant->delete();
+        }
+    })
     ->in('Feature');
 
 /*
@@ -44,7 +51,20 @@ expect()->extend('toBeOne', function () {
 |
 */
 
-function something()
+/**
+ * Cria um tenant para o teste — dispara a criação e migração do banco do
+ * tenant — e o registra para limpeza automática no afterEach.
+ *
+ * @param  array<string, mixed>  $attributes
+ */
+function createTenant(array $attributes = []): Tenant
 {
-    // ..
+    $tenant = Tenant::create(array_merge([
+        'name' => 'Tenant de teste',
+        'is_active' => true,
+    ], $attributes));
+
+    TenantRegistry::add($tenant);
+
+    return $tenant;
 }

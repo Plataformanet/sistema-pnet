@@ -26,10 +26,10 @@ class StoreAccountPayableRequest extends FormRequest
     {
         return [
             'financial_category_id'    => 'required|integer|exists:financial_categories,id',
-            'financial_subcategory_id' => 'nullable|integer|exists:financial_subcategories,id',
+            'financial_subcategory_id' => 'nullable|integer',
             'cost_id'                  => 'nullable|integer|exists:costs,id',
             'bank_account_id'          => 'required|integer|exists:bank_accounts,id',
-            'financial_contact_id'     => 'required|integer|exists:financial_contacts,id',
+            'financial_contact_id'     => 'sometimes',
             'description'              => 'required|string',
             'total'                    => 'nullable|integer',
             'payment_method'           => 'required|integer',
