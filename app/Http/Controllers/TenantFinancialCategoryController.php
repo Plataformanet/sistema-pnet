@@ -13,7 +13,8 @@ class TenantFinancialCategoryController extends Controller
 {
     public function __construct(
         protected FinancialCategoryService $financialCategoryService,
-    ) {}
+    ) {
+    }
 
     public function index()
     {
@@ -38,13 +39,13 @@ class TenantFinancialCategoryController extends Controller
         } catch (ValidationException $th) {
             throw $th;
         } catch (\Throwable $th) {
-            Log::error('Erro ao criar categoria financeira: '.$th->getMessage());
+            Log::error('Erro ao criar categoria financeira: ' . $th->getMessage());
 
             return redirect()->back()->with('error', 'Erro ao criar categoria!');
         }
     }
 
-    public function edit($id)
+    public function edit(string $id)
     {
         $category = $this->financialCategoryService->findById($id, tenant());
 
@@ -53,7 +54,7 @@ class TenantFinancialCategoryController extends Controller
         ]);
     }
 
-    public function update(UpdateFinancialCategoryRequest $request, $id)
+    public function update(UpdateFinancialCategoryRequest $request, string $id)
     {
         try {
             $this->financialCategoryService->update($id, $request->validated(), tenant());
@@ -62,13 +63,13 @@ class TenantFinancialCategoryController extends Controller
         } catch (ValidationException $th) {
             throw $th;
         } catch (\Throwable $th) {
-            Log::error('Erro ao atualizar categoria financeira: '.$th->getMessage());
+            Log::error('Erro ao atualizar categoria financeira: ' . $th->getMessage());
 
             return redirect()->back()->with('error', 'Erro ao atualizar categoria!');
         }
     }
 
-    public function destroy($id)
+    public function destroy(string $id)
     {
         try {
             $this->financialCategoryService->delete($id, tenant());
@@ -77,7 +78,7 @@ class TenantFinancialCategoryController extends Controller
         } catch (ValidationException $th) {
             return redirect()->back()->with('error', $th->validator->errors()->first());
         } catch (\Throwable $th) {
-            Log::error('Erro ao excluir categoria financeira: '.$th->getMessage());
+            Log::error('Erro ao excluir categoria financeira: ' . $th->getMessage());
 
             return redirect()->back()->with('error', 'Erro ao excluir categoria!');
         }

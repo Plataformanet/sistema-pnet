@@ -23,7 +23,7 @@ class FinancialCategoryService
                     $category->update($data);
                 } else {
                     throw ValidationException::withMessages([
-                        'nome' => 'Já existe uma categoria com este nome e tipo.',
+                        'name' => 'Já existe uma categoria com este nome e tipo.',
                     ]);
                 }
 
