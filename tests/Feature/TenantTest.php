@@ -3,7 +3,6 @@
 use App\Models\Module;
 use App\Models\User;
 use App\Services\TenantService;
-use Database\Seeders\DatabaseSeeder;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Tests\Support\TenantRegistry;
@@ -18,17 +17,17 @@ use Tests\Support\TenantRegistry;
 function tenantPayload(array $overrides = []): array
 {
     return array_merge([
-        'name'     => 'Acme',
-        'domain'   => 'acme.localhost',
-        'plan_id'  => 1,
+        'name' => 'Acme',
+        'domain' => 'acme.localhost',
+        'plan_id' => 1,
         'userName' => 'Admin Acme',
-        'email'    => 'admin@acme.com',
+        'email' => 'admin@acme.com',
         'password' => 'password',
     ], $overrides);
 }
 
 test('create tenant', function () {
-    $tenant = createTenant();
+    $tenant = makeTenant();
 
     expect($tenant)->not->toBeNull();
     expect($tenant->name)->toBe('Tenant de teste');
@@ -36,7 +35,7 @@ test('create tenant', function () {
 });
 
 test('create tenant with domain', function () {
-    $tenant = createTenant(['name' => 'tenant1', 'is_active' => true]);
+    $tenant = makeTenant(['name' => 'tenant1', 'is_active' => true]);
 
     $tenant->domains()->create([
         'domain' => 'tenant1.localhost',
@@ -47,14 +46,12 @@ test('create tenant with domain', function () {
 });
 
 test('store provisions a tenant with domain, modules and an admin user', function () {
-    $this->seed(DatabaseSeeder::class);
-
     $tenant = app(TenantService::class)->store(tenantPayload());
     TenantRegistry::add($tenant);
 
     $this->assertDatabaseHas('tenants', [
-        'id'        => $tenant->id,
-        'name'      => 'Acme',
+        'id' => $tenant->id,
+        'name' => 'Acme',
         'is_active' => true,
     ]);
     $this->assertDatabaseHas('domains', ['domain' => 'acme.localhost', 'tenant_id' => $tenant->id]);
@@ -77,8 +74,6 @@ test('store provisions a tenant with domain, modules and an admin user', functio
 });
 
 test('hasModule reflects the tenant active modules', function () {
-    $this->seed(DatabaseSeeder::class);
-
     $tenant = app(TenantService::class)->store(tenantPayload());
     TenantRegistry::add($tenant);
 
@@ -89,14 +84,12 @@ test('hasModule reflects the tenant active modules', function () {
 });
 
 test('store does not persist the tenant when the plan does not exist', function () {
-    $this->seed(DatabaseSeeder::class);
-
     $threw = false;
     try {
         app(TenantService::class)->store(tenantPayload([
             'plan_id' => 999,
-            'name'    => 'Sem Plano',
-            'domain'  => 'semplano.localhost',
+            'name' => 'Sem Plano',
+            'domain' => 'semplano.localhost',
         ]));
     } catch (Throwable $e) {
         $threw = true;
@@ -109,8 +102,6 @@ test('store does not persist the tenant when the plan does not exist', function 
 });
 
 test('store rolls back the tenant when the domain is already taken', function () {
-    $this->seed(DatabaseSeeder::class);
-
     $service = app(TenantService::class);
 
     $first = $service->store(tenantPayload(['domain' => 'duplicate.localhost']));
@@ -119,9 +110,9 @@ test('store rolls back the tenant when the domain is already taken', function ()
     $threw = false;
     try {
         $service->store(tenantPayload([
-            'name'   => 'Segundo',
+            'name' => 'Segundo',
             'domain' => 'duplicate.localhost',
-            'email'  => 'segundo@acme.com',
+            'email' => 'segundo@acme.com',
         ]));
     } catch (Throwable $e) {
         $threw = true;
@@ -135,21 +126,17 @@ test('store rolls back the tenant when the domain is already taken', function ()
 });
 
 test('canActivateModule throws when the module is not in the tenant plan', function () {
-    $this->seed(DatabaseSeeder::class);
-
-    $tenant = createTenant(['plan_id' => 2]);
+    $tenant = makeTenant(['plan_id' => 2]);
     $module = Module::firstOrFail();
 
-    expect(fn() => app(TenantService::class)->canActivateModule($tenant, $module))
+    expect(fn () => app(TenantService::class)->canActivateModule($tenant, $module))
         ->toThrow(Exception::class, 'Módulo não disponível no plano atual');
 });
 
 test('canActivateModule throws when the tenant is blocked', function () {
-    $this->seed(DatabaseSeeder::class);
-
-    $tenant = createTenant(['plan_id' => 1, 'is_active' => false]);
+    $tenant = makeTenant(['plan_id' => 1, 'is_active' => false]);
     $module = Module::where('slug', 'registrations')->firstOrFail();
 
-    expect(fn() => app(TenantService::class)->canActivateModule($tenant, $module))
+    expect(fn () => app(TenantService::class)->canActivateModule($tenant, $module))
         ->toThrow(Exception::class, 'Tenant bloqueado');
 });

@@ -8,9 +8,9 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Validation\ValidationException;
 
 beforeEach(function () {
-    // Cria o tenant (e migra o banco dele). A limpeza do banco do tenant é
-    // feita automaticamente pelo afterEach global em tests/Pest.php.
-    $this->tenant = createTenant(['name' => 'Acme']);
+    // Tenant compartilhado: a tenancy é inicializada e o teste roda dentro de
+    // uma transação revertida no afterEach global (tests/Pest.php).
+    $this->tenant = sharedTenant();
 });
 
 test('creates financial category in tenant context', function () {
@@ -24,7 +24,7 @@ test('creates financial category in tenant context', function () {
     // Dentro do run() a conexão padrão é a do tenant, então o assert bate no banco certo.
     $this->tenant->run(function () use ($category) {
         $this->assertDatabaseHas('financial_categories', [
-            'id'   => $category->id,
+            'id' => $category->id,
             'name' => 'Categoria de teste',
             'type' => FinancialCategoryEnum::EXPENSE->value,
         ]);
@@ -71,11 +71,11 @@ test('restores a soft-deleted category instead of creating a duplicate', functio
         'type' => FinancialCategoryEnum::EXPENSE,
     ], $this->tenant);
 
-    $this->tenant->run(fn() => $original->delete());
+    $this->tenant->run(fn () => $original->delete());
 
     $restored = $service->create([
-        'name'         => 'Aluguel',
-        'type'         => FinancialCategoryEnum::EXPENSE,
+        'name' => 'Aluguel',
+        'type' => FinancialCategoryEnum::EXPENSE,
         'observations' => 'Reaproveitada',
     ], $this->tenant);
 
@@ -97,7 +97,7 @@ test('updates a financial category', function () {
     ], $this->tenant);
 
     $result = $service->update($category->id, [
-        'name'   => 'Categoria atualizada',
+        'name' => 'Categoria atualizada',
         'active' => false,
     ], $this->tenant);
 
@@ -105,8 +105,8 @@ test('updates a financial category', function () {
 
     $this->tenant->run(function () use ($category) {
         $this->assertDatabaseHas('financial_categories', [
-            'id'     => $category->id,
-            'name'   => 'Categoria atualizada',
+            'id' => $category->id,
+            'name' => 'Categoria atualizada',
             'active' => false,
         ]);
     });

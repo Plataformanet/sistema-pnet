@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Tenant;
+use Illuminate\Support\Str;
 use Tests\Support\TenantRegistry;
 use Tests\TestCase;
 
@@ -17,11 +18,8 @@ use Tests\TestCase;
 
 pest()->extend(TestCase::class)
     ->afterEach(function () {
-        // Dropa os bancos físicos dos tenants criados durante o teste.
-        foreach (TenantRegistry::flush() as $tenant) {
-            tenancy()->end();
-            $tenant->delete();
-        }
+        // Reverte a transação do tenant compartilhado e remove tenants reais.
+        TenantRegistry::cleanup();
     })
     ->in('Feature');
 
@@ -52,8 +50,19 @@ expect()->extend('toBeOne', function () {
 */
 
 /**
- * Cria um tenant para o teste — dispara a criação e migração do banco do
- * tenant — e o registra para limpeza automática no afterEach.
+ * Tenant compartilhado e rápido: criado e migrado uma vez por suíte, com a
+ * tenancy inicializada e o teste isolado numa transação (revertida no
+ * afterEach). Use para testar recursos dentro do tenant.
+ */
+function sharedTenant(): Tenant
+{
+    return TenantRegistry::beginShared();
+}
+
+/**
+ * Cria um tenant real (novo banco criado e migrado) e o registra para remoção
+ * no afterEach. Use para testar o provisionamento de tenants em si — é lento
+ * por natureza, pois exercita a criação do banco do tenant.
  *
  * @param  array<string, mixed>  $attributes
  */
@@ -67,4 +76,23 @@ function createTenant(array $attributes = []): Tenant
     TenantRegistry::add($tenant);
 
     return $tenant;
+}
+
+/**
+ * Cria apenas a linha central do tenant, SEM disparar a criação/migração do
+ * banco do tenant (suprime os eventos do model). Como não há DDL, a transação
+ * central do teste reverte tudo no fim — sem necessidade de limpeza explícita.
+ *
+ * Use para testes que só tocam tabelas centrais (plano, módulos, domínios) e
+ * não precisam do banco do tenant.
+ *
+ * @param  array<string, mixed>  $attributes
+ */
+function makeTenant(array $attributes = []): Tenant
+{
+    return Tenant::withoutEvents(fn () => Tenant::create(array_merge([
+        'id' => (string) Str::uuid(),
+        'name' => 'Tenant de teste',
+        'is_active' => true,
+    ], $attributes)));
 }
