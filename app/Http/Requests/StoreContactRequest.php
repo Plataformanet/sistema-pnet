@@ -22,22 +22,31 @@ class StoreContactRequest extends FormRequest
      */
     public function rules(): array
     {
+        $isSupplier = $this->routeIs('*suppliers*');
+        $isEmployee = $this->routeIs('*employees*');
+
         return [
             'type' => 'sometimes|in:PF,PJ',
-            'name_corporatereason' => 'required_if:type,PJ|string|max:255',
+            'name_corporatereason' => 'required|string|max:255',
             'fantasy_name' => 'nullable|string|max:255',
             'cpf_cnpj' => 'required|string',
             'email' => 'nullable|email',
             'phone' => 'nullable|string',
             'cell_phone' => 'nullable|string',
-            'rg' => 'sometimes',
-            'birth_date' => 'sometimes|date',
-            'position' => 'sometimes',
-            'salary' => 'sometimes|numeric',
-            'hire_date' => 'sometimes|date',
-            'responsible_person' => 'sometimes',
-            'description' => 'sometimes',
-            'supply_category' => 'sometimes',
+            
+            // Employee specific validation
+            'rg' => $isEmployee ? 'required|string' : 'sometimes',
+            'birth_date' => $isEmployee ? 'required|date' : 'sometimes|date',
+            'position' => $isEmployee ? 'required|string' : 'sometimes',
+            'salary' => $isEmployee ? 'required|numeric' : 'sometimes|numeric',
+            'hire_date' => $isEmployee ? 'required|date' : 'sometimes|date',
+            
+            // Supplier specific validation
+            'responsible_person' => 'nullable|string',
+            'description' => $isSupplier ? 'required|string' : 'nullable|string',
+            'supply_category' => $isSupplier ? 'required|string' : 'nullable|string',
+            
+            // Address
             'zip_code' => 'required',
             'street' => 'required',
             'number' => 'required',
@@ -57,6 +66,7 @@ class StoreContactRequest extends FormRequest
             'name_corporatereason.max' => 'O nome ou razão social deve ter no máximo 255 caracteres.',
             'fantasy_name.max' => 'O nome fantasia deve ter no máximo 255 caracteres.',
             'cpf_cnpj.required' => 'O CPF/CNPJ é obrigatório.',
+            'description.required' => 'A descrição é obrigatória.',
             'email.email' => 'O e-mail deve ter no máximo 255 caracteres.',
             'zip_code.required' => 'O CEP é obrigatório.',
             'street.required' => 'A rua é obrigatória.',

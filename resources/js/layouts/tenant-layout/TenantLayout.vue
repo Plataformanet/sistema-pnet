@@ -189,12 +189,12 @@ const data: TenantNav = {
                 {
                     title: "Contas a pagar",
                     permission: "finance.accounts_payable.view",
-                    url: "/finance/accounts-payable",
+                    url: "/finance/accounts-payable/list",
                 },
                 {
                     title: "Contas a receber",
                     permission: "finance.accounts_receivable.view",
-                    url: "/finance/accounts-receivable",
+                    url: "/finance/accounts-receivable/list",
                 },
                 {
                     title: "Fluxo de caixa",
