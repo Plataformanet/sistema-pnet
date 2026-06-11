@@ -332,17 +332,17 @@ function onSubmit() {
                     <FieldLabel for="payment_method">Forma de Pagamento *</FieldLabel>
                     <Select
                         :model-value="props.form.payment_method ? String(props.form.payment_method) : ''"
-                        @update:model-value="props.form.payment_method = Number($event)"
+                        @update:model-value="props.form.payment_method = $event"
                     >
                         <SelectTrigger id="payment_method">
                             <SelectValue placeholder="Selecione a forma..." />
                         </SelectTrigger>
                         <SelectContent side="bottom">
                             <SelectGroup>
-                                <SelectItem value="1">Dinheiro</SelectItem>
-                                <SelectItem value="2">Pix</SelectItem>
-                                <SelectItem value="3">Boleto</SelectItem>
-                                <SelectItem value="4">Cartão de Crédito</SelectItem>
+                                <SelectItem value="money">Dinheiro</SelectItem>
+                                <SelectItem value="pix">Pix</SelectItem>
+                                <SelectItem value="ticket">Boleto</SelectItem>
+                                <SelectItem value="credit_card">Cartão de Crédito</SelectItem>
                             </SelectGroup>
                         </SelectContent>
                     </Select>

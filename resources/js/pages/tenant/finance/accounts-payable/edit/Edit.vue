@@ -26,15 +26,14 @@ const props = defineProps<{
     bankAccounts: BankAccount[];
 }>();
 
-// Helper to map backend payment methods (like 'money', 'pix' enum cases) to front-end integer values
-function mapPaymentMethodToInteger(val: string | number | undefined | null): string {
+// Helper to normalize backend payment methods (like 'money', 'pix' enum cases) to front-end keys
+function normalizePaymentMethod(val: string | number | undefined | null): string {
     if (val === undefined || val === null) return "";
-    if (typeof val === "number") return String(val);
     const s = String(val).toLowerCase();
-    if (s.includes("money") || s.includes("dinheiro")) return "1";
-    if (s.includes("pix")) return "2";
-    if (s.includes("ticket") || s.includes("boleto")) return "3";
-    if (s.includes("credit") || s.includes("cartao") || s.includes("cartão")) return "4";
+    if (s.includes("money") || s.includes("dinheiro")) return "money";
+    if (s.includes("pix")) return "pix";
+    if (s.includes("ticket") || s.includes("boleto")) return "ticket";
+    if (s.includes("credit") || s.includes("cartao") || s.includes("cartão")) return "credit_card";
     return s;
 }
 
@@ -48,7 +47,7 @@ const form = useForm({
     total: props.accountPayable.total !== undefined && props.accountPayable.total !== null
         ? maskCurrency(String(props.accountPayable.total))
         : "",
-    payment_method: mapPaymentMethodToInteger(props.accountPayable.payment_method) as string | number,
+    payment_method: normalizePaymentMethod(props.accountPayable.payment_method) as string | number,
     payment_condition: props.accountPayable.payment_condition || "",
     total_installments: props.accountPayable.total_installments || 1,
     bank_account_out: props.accountPayable.bank_account_out ? String(props.accountPayable.bank_account_out) : "" as string | number,
@@ -74,7 +73,7 @@ function submit() {
         financial_contact_id: form.financial_contact_id ? Number(form.financial_contact_id) : null,
         total: parseCurrencyToCents(form.total as string),
         value: parseCurrencyToCents(form.value as string),
-        payment_method: form.payment_method ? Number(form.payment_method) : null,
+        payment_method: form.payment_method || null,
         bank_account_out: form.bank_account_out ? Number(form.bank_account_out) : null,
     };
 

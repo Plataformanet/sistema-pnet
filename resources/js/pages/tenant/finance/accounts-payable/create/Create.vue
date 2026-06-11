@@ -56,7 +56,7 @@ function submit() {
         financial_contact_id: form.financial_contact_id ? Number(form.financial_contact_id) : null,
         total: parseCurrencyToCents(form.total as string),
         value: parseCurrencyToCents(form.value as string),
-        payment_method: form.payment_method ? Number(form.payment_method) : null,
+        payment_method: form.payment_method || null,
         bank_account_out: form.bank_account_out ? Number(form.bank_account_out) : null,
     };
     
