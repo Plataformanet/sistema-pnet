@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreContactRequest;
 use App\Http\Requests\UpdateContactRequest;
+use App\Models\Contact;
 use App\Services\ContactService;
 use App\Services\SuppliersService;
 use Illuminate\Support\Facades\Log;
@@ -33,7 +34,12 @@ class TenantSupplierController extends Controller
     public function store(StoreContactRequest $request)
     {
         try {
-            $contact = $this->contactService->store($request->validated(), tenant());
+
+            $contact = Contact::where('cpf_cnpj', $request->validated('cpf_cnpj'))->first();
+
+            if (! $contact) {
+                $contact = $this->contactService->store($request->validated(), tenant());
+            }
 
             $this->supplierService->store($contact, $request->validated(), tenant());
 

@@ -11,9 +11,8 @@ class ContactService
     public function store(array $data, Tenant $tenant)
     {
         return $tenant->run(function () use ($data) {
-            DB::beginTransaction();
+            return DB::transaction(function () use ($data) {
 
-            try {
                 $contact = Contact::create([
                     'type' => $data['type'] ?? 'PF',
                     'name_corporatereason' => $data['name_corporatereason'],
@@ -34,14 +33,9 @@ class ContactService
                     'state' => $data['state'],
                 ]);
 
-                DB::commit();
-
                 return $contact;
 
-            } catch (\Throwable $th) {
-                DB::rollBack();
-                throw $th;
-            }
+            });
         });
     }
 

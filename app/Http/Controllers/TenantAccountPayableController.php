@@ -87,11 +87,14 @@ class TenantAccountPayableController extends Controller
         $financialSubcategories = $this->financialSubcategoryService->findAll(tenant());
         $costs = Cost::select('id', 'type')->get();
 
-        $financialSubcategories = $financialSubcategories->map(function ($item) {
-            if ($item->active) {
-                return $item->name;
-            }
-        });
+        $financialSubcategories = $financialSubcategories
+            ->filter(fn ($item) => $item->active)
+            ->map(fn ($item) => [
+                'id' => $item->id,
+                'name' => $item->name,
+                'financial_category_id' => $item->financial_category_id,
+            ])
+            ->values();
 
         $contacts = collect();
         Contact::select('id', 'name_corporatereason')
@@ -121,10 +124,10 @@ class TenantAccountPayableController extends Controller
         try {
             $this->accountPayableService->create($request->validated(), tenant());
 
-            return redirect()->route('tenant.finance.accounts-payable.list')->with('success', 'Account payable created successfully!');
+            return redirect()->route('tenant.finance.accounts-payable.list')->with('success', 'Conta a pagar criada com sucesso');
 
         } catch (\Throwable $th) {
-            return redirect()->route('tenant.finance.accounts-payable.list')->with('error', 'Error creating account payable!');
+            return redirect()->route('tenant.finance.accounts-payable.list')->with('error', 'Erro ao tentar fazer cadastro!');
         }
     }
 
@@ -151,11 +154,14 @@ class TenantAccountPayableController extends Controller
         $financialSubcategories = $this->financialSubcategoryService->findAll(tenant());
         $costs = Cost::select('id', 'type')->get();
 
-        $financialSubcategories = $financialSubcategories->map(function ($item) {
-            if ($item->active) {
-                return ['id' => $item->id, 'name' => $item->name];
-            }
-        });
+        $financialSubcategories = $financialSubcategories
+            ->filter(fn ($item) => $item->active)
+            ->map(fn ($item) => [
+                'id' => $item->id,
+                'name' => $item->name,
+                'financial_category_id' => $item->financial_category_id,
+            ])
+            ->values();
 
         $contacts = collect();
         Contact::select('id', 'name_corporatereason')
@@ -186,10 +192,10 @@ class TenantAccountPayableController extends Controller
         $accountPayable = $this->accountPayableService->update($id, $request->validated(), tenant());
 
         if ($accountPayable) {
-            return redirect()->route('tenant.finance.accounts-payable.edit', ['id' => $accountPayable->id])->with('success', 'Account payable updated successfully!');
+            return redirect()->route('tenant.finance.accounts-payable.edit', ['id' => $accountPayable->id])->with('success', 'Conta a pagar atualizada com sucesso!');
         }
 
-        return redirect()->route('tenant.finance.accounts-payable.edit', ['id' => $accountPayable->id])->with('error', 'Error updating account payable!');
+        return redirect()->route('tenant.finance.accounts-payable.edit', ['id' => $accountPayable->id])->with('error', 'Erro ao tentar atualizar a conta a pagar!');
     }
 
     /**
@@ -200,10 +206,10 @@ class TenantAccountPayableController extends Controller
         $accountPayable = $this->accountPayableService->delete($id, tenant());
 
         if ($accountPayable) {
-            return redirect()->route('tenant.finance.accounts-payable.list')->with('success', 'Account payable deleted successfully!');
+            return redirect()->route('tenant.finance.accounts-payable.list')->with('success', 'Conta a pagar excluída com sucesso!');
         }
 
-        return redirect()->route('tenant.finance.accounts-payable.list')->with('error', 'Error deleting account payable!');
+        return redirect()->route('tenant.finance.accounts-payable.list')->with('error', 'Erro ao tentar excluir a conta a pagar!');
     }
 
     public function updateInstallments(Request $request)
@@ -213,10 +219,10 @@ class TenantAccountPayableController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Installments updated successfully!',
+                'message' => 'Parcelas atualizadas com sucesso!',
             ], Response::HTTP_CREATED);
         } catch (\Throwable) {
-            throw new UpdateInstallmentException('Error updating installments!');
+            throw new UpdateInstallmentException('Erro ao tentar atualizar as parcelas!');
         }
     }
 
@@ -225,9 +231,9 @@ class TenantAccountPayableController extends Controller
         $updatedInstallments = $this->accountPayableService->updateInstallmentValue($request->validated(), tenant());
 
         if ($updatedInstallments) {
-            return response()->json(['status' => 200, 'message' => 'Installment value updated successfully!']);
+            return response()->json(['status' => 200, 'message' => 'Valor da parcela atualizada com sucesso!']);
         }
 
-        return response()->json(['status' => 500, 'message' => 'Error updating installment!']);
+        return response()->json(['status' => 500, 'message' => 'Erro ao tentar atualizar o valor da parcela!']);
     }
 }

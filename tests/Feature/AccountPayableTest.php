@@ -6,13 +6,14 @@ use App\Models\BankAccount;
 use App\Models\Contact;
 use App\Models\FinancialCategory;
 use App\Models\FinancialContact;
+use App\Models\FinancialSubcategory;
 use App\Services\AccountPayableService;
 use App\Services\AccountReceivableService;
 
 beforeEach(function () {
     $this->tenant = sharedTenant();
 
-    [$this->contact, $this->category, $this->bankAccount] = $this->tenant->run(function () {
+    [$this->contact, $this->category, $this->subcategory, $this->bankAccount] = $this->tenant->run(function () {
         $contact = Contact::create([
             'type' => TypeContactEnum::SUPPLIER->value,
             'name_corporatereason' => 'Fornecedor Teste',
@@ -27,6 +28,11 @@ beforeEach(function () {
             'type' => 'despesa',
         ]);
 
+        $subcategory = FinancialSubcategory::create([
+            'financial_category_id' => $category->id,
+            'name' => 'Subcategoria Teste',
+        ]);
+
         $bankAccount = BankAccount::create([
             'name' => 'Conta Principal',
             'bank' => 'Banco Teste',
@@ -38,7 +44,7 @@ beforeEach(function () {
             'main_account' => 1,
         ]);
 
-        return [$contact, $category, $bankAccount];
+        return [$contact, $category, $subcategory, $bankAccount];
     });
 });
 
@@ -46,6 +52,7 @@ function payablePayload(array $overrides = []): array
 {
     return array_merge([
         'financial_category_id' => test()->category->id,
+        'financial_subcategory_id' => test()->subcategory->id,
         'bank_account_id' => test()->bankAccount->id,
         'financial_contact_id' => test()->contact->id, // id de contacts, resolvido para financial_contacts pelo service
         'description' => 'Conta de teste',
