@@ -159,12 +159,12 @@ watch(
     }
 );
 
-// Watch first installment value to update total if condition is à-vista
+// Watch total value to update first installment value if not parcelled
 watch(
-    () => props.form.value,
+    () => props.form.total,
     (val) => {
-        if (props.form.payment_condition === "a-vista" && !isEdit.value) {
-            props.form.total = val;
+        if (localInstallments.value.length <= 1) {
+            props.form.value = val;
         }
     }
 );
@@ -480,7 +480,6 @@ function onSubmit() {
                         "
                         placeholder="R$ 0,00"
                         required
-                        :disabled="props.form.payment_condition === 'a-vista' && !isEdit"
                         class="flex h-9 w-full min-w-0 rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm dark:bg-input/30"
                     />
                     <FieldError v-if="props.form.errors.total">
@@ -494,17 +493,9 @@ function onSubmit() {
                     <input
                         id="value"
                         :value="props.form.value"
-                        @input="
-                            (e: Event) => {
-                                const val = maskCurrency(
-                                    (e.target as HTMLInputElement).value,
-                                );
-                                props.form.value = val;
-                                (e.target as HTMLInputElement).value = val;
-                            }
-                        "
                         placeholder="R$ 0,00"
                         required
+                        disabled
                         class="flex h-9 w-full min-w-0 rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm dark:bg-input/30"
                     />
                     <FieldError v-if="props.form.errors.value">
