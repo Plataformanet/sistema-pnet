@@ -7,6 +7,7 @@ import { route } from "ziggy-js";
 import EmployeeForm from "../components/EmployeeForm.vue";
 
 import { Employee } from "@/types";
+import { maskCurrency, parseCurrencyToCents } from "@/lib/masks.js";
 
 defineOptions({ layout: TenantLayout });
 
@@ -20,7 +21,10 @@ const form = useForm({
     rg: props.employee.rg ?? "",
     birth_date: props.employee.birth_date ?? "",
     position: props.employee.position ?? "",
-    salary: props.employee.salary ?? "",
+    salary:
+        props.employee.salary !== undefined && props.employee.salary !== null
+            ? maskCurrency(String(props.employee.salary))
+            : "",
     hire_date: props.employee.hire_date ?? "",
     email: props.employee.contact?.email ?? "",
     phone: props.employee.contact?.phone ?? "",
@@ -35,14 +39,27 @@ const form = useForm({
 });
 
 function submit() {
-    form.put(route("tenant.registrations.employees.update", props.employee.contact?.id));
+    // Transform values back to backend format (ints / cents)
+    const payload = {
+        ...form.data(),
+        salary: parseCurrencyToCents(form.salary),
+    };
+
+    form.transform(() => payload).put(
+        route(
+            "tenant.registrations.employees.update",
+            props.employee.contact?.id,
+        ),
+    );
 }
 </script>
 
 <template>
     <Head title="Editar Funcionário" />
 
-    <div class="mb-6 flex items-center justify-between border-b border-border pb-4">
+    <div
+        class="mb-6 flex items-center justify-between border-b border-border pb-4"
+    >
         <div>
             <h2 class="text-3xl font-bold tracking-tight text-foreground">
                 Editar Funcionário
