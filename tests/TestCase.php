@@ -2,20 +2,25 @@
 
 namespace Tests;
 
+use Database\Seeders\DatabaseSeeder;
 use Illuminate\Contracts\Console\Kernel;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\RefreshDatabaseState;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
+use Tests\Support\TenantRegistry;
 
 abstract class TestCase extends BaseTestCase
 {
     use RefreshDatabase;
 
     /**
-     * Migra o banco central (path default + path central) uma vez por suíte e
-     * envolve cada teste numa transação na conexão central. As operações em
-     * bancos de tenant rodam em outras conexões, por isso cada teste que criar
-     * um tenant deve apagá-lo (o que dropa o banco físico do tenant).
+     * Uma vez por suíte (tudo committed, fora de transação): migra o banco
+     * central (path default + central), seeda os dados de referência centrais
+     * (planos, módulos, permissões) e cria/migra o banco do tenant
+     * compartilhado. Em seguida cada teste roda dentro de uma transação na
+     * conexão central; testes que usam sharedTenant() abrem também uma transação
+     * na conexão do tenant. Por isso os testes NÃO devem re-seedar o central:
+     * os dados de referência já existem e persistem por toda a suíte.
      */
     protected function refreshTestDatabase(): void
     {
@@ -25,6 +30,10 @@ abstract class TestCase extends BaseTestCase
             $this->artisan('migrate', ['--path' => 'database/migrations/central']);
 
             $this->app[Kernel::class]->setArtisan(null);
+
+            $this->seed(DatabaseSeeder::class);
+
+            TenantRegistry::migrate();
 
             RefreshDatabaseState::$migrated = true;
         }
