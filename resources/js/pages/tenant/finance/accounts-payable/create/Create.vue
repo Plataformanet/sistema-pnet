@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { onMounted, ref } from "vue";
 import { Head, Link, useForm } from "@inertiajs/vue3";
 import TenantLayout from "@/layouts/tenant-layout/TenantLayout.vue";
 import { Button } from "@/components/ui/button";
@@ -40,9 +41,19 @@ const form = useForm({
     observations: "",
     receipt: "",
     value: "",
-    due_date: "",
+    due_date: new Date().toLocaleDateString("en-CA"),
     status: "open",
     installments: [] as any[],
+});
+
+const backUrl = ref(route("tenant.finance.accounts-payable.list"));
+const submitUrl = ref(route("tenant.finance.accounts-payable.store"));
+
+onMounted(() => {
+    if (window.location.search) {
+        backUrl.value = route("tenant.finance.accounts-payable.list") + window.location.search;
+        submitUrl.value = route("tenant.finance.accounts-payable.store") + window.location.search;
+    }
 });
 
 function submit() {
@@ -60,7 +71,7 @@ function submit() {
         bank_account_out: form.bank_account_out ? Number(form.bank_account_out) : null,
     };
     
-    form.transform(() => payload).post(route("tenant.finance.accounts-payable.store"));
+    form.transform(() => payload).post(submitUrl.value);
 }
 </script>
 
@@ -75,7 +86,7 @@ function submit() {
             <p class="text-sm text-muted-foreground">Registre um novo contas a pagar no financeiro.</p>
         </div>
         <Button variant="outline" class="cursor-pointer" as-child>
-            <Link :href="route('tenant.finance.accounts-payable.list')">
+            <Link :href="backUrl">
                 <ChevronLeft class="mr-2 h-4 w-4" /> Voltar
             </Link>
         </Button>

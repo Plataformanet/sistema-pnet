@@ -70,6 +70,7 @@ class TenantAccountPayableController extends Controller
             'perPage' => $request->input('quantidade'),
             'start' => $request->input('inicio'),
             'end' => $request->input('fim'),
+            'status' => $request->input('status'),
             'categoryId' => $request->input('categoria_id'),
             'financialCategories' => $financialCategories,
             'searchedCategory' => $searchedCategory,
@@ -124,10 +125,10 @@ class TenantAccountPayableController extends Controller
         try {
             $this->accountPayableService->create($request->validated(), tenant());
 
-            return redirect()->route('tenant.finance.accounts-payable.list')->with('success', 'Conta a pagar criada com sucesso');
+            return redirect()->route('tenant.finance.accounts-payable.list', $request->query())->with('success', 'Conta a pagar criada com sucesso');
 
         } catch (\Throwable $th) {
-            return redirect()->route('tenant.finance.accounts-payable.list')->with('error', 'Erro ao tentar fazer cadastro!');
+            return redirect()->route('tenant.finance.accounts-payable.list', $request->query())->with('error', 'Erro ao tentar fazer cadastro!');
         }
     }
 
@@ -192,10 +193,10 @@ class TenantAccountPayableController extends Controller
         $accountPayable = $this->accountPayableService->update($id, $request->validated(), tenant());
 
         if ($accountPayable) {
-            return redirect()->route('tenant.finance.accounts-payable.edit', ['id' => $accountPayable->id])->with('success', 'Conta a pagar atualizada com sucesso!');
+            return redirect()->route('tenant.finance.accounts-payable.list', $request->query())->with('success', 'Conta a pagar atualizada com sucesso!');
         }
 
-        return redirect()->route('tenant.finance.accounts-payable.edit', ['id' => $accountPayable->id])->with('error', 'Erro ao tentar atualizar a conta a pagar!');
+        return redirect()->route('tenant.finance.accounts-payable.edit', ['id' => $id] + $request->query())->with('error', 'Erro ao tentar atualizar a conta a pagar!');
     }
 
     /**

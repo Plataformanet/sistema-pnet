@@ -44,6 +44,10 @@ class StoreAccountPayableRequest extends FormRequest
             'value' => 'required|integer',
             'due_date' => 'required|date',
             'status' => ['required', Rule::enum(AccountsEnum::class)],
+
+            'installments' => 'nullable|array',
+            'installments.*.value' => 'required|integer',
+            'installments.*.due_date' => 'required|date',
         ];
     }
 
@@ -83,6 +87,12 @@ class StoreAccountPayableRequest extends FormRequest
             'due_date.date' => 'A data de vencimento é inválida.',
             'status.required' => 'O status é obrigatório.',
             'status.enum' => 'O status selecionado é inválido.',
+
+            'installments.array' => 'As parcelas devem ser uma lista válida.',
+            'installments.*.value.required' => 'O valor da parcela é obrigatório.',
+            'installments.*.value.integer' => 'O valor da parcela deve ser um valor inteiro.',
+            'installments.*.due_date.required' => 'A data de vencimento da parcela é obrigatória.',
+            'installments.*.due_date.date' => 'A data de vencimento da parcela é inválida.',
         ];
     }
 }

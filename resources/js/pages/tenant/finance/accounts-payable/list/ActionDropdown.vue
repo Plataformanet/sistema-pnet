@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed } from "vue";
 import { MoreHorizontal, Eye, Check, Pencil, Trash } from "lucide-vue-next";
 import {
     DropdownMenu,
@@ -30,6 +31,10 @@ const emit = defineEmits<{
 }>();
 
 const { permissions } = usePermission();
+
+const editUrlWithFilters = computed(() => {
+    return route("tenant.finance.accounts-payable.edit", props.item.id) + (typeof window !== "undefined" ? window.location.search : "");
+});
 </script>
 
 <template>
@@ -77,7 +82,7 @@ const { permissions } = usePermission();
                 as-child
             >
                 <Link
-                    :href="route('tenant.finance.accounts-payable.edit', props.item.id)"
+                    :href="editUrlWithFilters"
                     class="flex w-full cursor-pointer items-center"
                 >
                     <Pencil class="mr-2 h-4 w-4" /> Editar Lançamento

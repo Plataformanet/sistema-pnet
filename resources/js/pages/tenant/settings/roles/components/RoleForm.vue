@@ -106,10 +106,10 @@ function togglePermission(id: string) {
                 <Card
                     v-for="group in permissionsGroups"
                     :key="group.name"
-                    class="mb-6 flex break-inside-avoid flex-col overflow-hidden border-border/60 transition-all duration-200 hover:border-primary/30 hover:shadow-md"
+                    class="mb-6 flex break-inside-avoid flex-col overflow-hidden border-border/60 py-0 transition-all duration-200 hover:border-primary/30 hover:shadow-md"
                 >
                     <CardHeader
-                        class="border-b border-border/40 bg-muted/30 px-4 py-3 pb-3"
+                        class="gap-0 border-b border-border/40 bg-muted/30 px-4 [.border-b]:py-3"
                     >
                         <CardTitle
                             class="text-base font-semibold text-foreground"
@@ -151,7 +151,12 @@ function togglePermission(id: string) {
                     @click="() => form.reset()"
                     >Limpar</Button
                 >
-                <Button type="submit" :loading="form.processing" :disabled="form.processing">Salvar Cargo</Button>
+                <Button
+                    type="submit"
+                    :loading="form.processing"
+                    :disabled="form.processing"
+                    >Salvar Cargo</Button
+                >
             </div>
         </div>
     </form>

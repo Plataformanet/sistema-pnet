@@ -46,6 +46,7 @@ const localInstallments = ref<any[]>(
         installment_number: inst.installment_number,
         value: maskCurrency(String(inst.value)),
         due_date: inst.due_date ? inst.due_date.split("T")[0] : "",
+        status: inst.status,
     })) || []
 );
 
@@ -81,16 +82,47 @@ const filteredSubcategories = computed(() => {
     });
 });
 
-// Watch payment condition and total value to calculate installments value
+function calculateInstallmentDueDate(startDateStr: string, index: number): string {
+    if (!startDateStr) return "";
+    const date = new Date(startDateStr + "T00:00:00");
+    if (isNaN(date.getTime())) return "";
+
+    const dayOriginal = date.getDate();
+    const year = date.getFullYear();
+    const month = date.getMonth(); // 0-indexed
+
+    // Calculate adjusted month and year
+    const monthCurrent = month + index;
+    const yearCurrent = year + Math.floor(monthCurrent / 12);
+    const monthAdjust = monthCurrent % 12;
+
+    // Create a temporary date on the 1st of the target month to find the number of days in that month
+    const tempDate = new Date(yearCurrent, monthAdjust + 1, 0); // last day of month
+    const lastDayOfMonth = tempDate.getDate();
+    const dayAdjust = Math.min(dayOriginal, lastDayOfMonth);
+
+    // Format as YYYY-MM-DD
+    const finalYear = String(yearCurrent);
+    const finalMonth = String(monthAdjust + 1).padStart(2, "0");
+    const finalDay = String(dayAdjust).padStart(2, "0");
+
+    return `${finalYear}-${finalMonth}-${finalDay}`;
+}
+
+// Watch payment condition, total value and due date to calculate installments value and populate localInstallments
 watch(
-    [() => props.form.payment_condition, () => props.form.total],
-    ([condition, totalVal]) => {
-        if (!condition || isEdit.value) return;
+    [
+        () => props.form.payment_condition,
+        () => props.form.total,
+        () => props.form.due_date,
+    ],
+    ([condition, totalVal, dueDateVal]) => {
+        if (isEdit.value) return;
 
         const totalCents = parseCurrencyToCents(totalVal as string);
         let installmentsCount = 1;
 
-        if (condition !== "a-vista") {
+        if (condition && condition !== "a-vista") {
             installmentsCount = parseInt(condition) || 1;
         }
 
@@ -99,8 +131,30 @@ watch(
         if (totalCents > 0) {
             const installmentValueCents = Math.round(totalCents / installmentsCount);
             props.form.value = maskCurrency(String(installmentValueCents));
+
+            if (installmentsCount > 1) {
+                const arr = [];
+                for (let i = 0; i < installmentsCount; i++) {
+                    let valCents = installmentValueCents;
+                    if (i === installmentsCount - 1) {
+                        valCents = totalCents - (installmentValueCents * (installmentsCount - 1));
+                    }
+
+                    arr.push({
+                        installment_id: null,
+                        installment_number: i + 1,
+                        value: maskCurrency(String(valCents)),
+                        due_date: dueDateVal ? calculateInstallmentDueDate(dueDateVal as string, i) : "",
+                        status: "open",
+                    });
+                }
+                localInstallments.value = arr;
+            } else {
+                localInstallments.value = [];
+            }
         } else {
             props.form.value = "";
+            localInstallments.value = [];
         }
     }
 );
@@ -115,14 +169,72 @@ watch(
     }
 );
 
+function onInstallmentValueChange(
+    editedIndex: number,
+    newValueStr: string,
+    inputElement?: HTMLInputElement
+) {
+    const totalCents = parseCurrencyToCents(props.form.total as string);
+    if (!(totalCents > 0)) return;
+
+    const insts = localInstallments.value;
+    if (insts.length <= 1) return;
+
+    let editedValueCents = parseCurrencyToCents(newValueStr);
+
+    let paidSumCents = 0;
+    insts.forEach((inst, index) => {
+        if (inst.status === "paid" && index !== editedIndex) {
+            paidSumCents += parseCurrencyToCents(inst.value);
+        }
+    });
+
+    // Enforce that the installment value cannot be greater than the total minus any paid installments
+    const maxValCents = totalCents - paidSumCents;
+    if (editedValueCents > maxValCents) {
+        editedValueCents = maxValCents;
+        const cappedFormatted = maskCurrency(String(editedValueCents));
+        insts[editedIndex].value = cappedFormatted;
+        if (inputElement) {
+            inputElement.value = cappedFormatted;
+        }
+    }
+
+    const targets = insts.filter((inst, index) => {
+        return inst.status !== "paid" && index !== editedIndex;
+    });
+
+    if (targets.length === 0) return;
+
+    const remainingCents = totalCents - paidSumCents - editedValueCents;
+
+    const targetCount = targets.length;
+    const baseValueCents = Math.trunc(remainingCents / targetCount);
+
+    targets.forEach((inst, i) => {
+        let valCents = baseValueCents;
+        if (i === targetCount - 1) {
+            valCents = remainingCents - (baseValueCents * (targetCount - 1));
+        }
+
+        if (valCents < 0) {
+            valCents = 0;
+        }
+
+        inst.value = maskCurrency(String(valCents));
+    });
+}
+
 function onSubmit() {
-    // If editing individual installments and total hasn't changed, pass them in payload
-    if (isEdit.value && localInstallments.value.length > 0) {
+    // Pass custom installments to form if they exist
+    if (localInstallments.value.length > 1) {
         props.form.installments = localInstallments.value.map((inst) => ({
-            installment_id: inst.installment_id,
+            installment_id: inst.installment_id || undefined,
             value: parseCurrencyToCents(inst.value),
             due_date: inst.due_date,
         }));
+    } else {
+        props.form.installments = [];
     }
     emit("submit");
 }
@@ -354,9 +466,9 @@ function onSubmit() {
                 <!-- Valor Total -->
                 <Field>
                     <FieldLabel for="total">Valor Total *</FieldLabel>
-                    <Input
+                    <input
                         id="total"
-                        :model-value="props.form.total"
+                        :value="props.form.total"
                         @input="
                             (e: Event) => {
                                 const val = maskCurrency(
@@ -369,6 +481,7 @@ function onSubmit() {
                         placeholder="R$ 0,00"
                         required
                         :disabled="props.form.payment_condition === 'a-vista' && !isEdit"
+                        class="flex h-9 w-full min-w-0 rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm dark:bg-input/30"
                     />
                     <FieldError v-if="props.form.errors.total">
                         {{ props.form.errors.total }}
@@ -378,9 +491,9 @@ function onSubmit() {
                 <!-- Valor da Parcela -->
                 <Field>
                     <FieldLabel for="value">Valor da Parcela *</FieldLabel>
-                    <Input
+                    <input
                         id="value"
-                        :model-value="props.form.value"
+                        :value="props.form.value"
                         @input="
                             (e: Event) => {
                                 const val = maskCurrency(
@@ -392,6 +505,7 @@ function onSubmit() {
                         "
                         placeholder="R$ 0,00"
                         required
+                        class="flex h-9 w-full min-w-0 rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm dark:bg-input/30"
                     />
                     <FieldError v-if="props.form.errors.value">
                         {{ props.form.errors.value }}
@@ -466,62 +580,59 @@ function onSubmit() {
             </div>
         </div>
 
-        <!-- Section 3: Edição das parcelas individuais (Apenas em Edição) -->
+        <!-- Section 3: Edição das parcelas individuais (Apenas em Edição e se for parcelado) -->
         <div
-            v-if="isEdit && localInstallments.length > 0"
+            v-if="localInstallments.length > 1"
             class="space-y-6 border-t border-border pt-6"
         >
-            <div class="flex flex-col gap-1">
-                <h3 class="text-lg font-semibold text-card-foreground">
-                    Detalhamento das Parcelas
-                </h3>
-                <p class="text-xs text-muted-foreground">
-                    Modifique datas de vencimento ou valores individuais se necessário. (Caso altere o valor total acima, estas parcelas serão recalculadas ao salvar).
-                </p>
-            </div>
+            <h3 class="text-xl font-bold text-card-foreground">
+                Parcelas
+            </h3>
 
-            <div class="rounded-xl border border-border overflow-hidden">
-                <div class="bg-muted/30 px-4 py-3 border-b border-border font-bold grid grid-cols-3 text-xs text-muted-foreground tracking-wider uppercase">
-                    <div>Parcela</div>
-                    <div>Valor da Parcela</div>
-                    <div>Vencimento</div>
-                </div>
-
-                <div class="divide-y divide-border">
-                    <div
-                        v-for="(inst, idx) in localInstallments"
-                        :key="idx"
-                        class="p-4 grid grid-cols-3 gap-4 items-center bg-background"
-                    >
-                        <div class="font-semibold text-sm">
-                            Parcela {{ inst.installment_number }} / {{ localInstallments.length }}
-                        </div>
-
-                        <div>
-                            <Input
-                                v-model="inst.value"
-                                @input="
-                                    (e: Event) => {
-                                        const val = maskCurrency(
-                                            (e.target as HTMLInputElement).value,
-                                        );
-                                        inst.value = val;
-                                        (e.target as HTMLInputElement).value = val;
-                                    }
-                                "
-                                placeholder="R$ 0,00"
-                                class="h-9 text-sm"
-                            />
-                        </div>
-
-                        <div>
-                            <Input
-                                type="date"
-                                v-model="inst.due_date"
-                                class="h-9 text-sm"
-                            />
-                        </div>
+            <div class="space-y-6">
+                <div
+                    v-for="(inst, idx) in localInstallments"
+                    :key="idx"
+                    class="grid grid-cols-1 gap-6 sm:grid-cols-2 p-5 rounded-xl border border-border/60 bg-muted/10 relative"
+                >
+                    <!-- Badges showing installment status -->
+                    <div class="absolute -top-3 left-4 bg-background border border-border px-2 py-0.5 rounded text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
+                        <span>Parcela {{ inst.installment_number }} de {{ localInstallments.length }}</span>
+                        <span v-if="inst.status === 'paid'" class="text-emerald-600 font-bold text-[10px] uppercase tracking-wider bg-emerald-50 border border-emerald-200 px-1 py-0.2 rounded">(Paga)</span>
                     </div>
+
+                    <!-- Vencimento -->
+                    <Field>
+                        <FieldLabel>Vencimento <span class="text-destructive">*</span> :</FieldLabel>
+                        <Input
+                            type="date"
+                            v-model="inst.due_date"
+                            :disabled="inst.status === 'paid'"
+                            required
+                        />
+                    </Field>
+
+                    <!-- Valor -->
+                    <Field>
+                        <FieldLabel>Valor <span class="text-destructive">*</span> :</FieldLabel>
+                        <input
+                            :value="inst.value"
+                            @input="
+                                (e: Event) => {
+                                    const val = maskCurrency(
+                                        (e.target as HTMLInputElement).value,
+                                    );
+                                    inst.value = val;
+                                    (e.target as HTMLInputElement).value = val;
+                                    onInstallmentValueChange(idx, val, e.target as HTMLInputElement);
+                                }
+                            "
+                            placeholder="R$ 0,00"
+                            class="flex h-9 w-full min-w-0 rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm dark:bg-input/30"
+                            :disabled="inst.status === 'paid'"
+                            required
+                        />
+                    </Field>
                 </div>
             </div>
         </div>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from "vue";
+import { ref, computed, watch } from "vue";
 import { Head, Link, router } from "@inertiajs/vue3";
 import TenantLayout from "@/layouts/tenant-layout/TenantLayout.vue";
 import { Button } from "@/components/ui/button";
@@ -47,7 +47,7 @@ import {
     PopoverTrigger,
 } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { parseDate } from "@internationalized/date";
+import { parseDate, today, getLocalTimeZone } from "@internationalized/date";
 import { usePermission } from "@/composables/usePermission";
 import { AccountPayable, BankAccount, FinanceCategory } from "@/types";
 import ActionDropdown from "./ActionDropdown.vue";
@@ -78,6 +78,7 @@ const props = defineProps<{
     perPage?: string | number;
     start?: string;
     end?: string;
+    status?: string;
     categoryId?: string | number;
     financialCategories: FinanceCategory[];
     searchedCategory?: { name: string } | null;
@@ -88,6 +89,10 @@ const props = defineProps<{
 const { permissions } = usePermission();
 
 const searchQuery = ref("");
+
+const createUrlWithFilters = computed(() => {
+    return route("tenant.finance.accounts-payable.create") + (typeof window !== "undefined" ? window.location.search : "");
+});
 const showDeleteDialog = ref(false);
 const itemToDelete = ref<number | string | null>(null);
 
@@ -113,6 +118,34 @@ const endCalendarDate = computed({
         customEnd.value = val ? val.toString() : "";
     },
 });
+
+const startCalendarPlaceholder = ref<any>(
+    customStart.value ? parseDate(customStart.value) : today(getLocalTimeZone())
+);
+
+const endCalendarPlaceholder = ref<any>(
+    customEnd.value ? parseDate(customEnd.value) : today(getLocalTimeZone())
+);
+
+watch(
+    () => props.start,
+    (newVal) => {
+        customStart.value = newVal || "";
+        startCalendarPlaceholder.value = newVal
+            ? parseDate(newVal)
+            : today(getLocalTimeZone());
+    }
+);
+
+watch(
+    () => props.end,
+    (newVal) => {
+        customEnd.value = newVal || "";
+        endCalendarPlaceholder.value = newVal
+            ? parseDate(newVal)
+            : today(getLocalTimeZone());
+    }
+);
 
 function formatDisplayDate(dateStr: string) {
     if (!dateStr) return "";
@@ -228,6 +261,7 @@ function reload(extraParams = {}) {
         search: searchQuery.value || undefined,
         conta_id: props.bankAccount?.id || undefined,
         categoria_id: props.categoryId || undefined,
+        status: props.status || undefined,
         ...extraParams,
     };
 
@@ -388,7 +422,7 @@ async function executePay() {
                 variant="outline"
                 as-child
             >
-                <Link :href="route('tenant.finance.accounts-payable.create')">
+                <Link :href="createUrlWithFilters">
                     <Plus class="mr-2 h-4 w-4" /> Novo Lançamento
                 </Link>
             </Button>
@@ -516,6 +550,7 @@ async function executePay() {
                                     >
                                         <Calendar
                                             v-model="startCalendarDate"
+                                            v-model:placeholder="startCalendarPlaceholder"
                                             locale="pt-BR"
                                             initial-focus
                                         />
@@ -555,6 +590,7 @@ async function executePay() {
                                     >
                                         <Calendar
                                             v-model="endCalendarDate"
+                                            v-model:placeholder="endCalendarPlaceholder"
                                             locale="pt-BR"
                                             initial-focus
                                         />
@@ -594,9 +630,9 @@ async function executePay() {
                     </div>
                 </div>
 
-                <!-- Row 2: Secondary selectors (Bank accounts, Categories) -->
+                <!-- Row 2: Secondary selectors (Bank accounts, Categories, Status) -->
                 <div
-                    class="grid grid-cols-1 gap-4 border-t border-border/60 pt-4 md:grid-cols-3"
+                    class="grid grid-cols-1 gap-4 border-t border-border/60 pt-4 md:grid-cols-4"
                 >
                     <div class="space-y-1.5">
                         <label
@@ -682,6 +718,47 @@ async function executePay() {
                                 >
                                     {{ cat.name }}
                                 </SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+
+                    <div class="space-y-1.5">
+                        <label
+                            class="text-xs font-semibold tracking-wider text-muted-foreground uppercase"
+                            >Situação</label
+                        >
+                        <Select
+                            :model-value="props.status || 'all'"
+                            @update:model-value="
+                                (val) =>
+                                    reload({
+                                        status: val === 'all' ? null : val,
+                                    })
+                            "
+                        >
+                            <SelectTrigger
+                                class="h-10 border border-border bg-background text-sm"
+                            >
+                                <SelectValue
+                                    placeholder="Selecione a situação..."
+                                />
+                            </SelectTrigger>
+                            <SelectContent side="bottom">
+                                <SelectItem value="all"
+                                    >Todas as Situações</SelectItem
+                                >
+                                <SelectItem value="a-vencer"
+                                    >A Vencer</SelectItem
+                                >
+                                <SelectItem value="vencidos"
+                                    >Vencidos</SelectItem
+                                >
+                                <SelectItem value="vencem-hoje"
+                                    >Vencem Hoje</SelectItem
+                                >
+                                <SelectItem value="pago"
+                                    >Pago</SelectItem
+                                >
                             </SelectContent>
                         </Select>
                     </div>
