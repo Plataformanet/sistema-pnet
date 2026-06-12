@@ -15,7 +15,8 @@ class TenantClientController extends Controller
     public function __construct(
         protected ContactService $contactService,
         protected ClientService $clientService,
-    ) {}
+    ) {
+    }
 
     public function index()
     {
@@ -37,7 +38,7 @@ class TenantClientController extends Controller
 
             $contact = Contact::where('cpf_cnpj', $request->validated('cpf_cnpj'))->first();
 
-            if (! $contact) {
+            if (!$contact) {
                 $contact = $this->contactService->store($request->validated(), tenant());
             }
 
@@ -46,7 +47,7 @@ class TenantClientController extends Controller
             return redirect()->route('tenant.registrations.clients.list')->with('success', 'Cliente criado com sucesso!');
 
         } catch (\Throwable $th) {
-            Log::error('Erro ao criar cliente: '.$th->getMessage());
+            Log::error('Erro ao criar cliente: ' . $th->getMessage());
 
             return redirect()->back()->with('error', 'Erro ao criar cliente!');
         }
@@ -79,7 +80,7 @@ class TenantClientController extends Controller
 
             return redirect()->route('tenant.registrations.clients.list')->with('success', 'Cliente atualizado com sucesso!');
         } catch (\Throwable $th) {
-            Log::error('Erro ao atualizar cliente: '.$th->getMessage());
+            Log::error('Erro ao atualizar cliente: ' . $th->getMessage());
 
             return redirect()->back()->with('error', 'Erro ao atualizar cliente!');
         }
@@ -92,7 +93,7 @@ class TenantClientController extends Controller
 
             return redirect()->route('tenant.registrations.clients.list')->with('success', 'Cliente excluído com sucesso!');
         } catch (\Throwable $th) {
-            Log::error('Erro ao excluir cliente: '.$th->getMessage());
+            Log::error('Erro ao excluir cliente: ' . $th->getMessage());
 
             return redirect()->back()->with('error', 'Erro ao excluir cliente!');
         }
