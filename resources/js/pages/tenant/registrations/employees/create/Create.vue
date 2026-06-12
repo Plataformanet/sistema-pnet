@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { ChevronLeft } from "lucide-vue-next";
 import { route } from "ziggy-js";
 import EmployeeForm from "../components/EmployeeForm.vue";
+import { parseCurrencyToCents } from "@/lib/masks.js";
 
 defineOptions({ layout: TenantLayout });
 
@@ -34,15 +35,24 @@ const form = useForm({
 });
 
 function submit() {
-    // console.log("Enviando dados do formulário de funcionário:", form.data());
-    form.post(route('tenant.registrations.employees.store'))
+    // Transform values back to backend format (ints / cents)
+    const payload = {
+        ...form.data(),
+        salary: parseCurrencyToCents(form.salary as string),
+    };
+
+    form.transform(() => payload).post(
+        route("tenant.registrations.employees.store"),
+    );
 }
 </script>
 
 <template>
     <Head title="Novo Funcionário" />
 
-    <div class="mb-6 flex items-center justify-between border-b border-border pb-4">
+    <div
+        class="mb-6 flex items-center justify-between border-b border-border pb-4"
+    >
         <div>
             <h2 class="text-3xl font-bold tracking-tight text-foreground">
                 Novo Funcionário

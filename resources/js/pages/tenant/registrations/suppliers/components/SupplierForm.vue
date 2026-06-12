@@ -210,13 +210,14 @@ function onSubmit() {
                 </Field>
 
                 <Field>
-                    <FieldLabel for="phone">Telefone</FieldLabel>
+                    <FieldLabel for="phone">Telefone *</FieldLabel>
                     <Input
                         id="phone"
                         :model-value="form.phone"
                         @input="handleMask($event, maskPhone, val => form.phone = val)"
                         placeholder="(00) 0000-0000"
                         maxlength="15"
+                        required
                     />
                     <FieldError v-if="form.errors.phone">{{
                         form.errors.phone
@@ -224,13 +225,14 @@ function onSubmit() {
                 </Field>
 
                 <Field>
-                    <FieldLabel for="cell_phone">Celular</FieldLabel>
+                    <FieldLabel for="cell_phone">Celular *</FieldLabel>
                     <Input
                         id="cell_phone"
                         :model-value="form.cell_phone"
                         @input="handleMask($event, maskPhone, val => form.cell_phone = val)"
                         placeholder="(00) 00000-0000"
                         maxlength="15"
+                        required
                     />
                     <FieldError v-if="form.errors.cell_phone">{{
                         form.errors.cell_phone
@@ -245,13 +247,14 @@ function onSubmit() {
             </h3>
             <div class="grid grid-cols-1 gap-6 md:grid-cols-12">
                 <Field class="md:col-span-3">
-                    <FieldLabel for="zip_code">CEP</FieldLabel>
+                    <FieldLabel for="zip_code">CEP *</FieldLabel>
                     <Input
                         id="zip_code"
                         :model-value="form.zip_code"
                         @input="handleMask($event, maskCEP, val => form.zip_code = val)"
                         placeholder="00000-000"
                         maxlength="9"
+                        required
                     />
                     <FieldError v-if="form.errors.zip_code">{{
                         form.errors.zip_code
@@ -259,16 +262,16 @@ function onSubmit() {
                 </Field>
 
                 <Field class="md:col-span-7">
-                    <FieldLabel for="street">Logradouro</FieldLabel>
-                    <Input id="street" v-model="form.street" />
+                    <FieldLabel for="street">Logradouro *</FieldLabel>
+                    <Input id="street" v-model="form.street" required />
                     <FieldError v-if="form.errors.street">{{
                         form.errors.street
                     }}</FieldError>
                 </Field>
 
                 <Field class="md:col-span-2">
-                    <FieldLabel for="number">Número</FieldLabel>
-                    <Input id="number" v-model="form.number" />
+                    <FieldLabel for="number">Número *</FieldLabel>
+                    <Input id="number" v-model="form.number" required />
                     <FieldError v-if="form.errors.number">{{
                         form.errors.number
                     }}</FieldError>
@@ -287,28 +290,28 @@ function onSubmit() {
                 </Field>
 
                 <Field class="md:col-span-3">
-                    <FieldLabel for="neighborhood">Bairro</FieldLabel>
-                    <Input id="neighborhood" v-model="form.neighborhood" />
+                    <FieldLabel for="neighborhood">Bairro *</FieldLabel>
+                    <Input id="neighborhood" v-model="form.neighborhood" required />
                     <FieldError v-if="form.errors.neighborhood">{{
                         form.errors.neighborhood
                     }}</FieldError>
                 </Field>
 
                 <Field class="md:col-span-4">
-                    <FieldLabel for="city">Cidade</FieldLabel>
-                    <Input id="city" v-model="form.city" />
+                    <FieldLabel for="city">Cidade *</FieldLabel>
+                    <Input id="city" v-model="form.city" required />
                     <FieldError v-if="form.errors.city">{{
                         form.errors.city
                     }}</FieldError>
                 </Field>
 
                 <Field class="md:col-span-2">
-                    <FieldLabel for="state">UF</FieldLabel>
+                    <FieldLabel for="state">UF *</FieldLabel>
                     <Select :model-value="form.state" @update:model-value="form.state = $event">
                         <SelectTrigger id="state">
                             <SelectValue placeholder="UF" />
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent side="bottom">
                             <SelectGroup>
                                 <SelectItem v-for="uf in ufs" :key="uf" :value="uf">
                                     {{ uf }}
