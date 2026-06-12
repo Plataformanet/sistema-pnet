@@ -15,7 +15,8 @@ class TenantSupplierController extends Controller
     public function __construct(
         protected ContactService $contactService,
         protected SuppliersService $supplierService,
-    ) {}
+    ) {
+    }
 
     public function index()
     {
@@ -37,7 +38,7 @@ class TenantSupplierController extends Controller
 
             $contact = Contact::where('cpf_cnpj', $request->validated('cpf_cnpj'))->first();
 
-            if (! $contact) {
+            if (!$contact) {
                 $contact = $this->contactService->store($request->validated(), tenant());
             }
 
@@ -46,7 +47,7 @@ class TenantSupplierController extends Controller
             return redirect()->route('tenant.registrations.suppliers.list')->with('success', 'Fornecedor criado com sucesso!');
 
         } catch (\Throwable $th) {
-            Log::error('Erro ao criar fornecedor: '.$th->getMessage());
+            Log::error('Erro ao criar fornecedor: ' . $th->getMessage());
 
             return redirect()->back()->with('error', 'Erro ao criar fornecedor!');
         }
@@ -79,7 +80,7 @@ class TenantSupplierController extends Controller
 
             return redirect()->route('tenant.registrations.suppliers.list')->with('success', 'Fornecedor atualizado com sucesso!');
         } catch (\Throwable $th) {
-            Log::error('Erro ao atualizar fornecedor: '.$th->getMessage());
+            Log::error('Erro ao atualizar fornecedor: ' . $th->getMessage());
 
             return redirect()->back()->with('error', 'Erro ao atualizar fornecedor!');
         }
@@ -92,7 +93,7 @@ class TenantSupplierController extends Controller
 
             return redirect()->route('tenant.registrations.suppliers.list')->with('success', 'Fornecedor excluído com sucesso!');
         } catch (\Throwable $th) {
-            Log::error('Erro ao excluir fornecedor: '.$th->getMessage());
+            Log::error('Erro ao excluir fornecedor: ' . $th->getMessage());
 
             return redirect()->back()->with('error', 'Erro ao excluir fornecedor!');
         }
