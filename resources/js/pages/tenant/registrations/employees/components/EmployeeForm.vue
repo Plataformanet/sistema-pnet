@@ -93,7 +93,7 @@ function onSubmit() {
                 </Field>
 
                 <Field>
-                    <FieldLabel for="rg">RG</FieldLabel>
+                    <FieldLabel for="rg">RG *</FieldLabel>
                     <Input
                         id="rg"
                         :model-value="form.rg"
@@ -103,6 +103,7 @@ function onSubmit() {
                         @keypress="onRGKeypress"
                         placeholder="00.000.000-0"
                         maxlength="12"
+                        required
                     />
                     <FieldError v-if="form.errors.rg">{{
                         form.errors.rg
@@ -110,11 +111,12 @@ function onSubmit() {
                 </Field>
 
                 <Field>
-                    <FieldLabel for="birth_date">Data de Nascimento</FieldLabel>
+                    <FieldLabel for="birth_date">Data de Nascimento *</FieldLabel>
                     <Input
                         id="birth_date"
                         type="date"
                         v-model="form.birth_date"
+                        required
                     />
                     <FieldError v-if="form.errors.birth_date">{{
                         form.errors.birth_date
@@ -131,11 +133,12 @@ function onSubmit() {
             </h3>
             <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
                 <Field>
-                    <FieldLabel for="position">Cargo</FieldLabel>
+                    <FieldLabel for="position">Cargo *</FieldLabel>
                     <Input
                         id="position"
                         v-model="form.position"
                         placeholder="Ex: Vendedor, Assistente Administrativo..."
+                        required
                     />
                     <FieldError v-if="form.errors.position">{{
                         form.errors.position
@@ -143,7 +146,7 @@ function onSubmit() {
                 </Field>
 
                 <Field>
-                    <FieldLabel for="salary">Salário Bruto</FieldLabel>
+                    <FieldLabel for="salary">Salário Bruto *</FieldLabel>
                     <Input
                         id="salary"
                         :model-value="form.salary"
@@ -157,6 +160,7 @@ function onSubmit() {
                             }
                         "
                         placeholder="R$ 0,00"
+                        required
                     />
                     <FieldError v-if="form.errors.salary">{{
                         form.errors.salary
@@ -164,11 +168,12 @@ function onSubmit() {
                 </Field>
 
                 <Field>
-                    <FieldLabel for="hire_date">Data de Admissão</FieldLabel>
+                    <FieldLabel for="hire_date">Data de Admissão *</FieldLabel>
                     <Input
                         id="hire_date"
                         type="date"
                         v-model="form.hire_date"
+                        required
                     />
                     <FieldError v-if="form.errors.hire_date">{{
                         form.errors.hire_date
@@ -197,7 +202,7 @@ function onSubmit() {
                 </Field>
 
                 <Field>
-                    <FieldLabel for="phone">Telefone Fixo</FieldLabel>
+                    <FieldLabel for="phone">Telefone *</FieldLabel>
                     <Input
                         id="phone"
                         :model-value="form.phone"
@@ -210,6 +215,7 @@ function onSubmit() {
                         "
                         placeholder="(00) 0000-0000"
                         maxlength="15"
+                        required
                     />
                     <FieldError v-if="form.errors.phone">{{
                         form.errors.phone
@@ -217,7 +223,7 @@ function onSubmit() {
                 </Field>
 
                 <Field>
-                    <FieldLabel for="cell_phone">Celular</FieldLabel>
+                    <FieldLabel for="cell_phone">Celular *</FieldLabel>
                     <Input
                         id="cell_phone"
                         :model-value="form.cell_phone"
@@ -230,6 +236,7 @@ function onSubmit() {
                         "
                         placeholder="(00) 00000-0000"
                         maxlength="15"
+                        required
                     />
                     <FieldError v-if="form.errors.cell_phone">{{
                         form.errors.cell_phone
@@ -244,7 +251,7 @@ function onSubmit() {
             </h3>
             <div class="grid grid-cols-1 gap-6 md:grid-cols-12">
                 <Field class="md:col-span-3">
-                    <FieldLabel for="zip_code">CEP</FieldLabel>
+                    <FieldLabel for="zip_code">CEP *</FieldLabel>
                     <Input
                         id="zip_code"
                         :model-value="form.zip_code"
@@ -257,6 +264,7 @@ function onSubmit() {
                         "
                         placeholder="00000-000"
                         maxlength="9"
+                        required
                     />
                     <FieldError v-if="form.errors.zip_code">{{
                         form.errors.zip_code
@@ -264,16 +272,16 @@ function onSubmit() {
                 </Field>
 
                 <Field class="md:col-span-7">
-                    <FieldLabel for="street">Logradouro</FieldLabel>
-                    <Input id="street" v-model="form.street" />
+                    <FieldLabel for="street">Logradouro *</FieldLabel>
+                    <Input id="street" v-model="form.street" required />
                     <FieldError v-if="form.errors.street">{{
                         form.errors.street
                     }}</FieldError>
                 </Field>
 
                 <Field class="md:col-span-2">
-                    <FieldLabel for="number">Número</FieldLabel>
-                    <Input id="number" v-model="form.number" />
+                    <FieldLabel for="number">Número *</FieldLabel>
+                    <Input id="number" v-model="form.number" required />
                     <FieldError v-if="form.errors.number">{{
                         form.errors.number
                     }}</FieldError>
@@ -292,23 +300,23 @@ function onSubmit() {
                 </Field>
 
                 <Field class="md:col-span-3">
-                    <FieldLabel for="neighborhood">Bairro</FieldLabel>
-                    <Input id="neighborhood" v-model="form.neighborhood" />
+                    <FieldLabel for="neighborhood">Bairro *</FieldLabel>
+                    <Input id="neighborhood" v-model="form.neighborhood" required />
                     <FieldError v-if="form.errors.neighborhood">{{
                         form.errors.neighborhood
                     }}</FieldError>
                 </Field>
 
                 <Field class="md:col-span-4">
-                    <FieldLabel for="city">Cidade</FieldLabel>
-                    <Input id="city" v-model="form.city" />
+                    <FieldLabel for="city">Cidade *</FieldLabel>
+                    <Input id="city" v-model="form.city" required />
                     <FieldError v-if="form.errors.city">{{
                         form.errors.city
                     }}</FieldError>
                 </Field>
 
                 <Field class="md:col-span-2">
-                    <FieldLabel for="state">UF</FieldLabel>
+                    <FieldLabel for="state">UF *</FieldLabel>
                     <Select
                         :model-value="form.state"
                         @update:model-value="form.state = $event"
