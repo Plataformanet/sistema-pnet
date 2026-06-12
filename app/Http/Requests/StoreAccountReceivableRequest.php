@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Enums\AccountsEnum;
+use App\Enums\FinancialPaymentMethodEnum;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -29,10 +30,10 @@ class StoreAccountReceivableRequest extends FormRequest
             'financial_subcategory_id' => 'nullable|integer|exists:financial_subcategories,id',
             'cost_id' => 'nullable|integer|exists:costs,id',
             'bank_account_id' => 'required|integer|exists:bank_accounts,id',
-            'financial_contact_id' => 'required|integer|exists:financial_contacts,id',
+            'financial_contact_id' => 'required|integer|exists:contacts,id',
             'description' => 'required|string',
             'total' => 'nullable|integer',
-            'payment_method' => 'required|integer',
+            'payment_method' => ['required', Rule::enum(FinancialPaymentMethodEnum::class)],
             'payment_condition' => 'required|string|max:50',
             'total_installments' => 'required|integer',
             'bank_account_out' => 'required|integer',
@@ -66,7 +67,7 @@ class StoreAccountReceivableRequest extends FormRequest
             'description.string' => 'A descrição deve ser um texto válido.',
             'total.integer' => 'O total deve ser um valor inteiro.',
             'payment_method.required' => 'A forma de pagamento é obrigatória.',
-            'payment_method.integer' => 'A forma de pagamento é inválida.',
+            'payment_method.enum' => 'A forma de pagamento é inválida.',
             'payment_condition.required' => 'A condição de pagamento é obrigatória.',
             'payment_condition.string' => 'A condição de pagamento deve ser um texto válido.',
             'payment_condition.max' => 'A condição de pagamento deve ter no máximo 50 caracteres.',

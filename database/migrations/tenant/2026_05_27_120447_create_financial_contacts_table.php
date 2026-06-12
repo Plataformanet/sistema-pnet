@@ -17,6 +17,9 @@ return new class extends Migration
             $table->string('type');
             $table->softDeletes();
             $table->timestamps();
+
+            // Um contato pode ser cliente E fornecedor, mas só um registro por par (contato, tipo).
+            $table->unique(['contact_id', 'type']);
         });
     }
 

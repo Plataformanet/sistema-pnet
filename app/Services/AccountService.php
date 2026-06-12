@@ -3,7 +3,9 @@
 namespace App\Services;
 
 use App\Enums\AccountsEnum;
+use App\Enums\TypeContactEnum;
 use App\Models\BankAccount;
+use App\Models\FinancialContact;
 use App\Models\Installment;
 use App\Models\Tenant;
 use Carbon\Carbon;
@@ -21,6 +23,18 @@ abstract class AccountService
 
     abstract protected function getModel(): string;
 
+    /**
+     * Resolve (ou cria) o financial_contact correspondente ao contato selecionado
+     * no formulário e devolve o id da tabela financial_contacts para o FK.
+     */
+    protected function resolveFinancialContactId(int $contactId, TypeContactEnum $type): int
+    {
+        return FinancialContact::firstOrCreate([
+            'contact_id' => $contactId,
+            'type'       => $type->value,
+        ])->id;
+    }
+
     public function findAll($request, string $periodo, Tenant $tenant)
     {
         return $tenant->run(function () use ($request, $periodo) {
@@ -34,7 +48,7 @@ abstract class AccountService
 
             if ($request->query('status') === 'a-vencer') {
                 $inicio = Carbon::today();
-                $fim = Carbon::today()->addDays($request->query('dias'));
+                $fim    = Carbon::today()->addDays($request->query('dias'));
                 $mesAno = Carbon::createFromFormat('Y-m', $periodo);
 
                 if ($mesAno->format('Y-m') !== now()->format('Y-m')) {
@@ -59,7 +73,7 @@ abstract class AccountService
                 })->whereHas('installments', function (Builder $query) use ($inicio, $fim, $request, $hoje) {
                     $query->whereBetween('due_date', [$inicio, $fim])
                         ->when($request->has('categoria_id'), function (Builder $query) use ($request) {
-                            $query->where('cat_id', $request->query('categoria_id'));
+                            $query->where('financial_category_id', $request->query('categoria_id'));
                         })
                         ->when($request->query('status') === 'pago', function (Builder $query) {
                             $query->where('status', AccountsEnum::PAID->value);
@@ -76,10 +90,10 @@ abstract class AccountService
                                 ->where('status', AccountsEnum::OPEN->value);
                         });
                 })->with([
-                    'installments' => function ($query) use ($inicio, $fim) {
-                        $query->whereBetween('due_date', [$inicio, $fim]);
-                    },
-                ])->orderByDesc('id')
+                        'installments' => function ($query) use ($inicio, $fim) {
+                            $query->whereBetween('due_date', [$inicio, $fim]);
+                        },
+                    ])->orderByDesc('id')
                 ->paginate($request->query('quantidade', 10))
                 ->appends($request->all());
         });
@@ -87,7 +101,7 @@ abstract class AccountService
 
     public function delete(string $id, Tenant $tenant)
     {
-        return $tenant->run(fn () => $this->model::findOrFail($id)->delete());
+        return $tenant->run(fn() => $this->model::findOrFail($id)->delete());
     }
 
     public function updateInstallment(string $id, Tenant $tenant): bool
@@ -125,15 +139,15 @@ abstract class AccountService
     public function paymentConditions()
     {
         return [
-            '1' => '1x',
-            '2' => '2x',
-            '3' => '3x',
-            '4' => '4x',
-            '5' => '5x',
-            '6' => '6x',
-            '7' => '7x',
-            '8' => '8x',
-            '9' => '9x',
+            '1'  => '1x',
+            '2'  => '2x',
+            '3'  => '3x',
+            '4'  => '4x',
+            '5'  => '5x',
+            '6'  => '6x',
+            '7'  => '7x',
+            '8'  => '8x',
+            '9'  => '9x',
             '10' => '10x',
             '11' => '11x',
             '12' => '12x',
@@ -159,7 +173,7 @@ abstract class AccountService
                 });
 
                 $query->when(is_numeric($search), function (Builder $query) use ($search) {
-                    $value = (float) $search;
+                    $value  = (float) $search;
                     $margin = 100;
                     $query->orWhereBetween('value', [$value - $margin, $value + $margin]);
                 });
@@ -199,7 +213,7 @@ abstract class AccountService
                 });
 
                 $query->when(is_numeric($search), function (Builder $query) use ($search) {
-                    $value = (float) $search;
+                    $value  = (float) $search;
                     $margin = 100;
                     $query->orWhereBetween('value', [$value - $margin, $value + $margin]);
                 });
@@ -224,7 +238,7 @@ abstract class AccountService
                             });
 
                             if (is_numeric($search)) {
-                                $value = (float) $search;
+                                $value  = (float) $search;
                                 $margin = 100;
                                 $query->orWhereBetween('value', [$value - $margin, $value + $margin]);
                             }
@@ -243,18 +257,18 @@ abstract class AccountService
 
             if ($request->query('inicio') && $request->query('fim')) {
                 $intervalStart = Carbon::parse($request->query('inicio'))->startOfDay();
-                $intervalEnd = Carbon::parse($request->query('fim'))->endOfDay();
-                $today = now()->startOfDay();
+                $intervalEnd   = Carbon::parse($request->query('fim'))->endOfDay();
+                $today         = now()->startOfDay();
 
                 if ($today->lt($intervalStart) || $today->gt($intervalEnd)) {
                     return 0;
                 }
 
                 $start = $today;
-                $end = $today->copy()->addDays($days);
+                $end   = $today->copy()->addDays($days);
             } else {
-                $start = Carbon::today();
-                $end = Carbon::today()->addDays($days);
+                $start     = Carbon::today();
+                $end       = Carbon::today()->addDays($days);
                 $monthYear = Carbon::createFromFormat('Y-m', $period);
 
                 if ($monthYear->format('Y-m') !== now()->format('Y-m')) {
@@ -270,7 +284,7 @@ abstract class AccountService
                 });
 
                 $query->when(is_numeric($search), function (Builder $query) use ($search) {
-                    $value = (float) $search;
+                    $value  = (float) $search;
                     $margin = 100;
                     $query->orWhereBetween('value', [$value - $margin, $value + $margin]);
                 });
@@ -296,11 +310,11 @@ abstract class AccountService
     {
         return $tenant->run(function () use ($request, $period, $bankAccountId) {
             $statusOpen = AccountsEnum::OPEN->value;
-            $today = now()->startOfDay();
+            $today      = now()->startOfDay();
 
             if ($request->query('inicio') && $request->query('fim')) {
                 $intervalStart = Carbon::parse($request->query('inicio'))->startOfDay();
-                $intervalEnd = Carbon::parse($request->query('fim'))->endOfDay();
+                $intervalEnd   = Carbon::parse($request->query('fim'))->endOfDay();
 
                 if ($today->lt($intervalStart) || $today->gt($intervalEnd)) {
                     return 0;
@@ -320,7 +334,7 @@ abstract class AccountService
                 });
 
                 $query->when(is_numeric($search), function (Builder $query) use ($search) {
-                    $value = (float) $search;
+                    $value  = (float) $search;
                     $margin = 100;
                     $query->orWhereBetween('value', [$value - $margin, $value + $margin]);
                 });
@@ -346,14 +360,14 @@ abstract class AccountService
     {
         return $tenant->run(function () use ($request, $period, $bankAccountId) {
             $statusOpen = AccountsEnum::OPEN->value;
-            $today = Carbon::today();
+            $today      = Carbon::today();
 
             if ($request->query('inicio') && $request->query('fim')) {
                 $start = Carbon::parse($request->query('inicio'))->startOfDay();
-                $end = Carbon::parse($request->query('fim'))->endOfDay();
+                $end   = Carbon::parse($request->query('fim'))->endOfDay();
             } else {
                 $start = Carbon::createFromFormat('Y-m', $period)->startOfMonth();
-                $end = Carbon::createFromFormat('Y-m', $period)->endOfMonth();
+                $end   = Carbon::createFromFormat('Y-m', $period)->endOfMonth();
             }
 
             $query = Installment::where(function (Builder $query) use ($request) {
@@ -364,7 +378,7 @@ abstract class AccountService
                 });
 
                 $query->when(is_numeric($search), function (Builder $query) use ($search) {
-                    $value = (float) $search;
+                    $value  = (float) $search;
                     $margin = 100;
                     $query->orWhereBetween('value', [$value - $margin, $value + $margin]);
                 });
@@ -422,7 +436,7 @@ abstract class AccountService
                 });
 
                 $query->when(is_numeric($search), function (Builder $query) use ($search) {
-                    $value = (float) $search;
+                    $value  = (float) $search;
                     $margin = 100;
                     $query->orWhereBetween('value', [$value - $margin, $value + $margin]);
                 });
@@ -430,13 +444,13 @@ abstract class AccountService
                 $query->whereBetween('due_date', [$start, $end]);
             })->paginate($request->query('quantidade', 10))
                 ->appends([
-                    'periodo' => $request->query('periodo'),
-                    'quantidade' => $request->query('quantidade'),
-                    'inicio' => $request->query('inicio'),
-                    'fim' => $request->query('fim'),
+                    'periodo'      => $request->query('periodo'),
+                    'quantidade'   => $request->query('quantidade'),
+                    'inicio'       => $request->query('inicio'),
+                    'fim'          => $request->query('fim'),
                     'categoria_id' => $request->query('categoria_id'),
-                    'tipo_conta' => $request->query('tipo_conta'),
-                    'search' => $request->query('search'),
+                    'tipo_conta'   => $request->query('tipo_conta'),
+                    'search'       => $request->query('search'),
                 ]);
         });
     }

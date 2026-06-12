@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Enums\AccountsEnum;
+use App\Enums\TypeContactEnum;
 use App\Models\AccountReceivable;
 use App\Models\BankAccount;
 use App\Models\Tenant;
@@ -15,6 +16,8 @@ class AccountReceivableService extends AccountService
     {
         return $tenant->run(function () use ($data) {
             return DB::transaction(function () use ($data) {
+
+                $data['financial_contact_id'] = $this->resolveFinancialContactId($data['financial_contact_id'], TypeContactEnum::CLIENT);
 
                 $data['total_installments'] = $data['payment_condition'] === 'a-vista' ? 1 : $data['payment_condition'];
                 $data['value'] = $data['total'] / $data['total_installments'];
@@ -71,6 +74,10 @@ class AccountReceivableService extends AccountService
     {
         return $tenant->run(function () use ($id, $data) {
             $account = AccountReceivable::findOrFail($id);
+
+            if (isset($data['financial_contact_id'])) {
+                $data['financial_contact_id'] = $this->resolveFinancialContactId($data['financial_contact_id'], TypeContactEnum::CLIENT);
+            }
 
             if ($account->total != $data['total']) {
 
@@ -145,7 +152,8 @@ class AccountReceivableService extends AccountService
     {
         return $tenant->run(fn () => AccountReceivable::with(
             [
-                'financialContact:id,name_corporatereason',
+                'financialContact:id,contact_id',
+                'financialContact.contact:id,name_corporatereason',
                 'financialCategory:id,name',
                 'financialSubcategory:id,name',
                 'cost:id,type',
