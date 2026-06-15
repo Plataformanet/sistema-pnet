@@ -80,6 +80,7 @@ const props = defineProps<{
     end?: string;
     status?: string;
     categoryId?: string | number;
+    search?: string;
     financialCategories: FinanceCategory[];
     searchedCategory?: { name: string } | null;
     bankAccounts: BankAccount[];
@@ -88,10 +89,13 @@ const props = defineProps<{
 
 const { permissions } = usePermission();
 
-const searchQuery = ref("");
+const searchQuery = ref(props.search || "");
 
 const createUrlWithFilters = computed(() => {
-    return route("tenant.finance.accounts-payable.create") + (typeof window !== "undefined" ? window.location.search : "");
+    return (
+        route("tenant.finance.accounts-payable.create") +
+        (typeof window !== "undefined" ? window.location.search : "")
+    );
 });
 const showDeleteDialog = ref(false);
 const itemToDelete = ref<number | string | null>(null);
@@ -120,11 +124,13 @@ const endCalendarDate = computed({
 });
 
 const startCalendarPlaceholder = ref<any>(
-    customStart.value ? parseDate(customStart.value) : today(getLocalTimeZone())
+    customStart.value
+        ? parseDate(customStart.value)
+        : today(getLocalTimeZone()),
 );
 
 const endCalendarPlaceholder = ref<any>(
-    customEnd.value ? parseDate(customEnd.value) : today(getLocalTimeZone())
+    customEnd.value ? parseDate(customEnd.value) : today(getLocalTimeZone()),
 );
 
 watch(
@@ -134,7 +140,7 @@ watch(
         startCalendarPlaceholder.value = newVal
             ? parseDate(newVal)
             : today(getLocalTimeZone());
-    }
+    },
 );
 
 watch(
@@ -144,7 +150,14 @@ watch(
         endCalendarPlaceholder.value = newVal
             ? parseDate(newVal)
             : today(getLocalTimeZone());
-    }
+    },
+);
+
+watch(
+    () => props.search,
+    (newVal) => {
+        searchQuery.value = newVal || "";
+    },
 );
 
 function formatDisplayDate(dateStr: string) {
@@ -550,7 +563,9 @@ async function executePay() {
                                     >
                                         <Calendar
                                             v-model="startCalendarDate"
-                                            v-model:placeholder="startCalendarPlaceholder"
+                                            v-model:placeholder="
+                                                startCalendarPlaceholder
+                                            "
                                             locale="pt-BR"
                                             initial-focus
                                         />
@@ -590,7 +605,9 @@ async function executePay() {
                                     >
                                         <Calendar
                                             v-model="endCalendarDate"
-                                            v-model:placeholder="endCalendarPlaceholder"
+                                            v-model:placeholder="
+                                                endCalendarPlaceholder
+                                            "
                                             locale="pt-BR"
                                             initial-focus
                                         />
@@ -756,9 +773,7 @@ async function executePay() {
                                 <SelectItem value="vencem-hoje"
                                     >Vencem Hoje</SelectItem
                                 >
-                                <SelectItem value="pago"
-                                    >Pago</SelectItem
-                                >
+                                <SelectItem value="pago">Pago</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
