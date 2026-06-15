@@ -16,6 +16,9 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { Calendar } from "lucide-vue-next";
+import { route } from "ziggy-js";
+
+import ComboboxRemote from "@/components/ui/combobox/ComboboxRemote.vue";
 
 const props = withDefaults(
     defineProps<{
@@ -28,10 +31,12 @@ const props = withDefaults(
         bankAccounts: any[];
         accountPayable?: any;
         submitText?: string;
+        initialContact?: any;
     }>(),
     {
         submitText: "Salvar Lançamento",
-    }
+        initialContact: null,
+    },
 );
 
 const emit = defineEmits(["submit"]);
@@ -47,7 +52,7 @@ const localInstallments = ref<any[]>(
         value: maskCurrency(String(inst.value)),
         due_date: inst.due_date ? inst.due_date.split("T")[0] : "",
         status: inst.status,
-    })) || []
+    })) || [],
 );
 
 // Watch category to reset subcategory if category changes
@@ -58,7 +63,7 @@ watch(
         if (props.form.wasSuccessful === false) {
             props.form.financial_subcategory_id = "";
         }
-    }
+    },
 );
 
 // Watch bank account to sync bank_account_out
@@ -66,7 +71,7 @@ watch(
     () => props.form.bank_account_id,
     (val) => {
         props.form.bank_account_out = val ? Number(val) : "";
-    }
+    },
 );
 
 // Filter subcategories based on selected category
@@ -76,13 +81,19 @@ const filteredSubcategories = computed(() => {
         if (!sub) return false;
         if (typeof sub === "string") return true;
         if (props.form.financial_category_id) {
-            return Number(sub.financial_category_id) === Number(props.form.financial_category_id);
+            return (
+                Number(sub.financial_category_id) ===
+                Number(props.form.financial_category_id)
+            );
         }
         return true;
     });
 });
 
-function calculateInstallmentDueDate(startDateStr: string, index: number): string {
+function calculateInstallmentDueDate(
+    startDateStr: string,
+    index: number,
+): string {
     if (!startDateStr) return "";
     const date = new Date(startDateStr + "T00:00:00");
     if (isNaN(date.getTime())) return "";
@@ -129,7 +140,9 @@ watch(
         props.form.total_installments = installmentsCount;
 
         if (totalCents > 0) {
-            const installmentValueCents = Math.round(totalCents / installmentsCount);
+            const installmentValueCents = Math.round(
+                totalCents / installmentsCount,
+            );
             props.form.value = maskCurrency(String(installmentValueCents));
 
             if (installmentsCount > 1) {
@@ -137,14 +150,21 @@ watch(
                 for (let i = 0; i < installmentsCount; i++) {
                     let valCents = installmentValueCents;
                     if (i === installmentsCount - 1) {
-                        valCents = totalCents - (installmentValueCents * (installmentsCount - 1));
+                        valCents =
+                            totalCents -
+                            installmentValueCents * (installmentsCount - 1);
                     }
 
                     arr.push({
                         installment_id: null,
                         installment_number: i + 1,
                         value: maskCurrency(String(valCents)),
-                        due_date: dueDateVal ? calculateInstallmentDueDate(dueDateVal as string, i) : "",
+                        due_date: dueDateVal
+                            ? calculateInstallmentDueDate(
+                                  dueDateVal as string,
+                                  i,
+                              )
+                            : "",
                         status: "open",
                     });
                 }
@@ -156,7 +176,7 @@ watch(
             props.form.value = "";
             localInstallments.value = [];
         }
-    }
+    },
 );
 
 // Watch total value to update first installment value if not parcelled
@@ -166,13 +186,13 @@ watch(
         if (localInstallments.value.length <= 1) {
             props.form.value = val;
         }
-    }
+    },
 );
 
 function onInstallmentValueChange(
     editedIndex: number,
     newValueStr: string,
-    inputElement?: HTMLInputElement
+    inputElement?: HTMLInputElement,
 ) {
     const totalCents = parseCurrencyToCents(props.form.total as string);
     if (!(totalCents > 0)) return;
@@ -214,7 +234,7 @@ function onInstallmentValueChange(
     targets.forEach((inst, i) => {
         let valCents = baseValueCents;
         if (i === targetCount - 1) {
-            valCents = remainingCents - (baseValueCents * (targetCount - 1));
+            valCents = remainingCents - baseValueCents * (targetCount - 1);
         }
 
         if (valCents < 0) {
@@ -247,7 +267,9 @@ function onSubmit() {
     >
         <!-- Section 1: Informações Gerais -->
         <div class="space-y-6">
-            <h3 class="text-lg font-semibold text-card-foreground border-b border-border/60 pb-2">
+            <h3
+                class="border-b border-border/60 pb-2 text-lg font-semibold text-card-foreground"
+            >
                 Dados do Lançamento
             </h3>
 
@@ -268,26 +290,22 @@ function onSubmit() {
 
                 <!-- Fornecedor -->
                 <Field>
-                    <FieldLabel for="financial_contact_id">Fornecedor *</FieldLabel>
-                    <Select
-                        :model-value="props.form.financial_contact_id ? String(props.form.financial_contact_id) : ''"
-                        @update:model-value="props.form.financial_contact_id = $event"
+                    <FieldLabel for="financial_contact_id"
+                        >Fornecedor *</FieldLabel
                     >
-                        <SelectTrigger id="financial_contact_id">
-                            <SelectValue placeholder="Selecione o fornecedor..." />
-                        </SelectTrigger>
-                        <SelectContent side="bottom">
-                            <SelectGroup>
-                                <SelectItem
-                                    v-for="contact in props.contacts"
-                                    :key="contact.id"
-                                    :value="String(contact.id)"
-                                >
-                                    {{ contact.name_corporatereason }}
-                                </SelectItem>
-                            </SelectGroup>
-                        </SelectContent>
-                    </Select>
+                    <ComboboxRemote
+                        id="financial_contact_id"
+                        v-model="props.form.financial_contact_id"
+                        :url="
+                            route(
+                                'tenant.finance.accounts-payable.search-contact',
+                            )
+                        "
+                        :query-params="{ type: 'supplier' }"
+                        placeholder="Selecione o fornecedor..."
+                        search-placeholder="Pesquisar fornecedor..."
+                        :initial-item="props.initialContact"
+                    />
                     <FieldError v-if="props.form.errors.financial_contact_id">
                         {{ props.form.errors.financial_contact_id }}
                     </FieldError>
@@ -295,13 +313,23 @@ function onSubmit() {
 
                 <!-- Conta Bancária de Origem -->
                 <Field>
-                    <FieldLabel for="bank_account_id">Conta Bancária *</FieldLabel>
+                    <FieldLabel for="bank_account_id"
+                        >Conta Bancária *</FieldLabel
+                    >
                     <Select
-                        :model-value="props.form.bank_account_id ? String(props.form.bank_account_id) : ''"
-                        @update:model-value="props.form.bank_account_id = $event"
+                        :model-value="
+                            props.form.bank_account_id
+                                ? String(props.form.bank_account_id)
+                                : ''
+                        "
+                        @update:model-value="
+                            props.form.bank_account_id = $event
+                        "
                     >
                         <SelectTrigger id="bank_account_id">
-                            <SelectValue placeholder="Selecione a conta de origem..." />
+                            <SelectValue
+                                placeholder="Selecione a conta de origem..."
+                            />
                         </SelectTrigger>
                         <SelectContent side="bottom">
                             <SelectGroup>
@@ -310,7 +338,16 @@ function onSubmit() {
                                     :key="acc.id"
                                     :value="String(acc.id)"
                                 >
-                                    {{ acc.name }} (R$ {{ acc.current_balance ? (acc.current_balance/100).toLocaleString('pt-BR', {minimumFractionDigits: 2}) : '0,00' }})
+                                    {{ acc.name }} (R$
+                                    {{
+                                        acc.current_balance
+                                            ? (
+                                                  acc.current_balance / 100
+                                              ).toLocaleString("pt-BR", {
+                                                  minimumFractionDigits: 2,
+                                              })
+                                            : "0,00"
+                                    }})
                                 </SelectItem>
                             </SelectGroup>
                         </SelectContent>
@@ -322,13 +359,23 @@ function onSubmit() {
 
                 <!-- Categoria Financeira -->
                 <Field>
-                    <FieldLabel for="financial_category_id">Categoria Financeira *</FieldLabel>
+                    <FieldLabel for="financial_category_id"
+                        >Categoria Financeira *</FieldLabel
+                    >
                     <Select
-                        :model-value="props.form.financial_category_id ? String(props.form.financial_category_id) : ''"
-                        @update:model-value="props.form.financial_category_id = $event"
+                        :model-value="
+                            props.form.financial_category_id
+                                ? String(props.form.financial_category_id)
+                                : ''
+                        "
+                        @update:model-value="
+                            props.form.financial_category_id = $event
+                        "
                     >
                         <SelectTrigger id="financial_category_id">
-                            <SelectValue placeholder="Selecione a categoria..." />
+                            <SelectValue
+                                placeholder="Selecione a categoria..."
+                            />
                         </SelectTrigger>
                         <SelectContent side="bottom">
                             <SelectGroup>
@@ -349,14 +396,24 @@ function onSubmit() {
 
                 <!-- Subcategoria Financeira -->
                 <Field>
-                    <FieldLabel for="financial_subcategory_id">Subcategoria Financeira</FieldLabel>
+                    <FieldLabel for="financial_subcategory_id"
+                        >Subcategoria Financeira</FieldLabel
+                    >
                     <Select
-                        :model-value="props.form.financial_subcategory_id ? String(props.form.financial_subcategory_id) : ''"
-                        @update:model-value="props.form.financial_subcategory_id = $event"
+                        :model-value="
+                            props.form.financial_subcategory_id
+                                ? String(props.form.financial_subcategory_id)
+                                : ''
+                        "
+                        @update:model-value="
+                            props.form.financial_subcategory_id = $event
+                        "
                         :disabled="!props.form.financial_category_id"
                     >
                         <SelectTrigger id="financial_subcategory_id">
-                            <SelectValue placeholder="Selecione a subcategoria..." />
+                            <SelectValue
+                                placeholder="Selecione a subcategoria..."
+                            />
                         </SelectTrigger>
                         <SelectContent side="bottom">
                             <SelectGroup>
@@ -370,7 +427,9 @@ function onSubmit() {
                             </SelectGroup>
                         </SelectContent>
                     </Select>
-                    <FieldError v-if="props.form.errors.financial_subcategory_id">
+                    <FieldError
+                        v-if="props.form.errors.financial_subcategory_id"
+                    >
                         {{ props.form.errors.financial_subcategory_id }}
                     </FieldError>
                 </Field>
@@ -379,11 +438,15 @@ function onSubmit() {
                 <Field>
                     <FieldLabel for="cost_id">Centro de Custo</FieldLabel>
                     <Select
-                        :model-value="props.form.cost_id ? String(props.form.cost_id) : ''"
+                        :model-value="
+                            props.form.cost_id ? String(props.form.cost_id) : ''
+                        "
                         @update:model-value="props.form.cost_id = $event"
                     >
                         <SelectTrigger id="cost_id">
-                            <SelectValue placeholder="Selecione o centro de custo..." />
+                            <SelectValue
+                                placeholder="Selecione o centro de custo..."
+                            />
                         </SelectTrigger>
                         <SelectContent side="bottom">
                             <SelectGroup>
@@ -406,26 +469,40 @@ function onSubmit() {
 
         <!-- Section 2: Valores e Parcelamento -->
         <div class="space-y-6">
-            <h3 class="text-lg font-semibold text-card-foreground border-b border-border/60 pb-2">
+            <h3
+                class="border-b border-border/60 pb-2 text-lg font-semibold text-card-foreground"
+            >
                 Valores e Condições de Pagamento
             </h3>
 
             <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
                 <!-- Condição de Pagamento -->
                 <Field>
-                    <FieldLabel for="payment_condition">Condição de Pagamento *</FieldLabel>
+                    <FieldLabel for="payment_condition"
+                        >Condição de Pagamento *</FieldLabel
+                    >
                     <Select
-                        :model-value="props.form.payment_condition ? String(props.form.payment_condition) : ''"
-                        @update:model-value="props.form.payment_condition = $event"
+                        :model-value="
+                            props.form.payment_condition
+                                ? String(props.form.payment_condition)
+                                : ''
+                        "
+                        @update:model-value="
+                            props.form.payment_condition = $event
+                        "
                     >
                         <SelectTrigger id="payment_condition">
-                            <SelectValue placeholder="Selecione a condição..." />
+                            <SelectValue
+                                placeholder="Selecione a condição..."
+                            />
                         </SelectTrigger>
                         <SelectContent side="bottom">
                             <SelectGroup>
                                 <SelectItem value="a-vista">À Vista</SelectItem>
                                 <SelectItem
-                                    v-for="(label, key) in props.paymentConditions"
+                                    v-for="(
+                                        label, key
+                                    ) in props.paymentConditions"
                                     :key="key"
                                     :value="String(key)"
                                 >
@@ -441,9 +518,15 @@ function onSubmit() {
 
                 <!-- Forma de Pagamento -->
                 <Field>
-                    <FieldLabel for="payment_method">Forma de Pagamento *</FieldLabel>
+                    <FieldLabel for="payment_method"
+                        >Forma de Pagamento *</FieldLabel
+                    >
                     <Select
-                        :model-value="props.form.payment_method ? String(props.form.payment_method) : ''"
+                        :model-value="
+                            props.form.payment_method
+                                ? String(props.form.payment_method)
+                                : ''
+                        "
                         @update:model-value="props.form.payment_method = $event"
                     >
                         <SelectTrigger id="payment_method">
@@ -454,7 +537,9 @@ function onSubmit() {
                                 <SelectItem value="money">Dinheiro</SelectItem>
                                 <SelectItem value="pix">Pix</SelectItem>
                                 <SelectItem value="ticket">Boleto</SelectItem>
-                                <SelectItem value="credit_card">Cartão de Crédito</SelectItem>
+                                <SelectItem value="credit_card"
+                                    >Cartão de Crédito</SelectItem
+                                >
                             </SelectGroup>
                         </SelectContent>
                     </Select>
@@ -480,7 +565,7 @@ function onSubmit() {
                         "
                         placeholder="R$ 0,00"
                         required
-                        class="flex h-9 w-full min-w-0 rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm dark:bg-input/30"
+                        class="flex h-9 w-full min-w-0 rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm dark:bg-input/30"
                     />
                     <FieldError v-if="props.form.errors.total">
                         {{ props.form.errors.total }}
@@ -496,7 +581,7 @@ function onSubmit() {
                         placeholder="R$ 0,00"
                         required
                         disabled
-                        class="flex h-9 w-full min-w-0 rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm dark:bg-input/30"
+                        class="flex h-9 w-full min-w-0 rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm dark:bg-input/30"
                     />
                     <FieldError v-if="props.form.errors.value">
                         {{ props.form.errors.value }}
@@ -524,7 +609,9 @@ function onSubmit() {
                 <Field>
                     <FieldLabel for="status">Situação Inicial *</FieldLabel>
                     <Select
-                        :model-value="props.form.status ? String(props.form.status) : ''"
+                        :model-value="
+                            props.form.status ? String(props.form.status) : ''
+                        "
                         @update:model-value="props.form.status = $event"
                     >
                         <SelectTrigger id="status">
@@ -558,7 +645,9 @@ function onSubmit() {
 
                 <!-- Comprovante (Recibo/Anexo) -->
                 <Field class="md:col-span-2">
-                    <FieldLabel for="receipt">Link do Comprovante / Anexo</FieldLabel>
+                    <FieldLabel for="receipt"
+                        >Link do Comprovante / Anexo</FieldLabel
+                    >
                     <Input
                         id="receipt"
                         v-model="props.form.receipt"
@@ -576,25 +665,36 @@ function onSubmit() {
             v-if="localInstallments.length > 1"
             class="space-y-6 border-t border-border pt-6"
         >
-            <h3 class="text-xl font-bold text-card-foreground">
-                Parcelas
-            </h3>
+            <h3 class="text-xl font-bold text-card-foreground">Parcelas</h3>
 
             <div class="space-y-6">
                 <div
                     v-for="(inst, idx) in localInstallments"
                     :key="idx"
-                    class="grid grid-cols-1 gap-6 sm:grid-cols-2 p-5 rounded-xl border border-border/60 bg-muted/10 relative"
+                    class="relative grid grid-cols-1 gap-6 rounded-xl border border-border/60 bg-muted/10 p-5 sm:grid-cols-2"
                 >
                     <!-- Badges showing installment status -->
-                    <div class="absolute -top-3 left-4 bg-background border border-border px-2 py-0.5 rounded text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
-                        <span>Parcela {{ inst.installment_number }} de {{ localInstallments.length }}</span>
-                        <span v-if="inst.status === 'paid'" class="text-emerald-600 font-bold text-[10px] uppercase tracking-wider bg-emerald-50 border border-emerald-200 px-1 py-0.2 rounded">(Paga)</span>
+                    <div
+                        class="absolute -top-3 left-4 flex items-center gap-1.5 rounded border border-border bg-background px-2 py-0.5 text-xs font-semibold text-muted-foreground"
+                    >
+                        <span
+                            >Parcela {{ inst.installment_number }} de
+                            {{ localInstallments.length }}</span
+                        >
+                        <span
+                            v-if="inst.status === 'paid'"
+                            class="py-0.2 rounded border border-emerald-200 bg-emerald-50 px-1 text-[10px] font-bold tracking-wider text-emerald-600 uppercase"
+                            >(Paga)</span
+                        >
                     </div>
 
                     <!-- Vencimento -->
                     <Field>
-                        <FieldLabel>Vencimento <span class="text-destructive">*</span> :</FieldLabel>
+                        <FieldLabel
+                            >Vencimento
+                            <span class="text-destructive">*</span>
+                            :</FieldLabel
+                        >
                         <Input
                             type="date"
                             v-model="inst.due_date"
@@ -605,7 +705,11 @@ function onSubmit() {
 
                     <!-- Valor -->
                     <Field>
-                        <FieldLabel>Valor <span class="text-destructive">*</span> :</FieldLabel>
+                        <FieldLabel
+                            >Valor
+                            <span class="text-destructive">*</span>
+                            :</FieldLabel
+                        >
                         <input
                             :value="inst.value"
                             @input="
@@ -615,11 +719,15 @@ function onSubmit() {
                                     );
                                     inst.value = val;
                                     (e.target as HTMLInputElement).value = val;
-                                    onInstallmentValueChange(idx, val, e.target as HTMLInputElement);
+                                    onInstallmentValueChange(
+                                        idx,
+                                        val,
+                                        e.target as HTMLInputElement,
+                                    );
                                 }
                             "
                             placeholder="R$ 0,00"
-                            class="flex h-9 w-full min-w-0 rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm dark:bg-input/30"
+                            class="flex h-9 w-full min-w-0 rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm dark:bg-input/30"
                             :disabled="inst.status === 'paid'"
                             required
                         />
@@ -632,7 +740,7 @@ function onSubmit() {
         <div class="flex justify-end border-t border-border pt-6">
             <Button
                 type="submit"
-                class="text-md w-full px-10 font-bold md:w-auto cursor-pointer"
+                class="text-md w-full cursor-pointer px-10 font-bold md:w-auto"
                 :loading="props.form.processing"
                 :disabled="props.form.processing"
             >

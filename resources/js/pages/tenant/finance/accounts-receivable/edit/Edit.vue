@@ -54,8 +54,8 @@ const form = useForm({
     bank_account_id: props.accountReceivable.bank_account_id
         ? String(props.accountReceivable.bank_account_id)
         : "",
-    financial_contact_id: props.accountReceivable.financial_contact_id
-        ? String(props.accountReceivable.financial_contact_id)
+    financial_contact_id: props.accountReceivable.financial_contact?.contact_id
+        ? String(props.accountReceivable.financial_contact.contact_id)
         : "",
     description: props.accountReceivable.description || "",
     total:
@@ -75,7 +75,9 @@ const form = useForm({
     receipt: props.accountReceivable.receipt || "",
     value:
         props.accountReceivable.installments?.[0]?.value !== undefined
-            ? maskCurrency(String(props.accountReceivable.installments[0].value))
+            ? maskCurrency(
+                  String(props.accountReceivable.installments[0].value),
+              )
             : props.accountReceivable.total !== undefined
               ? maskCurrency(String(props.accountReceivable.total))
               : "",
@@ -91,9 +93,15 @@ const form = useForm({
     installments: [] as any[], // individual installments payload (will be populated on form submit if needed)
 });
 
+const initialContact =
+    props.accountReceivable.financial_contact?.contact || null;
+
 const backUrl = ref(route("tenant.finance.accounts-receivable.list"));
 const submitUrl = ref(
-    route("tenant.finance.accounts-receivable.update", props.accountReceivable.id),
+    route(
+        "tenant.finance.accounts-receivable.update",
+        props.accountReceivable.id,
+    ),
 );
 
 onMounted(() => {
@@ -168,6 +176,7 @@ function submit() {
             :payment-conditions="props.paymentConditions"
             :bank-accounts="props.bankAccounts"
             :account-receivable="props.accountReceivable"
+            :initial-contact="initialContact"
             @submit="submit"
             submitText="Atualizar Lançamento"
         />
