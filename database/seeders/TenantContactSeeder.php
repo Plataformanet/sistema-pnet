@@ -1,0 +1,33 @@
+<?php
+
+namespace Database\Seeders;
+
+use App\Models\Address;
+use App\Models\Client;
+use App\Models\Contact;
+use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use Illuminate\Database\Seeder;
+
+class TenantContactSeeder extends Seeder
+{
+    /**
+     * Run the database seeds.
+     */
+    public function run(): void
+    {
+        $contacts = Contact::factory()->count(3)->create();
+
+        foreach ($contacts as $contact) {
+            $contact->address()->save(
+                Address::factory()->make()
+            );
+        }
+
+        foreach ($contacts as $contact) {
+            $contact->client()->create(
+                // Client::factory()->make()
+                ['contact_id' => $contact->id]
+            );
+        }
+    }
+}
