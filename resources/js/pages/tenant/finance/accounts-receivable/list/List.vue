@@ -649,9 +649,9 @@ async function executePay() {
                     </div>
                 </div>
 
-                <!-- Row 2: Secondary selectors (Bank accounts, Categories, Status) -->
+                <!-- Row 2: Secondary selectors (Bank accounts, Categories) -->
                 <div
-                    class="grid grid-cols-1 gap-4 border-t border-border/60 pt-4 md:grid-cols-4"
+                    class="grid grid-cols-1 gap-4 border-t border-border/60 pt-4 md:grid-cols-3"
                 >
                     <div class="space-y-1.5">
                         <label
@@ -744,45 +744,6 @@ async function executePay() {
                     <div class="space-y-1.5">
                         <label
                             class="text-xs font-semibold tracking-wider text-muted-foreground uppercase"
-                            >Situação</label
-                        >
-                        <Select
-                            :model-value="props.status || 'all'"
-                            @update:model-value="
-                                (val) =>
-                                    reload({
-                                        status: val === 'all' ? null : val,
-                                    })
-                            "
-                        >
-                            <SelectTrigger
-                                class="h-10 border border-border bg-background text-sm"
-                            >
-                                <SelectValue
-                                    placeholder="Selecione a situação..."
-                                />
-                            </SelectTrigger>
-                            <SelectContent side="bottom">
-                                <SelectItem value="all"
-                                    >Todas as Situações</SelectItem
-                                >
-                                <SelectItem value="a-vencer"
-                                    >A Vencer</SelectItem
-                                >
-                                <SelectItem value="vencidos"
-                                    >Vencidos</SelectItem
-                                >
-                                <SelectItem value="vencem-hoje"
-                                    >Vencem Hoje</SelectItem
-                                >
-                                <SelectItem value="pago">Recebido</SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
-
-                    <div class="space-y-1.5">
-                        <label
-                            class="text-xs font-semibold tracking-wider text-muted-foreground uppercase"
                             >Registros por página</label
                         >
                         <Select
@@ -821,7 +782,17 @@ async function executePay() {
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
             <!-- Overdue card -->
             <div
-                class="rounded-xl border border-border bg-card p-5 shadow-xs transition hover:shadow-sm"
+                @click="
+                    reload({
+                        status: props.status === 'vencidos' ? null : 'vencidos',
+                    })
+                "
+                class="cursor-pointer rounded-xl border p-5 shadow-xs transition select-none hover:shadow-sm"
+                :class="
+                    props.status === 'vencidos'
+                        ? 'border-rose-500 bg-rose-50/30 ring-2 ring-rose-500/20'
+                        : 'border-border bg-card'
+                "
             >
                 <div class="space-y-2">
                     <p
@@ -837,7 +808,20 @@ async function executePay() {
 
             <!-- Due Today card -->
             <div
-                class="rounded-xl border border-border bg-card p-5 shadow-xs transition hover:shadow-sm"
+                @click="
+                    reload({
+                        status:
+                            props.status === 'vencem-hoje'
+                                ? null
+                                : 'vencem-hoje',
+                    })
+                "
+                class="cursor-pointer rounded-xl border p-5 shadow-xs transition select-none hover:shadow-sm"
+                :class="
+                    props.status === 'vencem-hoje'
+                        ? 'border-rose-500 bg-rose-50/30 ring-2 ring-rose-500/20'
+                        : 'border-border bg-card'
+                "
             >
                 <div class="space-y-2">
                     <p
@@ -853,7 +837,17 @@ async function executePay() {
 
             <!-- To Due card -->
             <div
-                class="rounded-xl border border-border bg-card p-5 shadow-xs transition hover:shadow-sm"
+                @click="
+                    reload({
+                        status: props.status === 'a-vencer' ? null : 'a-vencer',
+                    })
+                "
+                class="cursor-pointer rounded-xl border p-5 shadow-xs transition select-none hover:shadow-sm"
+                :class="
+                    props.status === 'a-vencer'
+                        ? 'border-primary bg-primary/5 ring-2 ring-primary/20'
+                        : 'border-border bg-card'
+                "
             >
                 <div class="flex items-center justify-between space-y-2">
                     <div>
@@ -861,12 +855,6 @@ async function executePay() {
                             class="flex items-center gap-1 text-xs font-bold tracking-wider text-muted-foreground uppercase"
                         >
                             A receber (R$)
-                            <span
-                                class="cursor-help text-muted-foreground/60"
-                                title="Próximos 7 dias"
-                            >
-                                <HelpCircle class="h-3 w-3" />
-                            </span>
                         </p>
                         <p class="text-3xl font-extrabold text-foreground">
                             {{ formatMoney(props.totalToDue) }}
@@ -877,7 +865,15 @@ async function executePay() {
 
             <!-- Paid card -->
             <div
-                class="rounded-xl border border-border bg-card p-5 shadow-xs transition hover:shadow-sm"
+                @click="
+                    reload({ status: props.status === 'pago' ? null : 'pago' })
+                "
+                class="cursor-pointer rounded-xl border p-5 shadow-xs transition select-none hover:shadow-sm"
+                :class="
+                    props.status === 'pago'
+                        ? 'border-emerald-500 bg-emerald-50/30 ring-2 ring-emerald-500/20'
+                        : 'border-border bg-card'
+                "
             >
                 <div class="space-y-2">
                     <p
@@ -893,7 +889,13 @@ async function executePay() {
 
             <!-- Total period card -->
             <div
-                class="rounded-xl border border-border bg-card p-5 shadow-xs transition hover:shadow-sm"
+                @click="reload({ status: null })"
+                class="cursor-pointer rounded-xl border p-5 shadow-xs transition select-none hover:shadow-sm"
+                :class="
+                    !props.status
+                        ? 'border-blue-500 bg-blue-50/30 ring-2 ring-blue-500/20'
+                        : 'border-border bg-card'
+                "
             >
                 <div class="space-y-2">
                     <p
