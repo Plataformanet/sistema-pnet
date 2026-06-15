@@ -41,8 +41,6 @@ function normalizePaymentMethod(
     return s;
 }
 
-
-
 const form = useForm({
     financial_category_id: props.accountPayable.financial_category_id
         ? String(props.accountPayable.financial_category_id)
@@ -95,16 +93,19 @@ const form = useForm({
 
 const backUrl = ref(route("tenant.finance.accounts-payable.list"));
 const submitUrl = ref(
-    route(
-        "tenant.finance.accounts-payable.update",
-        props.accountPayable.id,
-    )
+    route("tenant.finance.accounts-payable.update", props.accountPayable.id),
 );
 
 onMounted(() => {
     if (window.location.search) {
-        backUrl.value = route("tenant.finance.accounts-payable.list") + window.location.search;
-        submitUrl.value = route("tenant.finance.accounts-payable.update", props.accountPayable.id) + window.location.search;
+        backUrl.value =
+            route("tenant.finance.accounts-payable.list") +
+            window.location.search;
+        submitUrl.value =
+            route(
+                "tenant.finance.accounts-payable.update",
+                props.accountPayable.id,
+            ) + window.location.search;
     }
 });
 
@@ -150,7 +151,7 @@ function submit() {
                 Atualize as informações deste lançamento de contas a pagar.
             </p>
         </div>
-         <Button variant="outline" class="cursor-pointer" as-child>
+        <Button variant="outline" class="cursor-pointer" as-child>
             <Link :href="backUrl">
                 <ChevronLeft class="mr-2 h-4 w-4" /> Voltar
             </Link>

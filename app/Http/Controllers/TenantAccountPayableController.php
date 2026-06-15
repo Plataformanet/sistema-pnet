@@ -27,7 +27,8 @@ class TenantAccountPayableController extends Controller
         protected FinancialSubcategoryService $financialSubcategoryService,
         protected ContactService $contactService,
         protected BankAccountService $bankAccountService
-    ) {}
+    ) {
+    }
 
     /**
      * Display a listing of the resource.
@@ -39,7 +40,7 @@ class TenantAccountPayableController extends Controller
 
         $accountsPayable = $this->accountPayableService->findAll($request, $period, tenant());
 
-        if (! $request->has('conta_id')) {
+        if (!$request->has('conta_id')) {
             $bankAccount = BankAccount::select('id', 'name', 'bank', 'current_balance')->where('main_account', 1)->first();
         }
 
@@ -89,8 +90,8 @@ class TenantAccountPayableController extends Controller
         $costs = Cost::select('id', 'type')->get();
 
         $financialSubcategories = $financialSubcategories
-            ->filter(fn ($item) => $item->active)
-            ->map(fn ($item) => [
+            ->filter(fn($item) => $item->active)
+            ->map(fn($item) => [
                 'id' => $item->id,
                 'name' => $item->name,
                 'financial_category_id' => $item->financial_category_id,
@@ -156,8 +157,8 @@ class TenantAccountPayableController extends Controller
         $costs = Cost::select('id', 'type')->get();
 
         $financialSubcategories = $financialSubcategories
-            ->filter(fn ($item) => $item->active)
-            ->map(fn ($item) => [
+            ->filter(fn($item) => $item->active)
+            ->map(fn($item) => [
                 'id' => $item->id,
                 'name' => $item->name,
                 'financial_category_id' => $item->financial_category_id,

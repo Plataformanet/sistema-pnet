@@ -22,6 +22,13 @@ export interface AccountPayableInstallment {
     updated_at?: string;
 }
 
+export interface FinancialContact {
+    id: string | number;
+    contact_id?: string | number;
+    type?: string;
+    contact?: Contact;
+}
+
 export interface AccountPayable {
     id: string | number;
     description: string;
@@ -47,7 +54,7 @@ export interface AccountPayable {
     bank_account?: BankAccount;
     financial_category?: FinanceCategory;
     financial_subcategory?: FinanceSubcategory;
-    financial_contact?: Contact;
+    financial_contact?: FinancialContact;
     cost?: Cost;
     installments?: AccountPayableInstallment[];
 }

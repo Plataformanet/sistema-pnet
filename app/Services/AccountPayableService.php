@@ -24,7 +24,7 @@ class AccountPayableService extends AccountService
 
                 $accountPayable = AccountPayable::create($data);
 
-                if (! empty($data['installments'])) {
+                if (!empty($data['installments'])) {
                     foreach ($data['installments'] as $idx => $inst) {
                         $accountPayable->installments()->create([
                             'installment_number' => $idx + 1,
@@ -156,18 +156,20 @@ class AccountPayableService extends AccountService
 
     public function findById(string $id, Tenant $tenant): AccountPayable
     {
-        return $tenant->run(fn () => AccountPayable::with('installments')->findOrFail($id));
+        return $tenant->run(fn() => AccountPayable::with('installments')->findOrFail($id));
     }
 
     public function showById(string $id, Tenant $tenant): AccountPayable
     {
-        return $tenant->run(fn () => AccountPayable::with(
+        return $tenant->run(fn() => AccountPayable::with(
             [
                 'financialContact:id,contact_id',
                 'financialContact.contact:id,name_corporatereason',
                 'financialCategory:id,name',
                 'financialSubcategory:id,name',
                 'cost:id,type',
+                'bankAccount:id,name',
+                'installments',
             ]
         )->findOrFail($id));
     }
