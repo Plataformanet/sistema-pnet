@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Enums\AccountsEnum;
 use App\Enums\TypeContactEnum;
 use App\Models\BankAccount;
+use App\Models\Contact;
 use App\Models\FinancialContact;
 use App\Models\Installment;
 use App\Models\Tenant;
@@ -453,5 +454,31 @@ abstract class AccountService
                     'search'       => $request->query('search'),
                 ]);
         });
+    }
+
+    public function searchContact($request)
+    {
+        $search = $request->query('search');
+        $type   = $request->query('type');
+
+        $query = Contact::select('id', 'name_corporatereason');
+
+        if ($type === 'client') {
+            $query->whereHas('client');
+        } elseif ($type === 'supplier') {
+            $query->whereHas('supplier');
+        }
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name_corporatereason', 'like', "%{$search}%")
+                    ->orWhere('fantasy_name', 'like', "%{$search}%")
+                    ->orWhere('cpf_cnpj', 'like', "%{$search}%");
+            });
+        }
+
+        $contacts = $query->limit(15)->get();
+
+        return $contacts;
     }
 }

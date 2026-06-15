@@ -39,7 +39,7 @@ class TenantAccountPayableController extends Controller
     public function index(IndexAccountPayableRequest $request)
     {
         $period = $request->input('periodo', now()->format('Y-m'));
-        $days = 7;
+        $days   = 7;
 
         $accountsPayable = $this->accountPayableService->findAll($request, $period, tenant());
 
@@ -51,11 +51,11 @@ class TenantAccountPayableController extends Controller
             $bankAccount = BankAccount::select('id', 'name', 'bank', 'current_balance')->where('id', $request->query('conta_id'))->first();
         }
 
-        $totalPeriod = $this->accountPayableService->totalPeriod($request, $period, tenant(), $bankAccount?->id);
-        $totalPaid = $this->accountPayableService->totalPaid($request, $period, tenant(), $bankAccount?->id);
+        $totalPeriod   = $this->accountPayableService->totalPeriod($request, $period, tenant(), $bankAccount?->id);
+        $totalPaid     = $this->accountPayableService->totalPaid($request, $period, tenant(), $bankAccount?->id);
         $totalDueToday = $this->accountPayableService->totalDueToday($request, $period, tenant(), $bankAccount?->id);
-        $totalToDue = $this->accountPayableService->totalToDue($request, $days, $period, tenant(), $bankAccount?->id);
-        $totalOverdue = $this->accountPayableService->totalOverdue($request, $period, tenant(), $bankAccount?->id);
+        $totalToDue    = $this->accountPayableService->totalToDue($request, $days, $period, tenant(), $bankAccount?->id);
+        $totalOverdue  = $this->accountPayableService->totalOverdue($request, $period, tenant(), $bankAccount?->id);
 
         $financialCategories = $this->financialCategoryService->findAll(tenant());
 
@@ -64,22 +64,22 @@ class TenantAccountPayableController extends Controller
         $bankAccounts = BankAccount::select('id', 'name', 'bank', 'current_balance', 'main_account')->get();
 
         return Inertia::render('tenant/finance/accounts-payable/list/List', [
-            'accountsPayable' => $accountsPayable,
-            'totalPeriod' => $totalPeriod,
-            'totalPaid' => $totalPaid,
-            'totalDueToday' => $totalDueToday,
-            'totalToDue' => $totalToDue,
-            'totalOverdue' => $totalOverdue,
-            'period' => $period,
-            'perPage' => $request->input('quantidade'),
-            'start' => $request->input('inicio'),
-            'end' => $request->input('fim'),
-            'status' => $request->input('status'),
-            'categoryId' => $request->input('categoria_id'),
+            'accountsPayable'     => $accountsPayable,
+            'totalPeriod'         => $totalPeriod,
+            'totalPaid'           => $totalPaid,
+            'totalDueToday'       => $totalDueToday,
+            'totalToDue'          => $totalToDue,
+            'totalOverdue'        => $totalOverdue,
+            'period'              => $period,
+            'perPage'             => $request->input('quantidade'),
+            'start'               => $request->input('inicio'),
+            'end'                 => $request->input('fim'),
+            'status'              => $request->input('status'),
+            'categoryId'          => $request->input('categoria_id'),
             'financialCategories' => $financialCategories,
-            'searchedCategory' => $searchedCategory,
-            'bankAccounts' => $bankAccounts,
-            'bankAccount' => $bankAccount,
+            'searchedCategory'    => $searchedCategory,
+            'bankAccounts'        => $bankAccounts,
+            'bankAccount'         => $bankAccount,
         ]);
     }
 
@@ -88,15 +88,15 @@ class TenantAccountPayableController extends Controller
      */
     public function create()
     {
-        $financialCategories = $this->financialCategoryService->findCategoryAccountsPayable(tenant());
+        $financialCategories    = $this->financialCategoryService->findCategoryAccountsPayable(tenant());
         $financialSubcategories = $this->financialSubcategoryService->findAll(tenant());
-        $costs = Cost::select('id', 'type')->get();
+        $costs                  = Cost::select('id', 'type')->get();
 
         $financialSubcategories = $financialSubcategories
             ->filter(fn($item) => $item->active)
             ->map(fn($item) => [
-                'id' => $item->id,
-                'name' => $item->name,
+                'id'                    => $item->id,
+                'name'                  => $item->name,
                 'financial_category_id' => $item->financial_category_id,
             ])
             ->values();
@@ -113,12 +113,12 @@ class TenantAccountPayableController extends Controller
         $bankAccounts = $this->bankAccountService->findAll(tenant());
 
         return Inertia::render('tenant/finance/accounts-payable/create/Create', [
-            'financialCategories' => $financialCategories,
+            'financialCategories'    => $financialCategories,
             'financialSubcategories' => $financialSubcategories,
-            'costs' => $costs,
-            'contacts' => $contacts,
-            'paymentConditions' => $paymentConditions,
-            'bankAccounts' => $bankAccounts,
+            'costs'                  => $costs,
+            'contacts'               => $contacts,
+            'paymentConditions'      => $paymentConditions,
+            'bankAccounts'           => $bankAccounts,
         ]);
     }
 
@@ -158,15 +158,15 @@ class TenantAccountPayableController extends Controller
     {
         $accountPayable = $this->accountPayableService->findById($id, tenant());
 
-        $financialCategories = $this->financialCategoryService->findCategoryAccountsPayable(tenant());
+        $financialCategories    = $this->financialCategoryService->findCategoryAccountsPayable(tenant());
         $financialSubcategories = $this->financialSubcategoryService->findAll(tenant());
-        $costs = Cost::select('id', 'type')->get();
+        $costs                  = Cost::select('id', 'type')->get();
 
         $financialSubcategories = $financialSubcategories
             ->filter(fn($item) => $item->active)
             ->map(fn($item) => [
-                'id' => $item->id,
-                'name' => $item->name,
+                'id'                    => $item->id,
+                'name'                  => $item->name,
                 'financial_category_id' => $item->financial_category_id,
             ])
             ->values();
@@ -183,13 +183,13 @@ class TenantAccountPayableController extends Controller
         $bankAccounts = $this->bankAccountService->findAll(tenant());
 
         return Inertia::render('tenant/finance/accounts-payable/edit/Edit', [
-            'accountPayable' => $accountPayable,
-            'financialCategories' => $financialCategories,
+            'accountPayable'         => $accountPayable,
+            'financialCategories'    => $financialCategories,
             'financialSubcategories' => $financialSubcategories,
-            'costs' => $costs,
-            'contacts' => $contacts,
-            'paymentConditions' => $paymentConditions,
-            'bankAccounts' => $bankAccounts,
+            'costs'                  => $costs,
+            'contacts'               => $contacts,
+            'paymentConditions'      => $paymentConditions,
+            'bankAccounts'           => $bankAccounts,
         ]);
     }
 
@@ -244,5 +244,12 @@ class TenantAccountPayableController extends Controller
         }
 
         return response()->json(['status' => 500, 'message' => 'Erro ao tentar atualizar o valor da parcela!']);
+    }
+
+    public function searchContact(Request $request)
+    {
+        $contacts = $this->accountPayableService->searchContact($request);
+
+        return response()->json($contacts);
     }
 }

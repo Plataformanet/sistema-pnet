@@ -38,7 +38,7 @@ class TenantAccountReceivableController extends Controller
     public function index(IndexAccountReceivableRequest $request)
     {
         $period = $request->input('periodo', now()->format('Y-m'));
-        $days = 7;
+        $days   = 7;
 
         $accountsReceivable = $this->accountReceivableService->findAll($request, $period, tenant());
 
@@ -50,11 +50,11 @@ class TenantAccountReceivableController extends Controller
             $bankAccount = BankAccount::select('id', 'name', 'bank', 'current_balance')->where('id', $request->query('conta_id'))->first();
         }
 
-        $totalPeriod = $this->accountReceivableService->totalPeriod($request, $period, tenant(), $bankAccount?->id);
-        $totalPaid = $this->accountReceivableService->totalPaid($request, $period, tenant(), $bankAccount?->id);
+        $totalPeriod   = $this->accountReceivableService->totalPeriod($request, $period, tenant(), $bankAccount?->id);
+        $totalPaid     = $this->accountReceivableService->totalPaid($request, $period, tenant(), $bankAccount?->id);
         $totalDueToday = $this->accountReceivableService->totalDueToday($request, $period, tenant(), $bankAccount?->id);
-        $totalToDue = $this->accountReceivableService->totalToDue($request, $days, $period, tenant(), $bankAccount?->id);
-        $totalOverdue = $this->accountReceivableService->totalOverdue($request, $period, tenant(), $bankAccount?->id);
+        $totalToDue    = $this->accountReceivableService->totalToDue($request, $days, $period, tenant(), $bankAccount?->id);
+        $totalOverdue  = $this->accountReceivableService->totalOverdue($request, $period, tenant(), $bankAccount?->id);
 
         $financialCategories = $this->financialCategoryService->findAll(tenant());
 
@@ -63,21 +63,21 @@ class TenantAccountReceivableController extends Controller
         $bankAccounts = BankAccount::select('id', 'name', 'bank', 'current_balance', 'main_account')->get();
 
         return Inertia::render('tenant/finance/accounts-receivable/list/List', [
-            'accountsReceivable' => $accountsReceivable,
-            'totalPeriod' => $totalPeriod,
-            'totalPaid' => $totalPaid,
-            'totalDueToday' => $totalDueToday,
-            'totalToDue' => $totalToDue,
-            'totalOverdue' => $totalOverdue,
-            'period' => $period,
-            'perPage' => $request->input('quantidade'),
-            'start' => $request->input('inicio'),
-            'end' => $request->input('fim'),
-            'categoryId' => $request->input('categoria_id'),
+            'accountsReceivable'  => $accountsReceivable,
+            'totalPeriod'         => $totalPeriod,
+            'totalPaid'           => $totalPaid,
+            'totalDueToday'       => $totalDueToday,
+            'totalToDue'          => $totalToDue,
+            'totalOverdue'        => $totalOverdue,
+            'period'              => $period,
+            'perPage'             => $request->input('quantidade'),
+            'start'               => $request->input('inicio'),
+            'end'                 => $request->input('fim'),
+            'categoryId'          => $request->input('categoria_id'),
             'financialCategories' => $financialCategories,
-            'searchedCategory' => $searchedCategory,
-            'bankAccounts' => $bankAccounts,
-            'bankAccount' => $bankAccount,
+            'searchedCategory'    => $searchedCategory,
+            'bankAccounts'        => $bankAccounts,
+            'bankAccount'         => $bankAccount,
         ]);
     }
 
@@ -86,15 +86,15 @@ class TenantAccountReceivableController extends Controller
      */
     public function create()
     {
-        $financialCategories = $this->financialCategoryService->findCategoryAccountsReceivable(tenant());
+        $financialCategories    = $this->financialCategoryService->findCategoryAccountsReceivable(tenant());
         $financialSubcategories = $this->financialSubcategoryService->findAll(tenant());
-        $costs = Cost::select('id', 'type')->get();
+        $costs                  = Cost::select('id', 'type')->get();
 
         $financialSubcategories = $financialSubcategories
             ->filter(fn($item) => $item->active)
             ->map(fn($item) => [
-                'id' => $item->id,
-                'name' => $item->name,
+                'id'                    => $item->id,
+                'name'                  => $item->name,
                 'financial_category_id' => $item->financial_category_id,
             ])
             ->values();
@@ -111,12 +111,12 @@ class TenantAccountReceivableController extends Controller
         $bankAccounts = $this->bankAccountService->findAll(tenant());
 
         return Inertia::render('tenant/finance/accounts-receivable/create/Create', [
-            'financialCategories' => $financialCategories,
+            'financialCategories'    => $financialCategories,
             'financialSubcategories' => $financialSubcategories,
-            'costs' => $costs,
-            'contacts' => $contacts,
-            'paymentConditions' => $paymentConditions,
-            'bankAccounts' => $bankAccounts,
+            'costs'                  => $costs,
+            'contacts'               => $contacts,
+            'paymentConditions'      => $paymentConditions,
+            'bankAccounts'           => $bankAccounts,
         ]);
     }
 
@@ -156,15 +156,15 @@ class TenantAccountReceivableController extends Controller
     {
         $accountReceivable = $this->accountReceivableService->findById($id, tenant());
 
-        $financialCategories = $this->financialCategoryService->findCategoryAccountsReceivable(tenant());
+        $financialCategories    = $this->financialCategoryService->findCategoryAccountsReceivable(tenant());
         $financialSubcategories = $this->financialSubcategoryService->findAll(tenant());
-        $costs = Cost::select('id', 'type')->get();
+        $costs                  = Cost::select('id', 'type')->get();
 
         $financialSubcategories = $financialSubcategories
             ->filter(fn($item) => $item->active)
             ->map(fn($item) => [
-                'id' => $item->id,
-                'name' => $item->name,
+                'id'                    => $item->id,
+                'name'                  => $item->name,
                 'financial_category_id' => $item->financial_category_id,
             ])
             ->values();
@@ -181,13 +181,13 @@ class TenantAccountReceivableController extends Controller
         $bankAccounts = $this->bankAccountService->findAll(tenant());
 
         return Inertia::render('tenant/finance/accounts-receivable/edit/Edit', [
-            'accountReceivable' => $accountReceivable,
-            'financialCategories' => $financialCategories,
+            'accountReceivable'      => $accountReceivable,
+            'financialCategories'    => $financialCategories,
             'financialSubcategories' => $financialSubcategories,
-            'costs' => $costs,
-            'contacts' => $contacts,
-            'paymentConditions' => $paymentConditions,
-            'bankAccounts' => $bankAccounts,
+            'costs'                  => $costs,
+            'contacts'               => $contacts,
+            'paymentConditions'      => $paymentConditions,
+            'bankAccounts'           => $bankAccounts,
         ]);
     }
 
@@ -242,5 +242,12 @@ class TenantAccountReceivableController extends Controller
         }
 
         return response()->json(['status' => 500, 'message' => 'Erro ao atualizar parcela!']);
+    }
+
+    public function searchContact(Request $request)
+    {
+        $contacts = $this->accountReceivableService->searchContact($request);
+
+        return response()->json($contacts);
     }
 }
