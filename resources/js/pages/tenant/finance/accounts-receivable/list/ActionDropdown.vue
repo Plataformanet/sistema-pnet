@@ -34,7 +34,7 @@ const { permissions } = usePermission();
 
 const editUrlWithFilters = computed(() => {
     return (
-        route("tenant.finance.accounts-payable.edit", props.item.id) +
+        route("tenant.finance.accounts-receivable.edit", props.item.id) +
         (typeof window !== "undefined" ? window.location.search : "")
     );
 });
@@ -54,13 +54,13 @@ const editUrlWithFilters = computed(() => {
 
             <!-- Show detail -->
             <DropdownMenuItem
-                v-if="permissions.includes('finance.accounts_payable.view')"
+                v-if="permissions.includes('finance.accounts_receivable.view')"
                 as-child
             >
                 <Link
                     :href="
                         route(
-                            'tenant.finance.accounts-payable.show',
+                            'tenant.finance.accounts-receivable.show',
                             props.item.id,
                         )
                     "
@@ -73,19 +73,19 @@ const editUrlWithFilters = computed(() => {
             <!-- Liquidate (Pay) -->
             <DropdownMenuItem
                 v-if="
-                    permissions.includes('finance.accounts_payable.edit') &&
+                    permissions.includes('finance.accounts_receivable.edit') &&
                     props.item.status !== 'paid' &&
                     props.item.installment_id
                 "
                 @click="emit('pay', props.item.installment_id)"
                 class="cursor-pointer text-emerald-600 focus:text-emerald-600"
             >
-                <Check class="mr-2 h-4 w-4" /> Liquidar Parcela
+                <Check class="mr-2 h-4 w-4" /> Receber Parcela
             </DropdownMenuItem>
 
             <!-- Edit -->
             <DropdownMenuItem
-                v-if="permissions.includes('finance.accounts_payable.edit')"
+                v-if="permissions.includes('finance.accounts_receivable.edit')"
                 as-child
             >
                 <Link
@@ -98,15 +98,21 @@ const editUrlWithFilters = computed(() => {
 
             <DropdownMenuSeparator
                 v-if="
-                    permissions.includes('finance.accounts_payable.delete') &&
-                    (permissions.includes('finance.accounts_payable.view') ||
-                        permissions.includes('finance.accounts_payable.edit'))
+                    permissions.includes(
+                        'finance.accounts_receivable.delete',
+                    ) &&
+                    (permissions.includes('finance.accounts_receivable.view') ||
+                        permissions.includes(
+                            'finance.accounts_receivable.edit',
+                        ))
                 "
             />
 
             <!-- Delete -->
             <DropdownMenuItem
-                v-if="permissions.includes('finance.accounts_payable.delete')"
+                v-if="
+                    permissions.includes('finance.accounts_receivable.delete')
+                "
                 @click="emit('delete', props.item.id)"
                 class="cursor-pointer text-destructive focus:text-destructive"
             >

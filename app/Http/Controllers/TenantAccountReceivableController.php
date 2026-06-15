@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\TypeContactEnum;
 use App\Exceptions\UpdateInstallmentException;
 use App\Http\Requests\StoreAccountReceivableRequest;
 use App\Http\Requests\UpdateAccountReceivableRequest;
@@ -28,8 +27,7 @@ class TenantAccountReceivableController extends Controller
         protected FinancialSubcategoryService $financialSubcategoryService,
         protected ContactService $contactService,
         protected BankAccountService $bankAccountService
-    ) {
-    }
+    ) {}
 
     /**
      * Display a listing of the resource.
@@ -37,11 +35,11 @@ class TenantAccountReceivableController extends Controller
     public function index(Request $request)
     {
         $period = $request->input('periodo', now()->format('Y-m'));
-        $days   = 7;
+        $days = 7;
 
         $accountsReceivable = $this->accountReceivableService->findAll($request, $period, tenant());
 
-        if (!$request->has('conta_id')) {
+        if (! $request->has('conta_id')) {
             $bankAccount = BankAccount::select('id', 'name', 'bank', 'current_balance')->where('main_account', 1)->first();
         }
 
@@ -49,11 +47,11 @@ class TenantAccountReceivableController extends Controller
             $bankAccount = BankAccount::select('id', 'name', 'bank', 'current_balance')->where('id', $request->query('conta_id'))->first();
         }
 
-        $totalPeriod   = $this->accountReceivableService->totalPeriod($request, $period, tenant(), $bankAccount?->id);
-        $totalPaid     = $this->accountReceivableService->totalPaid($request, $period, tenant(), $bankAccount?->id);
+        $totalPeriod = $this->accountReceivableService->totalPeriod($request, $period, tenant(), $bankAccount?->id);
+        $totalPaid = $this->accountReceivableService->totalPaid($request, $period, tenant(), $bankAccount?->id);
         $totalDueToday = $this->accountReceivableService->totalDueToday($request, $period, tenant(), $bankAccount?->id);
-        $totalToDue    = $this->accountReceivableService->totalToDue($request, $days, $period, tenant(), $bankAccount?->id);
-        $totalOverdue  = $this->accountReceivableService->totalOverdue($request, $period, tenant(), $bankAccount?->id);
+        $totalToDue = $this->accountReceivableService->totalToDue($request, $days, $period, tenant(), $bankAccount?->id);
+        $totalOverdue = $this->accountReceivableService->totalOverdue($request, $period, tenant(), $bankAccount?->id);
 
         $financialCategories = $this->financialCategoryService->findAll(tenant());
 
@@ -62,21 +60,21 @@ class TenantAccountReceivableController extends Controller
         $bankAccounts = BankAccount::select('id', 'name', 'bank', 'current_balance', 'main_account')->get();
 
         return Inertia::render('tenant/finance/accounts-receivable/list/List', [
-            'accountsReceivable'  => $accountsReceivable,
-            'totalPeriod'         => $totalPeriod,
-            'totalPaid'           => $totalPaid,
-            'totalDueToday'       => $totalDueToday,
-            'totalToDue'          => $totalToDue,
-            'totalOverdue'        => $totalOverdue,
-            'period'              => $period,
-            'perPage'             => $request->input('quantidade'),
-            'start'               => $request->input('inicio'),
-            'end'                 => $request->input('fim'),
-            'categoryId'          => $request->input('categoria_id'),
+            'accountsReceivable' => $accountsReceivable,
+            'totalPeriod' => $totalPeriod,
+            'totalPaid' => $totalPaid,
+            'totalDueToday' => $totalDueToday,
+            'totalToDue' => $totalToDue,
+            'totalOverdue' => $totalOverdue,
+            'period' => $period,
+            'perPage' => $request->input('quantidade'),
+            'start' => $request->input('inicio'),
+            'end' => $request->input('fim'),
+            'categoryId' => $request->input('categoria_id'),
             'financialCategories' => $financialCategories,
-            'searchedCategory'    => $searchedCategory,
-            'bankAccounts'        => $bankAccounts,
-            'bankAccount'         => $bankAccount,
+            'searchedCategory' => $searchedCategory,
+            'bankAccounts' => $bankAccounts,
+            'bankAccount' => $bankAccount,
         ]);
     }
 
@@ -85,19 +83,22 @@ class TenantAccountReceivableController extends Controller
      */
     public function create()
     {
-        $financialCategories    = $this->financialCategoryService->findCategoryAccountsReceivable(tenant());
+        $financialCategories = $this->financialCategoryService->findCategoryAccountsReceivable(tenant());
         $financialSubcategories = $this->financialSubcategoryService->findAll(tenant());
-        $costs                  = Cost::select('id', 'type')->get();
+        $costs = Cost::select('id', 'type')->get();
 
-        $financialSubcategories = $financialSubcategories->map(function ($item) {
-            if ($item->active) {
-                return $item->name;
-            }
-        });
+        $financialSubcategories = $financialSubcategories
+            ->filter(fn ($item) => $item->active)
+            ->map(fn ($item) => [
+                'id' => $item->id,
+                'name' => $item->name,
+                'financial_category_id' => $item->financial_category_id,
+            ])
+            ->values();
 
         $contacts = collect();
         Contact::select('id', 'name_corporatereason')
-            ->where('type', TypeContactEnum::CLIENT->value)
+            ->whereHas('client')
             ->chunkById(500, function ($chunk) use (&$contacts) {
                 $contacts = $contacts->merge($chunk);
             });
@@ -107,12 +108,12 @@ class TenantAccountReceivableController extends Controller
         $bankAccounts = $this->bankAccountService->findAll(tenant());
 
         return Inertia::render('tenant/finance/accounts-receivable/create/Create', [
-            'financialCategories'    => $financialCategories,
+            'financialCategories' => $financialCategories,
             'financialSubcategories' => $financialSubcategories,
-            'costs'                  => $costs,
-            'contacts'               => $contacts,
-            'paymentConditions'      => $paymentConditions,
-            'bankAccounts'           => $bankAccounts,
+            'costs' => $costs,
+            'contacts' => $contacts,
+            'paymentConditions' => $paymentConditions,
+            'bankAccounts' => $bankAccounts,
         ]);
     }
 
@@ -121,13 +122,14 @@ class TenantAccountReceivableController extends Controller
      */
     public function store(StoreAccountReceivableRequest $request)
     {
-        $accountReceivable = $this->accountReceivableService->create($request->validated(), tenant());
+        try {
+            $this->accountReceivableService->create($request->validated(), tenant());
 
-        if ($accountReceivable) {
-            return redirect()->route('tenant.finance.accounts-receivable.list')->with('success', 'Account receivable created successfully!');
+            return redirect()->route('tenant.finance.accounts-receivable.list', $request->query())->with('success', 'Conta a receber criada com sucesso');
+
+        } catch (\Throwable $th) {
+            return redirect()->route('tenant.finance.accounts-receivable.list', $request->query())->with('error', 'Erro ao tentar fazer cadastro!');
         }
-
-        return redirect()->route('tenant.finance.accounts-receivable.list')->with('error', 'Error creating account receivable!');
     }
 
     /**
@@ -149,19 +151,22 @@ class TenantAccountReceivableController extends Controller
     {
         $accountReceivable = $this->accountReceivableService->findById($id, tenant());
 
-        $financialCategories    = $this->financialCategoryService->findCategoryAccountsReceivable(tenant());
+        $financialCategories = $this->financialCategoryService->findCategoryAccountsReceivable(tenant());
         $financialSubcategories = $this->financialSubcategoryService->findAll(tenant());
-        $costs                  = Cost::select('id', 'type')->get();
+        $costs = Cost::select('id', 'type')->get();
 
-        $financialSubcategories = $financialSubcategories->map(function ($item) {
-            if ($item->active) {
-                return ['id' => $item->id, 'name' => $item->name];
-            }
-        });
+        $financialSubcategories = $financialSubcategories
+            ->filter(fn ($item) => $item->active)
+            ->map(fn ($item) => [
+                'id' => $item->id,
+                'name' => $item->name,
+                'financial_category_id' => $item->financial_category_id,
+            ])
+            ->values();
 
         $contacts = collect();
         Contact::select('id', 'name_corporatereason')
-            ->where('type', TypeContactEnum::CLIENT->value)
+            ->whereHas('client')
             ->chunkById(500, function ($chunk) use (&$contacts) {
                 $contacts = $contacts->merge($chunk);
             });
@@ -171,13 +176,13 @@ class TenantAccountReceivableController extends Controller
         $bankAccounts = $this->bankAccountService->findAll(tenant());
 
         return Inertia::render('tenant/finance/accounts-receivable/edit/Edit', [
-            'accountReceivable'      => $accountReceivable,
-            'financialCategories'    => $financialCategories,
+            'accountReceivable' => $accountReceivable,
+            'financialCategories' => $financialCategories,
             'financialSubcategories' => $financialSubcategories,
-            'costs'                  => $costs,
-            'contacts'               => $contacts,
-            'paymentConditions'      => $paymentConditions,
-            'bankAccounts'           => $bankAccounts,
+            'costs' => $costs,
+            'contacts' => $contacts,
+            'paymentConditions' => $paymentConditions,
+            'bankAccounts' => $bankAccounts,
         ]);
     }
 
@@ -189,10 +194,10 @@ class TenantAccountReceivableController extends Controller
         $accountReceivable = $this->accountReceivableService->update($id, $request->validated(), tenant());
 
         if ($accountReceivable) {
-            return redirect()->route('tenant.finance.accounts-receivable.edit', ['id' => $accountReceivable->id])->with('success', 'Account receivable updated successfully!');
+            return redirect()->route('tenant.finance.accounts-receivable.list', $request->query())->with('success', 'Conta a receber atualizada com sucesso!');
         }
 
-        return redirect()->route('tenant.finance.accounts-receivable.edit', ['id' => $accountReceivable->id])->with('error', 'Error updating account receivable!');
+        return redirect()->route('tenant.finance.accounts-receivable.edit', ['id' => $id] + $request->query())->with('error', 'Erro ao tentar atualizar a conta a receber!');
     }
 
     /**
@@ -203,10 +208,10 @@ class TenantAccountReceivableController extends Controller
         $accountReceivable = $this->accountReceivableService->delete($id, tenant());
 
         if ($accountReceivable) {
-            return redirect()->route('tenant.finance.accounts-receivable.list')->with('success', 'Account receivable deleted successfully!');
+            return redirect()->route('tenant.finance.accounts-receivable.list')->with('success', 'Conta a receber excluída com sucesso!');
         }
 
-        return redirect()->route('tenant.finance.accounts-receivable.list')->with('error', 'Error deleting account receivable!');
+        return redirect()->route('tenant.finance.accounts-receivable.list')->with('error', 'Erro ao tentar excluir a conta a receber!');
     }
 
     public function updateInstallments(Request $request)
@@ -216,10 +221,10 @@ class TenantAccountReceivableController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Installments updated successfully!',
+                'message' => 'Parcelas atualizadas com sucesso!',
             ], Response::HTTP_CREATED);
         } catch (\Throwable) {
-            throw new UpdateInstallmentException('Error updating installments!');
+            throw new UpdateInstallmentException('Erro ao tentar atualizar as parcelas!');
         }
     }
 
@@ -228,9 +233,9 @@ class TenantAccountReceivableController extends Controller
         $updatedInstallments = $this->accountReceivableService->updateInstallmentValue($request->validated(), tenant());
 
         if ($updatedInstallments) {
-            return response()->json(['status' => 200, 'message' => 'Installment value updated successfully!']);
+            return response()->json(['status' => 200, 'message' => 'Valor da parcela atualizada com sucesso!']);
         }
 
-        return response()->json(['status' => 500, 'message' => 'Error updating installment!']);
+        return response()->json(['status' => 500, 'message' => 'Erro ao tentar atualizar o valor da parcela!']);
     }
 }

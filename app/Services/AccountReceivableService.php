@@ -145,7 +145,7 @@ class AccountReceivableService extends AccountService
 
     public function findById(string $id, Tenant $tenant): AccountReceivable
     {
-        return $tenant->run(fn () => AccountReceivable::findOrFail($id));
+        return $tenant->run(fn () => AccountReceivable::with('installments')->findOrFail($id));
     }
 
     public function showById(string $id, Tenant $tenant): AccountReceivable
@@ -157,6 +157,8 @@ class AccountReceivableService extends AccountService
                 'financialCategory:id,name',
                 'financialSubcategory:id,name',
                 'cost:id,type',
+                'bankAccount:id,name',
+                'installments',
             ]
         )->findOrFail($id));
     }
