@@ -72,6 +72,7 @@ class TenantAccountPayableController extends Controller
             'start' => $request->input('inicio'),
             'end' => $request->input('fim'),
             'status' => $request->input('status'),
+            'search' => $request->input('search'),
             'categoryId' => $request->input('categoria_id'),
             'financialCategories' => $financialCategories,
             'searchedCategory' => $searchedCategory,

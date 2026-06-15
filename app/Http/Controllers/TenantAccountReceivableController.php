@@ -71,6 +71,8 @@ class TenantAccountReceivableController extends Controller
             'perPage' => $request->input('quantidade'),
             'start' => $request->input('inicio'),
             'end' => $request->input('fim'),
+            'status' => $request->input('status'),
+            'search' => $request->input('search'),
             'categoryId' => $request->input('categoria_id'),
             'financialCategories' => $financialCategories,
             'searchedCategory' => $searchedCategory,
