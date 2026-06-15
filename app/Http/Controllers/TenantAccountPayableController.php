@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Exceptions\InvalidFormatException;
 use App\Exceptions\UpdateInstallmentException;
+use App\Http\Requests\IndexAccountPayableRequest;
 use App\Http\Requests\StoreAccountPayableRequest;
 use App\Http\Requests\UpdateAccountPayableRequest;
 use App\Http\Requests\UpdateInstallmentValueRequest;
@@ -18,6 +20,7 @@ use App\Services\FinancialSubcategoryService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Inertia\Inertia;
+use Log;
 
 class TenantAccountPayableController extends Controller
 {
@@ -27,19 +30,20 @@ class TenantAccountPayableController extends Controller
         protected FinancialSubcategoryService $financialSubcategoryService,
         protected ContactService $contactService,
         protected BankAccountService $bankAccountService
-    ) {}
+    ) {
+    }
 
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request)
+    public function index(IndexAccountPayableRequest $request)
     {
         $period = $request->input('periodo', now()->format('Y-m'));
         $days = 7;
 
         $accountsPayable = $this->accountPayableService->findAll($request, $period, tenant());
 
-        if (! $request->has('conta_id')) {
+        if (!$request->has('conta_id')) {
             $bankAccount = BankAccount::select('id', 'name', 'bank', 'current_balance')->where('main_account', 1)->first();
         }
 
@@ -89,8 +93,8 @@ class TenantAccountPayableController extends Controller
         $costs = Cost::select('id', 'type')->get();
 
         $financialSubcategories = $financialSubcategories
-            ->filter(fn ($item) => $item->active)
-            ->map(fn ($item) => [
+            ->filter(fn($item) => $item->active)
+            ->map(fn($item) => [
                 'id' => $item->id,
                 'name' => $item->name,
                 'financial_category_id' => $item->financial_category_id,
@@ -129,7 +133,9 @@ class TenantAccountPayableController extends Controller
             return redirect()->route('tenant.finance.accounts-payable.list', $request->query())->with('success', 'Conta a pagar criada com sucesso');
 
         } catch (\Throwable $th) {
-            return redirect()->route('tenant.finance.accounts-payable.list', $request->query())->with('error', 'Erro ao tentar fazer cadastro!');
+            Log::error('Erro ao criar contas a pagar: ' . $th->getMessage());
+
+            return redirect()->back()->with('error', 'Erro ao criar contas a pagar!');
         }
     }
 
@@ -157,8 +163,8 @@ class TenantAccountPayableController extends Controller
         $costs = Cost::select('id', 'type')->get();
 
         $financialSubcategories = $financialSubcategories
-            ->filter(fn ($item) => $item->active)
-            ->map(fn ($item) => [
+            ->filter(fn($item) => $item->active)
+            ->map(fn($item) => [
                 'id' => $item->id,
                 'name' => $item->name,
                 'financial_category_id' => $item->financial_category_id,

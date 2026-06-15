@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Exceptions\UpdateInstallmentException;
+use App\Http\Requests\IndexAccountReceivableRequest;
 use App\Http\Requests\StoreAccountReceivableRequest;
 use App\Http\Requests\UpdateAccountReceivableRequest;
 use App\Http\Requests\UpdateInstallmentValueRequest;
@@ -18,6 +19,7 @@ use App\Services\FinancialSubcategoryService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Inertia\Inertia;
+use Log;
 
 class TenantAccountReceivableController extends Controller
 {
@@ -27,19 +29,20 @@ class TenantAccountReceivableController extends Controller
         protected FinancialSubcategoryService $financialSubcategoryService,
         protected ContactService $contactService,
         protected BankAccountService $bankAccountService
-    ) {}
+    ) {
+    }
 
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request)
+    public function index(IndexAccountReceivableRequest $request)
     {
         $period = $request->input('periodo', now()->format('Y-m'));
         $days = 7;
 
         $accountsReceivable = $this->accountReceivableService->findAll($request, $period, tenant());
 
-        if (! $request->has('conta_id')) {
+        if (!$request->has('conta_id')) {
             $bankAccount = BankAccount::select('id', 'name', 'bank', 'current_balance')->where('main_account', 1)->first();
         }
 
@@ -88,8 +91,8 @@ class TenantAccountReceivableController extends Controller
         $costs = Cost::select('id', 'type')->get();
 
         $financialSubcategories = $financialSubcategories
-            ->filter(fn ($item) => $item->active)
-            ->map(fn ($item) => [
+            ->filter(fn($item) => $item->active)
+            ->map(fn($item) => [
                 'id' => $item->id,
                 'name' => $item->name,
                 'financial_category_id' => $item->financial_category_id,
@@ -125,10 +128,12 @@ class TenantAccountReceivableController extends Controller
         try {
             $this->accountReceivableService->create($request->validated(), tenant());
 
-            return redirect()->route('tenant.finance.accounts-receivable.list', $request->query())->with('success', 'Conta a receber criada com sucesso');
+            return redirect()->route('tenant.finance.accounts-receivable.list')->with('success', 'Conta a receber criada com sucesso!');
 
         } catch (\Throwable $th) {
-            return redirect()->route('tenant.finance.accounts-receivable.list', $request->query())->with('error', 'Erro ao tentar fazer cadastro!');
+            Log::error('Erro ao criar contas a receber: ' . $th->getMessage());
+
+            return redirect()->back()->with('error', 'Erro ao criar contas a receber!');
         }
     }
 
@@ -156,8 +161,8 @@ class TenantAccountReceivableController extends Controller
         $costs = Cost::select('id', 'type')->get();
 
         $financialSubcategories = $financialSubcategories
-            ->filter(fn ($item) => $item->active)
-            ->map(fn ($item) => [
+            ->filter(fn($item) => $item->active)
+            ->map(fn($item) => [
                 'id' => $item->id,
                 'name' => $item->name,
                 'financial_category_id' => $item->financial_category_id,
@@ -194,10 +199,10 @@ class TenantAccountReceivableController extends Controller
         $accountReceivable = $this->accountReceivableService->update($id, $request->validated(), tenant());
 
         if ($accountReceivable) {
-            return redirect()->route('tenant.finance.accounts-receivable.list', $request->query())->with('success', 'Conta a receber atualizada com sucesso!');
+            return redirect()->route('tenant.finance.accounts-receivable.edit', ['id' => $accountReceivable->id])->with('success', 'Conta a receber atualizada com sucesso!');
         }
 
-        return redirect()->route('tenant.finance.accounts-receivable.edit', ['id' => $id] + $request->query())->with('error', 'Erro ao tentar atualizar a conta a receber!');
+        return redirect()->route('tenant.finance.accounts-receivable.edit', ['id' => $accountReceivable->id])->with('error', 'Erro ao tentar atualizar a conta a receber!');
     }
 
     /**
@@ -208,7 +213,7 @@ class TenantAccountReceivableController extends Controller
         $accountReceivable = $this->accountReceivableService->delete($id, tenant());
 
         if ($accountReceivable) {
-            return redirect()->route('tenant.finance.accounts-receivable.list')->with('success', 'Conta a receber excluída com sucesso!');
+            return redirect()->route('tenant.finance.accounts-receivable.list')->with('success', 'Conta a receber deletado com sucesso!');
         }
 
         return redirect()->route('tenant.finance.accounts-receivable.list')->with('error', 'Erro ao tentar excluir a conta a receber!');
@@ -236,6 +241,6 @@ class TenantAccountReceivableController extends Controller
             return response()->json(['status' => 200, 'message' => 'Valor da parcela atualizada com sucesso!']);
         }
 
-        return response()->json(['status' => 500, 'message' => 'Erro ao tentar atualizar o valor da parcela!']);
+        return response()->json(['status' => 500, 'message' => 'Erro ao atualizar parcela!']);
     }
 }
