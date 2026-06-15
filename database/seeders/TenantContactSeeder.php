@@ -15,7 +15,7 @@ class TenantContactSeeder extends Seeder
      */
     public function run(): void
     {
-        $contacts = Contact::factory()->count(3)->create();
+        $contacts = Contact::factory()->count(1000)->create();
 
         foreach ($contacts as $contact) {
             $contact->address()->save(
