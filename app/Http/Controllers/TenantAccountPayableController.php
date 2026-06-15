@@ -164,8 +164,13 @@ class TenantAccountPayableController extends Controller
         $financialSubcategories = $financialSubcategories
             ->filter(fn($item) => $item->active)
             ->map(fn($item) => [
+<<<<<<< HEAD
                 'id'                    => $item->id,
                 'name'                  => $item->name,
+=======
+                'id' => $item->id,
+                'name' => $item->name,
+>>>>>>> 236ae3e839e66bb9fe5eac7c1471c4ffda2f8d42
                 'financial_category_id' => $item->financial_category_id,
             ])
             ->values();
