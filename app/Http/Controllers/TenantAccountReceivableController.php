@@ -20,6 +20,7 @@ use App\Services\FinancialSubcategoryService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Inertia\Inertia;
+use Log;
 
 class TenantAccountReceivableController extends Controller
 {
@@ -122,13 +123,16 @@ class TenantAccountReceivableController extends Controller
      */
     public function store(StoreAccountReceivableRequest $request)
     {
-        $accountReceivable = $this->accountReceivableService->create($request->validated(), tenant());
+        try {
+            $this->accountReceivableService->create($request->validated(), tenant());
 
-        if ($accountReceivable) {
-            return redirect()->route('tenant.finance.accounts-receivable.list')->with('success', 'Account receivable created successfully!');
+            return redirect()->route('tenant.finance.accounts-receivable.list')->with('success', 'Conta a receber criada com sucesso!');
+
+        } catch (\Throwable $th) {
+            Log::error('Erro ao criar contas a receber: ' . $th->getMessage());
+
+            return redirect()->back()->with('error', 'Erro ao criar contas a receber!');
         }
-
-        return redirect()->route('tenant.finance.accounts-receivable.list')->with('error', 'Error creating account receivable!');
     }
 
     /**
@@ -190,10 +194,10 @@ class TenantAccountReceivableController extends Controller
         $accountReceivable = $this->accountReceivableService->update($id, $request->validated(), tenant());
 
         if ($accountReceivable) {
-            return redirect()->route('tenant.finance.accounts-receivable.edit', ['id' => $accountReceivable->id])->with('success', 'Account receivable updated successfully!');
+            return redirect()->route('tenant.finance.accounts-receivable.edit', ['id' => $accountReceivable->id])->with('success', 'Conta a receber atualizada com sucesso!');
         }
 
-        return redirect()->route('tenant.finance.accounts-receivable.edit', ['id' => $accountReceivable->id])->with('error', 'Error updating account receivable!');
+        return redirect()->route('tenant.finance.accounts-receivable.edit', ['id' => $accountReceivable->id])->with('error', 'Erro ao tentar atualizar a conta a receber!');
     }
 
     /**
@@ -204,10 +208,10 @@ class TenantAccountReceivableController extends Controller
         $accountReceivable = $this->accountReceivableService->delete($id, tenant());
 
         if ($accountReceivable) {
-            return redirect()->route('tenant.finance.accounts-receivable.list')->with('success', 'Account receivable deleted successfully!');
+            return redirect()->route('tenant.finance.accounts-receivable.list')->with('success', 'Conta a receber deletado com sucesso!');
         }
 
-        return redirect()->route('tenant.finance.accounts-receivable.list')->with('error', 'Error deleting account receivable!');
+        return redirect()->route('tenant.finance.accounts-receivable.list')->with('error', 'Erro ao tentar excluir a conta a receber!');
     }
 
     public function updateInstallments(Request $request)
@@ -217,10 +221,10 @@ class TenantAccountReceivableController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Installments updated successfully!',
+                'message' => 'Parcelas atualizadas com sucesso!',
             ], Response::HTTP_CREATED);
         } catch (\Throwable) {
-            throw new UpdateInstallmentException('Error updating installments!');
+            throw new UpdateInstallmentException('Erro ao tentar atualizar as parcelas!');
         }
     }
 
@@ -229,9 +233,9 @@ class TenantAccountReceivableController extends Controller
         $updatedInstallments = $this->accountReceivableService->updateInstallmentValue($request->validated(), tenant());
 
         if ($updatedInstallments) {
-            return response()->json(['status' => 200, 'message' => 'Installment value updated successfully!']);
+            return response()->json(['status' => 200, 'message' => 'Valor da parcela atualizada com sucesso!']);
         }
 
-        return response()->json(['status' => 500, 'message' => 'Error updating installment!']);
+        return response()->json(['status' => 500, 'message' => 'Erro ao atualizar parcela!']);
     }
 }
