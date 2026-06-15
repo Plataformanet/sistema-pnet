@@ -2,7 +2,8 @@
 
 namespace App\Http\Requests;
 
-class UpdateAccountPayableRequest extends StoreAccountPayableRequest
+
+class IndexAccountReceivableRequest extends IndexAccountPayableRequest
 {
     public function rules(): array
     {

@@ -24,53 +24,15 @@ class AccountPayableService extends AccountService
 
                 $accountPayable = AccountPayable::create($data);
 
-                if (! empty($data['installments'])) {
-                    foreach ($data['installments'] as $idx => $inst) {
-                        $accountPayable->installments()->create([
-                            'installment_number' => $idx + 1,
-                            'value' => $inst['value'],
-                            'description' => $data['description'],
-                            'due_date' => $inst['due_date'],
-                            'payment_date' => $inst['due_date'],
-                            'status' => $data['status'] ?? AccountsEnum::OPEN->value,
-                        ]);
-                    }
-                } else {
-                    $startDate = DateTime::createFromFormat('Y-m-d', $data['due_date']);
-                    $dayOriginal = (int) $startDate->format('d');
-                    $year = (int) $startDate->format('Y');
-                    $month = (int) $startDate->format('m');
-
-                    $count = 0;
-                    while ($count < $data['total_installments']) {
-
-                        // Calcula mês e ano ajustados
-                        $monthCurrent = $month + $count;
-                        $yearCurrent = $year + intdiv($monthCurrent - 1, 12);
-                        $monthAdjust = (($monthCurrent - 1) % 12) + 1;
-
-                        // Cria nova data
-                        $tempDate = new DateTime;
-                        $tempDate->setDate($yearCurrent, $monthAdjust, 1);
-
-                        $lastDayOfMonth = (int) $tempDate->format('t');
-                        $dayAdjust = min($dayOriginal, $lastDayOfMonth);
-
-                        $tempDate->setDate($yearCurrent, $monthAdjust, $dayAdjust);
-
-                        $dueDate = $tempDate->format('Y-m-d');
-
-                        $accountPayable->installments()->create([
-                            'installment_number' => $data['payment_condition'] === 'a-vista' ? 1 : $count + 1,
-                            'value' => $data['value'],
-                            'description' => $data['description'],
-                            'due_date' => $dueDate,
-                            'payment_date' => $dueDate,
-                            'status' => $data['status'] ?? AccountsEnum::OPEN->value,
-                        ]);
-
-                        $count++;
-                    }
+                foreach ($data['installments'] as $idx => $inst) {
+                    $accountPayable->installments()->create([
+                        'installment_number' => $idx + 1,
+                        'value' => $inst['value'],
+                        'description' => $data['description'],
+                        'due_date' => $inst['due_date'],
+                        'payment_date' => $inst['due_date'],
+                        'status' => $data['status'] ?? AccountsEnum::OPEN->value,
+                    ]);
                 }
 
                 if ($data['status'] === AccountsEnum::PAID->value) {

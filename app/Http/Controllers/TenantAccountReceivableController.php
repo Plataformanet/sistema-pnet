@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Enums\TypeContactEnum;
 use App\Exceptions\UpdateInstallmentException;
+use App\Http\Requests\IndexAccountReceivableRequest;
 use App\Http\Requests\StoreAccountReceivableRequest;
 use App\Http\Requests\UpdateAccountReceivableRequest;
 use App\Http\Requests\UpdateInstallmentValueRequest;
@@ -34,7 +35,7 @@ class TenantAccountReceivableController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request)
+    public function index(IndexAccountReceivableRequest $request)
     {
         $period = $request->input('periodo', now()->format('Y-m'));
         $days   = 7;
