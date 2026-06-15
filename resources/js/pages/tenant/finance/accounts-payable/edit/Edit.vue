@@ -54,8 +54,8 @@ const form = useForm({
     bank_account_id: props.accountPayable.bank_account_id
         ? String(props.accountPayable.bank_account_id)
         : "",
-    financial_contact_id: props.accountPayable.financial_contact_id
-        ? String(props.accountPayable.financial_contact_id)
+    financial_contact_id: props.accountPayable.financial_contact?.contact_id
+        ? String(props.accountPayable.financial_contact.contact_id)
         : "",
     description: props.accountPayable.description || "",
     total:
@@ -90,6 +90,8 @@ const form = useForm({
         "open",
     installments: [] as any[], // individual installments payload (will be populated on form submit if needed)
 });
+
+const initialContact = props.accountPayable.financial_contact?.contact || null;
 
 const backUrl = ref(route("tenant.finance.accounts-payable.list"));
 const submitUrl = ref(
@@ -168,6 +170,7 @@ function submit() {
             :payment-conditions="props.paymentConditions"
             :bank-accounts="props.bankAccounts"
             :account-payable="props.accountPayable"
+            :initial-contact="initialContact"
             @submit="submit"
             submitText="Atualizar Lançamento"
         />

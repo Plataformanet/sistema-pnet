@@ -142,30 +142,30 @@ Route::middleware([
         Route::get('/finance/accounts-payable/list', [TenantAccountPayableController::class, 'index'])->name('tenant.finance.accounts-payable.list')->middleware('permission:finance.accounts_payable.view');
         Route::get('/finance/accounts-payable/create', [TenantAccountPayableController::class, 'create'])->name('tenant.finance.accounts-payable.create')->middleware('permission:finance.accounts_payable.create');
         Route::post('/finance/accounts-payable/store', [TenantAccountPayableController::class, 'store'])->name('tenant.finance.accounts-payable.store')->middleware('permission:finance.accounts_payable.create');
+        Route::get('/finance/accounts-payable/contacts', [TenantAccountPayableController::class, 'searchContact'])->name('tenant.finance.accounts-payable.search-contact')->middleware('permission:finance.accounts_payable.view');
         Route::get('/finance/accounts-payable/{id}', [TenantAccountPayableController::class, 'show'])->name('tenant.finance.accounts-payable.show')->middleware('permission:finance.accounts_payable.view');
         Route::get('/finance/accounts-payable/{id}/edit', [TenantAccountPayableController::class, 'edit'])->name('tenant.finance.accounts-payable.edit')->middleware('permission:finance.accounts_payable.edit');
         Route::put('/finance/accounts-payable/{id}', [TenantAccountPayableController::class, 'update'])->name('tenant.finance.accounts-payable.update')->middleware('permission:finance.accounts_payable.edit');
         Route::delete('/finance/accounts-payable/{id}', [TenantAccountPayableController::class, 'destroy'])->name('tenant.finance.accounts-payable.destroy')->middleware('permission:finance.accounts_payable.delete');
         Route::patch('/finance/accounts-payable/installments/update', [TenantAccountPayableController::class, 'updateInstallments'])->name('tenant.finance.accounts-payable.installments.update')->middleware('permission:finance.accounts_payable.edit');
         Route::patch('/finance/accounts-payable/installments/value', [TenantAccountPayableController::class, 'updateInstallmentValue'])->name('tenant.finance.accounts-payable.installments.value')->middleware('permission:finance.accounts_payable.edit');
-        Route::get('/finance/accounts-payable/contacts', [TenantAccountPayableController::class, 'searchContact'])->name('tenant.finance.accounts-payable.search-contact')->middleware('permission:finance.accounts_payable.view');
 
         // Contas a Receber
         Route::get('/finance/accounts-receivable/list', [TenantAccountReceivableController::class, 'index'])->name('tenant.finance.accounts-receivable.list')->middleware('permission:finance.accounts_receivable.view');
         Route::get('/finance/accounts-receivable/create', [TenantAccountReceivableController::class, 'create'])->name('tenant.finance.accounts-receivable.create')->middleware('permission:finance.accounts_receivable.create');
         Route::post('/finance/accounts-receivable/store', [TenantAccountReceivableController::class, 'store'])->name('tenant.finance.accounts-receivable.store')->middleware('permission:finance.accounts_receivable.create');
+        Route::get('/finance/accounts-receivable/contacts', [TenantAccountReceivableController::class, 'searchContact'])->name('tenant.finance.accounts-receivable.search-contact')->middleware('permission:finance.accounts_receivable.view');
         Route::get('/finance/accounts-receivable/{id}', [TenantAccountReceivableController::class, 'show'])->name('tenant.finance.accounts-receivable.show')->middleware('permission:finance.accounts_receivable.view');
         Route::get('/finance/accounts-receivable/{id}/edit', [TenantAccountReceivableController::class, 'edit'])->name('tenant.finance.accounts-receivable.edit')->middleware('permission:finance.accounts_receivable.edit');
         Route::put('/finance/accounts-receivable/{id}', [TenantAccountReceivableController::class, 'update'])->name('tenant.finance.accounts-receivable.update')->middleware('permission:finance.accounts_receivable.edit');
         Route::delete('/finance/accounts-receivable/{id}', [TenantAccountReceivableController::class, 'destroy'])->name('tenant.finance.accounts-receivable.destroy')->middleware('permission:finance.accounts_receivable.delete');
         Route::patch('/finance/accounts-receivable/installments/update', [TenantAccountReceivableController::class, 'updateInstallments'])->name('tenant.finance.accounts-receivable.installments.update')->middleware('permission:finance.accounts_receivable.edit');
         Route::patch('/finance/accounts-receivable/installments/value', [TenantAccountReceivableController::class, 'updateInstallmentValue'])->name('tenant.finance.accounts-receivable.installments.value')->middleware('permission:finance.accounts_receivable.edit');
-        Route::get('/finance/accounts-receivable/contacts', [TenantAccountReceivableController::class, 'searchContact'])->name('tenant.finance.accounts-receivable.search-contact')->middleware('permission:finance.accounts_receivable.view');
 
         // Fluxo de Caixa
         Route::get('/finance/cash-flow', TenantCashFlowController::class)->name('tenant.finance.cash-flow.index')->middleware('permission:finance.cash_flow.view');
 
-        //Fluxo de Gastos
+        // Fluxo de Gastos
         Route::get('/finance/spending-flow', [TenantSpendingFlowController::class, 'index'])->name('tenant.finance.spending-flow.index')->middleware('permission:finance.spending_flow.view');
         Route::get('/finance/spending-flow/pdf', [TenantSpendingFlowController::class, 'geraPDF'])->name('tenant.finance.spending-flow.pdf')->middleware('permission:finance.spending_flow.view');
 
