@@ -859,12 +859,6 @@ async function executePay() {
                             class="flex items-center gap-1 text-xs font-bold tracking-wider text-muted-foreground uppercase"
                         >
                             A vencer (R$)
-                            <span
-                                class="cursor-help text-muted-foreground/60"
-                                title="Próximos 7 dias"
-                            >
-                                <HelpCircle class="h-3 w-3" />
-                            </span>
                         </p>
                         <p class="text-3xl font-extrabold text-foreground">
                             {{ formatMoney(props.totalToDue) }}

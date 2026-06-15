@@ -247,28 +247,24 @@ abstract class AccountService
 
     public function totalToDue($request, int $days, string $period, Tenant $tenant, ?int $bankAccountId = null)
     {
-        return $tenant->run(function () use ($request, $days, $period, $bankAccountId) {
+        return $tenant->run(function () use ($request, $period, $bankAccountId) {
             $statusOpen = AccountsEnum::OPEN->value;
+            $today = Carbon::today();
 
             if ($request->query('inicio') && $request->query('fim')) {
-                $intervalStart = Carbon::parse($request->query('inicio'))->startOfDay();
-                $intervalEnd = Carbon::parse($request->query('fim'))->endOfDay();
-                $today = now()->startOfDay();
-
-                if ($today->lt($intervalStart) || $today->gt($intervalEnd)) {
-                    return 0;
-                }
-
-                $start = $today;
-                $end = $today->copy()->addDays($days);
+                $start = Carbon::parse($request->query('inicio'))->startOfDay();
+                $end = Carbon::parse($request->query('fim'))->endOfDay();
             } else {
-                $start = Carbon::today();
-                $end = Carbon::today()->addDays($days);
-                $monthYear = Carbon::createFromFormat('Y-m', $period);
+                $start = Carbon::createFromFormat('Y-m', $period)->startOfMonth();
+                $end = Carbon::createFromFormat('Y-m', $period)->endOfMonth();
+            }
 
-                if ($monthYear->format('Y-m') !== now()->format('Y-m')) {
-                    return 0;
-                }
+            // We only want outstanding items, so due_date must be >= today
+            $start = $today->max($start);
+
+            // If start is after end, return 0
+            if ($start->gt($end)) {
+                return 0;
             }
 
             $query = Installment::where(function (Builder $query) use ($request) {
