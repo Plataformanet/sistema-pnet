@@ -57,7 +57,7 @@ const mockPermissions: Permission[] = [
     { name: 'registrations.employees.edit', display_name: 'Funcionários (Editar)' },
     { name: 'registrations.employees.create', display_name: 'Funcionários (Criar)' },
     { name: 'registrations.employees.delete', display_name: 'Funcionários (Excluir)' },
-    
+
     // Vendas
     { name: 'sales.sales.view', display_name: 'Vendas (Visualizar)' },
     { name: 'sales.sales.edit', display_name: 'Vendas (Editar)' },
@@ -94,7 +94,7 @@ const mockPermissions: Permission[] = [
     { name: 'finance.categories.create', display_name: 'Categorias Financeiras (Criar)' },
     { name: 'finance.categories.delete', display_name: 'Categorias Financeiras (Excluir)' },
     { name: 'finance.cash_flow.view', display_name: 'Fluxo de Caixa (Visualizar)' },
-    { name: 'finance.expenses_flow.view', display_name: 'Fluxo de Despesas (Visualizar)' },
+    { name: 'finance.spending_flow.view', display_name: 'Fluxo de Despesas (Visualizar)' },
     { name: 'finance.billing.view', display_name: 'Faturamento (Visualizar)' },
 
     // Documentações
@@ -146,8 +146,8 @@ const effectivePermissions = computed<Permission[]>(() => {
 
 // Determina o mapeamento ativo de cargos com permissões (recebido ou mockado como fallback)
 const effectiveRolesWithPermissions = computed<Record<string, string[]>>(() => {
-    return props.rolesWithPermissions && Object.keys(props.rolesWithPermissions).length > 0 
-        ? props.rolesWithPermissions 
+    return props.rolesWithPermissions && Object.keys(props.rolesWithPermissions).length > 0
+        ? props.rolesWithPermissions
         : mockRolesWithPermissions;
 });
 
@@ -203,7 +203,7 @@ const isChecked = (permissionName: string) => {
 
 function togglePermission(name: string) {
     if (isInherited(name)) return;
-    
+
     const permissionsList = props.form.permissions as string[];
     const index = permissionsList.indexOf(name);
     if (index === -1) {
