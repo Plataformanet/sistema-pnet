@@ -446,3 +446,27 @@ Vue components must have a single root element.
 - IMPORTANT: Activate `inertia-vue-development` when working with Inertia Vue client-side patterns.
 
 </laravel-boost-guidelines>
+
+
+## Code Review
+
+For any code review, review, audit, refactor, or performance/quality
+improvement request in this Laravel project, **use the `laravel-code-review`
+skill**. This applies even to short prompts like "revise este código",
+"quais melhorias podem ser feitas aqui?", "existe algum n+1 aqui?", ou "isto está limpo?".
+
+Before forming opinions, **ground the review in the real state of the
+application using the Laravel Boost MCP tools** — never guess:
+
+- Confirm PHP/Laravel versions, packages, and models (Application Info).
+- Verify the schema and which indexes actually exist before claiming a
+  query is slow or an index is missing (Database Schema).
+- Run `EXPLAIN`/queries to confirm real bottlenecks (Database Query).
+- Check logs and the last error to anchor runtime findings
+  (Read Log Entries / Last Error).
+- Confirm the version-appropriate idiom in the official docs (Search Docs)
+  instead of inventing method signatures.
+
+No performance claim goes into the review without being verified. Deliver
+the review in pt-BR, ordered by severity, with `file:line`, a concrete fix
+in code (before → after), and prioritized next steps.

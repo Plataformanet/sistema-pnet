@@ -26,54 +26,56 @@ class TenantCashFlowController extends Controller
 
         $period = $request->input('period', now()->format('Y-m'));
 
-        if (! $request->has('account_id')) {
+        $accountId = $request->query('account_id');
+
+        // "all" => todas as contas combinadas (sem filtro de banco).
+        // Conta específica => filtra por ela. Primeiro acesso (sem parâmetro) => conta principal.
+        if ($accountId === 'all') {
+            $bankAccount = null;
+        } elseif ($accountId !== null) {
+            $bankAccount = BankAccount::select('id', 'name', 'bank', 'current_balance')->where('id', $accountId)->first();
+        } else {
             $bankAccount = BankAccount::select('id', 'name', 'bank', 'current_balance')->where('main_account', 1)->first();
         }
 
-        if ($request->has('account_id')) {
-            $bankAccount = BankAccount::select('id', 'name', 'bank', 'current_balance')->where('id', $request->query('account_id'))->first();
-        }
-
-        $totalPeriod = $this->cashFlowService->totalPeriod($request, $period, tenant(), $bankAccount?->id);
         $expenses = $this->cashFlowService->expenses($request, $period, tenant(), $bankAccount?->id);
         $revenues = $this->cashFlowService->revenues($request, $period, tenant(), $bankAccount?->id);
+        $totalPeriod = $revenues - $expenses;
 
         $financialCategories = $this->financialCategoryService->findAll(tenant());
 
-        $accounts = $this->cashFlowService->findAll($request, $period, tenant());
+        $accounts = $this->cashFlowService->findAll($request, $period, tenant(), $bankAccount?->id);
 
         $bankAccounts = BankAccount::select('id', 'name', 'bank', 'current_balance', 'main_account')->get();
 
-        $payableAccounts = [];
-        $receivableAccounts = [];
+        // Uma única consulta carrega todas as parcelas em aberto/vencidas do período
+        // (todas as contas), evitando uma query por conta bancária (N+1).
+        $openInstallments = $this->cashFlowService->calculateAccounts($request, $period, tenant());
 
-        $bankAccounts->map(function ($bankAccount, $key) use ($request, $period, &$payableAccounts, &$receivableAccounts) {
+        $payablesByAccount = [];
+        $receivablesByAccount = [];
 
-            $calculatedAccounts = $this->cashFlowService->calculateAccounts($request, $period, tenant(), $bankAccount->id);
+        foreach ($openInstallments as $installment) {
+            $installmentBankAccountId = $installment->installmentable?->bank_account_id;
 
-            $calculatedAccounts->map(function ($installment) use ($key, &$payableAccounts, &$receivableAccounts) {
-                if ($installment->installmentable_type === AccountPayable::class) {
-                    $payableAccounts[$key][] = $installment->value;
-                }
-                if ($installment->installmentable_type === AccountReceivable::class) {
-                    $receivableAccounts[$key][] = $installment->value;
-                }
-            });
-        });
+            if ($installmentBankAccountId === null) {
+                continue;
+            }
 
-        foreach ($payableAccounts as $key => $payable) {
-            $payableAccounts[$key] = array_sum($payable);
+            if ($installment->installmentable_type === AccountPayable::class) {
+                $payablesByAccount[$installmentBankAccountId] = ($payablesByAccount[$installmentBankAccountId] ?? 0) + $installment->value;
+            }
+
+            if ($installment->installmentable_type === AccountReceivable::class) {
+                $receivablesByAccount[$installmentBankAccountId] = ($receivablesByAccount[$installmentBankAccountId] ?? 0) + $installment->value;
+            }
         }
 
-        foreach ($receivableAccounts as $key => $receivable) {
-            $receivableAccounts[$key] = array_sum($receivable);
-        }
-
-        $accountsResult = $bankAccounts->map(function ($bankAccount, $key) use (&$payableAccounts, &$receivableAccounts) {
-            return ($receivableAccounts[$key] ?? 0) - ($payableAccounts[$key] ?? 0);
+        $accountsResult = $bankAccounts->map(function ($bankAccount) use ($payablesByAccount, $receivablesByAccount) {
+            return ($receivablesByAccount[$bankAccount->id] ?? 0) - ($payablesByAccount[$bankAccount->id] ?? 0);
         });
 
-        $totalOpen = array_sum($accountsResult->toArray());
+        $totalOpen = $accountsResult->sum();
 
         $totalBankAccounts = BankAccount::sum('current_balance');
 
@@ -91,6 +93,7 @@ class TenantCashFlowController extends Controller
             'start' => $request->input('start'),
             'end' => $request->input('end'),
             'categoryId' => $request->input('category_id'),
+            'accountId' => $accountId,
             'financialCategories' => $financialCategories,
             'type' => $type,
             'bankAccounts' => $bankAccounts,

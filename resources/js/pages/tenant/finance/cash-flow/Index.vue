@@ -57,6 +57,7 @@ const props = defineProps<{
     start?: string;
     end?: string;
     categoryId?: string | number;
+    accountId?: string | number | null;
     financialCategories: FinanceCategory[];
     type: string;
     bankAccounts: BankAccount[];
@@ -265,7 +266,7 @@ function reload(extraParams = {}) {
     const params: any = {
         period: props.period,
         quantity: props.perPage || 10,
-        account_id: props.bankAccount?.id || undefined,
+        account_id: props.accountId ?? undefined,
         category_id: props.categoryId || undefined,
         status: currentStatus.value || undefined,
         start: props.start || undefined,
@@ -658,11 +659,7 @@ function getStatusBadge(status: string) {
                                         : 'all'
                                 "
                                 @update:model-value="
-                                    (val) =>
-                                        reload({
-                                            account_id:
-                                                val === 'all' ? null : val,
-                                        })
+                                    (val) => reload({ account_id: val })
                                 "
                             >
                                 <SelectTrigger
