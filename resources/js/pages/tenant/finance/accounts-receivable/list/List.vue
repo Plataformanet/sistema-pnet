@@ -160,6 +160,26 @@ watch(
     },
 );
 
+watch(customStart, (newStartVal) => {
+    if (newStartVal && customEnd.value) {
+        const start = parseDate(newStartVal);
+        const end = parseDate(customEnd.value);
+        if (start.compare(end) > 0) {
+            customEnd.value = newStartVal;
+        }
+    }
+});
+
+watch(customEnd, (newEndVal) => {
+    if (newEndVal && customStart.value) {
+        const start = parseDate(customStart.value);
+        const end = parseDate(newEndVal);
+        if (end.compare(start) < 0) {
+            customStart.value = newEndVal;
+        }
+    }
+});
+
 function formatDisplayDate(dateStr: string) {
     if (!dateStr) return "";
     const parts = dateStr.split("-");
@@ -214,6 +234,8 @@ interface InstallmentRow {
     value: number;
     total: number;
     status: string;
+    category_name?: string;
+    subcategory_name?: string;
     raw_ar: AccountReceivable;
     raw_inst: any;
 }
@@ -240,6 +262,8 @@ const installmentsList = computed<InstallmentRow[]>(() => {
                     value: inst.value,
                     total: ar.total,
                     status: inst.status,
+                    category_name: ar.financial_category?.name || "-",
+                    subcategory_name: ar.financial_subcategory?.name || "",
                     raw_ar: ar,
                     raw_inst: inst,
                 });
@@ -259,6 +283,8 @@ const installmentsList = computed<InstallmentRow[]>(() => {
                 value: ar.total,
                 total: ar.total,
                 status: ar.status || "open",
+                category_name: ar.financial_category?.name || "-",
+                subcategory_name: ar.financial_subcategory?.name || "",
                 raw_ar: ar,
                 raw_inst: null,
             });
@@ -568,6 +594,7 @@ async function executePay() {
                                             v-model:placeholder="
                                                 startCalendarPlaceholder
                                             "
+                                            :max-value="endCalendarDate"
                                             locale="pt-BR"
                                             initial-focus
                                         />
@@ -610,6 +637,7 @@ async function executePay() {
                                             v-model:placeholder="
                                                 endCalendarPlaceholder
                                             "
+                                            :min-value="startCalendarDate"
                                             locale="pt-BR"
                                             initial-focus
                                         />
@@ -931,6 +959,9 @@ async function executePay() {
                             <TableHead class="w-32 font-semibold"
                                 >Parcelamento</TableHead
                             >
+                            <TableHead class="font-semibold"
+                                >Categoria/Subcategoria</TableHead
+                            >
                             <TableHead class="min-w-[200px] font-semibold"
                                 >Descrição</TableHead
                             >
@@ -972,6 +1003,12 @@ async function executePay() {
                                 <TableCell class="text-muted-foreground">
                                     {{ item.installment_number }} /
                                     {{ item.total_installments }}
+                                </TableCell>
+                                <TableCell class="max-w-[200px] truncate">
+                                    <span class="font-medium text-foreground">{{ item.category_name }}</span>
+                                    <span v-if="item.subcategory_name" class="block text-xs text-muted-foreground">
+                                        {{ item.subcategory_name }}
+                                    </span>
                                 </TableCell>
                                 <TableCell
                                     class="max-w-[300px] truncate text-muted-foreground"
@@ -1016,7 +1053,7 @@ async function executePay() {
                         <template v-else>
                             <TableRow>
                                 <TableCell
-                                    colspan="10"
+                                    colspan="11"
                                     class="h-28 text-center text-muted-foreground"
                                 >
                                     Nenhum lançamento de contas a receber

@@ -160,6 +160,26 @@ watch(
     },
 );
 
+watch(customStart, (newStartVal) => {
+    if (newStartVal && customEnd.value) {
+        const start = parseDate(newStartVal);
+        const end = parseDate(customEnd.value);
+        if (start.compare(end) > 0) {
+            customEnd.value = newStartVal;
+        }
+    }
+});
+
+watch(customEnd, (newEndVal) => {
+    if (newEndVal && customStart.value) {
+        const start = parseDate(customStart.value);
+        const end = parseDate(newEndVal);
+        if (end.compare(start) < 0) {
+            customStart.value = newEndVal;
+        }
+    }
+});
+
 function formatDisplayDate(dateStr: string) {
     if (!dateStr) return "";
     const parts = dateStr.split("-");
@@ -566,6 +586,7 @@ async function executePay() {
                                             v-model:placeholder="
                                                 startCalendarPlaceholder
                                             "
+                                            :max-value="endCalendarDate"
                                             locale="pt-BR"
                                             initial-focus
                                         />
@@ -608,6 +629,7 @@ async function executePay() {
                                             v-model:placeholder="
                                                 endCalendarPlaceholder
                                             "
+                                            :min-value="startCalendarDate"
                                             locale="pt-BR"
                                             initial-focus
                                         />
