@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, watch } from "vue";
-import { Head, Link, router } from "@inertiajs/vue3";
+import { Head, Link, router, usePage } from "@inertiajs/vue3";
 import TenantLayout from "@/layouts/tenant-layout/TenantLayout.vue";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -99,12 +99,9 @@ const formattedPeriodLabel = computed(() => {
 });
 
 const currentStatus = computed(() => {
-    if (typeof window !== "undefined") {
-        return (
-            new URLSearchParams(window.location.search).get("status") || null
-        );
-    }
-    return null;
+    const url = usePage().url;
+    const search = url.includes("?") ? url.split("?")[1] : "";
+    return new URLSearchParams(search).get("status") || null;
 });
 
 const getInitialFilterMode = () => {

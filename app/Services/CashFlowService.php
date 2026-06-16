@@ -45,18 +45,13 @@ class CashFlowService
             // Query ContaAReceber
             $receivableAccounts = $this->getAccounts(AccountReceivable::class, $start, $end, $request, $bankAccountId);
 
-            $accounts = collect();
+            $status = $request->query('status');
 
-            if ($request->query('status') === 'expenses') {
+            if ($status === 'expenses') {
                 $accounts = $payableAccounts;
-            }
-
-            if ($request->query('status') === 'revenues') {
+            } elseif ($status === 'revenues') {
                 $accounts = $receivableAccounts;
-            }
-
-            // Junta tudo em uma Collection
-            if (! $request->has('status')) {
+            } else {
                 $accounts = $payableAccounts->concat($receivableAccounts);
             }
 
