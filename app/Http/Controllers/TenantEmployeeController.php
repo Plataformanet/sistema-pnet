@@ -15,8 +15,7 @@ class TenantEmployeeController extends Controller
     public function __construct(
         protected ContactService $contactService,
         protected EmployeesService $employeesService,
-    ) {
-    }
+    ) {}
 
     public function index()
     {
@@ -38,7 +37,7 @@ class TenantEmployeeController extends Controller
 
             $contact = Contact::where('cpf_cnpj', $request->validated('cpf_cnpj'))->first();
 
-            if (!$contact) {
+            if (! $contact) {
                 $contact = $this->contactService->store($request->validated(), tenant());
             }
 
@@ -47,7 +46,7 @@ class TenantEmployeeController extends Controller
             return redirect()->route('tenant.registrations.employees.list')->with('success', 'Funcionário criado com sucesso!');
 
         } catch (\Throwable $th) {
-            Log::error('Erro ao criar funcionário: ' . $th->getMessage());
+            Log::error('Erro ao criar funcionário: '.$th->getMessage());
 
             return redirect()->back()->with('error', 'Erro ao criar funcionário!');
         }
@@ -80,7 +79,7 @@ class TenantEmployeeController extends Controller
 
             return redirect()->route('tenant.registrations.employees.list')->with('success', 'Funcionário atualizado com sucesso!');
         } catch (\Throwable $th) {
-            Log::error('Erro ao atualizar funcionário: ' . $th->getMessage());
+            Log::error('Erro ao atualizar funcionário: '.$th->getMessage());
 
             return redirect()->back()->with('error', 'Erro ao atualizar funcionário!');
         }
@@ -93,9 +92,24 @@ class TenantEmployeeController extends Controller
 
             return redirect()->route('tenant.registrations.employees.list')->with('success', 'Funcionário excluído com sucesso!');
         } catch (\Throwable $th) {
-            Log::error('Erro ao excluir funcionário: ' . $th->getMessage());
+            Log::error('Erro ao excluir funcionário: '.$th->getMessage());
 
             return redirect()->back()->with('error', 'Erro ao excluir funcionário!');
+        }
+    }
+
+    public function getContactByCpfCnpj(string $cpfCnpj)
+    {
+        try {
+            $contact = $this->contactService->getContactByCpfCnpj($cpfCnpj, tenant());
+
+            return response()->json($contact);
+        } catch (\Throwable $th) {
+            Log::error('Erro ao buscar contato: '.$th->getMessage());
+
+            return response()->json([
+                'message' => 'Erro ao buscar contato!',
+            ], 500);
         }
     }
 }
