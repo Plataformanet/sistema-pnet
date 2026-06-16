@@ -470,3 +470,9 @@ application using the Laravel Boost MCP tools** — never guess:
 No performance claim goes into the review without being verified. Deliver
 the review in pt-BR, ordered by severity, with `file:line`, a concrete fix
 in code (before → after), and prioritized next steps.
+
+## Instructions
+
+- Always ask for permission before running git commands.
+- Always ask for permission before running any command.
+- Never make any changes without permission.
