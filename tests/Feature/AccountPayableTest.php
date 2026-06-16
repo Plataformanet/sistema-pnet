@@ -2,6 +2,7 @@
 
 use App\Enums\AccountsEnum;
 use App\Enums\TypeContactEnum;
+use App\Http\Requests\UpdateAccountPayableRequest;
 use App\Models\BankAccount;
 use App\Models\Contact;
 use App\Models\FinancialCategory;
@@ -9,6 +10,7 @@ use App\Models\FinancialContact;
 use App\Models\FinancialSubcategory;
 use App\Services\AccountPayableService;
 use App\Services\AccountReceivableService;
+use Illuminate\Support\Facades\Validator;
 
 beforeEach(function () {
     $this->tenant = sharedTenant();
@@ -64,6 +66,9 @@ function payablePayload(array $overrides = []): array
         'value' => 50000,
         'due_date' => '2026-06-12',
         'status' => AccountsEnum::OPEN->value,
+        'installments' => [
+            ['value' => 50000, 'due_date' => '2026-06-12'],
+        ],
     ], $overrides);
 }
 
@@ -117,9 +122,102 @@ test('generates one installment per period for parcelado', function () {
     $account = app(AccountPayableService::class)->create(payablePayload([
         'payment_condition' => '3',
         'total_installments' => 3,
+        'total' => 90000,
+        'installments' => [
+            ['value' => 30000, 'due_date' => '2026-06-12'],
+            ['value' => 30000, 'due_date' => '2026-07-12'],
+            ['value' => 30000, 'due_date' => '2026-08-12'],
+        ],
     ]), $this->tenant);
 
     $this->tenant->run(function () use ($account) {
         expect($account->installments()->count())->toBe(3);
+    });
+});
+
+test('validated() keeps installment_id for each installment', function () {
+    $payload = payablePayload([
+        'total' => 100000,
+        'payment_condition' => '2',
+        'total_installments' => 2,
+        'installments' => [
+            ['installment_id' => 10, 'value' => 60000, 'due_date' => '2026-06-12'],
+            ['installment_id' => 11, 'value' => 40000, 'due_date' => '2026-07-12'],
+        ],
+    ]);
+
+    $validated = Validator::make($payload, (new UpdateAccountPayableRequest)->rules())->validate();
+
+    expect($validated['installments'][0])->toHaveKey('installment_id')
+        ->and($validated['installments'][0]['installment_id'])->toBe(10)
+        ->and($validated['installments'][1]['installment_id'])->toBe(11);
+});
+
+test('update edits each installment by installment_id when total is unchanged', function () {
+    $service = app(AccountPayableService::class);
+
+    $account = $service->create(payablePayload([
+        'total' => 100000,
+        'payment_condition' => '2',
+        'total_installments' => 2,
+        'installments' => [
+            ['value' => 50000, 'due_date' => '2026-06-12'],
+            ['value' => 50000, 'due_date' => '2026-07-12'],
+        ],
+    ]), $this->tenant);
+
+    $installments = $this->tenant->run(
+        fn () => $account->installments()->orderBy('installment_number')->get()
+    );
+
+    $service->update($account->id, payablePayload([
+        'total' => 100000,
+        'payment_condition' => '2',
+        'total_installments' => 2,
+        'installments' => [
+            ['installment_id' => $installments[0]->id, 'value' => 70000, 'due_date' => '2026-06-15'],
+            ['installment_id' => $installments[1]->id, 'value' => 30000, 'due_date' => '2026-07-20'],
+        ],
+    ]), $this->tenant);
+
+    $this->tenant->run(function () use ($installments) {
+        $this->assertDatabaseHas('installments', [
+            'id' => $installments[0]->id,
+            'value' => 70000,
+            'due_date' => '2026-06-15',
+        ]);
+
+        $this->assertDatabaseHas('installments', [
+            'id' => $installments[1]->id,
+            'value' => 30000,
+            'due_date' => '2026-07-20',
+        ]);
+    });
+});
+
+test('update does not crash when an installment is missing installment_id', function () {
+    $service = app(AccountPayableService::class);
+
+    $account = $service->create(payablePayload([
+        'total' => 100000,
+        'payment_condition' => '2',
+        'total_installments' => 2,
+        'installments' => [
+            ['value' => 50000, 'due_date' => '2026-06-12'],
+            ['value' => 50000, 'due_date' => '2026-07-12'],
+        ],
+    ]), $this->tenant);
+
+    $service->update($account->id, payablePayload([
+        'total' => 100000,
+        'payment_condition' => '2',
+        'total_installments' => 2,
+        'installments' => [
+            ['value' => 70000, 'due_date' => '2026-06-15'],
+        ],
+    ]), $this->tenant);
+
+    $this->tenant->run(function () use ($account) {
+        expect($account->installments()->count())->toBe(2);
     });
 });

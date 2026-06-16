@@ -46,6 +46,7 @@ class StoreAccountPayableRequest extends FormRequest
             'status' => ['required', Rule::enum(AccountsEnum::class)],
 
             'installments' => 'nullable|array',
+            'installments.*.installment_id' => 'nullable|integer',
             'installments.*.value' => 'required|integer',
             'installments.*.due_date' => 'required|date',
         ];
