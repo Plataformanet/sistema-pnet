@@ -42,12 +42,12 @@ class CashFlowService
             }
 
             // Junta tudo em uma Collection
-            if (!$request->has('status')) {
+            if (! $request->has('status')) {
                 $accounts = $payableAccounts->concat($receivableAccounts);
             }
 
-            $perPage   = $request->query('quantity', 10);
-            $page      = $request->query('page', 1);
+            $perPage = $request->query('quantity', 10);
+            $page = $request->query('page', 1);
             $paginated = new LengthAwarePaginator(
                 $accounts->forPage($page, $perPage),
                 $accounts->count(),
@@ -63,6 +63,8 @@ class CashFlowService
     private function getAccounts(string $model, string $start, string $end, $request)
     {
         return $model::with([
+            'bankAccount',
+            'financialCategory',
             'installments' => function (MorphMany $query) use ($start, $end) {
                 $query->whereBetween('due_date', [$start, $end])
                     ->whereIn('status', [AccountsEnum::PAID, AccountsEnum::OPEN]);
