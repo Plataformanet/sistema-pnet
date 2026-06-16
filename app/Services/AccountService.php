@@ -105,6 +105,9 @@ abstract class AccountService
                                 ->where('status', AccountsEnum::OPEN->value);
                         });
                 })->with([
+                    'bankAccount',
+                    'financialCategory',
+                    'financialSubcategory',
                     'installments' => function ($query) use ($inicio, $fim, $request, $hoje) {
                         $query->whereBetween('due_date', [$inicio, $fim])
                             ->when($request->query('status') === 'pago', function (Builder $query) {
