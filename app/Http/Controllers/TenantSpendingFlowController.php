@@ -8,12 +8,9 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use PDF;
 
-
 class TenantSpendingFlowController extends Controller
 {
-    public function __construct(public SpendingFlowService $spendingFlowService)
-    {
-    }
+    public function __construct(public SpendingFlowService $spendingFlowService) {}
 
     /**
      * Handle the incoming request.
@@ -21,7 +18,7 @@ class TenantSpendingFlowController extends Controller
     public function index(Request $request)
     {
 
-        $year        = $request->input('year', now()->year);
+        $year = $request->input('year', now()->year);
         $category_id = $request->input('category_id', null);
 
         $financialCategories = FinancialCategory::get()->toArray();
@@ -31,16 +28,17 @@ class TenantSpendingFlowController extends Controller
         $spendingFlow = $this->spendingFlowService->calculateSpendingFlow(tenant(), $category_id, $year);
 
         return Inertia::render('tenant/finance/spending-flow/list/List', [
-            'year'                => $year,
-            'months'              => $months,
-            'spendingFlow'        => $spendingFlow,
+            'year' => $year,
+            'categoryId' => $category_id,
+            'months' => $months,
+            'spendingFlow' => $spendingFlow,
             'financialCategories' => $financialCategories,
         ]);
     }
 
     public function geraPDF(Request $request)
     {
-        $year        = $request->input('year', now()->year);
+        $year = $request->input('year', now()->year);
         $category_id = $request->input('category_id', null);
 
         $months = $this->months();
@@ -51,7 +49,7 @@ class TenantSpendingFlowController extends Controller
             'app.financeiro.fluxo_de_gastos.pdf.info-fluxo-de-gastos',
             [
                 'spendingFlow' => $spendingFlow,
-                'meses'        => $months,
+                'meses' => $months,
             ]
         );
         $pdf->setOption(['dpi' => 140, 'defaultFont' => 'sans-serif']);
@@ -63,15 +61,15 @@ class TenantSpendingFlowController extends Controller
     public function months()
     {
         return [
-            1  => 'Janeiro',
-            2  => 'Fevereiro',
-            3  => 'Março',
-            4  => 'Abril',
-            5  => 'Maio',
-            6  => 'Junho',
-            7  => 'Julho',
-            8  => 'Agosto',
-            9  => 'Setembro',
+            1 => 'Janeiro',
+            2 => 'Fevereiro',
+            3 => 'Março',
+            4 => 'Abril',
+            5 => 'Maio',
+            6 => 'Junho',
+            7 => 'Julho',
+            8 => 'Agosto',
+            9 => 'Setembro',
             10 => 'Outubro',
             11 => 'Novembro',
             12 => 'Dezembro',

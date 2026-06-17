@@ -25,7 +25,7 @@ class TenantBillingFlowController extends Controller
 
         $data = $this->billingFlowService->calculateBilling($startYear, $endYear, tenant(), $bankAccountId);
 
-        return Inertia::render('tenant/finance/billing-flow/', [
+        return Inertia::render('tenant/finance/billing-flow/Index', [
             'data' => $data,
             'bankAccounts' => $bankAccounts,
             'bankAccountId' => $bankAccountId,

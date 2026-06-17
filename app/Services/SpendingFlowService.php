@@ -42,7 +42,7 @@ class SpendingFlowService
                 $hasSubcategories = $category->subcategories->isNotEmpty();
 
                 if ($hasSubcategories) {
-                    // TEM SUBCATEGORIAS - categoria principal não mostra valores próprios
+                    // TEM SUBCATEGORIAS - categoria principal não mostra valores próprios no seu próprio nível
                     foreach ($category->subcategories as $subcategory) {
                         $subcategoryMonths = array_fill(1, 12, 0);
                         $subcategoryTotal = 0;
@@ -62,6 +62,34 @@ class SpendingFlowService
                             'subcategory' => $subcategory->only(['id', 'name']),
                             'months' => $subcategoryMonths,
                             'total' => $subcategoryTotal,
+                        ];
+                    }
+
+                    // Lançamentos diretos na categoria principal (sem subcategoria)
+                    $directAccountsPayable = $category->accountsPayable->filter(function ($ap) {
+                        return is_null($ap->financial_subcategory_id);
+                    });
+
+                    if ($directAccountsPayable->isNotEmpty()) {
+                        $directMonths = array_fill(1, 12, 0);
+                        $directTotal = 0;
+
+                        foreach ($this->sumInstallmentsByMonth($directAccountsPayable) as $month => $monthTotal) {
+                            $directMonths[$month] = $monthTotal;
+                            $directTotal += $monthTotal;
+                            $totalsByMonth[$month] += $monthTotal;
+                            $categoryMonths[$month] += $monthTotal;
+                        }
+
+                        $categoryTotal += $directTotal;
+
+                        $subcategoriesData[] = [
+                            'subcategory' => [
+                                'id' => null,
+                                'name' => 'Sem subcategoria',
+                            ],
+                            'months' => $directMonths,
+                            'total' => $directTotal,
                         ];
                     }
                 } else {

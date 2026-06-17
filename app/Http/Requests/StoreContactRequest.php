@@ -67,6 +67,7 @@ class StoreContactRequest extends FormRequest
             'fantasy_name.max' => 'O nome fantasia deve ter no máximo 255 caracteres.',
             'cpf_cnpj.required' => 'O CPF/CNPJ é obrigatório.',
             'description.required' => 'A descrição é obrigatória.',
+            'supply_category.required' => 'A categoria de fornecimento é obrigatória.',
             'email.required' => 'O e-mail é obrigatório.',
             'email.email' => 'O e-mail deve ser um endereço de e-mail válido.',
             'email.max' => 'O e-mail deve ter no máximo 255 caracteres.',

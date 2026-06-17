@@ -1009,6 +1009,9 @@ function getStatusBadge(status: string) {
                             <TableHead class="text-right font-semibold"
                                 >Lançamentos futuros (R$)</TableHead
                             >
+                            <TableHead class="text-right font-semibold"
+                                >Total (R$)</TableHead
+                            >
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -1046,6 +1049,19 @@ function getStatusBadge(status: string) {
                                     formatMoney(props.accountsResult[idx] || 0)
                                 }}
                             </TableCell>
+                            <TableCell
+                                class="text-right font-semibold"
+                                :class="
+                                    (Number(acc.current_balance || 0) + Number(props.accountsResult[idx] || 0)) < 0
+                                        ? 'text-rose-600'
+                                        : 'text-emerald-600'
+                                "
+                            >
+                                R$
+                                {{
+                                    formatMoney(Number(acc.current_balance || 0) + Number(props.accountsResult[idx] || 0))
+                                }}
+                            </TableCell>
                         </TableRow>
                         <!-- Total row -->
                         <TableRow
@@ -1075,6 +1091,16 @@ function getStatusBadge(status: string) {
                                 "
                             >
                                 R$ {{ formatMoney(props.totalOpen) }}
+                            </TableCell>
+                            <TableCell
+                                class="text-right text-base font-extrabold"
+                                :class="
+                                    Number(props.total) < 0
+                                        ? 'text-rose-600'
+                                        : 'text-emerald-600'
+                                "
+                            >
+                                R$ {{ formatMoney(props.total) }}
                             </TableCell>
                         </TableRow>
                     </TableBody>

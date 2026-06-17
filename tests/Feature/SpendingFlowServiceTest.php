@@ -100,7 +100,7 @@ test('categoria sem subcategorias soma seus proprios lancamentos por mes', funct
         ->and($result['grandTotal'])->toBe(35000);
 });
 
-test('categoria com subcategorias agrega as subcategorias e ignora lancamentos diretos', function () {
+test('categoria com subcategorias agrega as subcategorias e inclui lancamentos diretos sob sem subcategoria', function () {
     [$category, $subA, $subB] = $this->tenant->run(function () {
         $category = FinancialCategory::create(['name' => 'Despesas', 'type' => 'despesa']);
         $subA = FinancialSubcategory::create(['financial_category_id' => $category->id, 'name' => 'Sub A']);
@@ -116,7 +116,7 @@ test('categoria com subcategorias agrega as subcategorias e ignora lancamentos d
     makeSpendingPayable($category->id, $subB->id, [
         ['value' => 20000, 'due_date' => '2026-01-05'],
     ]);
-    // Lancamento direto na categoria principal: deve ser ignorado pois ela tem subcategorias.
+    // Lancamento direto na categoria principal.
     makeSpendingPayable($category->id, null, [
         ['value' => 99000, 'due_date' => '2026-01-08'],
     ]);
@@ -126,17 +126,23 @@ test('categoria com subcategorias agrega as subcategorias e ignora lancamentos d
     $entry = spendingFlowEntry($result, $category->id);
 
     expect($entry['has_subcategories'])->toBeTrue()
-        ->and($entry['months'][1])->toBe(30000)
+        ->and($entry['months'][1])->toBe(129000) // 10000 + 20000 + 99000
         ->and($entry['months'][2])->toBe(5000)
-        ->and($entry['total'])->toBe(35000)
-        ->and($entry['subcategories'])->toHaveCount(2);
+        ->and($entry['total'])->toBe(134000)
+        ->and($entry['subcategories'])->toHaveCount(3);
 
     $subAData = collect($entry['subcategories'])->firstWhere('subcategory.id', $subA->id);
 
     expect($subAData['months'][1])->toBe(10000)
         ->and($subAData['months'][2])->toBe(5000)
-        ->and($subAData['total'])->toBe(15000)
-        ->and($result['grandTotal'])->toBe(35000); // 99000 do lancamento direto nao entra
+        ->and($subAData['total'])->toBe(15000);
+
+    $directData = collect($entry['subcategories'])->firstWhere('subcategory.id', null);
+
+    expect($directData['subcategory']['name'])->toBe('Sem subcategoria')
+        ->and($directData['months'][1])->toBe(99000)
+        ->and($directData['total'])->toBe(99000)
+        ->and($result['grandTotal'])->toBe(134000);
 });
 
 test('exclui parcelas de outro ano via filtro de due_date', function () {
