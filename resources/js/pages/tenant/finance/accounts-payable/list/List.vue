@@ -951,6 +951,9 @@ async function executePay() {
                             <TableHead class="w-32 font-semibold"
                                 >Parcelamento</TableHead
                             >
+                            <TableHead class="font-semibold"
+                                >Categoria</TableHead
+                            >
                             <TableHead class="min-w-[200px] font-semibold"
                                 >Descrição</TableHead
                             >
@@ -992,6 +995,14 @@ async function executePay() {
                                 <TableCell class="text-muted-foreground">
                                     {{ item.installment_number }} /
                                     {{ item.total_installments }}
+                                </TableCell>
+                                <TableCell>
+                                    <div class="flex flex-col">
+                                        <span class="font-medium text-foreground">{{ item.raw_ap.financial_category?.name || '-' }}</span>
+                                        <span v-if="item.raw_ap.financial_subcategory?.name" class="text-xs text-muted-foreground">
+                                            {{ item.raw_ap.financial_subcategory.name }}
+                                        </span>
+                                    </div>
                                 </TableCell>
                                 <TableCell
                                     class="max-w-[300px] truncate text-muted-foreground"
@@ -1036,7 +1047,7 @@ async function executePay() {
                         <template v-else>
                             <TableRow>
                                 <TableCell
-                                    colspan="10"
+                                    colspan="11"
                                     class="h-28 text-center text-muted-foreground"
                                 >
                                     Nenhum lançamento de contas a pagar
