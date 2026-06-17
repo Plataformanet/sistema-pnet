@@ -16,6 +16,7 @@ import {
 
 import { useForm } from "@inertiajs/vue3";
 import { useCepLookup } from "@/composables/useCepLookup";
+import { useContactLookup } from "@/composables/useContactLookup";
 import { UFS_LIST } from "@/lib/constants";
 
 const ufs = UFS_LIST;
@@ -24,8 +25,10 @@ const ufs = UFS_LIST;
 const props = withDefaults(defineProps<{
     form: ReturnType<typeof useForm>;
     submitText?: string;
+    isEdit?: boolean;
 }>(), {
     submitText: "Salvar Cliente",
+    isEdit: false,
 });
 
 const emit = defineEmits(["submit"]);
@@ -41,6 +44,7 @@ watch(clientType, (val) => {
 });
 
 useCepLookup(props.form as any);
+useContactLookup(props.form, "clients", props.isEdit);
 
 function onSubmit() {
     emit("submit");
@@ -88,14 +92,6 @@ function onSubmit() {
             <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
                 <template v-if="clientType === 'PF'">
                     <Field>
-                        <FieldLabel for="name_corporatereason">Nome Completo *</FieldLabel>
-                        <Input id="name_corporatereason" v-model="form.name_corporatereason" required />
-                        <FieldError v-if="form.errors.name_corporatereason">{{
-                            form.errors.name_corporatereason
-                        }}</FieldError>
-                    </Field>
-
-                    <Field>
                         <FieldLabel for="cpf_cnpj">CPF *</FieldLabel>
                         <Input
                             id="cpf_cnpj"
@@ -109,21 +105,17 @@ function onSubmit() {
                             form.errors.cpf_cnpj
                         }}</FieldError>
                     </Field>
+
+                    <Field>
+                        <FieldLabel for="name_corporatereason">Nome Completo *</FieldLabel>
+                        <Input id="name_corporatereason" v-model="form.name_corporatereason" required />
+                        <FieldError v-if="form.errors.name_corporatereason">{{
+                            form.errors.name_corporatereason
+                        }}</FieldError>
+                    </Field>
                 </template>
 
                 <template v-if="clientType === 'PJ'">
-                    <Field>
-                        <FieldLabel for="name_corporatereason">Razão Social *</FieldLabel>
-                        <Input
-                            id="name_corporatereason"
-                            v-model="form.name_corporatereason"
-                            required
-                        />
-                        <FieldError v-if="form.errors.corporate_reason">{{
-                            form.errors.corporate_reason
-                        }}</FieldError>
-                    </Field>
-
                     <Field>
                         <FieldLabel for="cpf_cnpj">CNPJ *</FieldLabel>
                         <Input
@@ -136,6 +128,18 @@ function onSubmit() {
                         />
                         <FieldError v-if="form.errors.cpf_cnpj">{{
                             form.errors.cpf_cnpj
+                        }}</FieldError>
+                    </Field>
+
+                    <Field>
+                        <FieldLabel for="name_corporatereason">Razão Social *</FieldLabel>
+                        <Input
+                            id="name_corporatereason"
+                            v-model="form.name_corporatereason"
+                            required
+                        />
+                        <FieldError v-if="form.errors.corporate_reason">{{
+                            form.errors.corporate_reason
                         }}</FieldError>
                     </Field>
 

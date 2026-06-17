@@ -86,7 +86,24 @@ class ContactService
     public function getContactByCpfCnpj(string $cpfCnpj, Tenant $tenant)
     {
         return $tenant->run(function () use ($cpfCnpj) {
-            return Contact::where('cpf_cnpj', $cpfCnpj)->first();
+            $clean = preg_replace('/\D/', '', $cpfCnpj);
+
+            $formatted = null;
+            if (strlen($clean) === 11) {
+                $formatted = preg_replace("/(\d{3})(\d{3})(\d{3})(\d{2})/", '$1.$2.$3-$4', $clean);
+            } elseif (strlen($clean) === 14) {
+                $formatted = preg_replace("/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/", '$1.$2.$3/$4-$5', $clean);
+            }
+
+            return Contact::with('address')
+                ->where(function ($query) use ($clean, $cpfCnpj, $formatted) {
+                    $query->where('cpf_cnpj', $clean)
+                        ->orWhere('cpf_cnpj', $cpfCnpj);
+                    if ($formatted) {
+                        $query->orWhere('cpf_cnpj', $formatted);
+                    }
+                })
+                ->first();
         });
     }
 }

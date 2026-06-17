@@ -62,6 +62,7 @@ function submit() {
         <SupplierForm
             :form="form"
             submitText="Atualizar Fornecedor"
+            :isEdit="true"
             @submit="submit"
         />
     </div>
