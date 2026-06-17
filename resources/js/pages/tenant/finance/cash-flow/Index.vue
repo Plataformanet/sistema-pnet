@@ -816,7 +816,9 @@ function getStatusBadge(status: string) {
                 class="cursor-pointer rounded-xl border p-5 shadow-xs transition select-none hover:shadow-sm"
                 :class="
                     !currentStatus
-                        ? 'border-blue-500 bg-blue-50/30 ring-2 ring-blue-500/20'
+                        ? Number(props.totalPeriod) < 0
+                            ? 'border-rose-500 bg-rose-50/30 ring-2 ring-rose-500/20'
+                            : 'border-blue-500 bg-blue-50/30 ring-2 ring-blue-500/20'
                         : 'border-border bg-card'
                 "
             >
@@ -826,7 +828,14 @@ function getStatusBadge(status: string) {
                     >
                         Total do período (R$)
                     </p>
-                    <p class="text-3xl font-extrabold text-blue-600">
+                    <p
+                        class="text-3xl font-extrabold"
+                        :class="
+                            Number(props.totalPeriod) < 0
+                                ? 'text-rose-600'
+                                : 'text-blue-600'
+                        "
+                    >
                         {{ formatMoney(props.totalPeriod) }}
                     </p>
                 </div>

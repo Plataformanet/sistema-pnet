@@ -18,7 +18,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { ChevronLeft, ChevronRight } from "lucide-vue-next";
+import { ChevronLeft, ChevronRight, ChevronDown } from "lucide-vue-next";
 import { route } from "ziggy-js";
 
 defineOptions({ layout: TenantLayout });
@@ -74,6 +74,12 @@ function navigateYear(direction: "prev" | "next") {
 function handleCategoryChange(val: any) {
     selectedCategory.value = val;
     reload({ category_id: val === "all" ? undefined : val });
+}
+
+const expandedCategories = ref<Record<number, boolean>>({});
+
+function toggleCategory(categoryId: number) {
+    expandedCategories.value[categoryId] = !expandedCategories.value[categoryId];
 }
 
 // Helpers
@@ -205,35 +211,43 @@ function formatMoney(cents: number | string | undefined | null) {
                                 :key="index"
                             >
                                 <!-- Parent Category Row -->
-                                <TableRow class="bg-muted/30 hover:bg-muted/40 font-bold">
+                                <TableRow
+                                    class="bg-muted/30 hover:bg-muted/40 font-bold"
+                                    :class="{ 'cursor-pointer select-none': entry.has_subcategories }"
+                                    @click="entry.has_subcategories && toggleCategory(entry.category.id)"
+                                >
                                     <TableCell class="text-foreground font-semibold">
-                                        {{ entry.category?.name }}
+                                        <div class="flex items-center gap-2">
+                                            <ChevronRight
+                                                v-if="entry.has_subcategories"
+                                                class="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-300"
+                                                :class="{ 'rotate-90': expandedCategories[entry.category.id] }"
+                                            />
+                                            <span v-else class="w-4 h-4 shrink-0 inline-block"></span>
+                                            <span>{{ entry.category?.name }}</span>
+                                        </div>
                                     </TableCell>
                                     <TableCell
                                         v-for="m in Object.keys(props.months)"
                                         :key="m"
                                         class="text-center font-medium text-muted-foreground"
                                     >
-                                        <template v-if="entry.has_subcategories">
-                                            -
-                                        </template>
-                                        <template v-else>
-                                            {{ entry.months[Number(m)] > 0 ? formatMoney(entry.months[Number(m)]) : '-' }}
-                                        </template>
+                                        {{ entry.months[Number(m)] > 0 ? formatMoney(entry.months[Number(m)]) : '-' }}
                                     </TableCell>
                                     <TableCell class="text-right font-bold text-foreground">
                                         {{ formatMoney(entry.total) }}
                                     </TableCell>
                                 </TableRow>
 
-                                <!-- Subcategory Rows (rendered if parent has subcategories) -->
-                                <template v-if="entry.has_subcategories">
+                                <!-- Subcategory Rows (rendered if parent has subcategories and is expanded) -->
+                                <TransitionGroup name="row-fade">
                                     <TableRow
+                                        v-if="entry.has_subcategories && expandedCategories[entry.category.id]"
                                         v-for="(sub, subIdx) in entry.subcategories"
-                                        :key="`sub-${subIdx}`"
-                                        class="hover:bg-muted/10"
+                                        :key="`sub-${sub.subcategory.id || subIdx}`"
+                                        class="hover:bg-muted/10 transition-all duration-300"
                                     >
-                                        <TableCell class="pl-8 font-normal text-muted-foreground">
+                                        <TableCell class="pl-14 font-normal text-muted-foreground">
                                             └─ {{ sub.subcategory?.name }}
                                         </TableCell>
                                         <TableCell
@@ -247,7 +261,7 @@ function formatMoney(cents: number | string | undefined | null) {
                                             {{ formatMoney(sub.total) }}
                                         </TableCell>
                                     </TableRow>
-                                </template>
+                                </TransitionGroup>
                             </template>
 
                             <!-- Valores somados (R$) Row -->
@@ -337,4 +351,29 @@ function formatMoney(cents: number | string | undefined | null) {
     </div>
 </template>
 
-<style scoped></style>
+<style scoped>
+.row-fade-enter-active,
+.row-fade-leave-active {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.row-fade-enter-active td,
+.row-fade-leave-active td {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.row-fade-enter-from,
+.row-fade-leave-to {
+    opacity: 0;
+    transform: translateY(-8px);
+    border-color: transparent !important;
+}
+
+.row-fade-enter-from td,
+.row-fade-leave-to td {
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    line-height: 0 !important;
+    font-size: 0 !important;
+}
+</style>
