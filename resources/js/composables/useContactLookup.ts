@@ -27,25 +27,73 @@ export function useContactLookup(
 ) {
     const isLoadingContact = ref(false);
     const lastSearched = ref("");
+    const wasPrefilled = ref(false);
 
     // If it's edit mode, we do not want to run the automatic lookup since the contact already exists
     if (isEdit) {
         return { isLoadingContact };
     }
 
+    const clearPrefilledFields = () => {
+        if ("name_corporatereason" in form) {
+            form.name_corporatereason = "";
+        }
+        if ("fantasy_name" in form) {
+            form.fantasy_name = "";
+        }
+        if ("email" in form) {
+            form.email = "";
+        }
+        if ("phone" in form) {
+            form.phone = "";
+        }
+        if ("cell_phone" in form) {
+            form.cell_phone = "";
+        }
+        if ("zip_code" in form) {
+            form.zip_code = "";
+        }
+        if ("street" in form) {
+            form.street = "";
+        }
+        if ("number" in form) {
+            form.number = "";
+        }
+        if ("complement" in form) {
+            form.complement = "";
+        }
+        if ("neighborhood" in form) {
+            form.neighborhood = "";
+        }
+        if ("city" in form) {
+            form.city = "";
+        }
+        if ("state" in form) {
+            form.state = "";
+        }
+        wasPrefilled.value = false;
+    };
+
     watch(
         () => form.cpf_cnpj,
         async (newCpfCnpj) => {
-            if (!newCpfCnpj) return;
-
             // Remove formatting to get raw digits
-            const cleanVal = newCpfCnpj.replace(/\D/g, "");
+            const cleanVal = newCpfCnpj ? newCpfCnpj.replace(/\D/g, "") : "";
+
+            // If CPF/CNPJ is cleared or incomplete, clear the fields if they were prefilled
+            if (cleanVal.length !== 11 && cleanVal.length !== 14) {
+                if (wasPrefilled.value) {
+                    clearPrefilledFields();
+                }
+                lastSearched.value = "";
+                return;
+            }
 
             // We only search if it's a complete CPF (11 digits) or CNPJ (14 digits)
-            if (
-                (cleanVal.length === 11 || cleanVal.length === 14) &&
-                cleanVal !== lastSearched.value
-            ) {
+            if (cleanVal !== lastSearched.value) {
+                if (wasPrefilled.value) {
+                    clearPrefilledFields();
+                }
                 lastSearched.value = cleanVal;
                 isLoadingContact.value = true;
 
@@ -56,6 +104,8 @@ export function useContactLookup(
                     const contact = response.data;
 
                     if (contact && contact.id) {
+                        wasPrefilled.value = true;
+
                         // Prefill basic fields if they exist in the form
                         if ("name_corporatereason" in form) {
                             form.name_corporatereason = contact.name_corporatereason || "";

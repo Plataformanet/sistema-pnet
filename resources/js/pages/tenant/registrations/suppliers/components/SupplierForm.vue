@@ -45,6 +45,7 @@ const supplierType = ref<"PF" | "PJ">(props.form.type || "PJ");
 
 watch(supplierType, (val) => {
     props.form.type = val;
+    props.form.cpf_cnpj = "";
     if (typeof props.form.clearErrors === "function") {
         props.form.clearErrors();
     }
