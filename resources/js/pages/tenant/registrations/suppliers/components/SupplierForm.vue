@@ -183,15 +183,16 @@ function onSubmit() {
                 </Field>
                 <Field class="md:col-span-2">
                     <FieldLabel for="supply_category"
-                        >Categorias de Fornecimento</FieldLabel
+                        >Categorias de Fornecimento *</FieldLabel
                     >
                     <Input
                         id="supply_category"
                         v-model="form.supply_category"
                         placeholder="Ex: Equipamentos, Serviços de TI, Limpeza..."
+                        required
                     />
-                    <FieldError v-if="form.errors.categories">{{
-                        form.errors.categories
+                    <FieldError v-if="form.errors.supply_category">{{
+                        form.errors.supply_category
                     }}</FieldError>
                 </Field>
 

@@ -204,7 +204,7 @@ const data: TenantNav = {
                 {
                     title: "Fluxo de gastos",
                     permission: "finance.spending_flow.view",
-                    url: "/finance/spendings-flow",
+                    url: "/finance/spending-flow",
                 },
                 {
                     title: "Faturamentos",
