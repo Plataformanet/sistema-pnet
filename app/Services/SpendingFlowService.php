@@ -2,29 +2,29 @@
 
 namespace App\Services;
 
+use App\Models\AccountPayable;
 use App\Models\FinancialCategory;
 use App\Models\Tenant;
+use Illuminate\Support\Collection;
 
 class SpendingFlowService
 {
     /**
      * Calcula o fluxo de gastos com totalizadores incluindo subcategorias
-     *
-     * @param  int|null  $categoryId
-     * @param  int|null  $year
      */
-    public function calculateSpendingFlow(Tenant $tenant, $categoryId = null, $year = null): array
+    public function calculateSpendingFlow(Tenant $tenant, ?int $categoryId = null, ?int $year = null): array
     {
         return $tenant->run(function () use ($categoryId, $year) {
-            $year = $year ?? now()->year;
+            $year ??= now()->year;
 
-            // Carrega apenas categorias principais (sem categoria_pai_id)
+            $dueDateRange = ["{$year}-01-01", "{$year}-12-31"];
+
             $categories = FinancialCategory::with([
-                'accountsPayable.installments' => function ($query) use ($year) {
-                    $query->whereYear('due_date', $year);
+                'accountsPayable.installments' => function ($query) use ($dueDateRange) {
+                    $query->whereBetween('due_date', $dueDateRange);
                 },
-                'subcategories.accountsPayable.installments' => function ($query) use ($year) {
-                    $query->whereYear('due_date', $year);
+                'subcategories.accountsPayable.installments' => function ($query) use ($dueDateRange) {
+                    $query->whereBetween('due_date', $dueDateRange);
                 },
             ])->when($categoryId !== null, function ($query) use ($categoryId) {
                 $query->where('id', $categoryId);
@@ -39,49 +39,34 @@ class SpendingFlowService
                 $subcategoriesData = [];
                 $categoryTotal = 0;
                 $categoryMonths = array_fill(1, 12, 0); // Categoria principal sempre zerada
+                $hasSubcategories = $category->subcategories->isNotEmpty();
 
-                if ($category->subcategories && $category->subcategories->count() > 0) {
-                    // TEM SUBCATEGORIAS - categoria principal não mostra valores
+                if ($hasSubcategories) {
+                    // TEM SUBCATEGORIAS - categoria principal não mostra valores próprios
                     foreach ($category->subcategories as $subcategory) {
+                        $subcategoryMonths = array_fill(1, 12, 0);
                         $subcategoryTotal = 0;
-                        $subcategoryMonths = [];
 
-                        for ($month = 1; $month <= 12; $month++) {
-                            $monthTotal = 0;
-
-                            foreach ($subcategory->accountsPayable as $account) {
-                                $monthTotal += $account->installments
-                                    ->filter(fn ($installment) => $installment->due_date->month == $month)
-                                    ->sum('value');
-                            }
-
+                        foreach ($this->sumInstallmentsByMonth($subcategory->accountsPayable) as $month => $monthTotal) {
                             $subcategoryMonths[$month] = $monthTotal;
                             $subcategoryTotal += $monthTotal;
 
-                            // Adiciona aos totais gerais
+                            // Acumula nos totais gerais e no total da categoria
                             $totalsByMonth[$month] += $monthTotal;
-                            $categoryMonths[$month] += $monthTotal; // Acumula no total da categoria
+                            $categoryMonths[$month] += $monthTotal;
                         }
 
                         $categoryTotal += $subcategoryTotal;
 
                         $subcategoriesData[] = [
-                            'subcategory' => $subcategory,
+                            'subcategory' => $subcategory->only(['id', 'name']),
                             'months' => $subcategoryMonths,
                             'total' => $subcategoryTotal,
                         ];
                     }
                 } else {
                     // NÃO TEM SUBCATEGORIAS - categoria mostra seus próprios valores
-                    for ($month = 1; $month <= 12; $month++) {
-                        $monthTotal = 0;
-
-                        foreach ($category->accountsPayable as $account) {
-                            $monthTotal += $account->installments
-                                ->filter(fn ($installment) => $installment->due_date->month == $month)
-                                ->sum('value');
-                        }
-
+                    foreach ($this->sumInstallmentsByMonth($category->accountsPayable) as $month => $monthTotal) {
                         $categoryMonths[$month] = $monthTotal;
                         $categoryTotal += $monthTotal;
                         $totalsByMonth[$month] += $monthTotal;
@@ -91,11 +76,11 @@ class SpendingFlowService
                 $grandTotal += $categoryTotal;
 
                 return [
-                    'category' => $category,
+                    'category' => $category->only(['id', 'name']),
                     'months' => $categoryMonths,
                     'total' => $categoryTotal,
                     'subcategories' => $subcategoriesData,
-                    'has_subcategories' => $category->subcategories && $category->subcategories->count() > 0,
+                    'has_subcategories' => $hasSubcategories,
                 ];
             });
 
@@ -107,5 +92,19 @@ class SpendingFlowService
                 'dailyAverage' => ($grandTotal / 12) / 30,
             ];
         });
+    }
+
+    /**
+     * Soma o valor das parcelas agrupadas por mês de vencimento, numa única passagem.
+     *
+     * @param  Collection<int, AccountPayable>  $accountsPayable
+     * @return Collection<int, int> Mapa mês (1-12) => soma das parcelas
+     */
+    private function sumInstallmentsByMonth($accountsPayable): Collection
+    {
+        return $accountsPayable
+            ->flatMap->installments
+            ->groupBy(fn ($installment) => $installment->due_date->month)
+            ->map->sum('value');
     }
 }
