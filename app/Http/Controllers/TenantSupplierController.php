@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\StoreContactRequest;
-use App\Http\Requests\UpdateContactRequest;
+use App\Http\Requests\StoreSupplierRequest;
+use App\Http\Requests\UpdateSupplierRequest;
 use App\Models\Contact;
 use App\Services\ContactService;
 use App\Services\SuppliersService;
@@ -31,7 +31,7 @@ class TenantSupplierController extends Controller
         return Inertia::render('tenant/registrations/suppliers/create/Create');
     }
 
-    public function store(StoreContactRequest $request)
+    public function store(StoreSupplierRequest $request)
     {
         try {
 
@@ -70,7 +70,7 @@ class TenantSupplierController extends Controller
         ]);
     }
 
-    public function update(UpdateContactRequest $request, $id)
+    public function update(UpdateSupplierRequest $request, $id)
     {
         try {
             $contact = $this->contactService->update($request->validated(), tenant(), $id);

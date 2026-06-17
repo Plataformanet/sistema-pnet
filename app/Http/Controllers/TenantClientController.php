@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\StoreContactRequest;
-use App\Http\Requests\UpdateContactRequest;
+use App\Http\Requests\StoreClientRequest;
+use App\Http\Requests\UpdateClientRequest;
 use App\Models\Contact;
 use App\Services\ClientService;
 use App\Services\ContactService;
@@ -31,7 +31,7 @@ class TenantClientController extends Controller
         return Inertia::render('tenant/registrations/clients/create/Create');
     }
 
-    public function store(StoreContactRequest $request)
+    public function store(StoreClientRequest $request)
     {
         try {
 
@@ -70,7 +70,7 @@ class TenantClientController extends Controller
         ]);
     }
 
-    public function update(UpdateContactRequest $request, string $id)
+    public function update(UpdateClientRequest $request, string $id)
     {
         try {
             $contact = $this->contactService->update($request->validated(), tenant(), $id);

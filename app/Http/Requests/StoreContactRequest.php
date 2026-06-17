@@ -22,9 +22,6 @@ class StoreContactRequest extends FormRequest
      */
     public function rules(): array
     {
-        $isSupplier = $this->routeIs('*suppliers*');
-        $isEmployee = $this->routeIs('*employees*');
-
         return [
             'type' => 'sometimes|in:PF,PJ',
             'name_corporatereason' => 'required|string|max:255',
@@ -33,18 +30,6 @@ class StoreContactRequest extends FormRequest
             'email' => 'required|email|max:255',
             'phone' => 'required|string',
             'cell_phone' => 'required|string',
-
-            // Employee specific validation
-            'rg' => $isEmployee ? 'required|string' : 'sometimes',
-            'birth_date' => $isEmployee ? 'required|date' : 'sometimes|date',
-            'position' => $isEmployee ? 'required|string' : 'sometimes',
-            'salary' => $isEmployee ? 'required|numeric' : 'sometimes|numeric',
-            'hire_date' => $isEmployee ? 'required|date' : 'sometimes|date',
-
-            // Supplier specific validation
-            'responsible_person' => 'nullable|string',
-            'description' => $isSupplier ? 'required|string' : 'nullable|string',
-            'supply_category' => $isSupplier ? 'required|string' : 'nullable|string',
 
             // Address
             'zip_code' => 'required',
@@ -57,6 +42,11 @@ class StoreContactRequest extends FormRequest
         ];
     }
 
+    /**
+     * Get the validation messages that apply to the request.
+     *
+     * @return array<string, string>
+     */
     public function messages(): array
     {
         return [
@@ -66,8 +56,6 @@ class StoreContactRequest extends FormRequest
             'name_corporatereason.max' => 'O nome ou razão social deve ter no máximo 255 caracteres.',
             'fantasy_name.max' => 'O nome fantasia deve ter no máximo 255 caracteres.',
             'cpf_cnpj.required' => 'O CPF/CNPJ é obrigatório.',
-            'description.required' => 'A descrição é obrigatória.',
-            'supply_category.required' => 'A categoria de fornecimento é obrigatória.',
             'email.required' => 'O e-mail é obrigatório.',
             'email.email' => 'O e-mail deve ser um endereço de e-mail válido.',
             'email.max' => 'O e-mail deve ter no máximo 255 caracteres.',
