@@ -24,15 +24,19 @@ class AccountReceivableService extends AccountService
 
                 $accountReceivable = AccountReceivable::create($data);
 
-                foreach ($data['installments'] as $idx => $inst) {
-                    $accountReceivable->installments()->create([
-                        'installment_number' => $idx + 1,
-                        'value' => $inst['value'],
-                        'description' => $data['description'],
-                        'due_date' => $inst['due_date'],
-                        'payment_date' => $inst['due_date'],
-                        'status' => $data['status'] ?? AccountsEnum::OPEN->value,
-                    ]);
+                if (! empty($data['installments'])) {
+                    foreach ($data['installments'] as $idx => $inst) {
+                        $accountReceivable->installments()->create([
+                            'installment_number' => $idx + 1,
+                            'value' => $inst['value'],
+                            'description' => $data['description'],
+                            'due_date' => $inst['due_date'],
+                            'payment_date' => $inst['due_date'],
+                            'status' => $data['status'] ?? AccountsEnum::OPEN->value,
+                        ]);
+                    }
+                } else {
+                    $this->generateInstallments($accountReceivable, $data, $data['value']);
                 }
 
                 if ($data['status'] === AccountsEnum::PAID->value) {

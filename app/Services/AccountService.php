@@ -11,6 +11,7 @@ use App\Models\Installment;
 use App\Models\Tenant;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 
 abstract class AccountService
@@ -23,6 +24,28 @@ abstract class AccountService
     }
 
     abstract protected function getModel(): string;
+
+    /**
+     * Gera as parcelas no servidor a partir de `total_installments`, deslocando o
+     * vencimento mês a mês. Usado quando o front não envia parcelas (à vista e 1 parcela).
+     *
+     * @param  array<string, mixed>  $data
+     */
+    protected function generateInstallments(Model $account, array $data, int|float $installmentValue): void
+    {
+        $dueDate = Carbon::parse($data['due_date']);
+
+        for ($count = 0; $count < $data['total_installments']; $count++) {
+            $account->installments()->create([
+                'installment_number' => $count + 1,
+                'value' => $installmentValue,
+                'description' => $data['description'],
+                'due_date' => $dueDate->copy()->addMonthsNoOverflow($count),
+                'payment_date' => $dueDate->copy()->addMonthsNoOverflow($count),
+                'status' => $data['status'] ?? AccountsEnum::OPEN->value,
+            ]);
+        }
+    }
 
     /**
      * Resolve (ou cria) o financial_contact correspondente ao contato selecionado

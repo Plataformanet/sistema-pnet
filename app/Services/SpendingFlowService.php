@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\FinancialCategoryEnum;
 use App\Models\AccountPayable;
 use App\Models\FinancialCategory;
 use App\Models\Tenant;
@@ -19,16 +20,17 @@ class SpendingFlowService
 
             $dueDateRange = ["{$year}-01-01", "{$year}-12-31"];
 
-            $categories = FinancialCategory::with([
-                'accountsPayable.installments' => function ($query) use ($dueDateRange) {
-                    $query->whereBetween('due_date', $dueDateRange);
-                },
-                'subcategories.accountsPayable.installments' => function ($query) use ($dueDateRange) {
-                    $query->whereBetween('due_date', $dueDateRange);
-                },
-            ])->when($categoryId !== null, function ($query) use ($categoryId) {
-                $query->where('id', $categoryId);
-            })->get();
+            $categories = FinancialCategory::where('type', FinancialCategoryEnum::EXPENSE)
+                ->with([
+                    'accountsPayable.installments' => function ($query) use ($dueDateRange) {
+                        $query->whereBetween('due_date', $dueDateRange);
+                    },
+                    'subcategories.accountsPayable.installments' => function ($query) use ($dueDateRange) {
+                        $query->whereBetween('due_date', $dueDateRange);
+                    },
+                ])->when($categoryId !== null, function ($query) use ($categoryId) {
+                    $query->where('id', $categoryId);
+                })->get();
 
             $totalsByMonth = array_fill(1, 12, 0);
             $grandTotal = 0;

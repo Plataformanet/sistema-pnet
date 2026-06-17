@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\FinancialCategoryEnum;
 use App\Models\FinancialCategory;
 use App\Services\SpendingFlowService;
 use Illuminate\Http\Request;
@@ -21,7 +22,7 @@ class TenantSpendingFlowController extends Controller
         $year = $request->input('year', now()->year);
         $category_id = $request->input('category_id', null);
 
-        $financialCategories = FinancialCategory::get()->toArray();
+        $financialCategories = FinancialCategory::where('type', FinancialCategoryEnum::EXPENSE)->get()->toArray();
 
         $months = $this->months();
 

@@ -145,6 +145,27 @@ test('categoria com subcategorias agrega as subcategorias e inclui lancamentos d
         ->and($result['grandTotal'])->toBe(134000);
 });
 
+test('ignora categorias de receita, trazendo apenas despesas', function () {
+    [$despesa, $receita] = $this->tenant->run(function () {
+        return [
+            FinancialCategory::create(['name' => 'Categoria Despesa', 'type' => 'despesa']),
+            FinancialCategory::create(['name' => 'Categoria Receita', 'type' => 'receita']),
+        ];
+    });
+
+    makeSpendingPayable($despesa->id, null, [['value' => 15000, 'due_date' => '2026-05-10']]);
+
+    $result = app(SpendingFlowService::class)->calculateSpendingFlow($this->tenant, null, 2026);
+
+    $names = $result['categories']->pluck('category.name');
+    $receitaEntry = $result['categories']->first(fn ($entry) => $entry['category']['id'] === $receita->id);
+
+    expect($names)->toContain('Categoria Despesa')
+        ->and($names)->not->toContain('Categoria Receita')
+        ->and($receitaEntry)->toBeNull()
+        ->and($result['grandTotal'])->toBe(15000);
+});
+
 test('exclui parcelas de outro ano via filtro de due_date', function () {
     $category = $this->tenant->run(fn () => FinancialCategory::create([
         'name' => 'Despesas Anuais',

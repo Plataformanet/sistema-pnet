@@ -71,6 +71,48 @@ function receivablePayload(array $overrides = []): array
     ], $overrides);
 }
 
+test('creates a single installment for a-vista when the front sends no installments', function () {
+    $account = app(AccountReceivableService::class)->create(receivablePayload([
+        'payment_condition' => 'a-vista',
+        'total_installments' => 1,
+        'total' => 50000,
+        'value' => 50000,
+        'installments' => [],
+    ]), $this->tenant);
+
+    $this->tenant->run(function () use ($account) {
+        expect($account->installments()->count())->toBe(1);
+
+        $this->assertDatabaseHas('installments', [
+            'installmentable_id' => $account->id,
+            'installment_number' => 1,
+            'value' => 50000,
+            'due_date' => '2026-06-12',
+        ]);
+    });
+});
+
+test('creates a single installment for one parcela when the front sends no installments', function () {
+    $account = app(AccountReceivableService::class)->create(receivablePayload([
+        'payment_condition' => '1',
+        'total_installments' => 1,
+        'total' => 50000,
+        'value' => 50000,
+        'installments' => [],
+    ]), $this->tenant);
+
+    $this->tenant->run(function () use ($account) {
+        expect($account->installments()->count())->toBe(1);
+
+        $this->assertDatabaseHas('installments', [
+            'installmentable_id' => $account->id,
+            'installment_number' => 1,
+            'value' => 50000,
+            'due_date' => '2026-06-12',
+        ]);
+    });
+});
+
 test('validated() keeps installment_id for each installment', function () {
     $payload = receivablePayload([
         'installments' => [
