@@ -8,19 +8,23 @@ use App\Models\AccountReceivable;
 use App\Models\BankAccount;
 use App\Models\Installment;
 use App\Models\Tenant;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Collection;
 
 class BillingFlowService
 {
     /**
-     * Calcula o faturamento por conta bancária e período
+     * Calcula o faturamento por conta bancária e período.
+     *
+     * @return array{
+     *     data_by_account: array<int, array{account: BankAccount, invoicing: array<int, array<string, mixed>>}>,
+     *     monthly_comparison: array<string, array{totals_by_year: array<int, int>, total_period: int}>,
+     *     general_summary: array<string, mixed>
+     * }
      */
     public function calculateBilling(int $startYear, int $endYear, Tenant $tenant, ?int $bankAccountId = null): array
     {
         return $tenant->run(function () use ($bankAccountId, $startYear, $endYear) {
-            $query = BankAccount::query()
-                ->where('active', true)
-                ->with(['accountsPayable.installments', 'accountsReceivable.installments']);
+            $query = BankAccount::query()->where('active', true);
 
             if ($bankAccountId) {
                 $query->where('id', $bankAccountId);
@@ -28,17 +32,20 @@ class BillingFlowService
 
             $bankAccounts = $query->get();
 
+            // Uma query agregada por tipo (receber/pagar) para todo o período,
+            // agrupada por conta, ano e mês. O resto é montado em memória.
+            $net = $this->buildNetMatrix($startYear, $endYear, $bankAccountId);
+
             $result = [
                 'data_by_account' => [],
-                'monthly_comparison' => $this->calculateComparativeMonthly($startYear, $endYear, $bankAccountId),
+                'monthly_comparison' => $this->calculateComparativeMonthly($net, $startYear, $endYear),
                 'general_summary' => [],
             ];
 
             foreach ($bankAccounts as $bankAccount) {
-                $data = $this->processBankAccount($bankAccount, $startYear, $endYear);
                 $result['data_by_account'][$bankAccount->id] = [
                     'account' => $bankAccount,
-                    'invoicing' => $data,
+                    'invoicing' => $this->processBankAccount($net[$bankAccount->id] ?? [], $startYear, $endYear),
                 ];
             }
 
@@ -49,20 +56,74 @@ class BillingFlowService
     }
 
     /**
-     * Processa os dados de faturamento de uma conta bancária específica
+     * Monta a matriz líquida (receber - pagar) por conta/ano/mês a partir de
+     * duas queries agregadas, evitando o loop de consultas por mês e por ano.
+     *
+     * @return array<int, array<int, array<int, int>>> [bankAccountId][year][month] => valor
      */
-    private function processBankAccount(BankAccount $bankAccount, int $startYear, int $endYear): array
+    private function buildNetMatrix(int $startYear, int $endYear, ?int $bankAccountId): array
+    {
+        $net = [];
+
+        foreach ($this->aggregatePaidInstallments(AccountReceivable::class, 'account_receivables', $startYear, $endYear, $bankAccountId) as $row) {
+            $net[$row->bank_account_id][(int) $row->year][(int) $row->month]
+                = ($net[$row->bank_account_id][(int) $row->year][(int) $row->month] ?? 0) + (int) $row->total;
+        }
+
+        foreach ($this->aggregatePaidInstallments(AccountPayable::class, 'account_payables', $startYear, $endYear, $bankAccountId) as $row) {
+            $net[$row->bank_account_id][(int) $row->year][(int) $row->month]
+                = ($net[$row->bank_account_id][(int) $row->year][(int) $row->month] ?? 0) - (int) $row->total;
+        }
+
+        return $net;
+    }
+
+    /**
+     * Soma as parcelas pagas de um tipo de conta, agrupadas por conta bancária,
+     * ano e mês, numa única query. Usa range em `payment_date` (em vez de
+     * whereYear/whereMonth) para aproveitar o índice da coluna.
+     *
+     * @param  class-string  $morphClass
+     * @return Collection<int, \stdClass>
+     */
+    private function aggregatePaidInstallments(string $morphClass, string $table, int $startYear, int $endYear, ?int $bankAccountId): Collection
+    {
+        return Installment::query()
+            ->join($table, function ($join) use ($table, $morphClass) {
+                $join->on('installments.installmentable_id', '=', "{$table}.id")
+                    ->where('installments.installmentable_type', '=', $morphClass);
+            })
+            ->whereNull("{$table}.deleted_at")
+            ->where('installments.status', AccountsEnum::PAID->value)
+            ->whereBetween('installments.payment_date', ["{$startYear}-01-01", "{$endYear}-12-31"])
+            ->when($bankAccountId, fn ($query) => $query->where("{$table}.bank_account_id", $bankAccountId))
+            ->groupBy('bank_account_id', 'year', 'month')
+            ->selectRaw("{$table}.bank_account_id as bank_account_id, YEAR(installments.payment_date) as year, MONTH(installments.payment_date) as month, SUM(installments.value) as total")
+            ->get();
+    }
+
+    /**
+     * Processa os dados de faturamento de uma conta bancária específica.
+     *
+     * @param  array<int, array<int, int>>  $accountNet  [year][month] => valor
+     * @return array<int, array{months: array<int, int>, annual_total: int, percentage_variation: float}>
+     */
+    private function processBankAccount(array $accountNet, int $startYear, int $endYear): array
     {
         $billingByYear = [];
 
         for ($year = $startYear; $year <= $endYear; $year++) {
+            $months = array_fill(1, 12, 0);
+
+            foreach ($accountNet[$year] ?? [] as $month => $value) {
+                $months[$month] = $value;
+            }
+
             $billingByYear[$year] = [
-                'months' => $this->calculateMonthlyBilling($bankAccount, $year),
-                'annual_value' => 0,
+                'months' => $months,
+                'annual_total' => array_sum($months),
                 'percentage_variation' => 0,
             ];
-
-            $billingByYear[$year]['annual_total'] = array_sum($billingByYear[$year]['months']);
 
             // Calcula variação percentual em relação ao ano anterior
             if (isset($billingByYear[$year - 1])) {
@@ -78,55 +139,13 @@ class BillingFlowService
     }
 
     /**
-     * Calcula o faturamento mensal (contas a receber - contas a pagar)
+     * Calcula a comparação mensal consolidada de todas as contas.
+     *
+     * @param  array<int, array<int, array<int, int>>>  $net  [bankAccountId][year][month] => valor
+     * @return array<string, array{totals_by_year: array<int, int>, total_period: int}>
      */
-    private function calculateMonthlyBilling(BankAccount $bankAccount, int $year): array
+    private function calculateComparativeMonthly(array $net, int $startYear, int $endYear): array
     {
-        $monthlyBilling = array_fill(1, 12, 0);
-
-        // Busca parcelas pagas de contas a receber
-        $receivableInstallments = Installment::whereHasMorph('installmentable', [AccountReceivable::class], function ($query) use ($bankAccount) {
-            $query->where('bank_account_id', $bankAccount->id);
-        })
-            ->where('status', AccountsEnum::PAID->value)
-            ->whereYear('payment_date', $year)
-            ->select(
-                DB::raw('MONTH(payment_date) as month'),
-                DB::raw('SUM(value) as total')
-            )
-            ->groupBy('month')
-            ->get();
-
-        foreach ($receivableInstallments as $installment) {
-            $monthlyBilling[$installment->month] += $installment->total;
-        }
-
-        // Busca parcelas pagas de contas a pagar (subtrai do faturamento)
-        $payableInstallments = Installment::whereHasMorph('installmentable', [AccountPayable::class], function ($query) use ($bankAccount) {
-            $query->where('bank_account_id', $bankAccount->id);
-        })
-            ->where('status', AccountsEnum::PAID->value)
-            ->whereYear('payment_date', $year)
-            ->select(
-                DB::raw('MONTH(payment_date) as month'),
-                DB::raw('SUM(value) as total')
-            )
-            ->groupBy('month')
-            ->get();
-
-        foreach ($payableInstallments as $installment) {
-            $monthlyBilling[$installment->month] -= $installment->total;
-        }
-
-        return $monthlyBilling;
-    }
-
-    /**
-     * Calcula a comparação mensal consolidada de todas as contas
-     */
-    private function calculateComparativeMonthly(int $startYear, int $endYear, ?int $bankAccountId = null): array
-    {
-        $comparison = [];
         $months = [
             1 => 'January',
             2 => 'February',
@@ -142,11 +161,22 @@ class BillingFlowService
             12 => 'December',
         ];
 
+        // Consolida todas as contas em [year][month] => valor
+        $consolidated = [];
+        foreach ($net as $accountNet) {
+            foreach ($accountNet as $year => $monthValues) {
+                foreach ($monthValues as $month => $value) {
+                    $consolidated[$year][$month] = ($consolidated[$year][$month] ?? 0) + $value;
+                }
+            }
+        }
+
+        $comparison = [];
         foreach ($months as $monthNumber => $monthName) {
             $totalsByYear = [];
 
             for ($year = $startYear; $year <= $endYear; $year++) {
-                $totalsByYear[$year] = $this->calculateTotalMonthYear($monthNumber, $year, $bankAccountId);
+                $totalsByYear[$year] = $consolidated[$year][$monthNumber] ?? 0;
             }
 
             $comparison[$monthName] = [
@@ -159,35 +189,10 @@ class BillingFlowService
     }
 
     /**
-     * Calcula o total de um mês específico em um ano
-     */
-    private function calculateTotalMonthYear(int $month, int $year, ?int $bankAccountId = null): float
-    {
-        $receivableQuery = Installment::whereHasMorph('installmentable', [AccountReceivable::class], function ($query) use ($bankAccountId) {
-            if ($bankAccountId) {
-                $query->where('bank_account_id', $bankAccountId);
-            }
-        })
-            ->where('status', AccountsEnum::PAID->value)
-            ->whereYear('payment_date', $year)
-            ->whereMonth('payment_date', $month)
-            ->sum('value');
-
-        $payableQuery = Installment::whereHasMorph('installmentable', [AccountPayable::class], function ($query) use ($bankAccountId) {
-            if ($bankAccountId) {
-                $query->where('bank_account_id', $bankAccountId);
-            }
-        })
-            ->where('status', AccountsEnum::PAID->value)
-            ->whereYear('payment_date', $year)
-            ->whereMonth('payment_date', $month)
-            ->sum('value');
-
-        return $receivableQuery - $payableQuery;
-    }
-
-    /**
-     * Calcula resumo geral consolidado
+     * Calcula resumo geral consolidado.
+     *
+     * @param  array<int, array{account: BankAccount, invoicing: array<int, array<string, mixed>>}>  $dataByAccount
+     * @return array<string, mixed>
      */
     private function calculateGeneralSummary(array $dataByAccount): array
     {
@@ -227,7 +232,10 @@ class BillingFlowService
     }
 
     /**
-     * Exporta dados para formato adequado para gráficos
+     * Exporta dados para formato adequado para gráficos.
+     *
+     * @param  array{monthly_comparison: array<string, array{totals_by_year: array<int, int>, total_period: int}>}  $data
+     * @return array{labels: array<int, string>, datasets: array<int, array{label: int, data: array<int, float>}>}
      */
     public function formatForChart(array $data): array
     {
