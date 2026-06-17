@@ -58,6 +58,7 @@ function submit() {
         <ClientForm
             :form="form"
             submitText="Atualizar Cliente"
+            :isEdit="true"
             @submit="submit"
         />
     </div>

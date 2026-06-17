@@ -76,6 +76,7 @@ function submit() {
         <EmployeeForm
             :form="form"
             submitText="Atualizar Funcionário"
+            :isEdit="true"
             @submit="submit"
         />
     </div>

@@ -17,6 +17,7 @@ import {
 import { useForm } from "@inertiajs/vue3";
 import { Textarea } from "@/components/ui/textarea";
 import { useCepLookup } from "@/composables/useCepLookup";
+import { useContactLookup } from "@/composables/useContactLookup";
 import { UFS_LIST } from "@/lib/constants";
 
 const ufs = UFS_LIST;
@@ -27,15 +28,18 @@ const props = withDefaults(
     defineProps<{
         form: ReturnType<typeof useForm>;
         submitText?: string;
+        isEdit?: boolean;
     }>(),
     {
         submitText: "Salvar Fornecedor",
+        isEdit: false,
     },
 );
 
 const emit = defineEmits(["submit"]);
 
 useCepLookup(props.form as any);
+useContactLookup(props.form, "suppliers", props.isEdit);
 
 const supplierType = ref<"PF" | "PJ">(props.form.type || "PJ");
 
@@ -93,14 +97,6 @@ function onSubmit() {
             <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
                 <template v-if="supplierType === 'PF'">
                     <Field>
-                        <FieldLabel for="name_corporatereason">Nome Completo *</FieldLabel>
-                        <Input id="name_corporatereason" v-model="form.name_corporatereason" required />
-                        <FieldError v-if="form.errors.name_corporatereason">{{
-                            form.errors.name_corporatereason
-                        }}</FieldError>
-                    </Field>
-
-                    <Field>
                         <FieldLabel for="cpf_cnpj">CPF *</FieldLabel>
                         <Input
                             id="cpf_cnpj"
@@ -114,23 +110,17 @@ function onSubmit() {
                             form.errors.cpf_cnpj
                         }}</FieldError>
                     </Field>
-                </template>
 
-                <template v-if="supplierType === 'PJ'">
                     <Field>
-                        <FieldLabel for="name_corporatereason"
-                            >Razão Social *</FieldLabel
-                        >
-                        <Input
-                            id="name_corporatereason"
-                            v-model="form.name_corporatereason"
-                            required
-                        />
+                        <FieldLabel for="name_corporatereason">Nome Completo *</FieldLabel>
+                        <Input id="name_corporatereason" v-model="form.name_corporatereason" required />
                         <FieldError v-if="form.errors.name_corporatereason">{{
                             form.errors.name_corporatereason
                         }}</FieldError>
                     </Field>
+                </template>
 
+                <template v-if="supplierType === 'PJ'">
                     <Field>
                         <FieldLabel for="cpf_cnpj">CNPJ *</FieldLabel>
                         <Input
@@ -143,6 +133,20 @@ function onSubmit() {
                         />
                         <FieldError v-if="form.errors.cpf_cnpj">{{
                             form.errors.cpf_cnpj
+                        }}</FieldError>
+                    </Field>
+
+                    <Field>
+                        <FieldLabel for="name_corporatereason"
+                            >Razão Social *</FieldLabel
+                        >
+                        <Input
+                            id="name_corporatereason"
+                            v-model="form.name_corporatereason"
+                            required
+                        />
+                        <FieldError v-if="form.errors.name_corporatereason">{{
+                            form.errors.name_corporatereason
                         }}</FieldError>
                     </Field>
 

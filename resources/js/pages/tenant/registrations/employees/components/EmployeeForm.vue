@@ -23,6 +23,7 @@ import {
 
 import { useForm } from "@inertiajs/vue3";
 import { useCepLookup } from "@/composables/useCepLookup";
+import { useContactLookup } from "@/composables/useContactLookup";
 import { UFS_LIST } from "@/lib/constants";
 
 const ufs = UFS_LIST;
@@ -31,15 +32,18 @@ const props = withDefaults(
     defineProps<{
         form: ReturnType<typeof useForm>;
         submitText?: string;
+        isEdit?: boolean;
     }>(),
     {
         submitText: "Salvar Funcionário",
+        isEdit: false,
     },
 );
 
 const emit = defineEmits(["submit"]);
 
 useCepLookup(props.form as any);
+useContactLookup(props.form, "employees", props.isEdit);
 
 function onSubmit() {
     emit("submit");
@@ -57,20 +61,6 @@ function onSubmit() {
                 Dados Pessoais
             </h3>
             <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
-                <Field class="md:col-span-2">
-                    <FieldLabel for="name_corporatereason"
-                        >Nome Completo *</FieldLabel
-                    >
-                    <Input
-                        id="name_corporatereason"
-                        v-model="form.name_corporatereason"
-                        required
-                    />
-                    <FieldError v-if="form.errors.name_corporatereason">{{
-                        form.errors.name_corporatereason
-                    }}</FieldError>
-                </Field>
-
                 <Field>
                     <FieldLabel for="cpf_cnpj">CPF *</FieldLabel>
                     <Input
@@ -107,6 +97,20 @@ function onSubmit() {
                     />
                     <FieldError v-if="form.errors.rg">{{
                         form.errors.rg
+                    }}</FieldError>
+                </Field>
+
+                <Field class="md:col-span-2">
+                    <FieldLabel for="name_corporatereason"
+                        >Nome Completo *</FieldLabel
+                    >
+                    <Input
+                        id="name_corporatereason"
+                        v-model="form.name_corporatereason"
+                        required
+                    />
+                    <FieldError v-if="form.errors.name_corporatereason">{{
+                        form.errors.name_corporatereason
                     }}</FieldError>
                 </Field>
 
