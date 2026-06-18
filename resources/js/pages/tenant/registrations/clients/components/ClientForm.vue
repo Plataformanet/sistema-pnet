@@ -37,6 +37,7 @@ const clientType = ref<"PF" | "PJ">(props.form.type || "PF");
 
 watch(clientType, (val) => {
     props.form.type = val;
+    props.form.cpf_cnpj = "";
     // Limpar os erros caso o usuário mude de tipo no meio do preenchimento
     if (typeof props.form.clearErrors === 'function') {
         props.form.clearErrors();
