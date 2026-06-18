@@ -307,6 +307,20 @@ class PermissionSeeder extends Seeder
                     ],
                 ],
             ],
+            'drives'        => [
+                'name'         => [
+                    'drives.drives.view',
+                    'drives.drives.edit',
+                    'drives.drives.create',
+                    'drives.drives.delete',
+                ],
+                'display_name' => [
+                    'Drives (Visualizar)',
+                    'Drives (Editar)',
+                    'Drives (Criar)',
+                    'Drives (Excluir)',
+                ],
+            ]
         ];
 
         $modules = Module::where('is_core', 1)->get();
