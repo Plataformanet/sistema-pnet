@@ -2,11 +2,11 @@
 
 namespace Database\Factories;
 
-use App\Models\Model;
+use App\Models\Contact;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends Factory<Model>
+ * @extends Factory<Contact>
  */
 class ContactFactory extends Factory
 {
@@ -18,12 +18,26 @@ class ContactFactory extends Factory
     public function definition(): array
     {
         return [
-            'type'                 => 'PF',
-            'name_corporatereason' => $this->faker->name,
-            'cpf_cnpj'             => '123.456.789-00',
-            'email'                => $this->faker->email,
-            'phone'                => $this->faker->phoneNumber,
-            'cell_phone'           => $this->faker->phoneNumber,
+            'type' => 'PF',
+            'name_corporatereason' => $this->faker->name(),
+            'fantasy_name' => null,
+            'cpf_cnpj' => $this->faker->cpf(),
+            'email' => $this->faker->safeEmail(),
+            'phone' => $this->faker->phoneNumber(),
+            'cell_phone' => $this->faker->cellphoneNumber(),
         ];
+    }
+
+    /**
+     * Contato pessoa jurídica (PJ) com razão social, nome fantasia e CNPJ.
+     */
+    public function pessoaJuridica(): static
+    {
+        return $this->state(fn (array $attributes): array => [
+            'type' => 'PJ',
+            'name_corporatereason' => $this->faker->company(),
+            'fantasy_name' => $this->faker->companySuffix(),
+            'cpf_cnpj' => $this->faker->cnpj(),
+        ]);
     }
 }
