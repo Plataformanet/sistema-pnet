@@ -1,7 +1,7 @@
 <?php
 
 use App\Enums\AccountsEnum;
-use App\Enums\TypeContactEnum;
+use App\Enums\ContactTypeEnum;
 use App\Http\Requests\UpdateAccountPayableRequest;
 use App\Models\BankAccount;
 use App\Models\Contact;
@@ -17,12 +17,12 @@ beforeEach(function () {
 
     [$this->contact, $this->category, $this->subcategory, $this->bankAccount] = $this->tenant->run(function () {
         $contact = Contact::create([
-            'type' => TypeContactEnum::SUPPLIER->value,
+            'type'                 => ContactTypeEnum::SUPPLIER->value,
             'name_corporatereason' => 'Fornecedor Teste',
-            'cpf_cnpj' => '12345678000190',
-            'email' => 'fornecedor@teste.com',
-            'phone' => '1133334444',
-            'cell_phone' => '11999998888',
+            'cpf_cnpj'             => '12345678000190',
+            'email'                => 'fornecedor@teste.com',
+            'phone'                => '1133334444',
+            'cell_phone'           => '11999998888',
         ]);
 
         $category = FinancialCategory::create([
@@ -32,18 +32,18 @@ beforeEach(function () {
 
         $subcategory = FinancialSubcategory::create([
             'financial_category_id' => $category->id,
-            'name' => 'Subcategoria Teste',
+            'name'                  => 'Subcategoria Teste',
         ]);
 
         $bankAccount = BankAccount::create([
-            'name' => 'Conta Principal',
-            'bank' => 'Banco Teste',
-            'agency' => '0001',
-            'account_number' => '123456',
-            'account_type' => 'corrente',
+            'name'            => 'Conta Principal',
+            'bank'            => 'Banco Teste',
+            'agency'          => '0001',
+            'account_number'  => '123456',
+            'account_type'    => 'corrente',
             'initial_balance' => 0,
             'current_balance' => 0,
-            'main_account' => 1,
+            'main_account'    => 1,
         ]);
 
         return [$contact, $category, $subcategory, $bankAccount];
@@ -53,20 +53,20 @@ beforeEach(function () {
 function payablePayload(array $overrides = []): array
 {
     return array_merge([
-        'financial_category_id' => test()->category->id,
+        'financial_category_id'    => test()->category->id,
         'financial_subcategory_id' => test()->subcategory->id,
-        'bank_account_id' => test()->bankAccount->id,
-        'financial_contact_id' => test()->contact->id, // id de contacts, resolvido para financial_contacts pelo service
-        'description' => 'Conta de teste',
-        'total' => 50000,
-        'payment_method' => 'pix',
-        'payment_condition' => 'a-vista',
-        'total_installments' => 1,
-        'bank_account_out' => 1,
-        'value' => 50000,
-        'due_date' => '2026-06-12',
-        'status' => AccountsEnum::OPEN->value,
-        'installments' => [
+        'bank_account_id'          => test()->bankAccount->id,
+        'financial_contact_id'     => test()->contact->id, // id de contacts, resolvido para financial_contacts pelo service
+        'description'              => 'Conta de teste',
+        'total'                    => 50000,
+        'payment_method'           => 'pix',
+        'payment_condition'        => 'a-vista',
+        'total_installments'       => 1,
+        'bank_account_out'         => 1,
+        'value'                    => 50000,
+        'due_date'                 => '2026-06-12',
+        'status'                   => AccountsEnum::OPEN->value,
+        'installments'             => [
             ['value' => 50000, 'due_date' => '2026-06-12'],
         ],
     ], $overrides);
@@ -79,11 +79,11 @@ test('resolves the contact into a financial_contact when creating an account pay
         $financialContact = FinancialContact::where('contact_id', $this->contact->id)->first();
 
         expect($financialContact)->not->toBeNull()
-            ->and($financialContact->type)->toBe(TypeContactEnum::SUPPLIER->value)
+            ->and($financialContact->type)->toBe(ContactTypeEnum::SUPPLIER->value)
             ->and($account->financial_contact_id)->toBe($financialContact->id);
 
         $this->assertDatabaseHas('account_payables', [
-            'id' => $account->id,
+            'id'                   => $account->id,
             'financial_contact_id' => $financialContact->id,
         ]);
     });
@@ -100,8 +100,8 @@ test('a contact can hold separate financial_contacts as supplier and client', fu
             ->all();
 
         expect($types)->toBe([
-            TypeContactEnum::CLIENT->value,
-            TypeContactEnum::SUPPLIER->value,
+            ContactTypeEnum::CLIENT->value,
+            ContactTypeEnum::SUPPLIER->value,
         ])->and($this->contact->financialContacts()->count())->toBe(2);
     });
 });
@@ -120,10 +120,10 @@ test('reuses the same financial_contact for the same contact', function () {
 
 test('generates one installment per period for parcelado', function () {
     $account = app(AccountPayableService::class)->create(payablePayload([
-        'payment_condition' => '3',
+        'payment_condition'  => '3',
         'total_installments' => 3,
-        'total' => 90000,
-        'installments' => [
+        'total'              => 90000,
+        'installments'       => [
             ['value' => 30000, 'due_date' => '2026-06-12'],
             ['value' => 30000, 'due_date' => '2026-07-12'],
             ['value' => 30000, 'due_date' => '2026-08-12'],
@@ -137,11 +137,11 @@ test('generates one installment per period for parcelado', function () {
 
 test('creates a single installment for a-vista when the front sends no installments', function () {
     $account = app(AccountPayableService::class)->create(payablePayload([
-        'payment_condition' => 'a-vista',
+        'payment_condition'  => 'a-vista',
         'total_installments' => 1,
-        'total' => 50000,
-        'value' => 50000,
-        'installments' => [],
+        'total'              => 50000,
+        'value'              => 50000,
+        'installments'       => [],
     ]), $this->tenant);
 
     $this->tenant->run(function () use ($account) {
@@ -150,19 +150,19 @@ test('creates a single installment for a-vista when the front sends no installme
         $this->assertDatabaseHas('installments', [
             'installmentable_id' => $account->id,
             'installment_number' => 1,
-            'value' => 50000,
-            'due_date' => '2026-06-12',
+            'value'              => 50000,
+            'due_date'           => '2026-06-12',
         ]);
     });
 });
 
 test('creates a single installment for one parcela when the front sends no installments', function () {
     $account = app(AccountPayableService::class)->create(payablePayload([
-        'payment_condition' => '1',
+        'payment_condition'  => '1',
         'total_installments' => 1,
-        'total' => 50000,
-        'value' => 50000,
-        'installments' => [],
+        'total'              => 50000,
+        'value'              => 50000,
+        'installments'       => [],
     ]), $this->tenant);
 
     $this->tenant->run(function () use ($account) {
@@ -171,18 +171,18 @@ test('creates a single installment for one parcela when the front sends no insta
         $this->assertDatabaseHas('installments', [
             'installmentable_id' => $account->id,
             'installment_number' => 1,
-            'value' => 50000,
-            'due_date' => '2026-06-12',
+            'value'              => 50000,
+            'due_date'           => '2026-06-12',
         ]);
     });
 });
 
 test('validated() keeps installment_id for each installment', function () {
     $payload = payablePayload([
-        'total' => 100000,
-        'payment_condition' => '2',
+        'total'              => 100000,
+        'payment_condition'  => '2',
         'total_installments' => 2,
-        'installments' => [
+        'installments'       => [
             ['installment_id' => 10, 'value' => 60000, 'due_date' => '2026-06-12'],
             ['installment_id' => 11, 'value' => 40000, 'due_date' => '2026-07-12'],
         ],
@@ -199,24 +199,24 @@ test('update edits each installment by installment_id when total is unchanged', 
     $service = app(AccountPayableService::class);
 
     $account = $service->create(payablePayload([
-        'total' => 100000,
-        'payment_condition' => '2',
+        'total'              => 100000,
+        'payment_condition'  => '2',
         'total_installments' => 2,
-        'installments' => [
+        'installments'       => [
             ['value' => 50000, 'due_date' => '2026-06-12'],
             ['value' => 50000, 'due_date' => '2026-07-12'],
         ],
     ]), $this->tenant);
 
     $installments = $this->tenant->run(
-        fn () => $account->installments()->orderBy('installment_number')->get()
+        fn() => $account->installments()->orderBy('installment_number')->get()
     );
 
     $service->update($account->id, payablePayload([
-        'total' => 100000,
-        'payment_condition' => '2',
+        'total'              => 100000,
+        'payment_condition'  => '2',
         'total_installments' => 2,
-        'installments' => [
+        'installments'       => [
             ['installment_id' => $installments[0]->id, 'value' => 70000, 'due_date' => '2026-06-15'],
             ['installment_id' => $installments[1]->id, 'value' => 30000, 'due_date' => '2026-07-20'],
         ],
@@ -224,14 +224,14 @@ test('update edits each installment by installment_id when total is unchanged', 
 
     $this->tenant->run(function () use ($installments) {
         $this->assertDatabaseHas('installments', [
-            'id' => $installments[0]->id,
-            'value' => 70000,
+            'id'       => $installments[0]->id,
+            'value'    => 70000,
             'due_date' => '2026-06-15',
         ]);
 
         $this->assertDatabaseHas('installments', [
-            'id' => $installments[1]->id,
-            'value' => 30000,
+            'id'       => $installments[1]->id,
+            'value'    => 30000,
             'due_date' => '2026-07-20',
         ]);
     });
@@ -241,20 +241,20 @@ test('update does not crash when an installment is missing installment_id', func
     $service = app(AccountPayableService::class);
 
     $account = $service->create(payablePayload([
-        'total' => 100000,
-        'payment_condition' => '2',
+        'total'              => 100000,
+        'payment_condition'  => '2',
         'total_installments' => 2,
-        'installments' => [
+        'installments'       => [
             ['value' => 50000, 'due_date' => '2026-06-12'],
             ['value' => 50000, 'due_date' => '2026-07-12'],
         ],
     ]), $this->tenant);
 
     $service->update($account->id, payablePayload([
-        'total' => 100000,
-        'payment_condition' => '2',
+        'total'              => 100000,
+        'payment_condition'  => '2',
         'total_installments' => 2,
-        'installments' => [
+        'installments'       => [
             ['value' => 70000, 'due_date' => '2026-06-15'],
         ],
     ]), $this->tenant);

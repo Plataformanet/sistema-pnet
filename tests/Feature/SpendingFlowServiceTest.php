@@ -1,7 +1,7 @@
 <?php
 
 use App\Enums\AccountsEnum;
-use App\Enums\TypeContactEnum;
+use App\Enums\ContactTypeEnum;
 use App\Models\BankAccount;
 use App\Models\Contact;
 use App\Models\FinancialCategory;
@@ -14,23 +14,23 @@ beforeEach(function () {
 
     [$this->contact, $this->bankAccount] = $this->tenant->run(function () {
         $contact = Contact::create([
-            'type' => TypeContactEnum::SUPPLIER->value,
+            'type'                 => ContactTypeEnum::SUPPLIER->value,
             'name_corporatereason' => 'Fornecedor Gastos',
-            'cpf_cnpj' => '12345678000190',
-            'email' => 'gastos@teste.com',
-            'phone' => '1133334444',
-            'cell_phone' => '11999998888',
+            'cpf_cnpj'             => '12345678000190',
+            'email'                => 'gastos@teste.com',
+            'phone'                => '1133334444',
+            'cell_phone'           => '11999998888',
         ]);
 
         $bankAccount = BankAccount::create([
-            'name' => 'Conta Principal',
-            'bank' => 'Banco Teste',
-            'agency' => '0001',
-            'account_number' => '111111',
-            'account_type' => 'corrente',
+            'name'            => 'Conta Principal',
+            'bank'            => 'Banco Teste',
+            'agency'          => '0001',
+            'account_number'  => '111111',
+            'account_type'    => 'corrente',
             'initial_balance' => 0,
             'current_balance' => 0,
-            'main_account' => 1,
+            'main_account'    => 1,
         ]);
 
         return [$contact, $bankAccount];
@@ -47,20 +47,20 @@ function makeSpendingPayable(int $categoryId, ?int $subcategoryId, array $instal
     $total = collect($installments)->sum('value');
 
     app(AccountPayableService::class)->create([
-        'financial_category_id' => $categoryId,
+        'financial_category_id'    => $categoryId,
         'financial_subcategory_id' => $subcategoryId,
-        'bank_account_id' => test()->bankAccount->id,
-        'financial_contact_id' => test()->contact->id,
-        'description' => 'Gasto',
-        'total' => $total,
-        'payment_method' => 'pix',
-        'payment_condition' => 'a-vista',
-        'total_installments' => count($installments),
-        'bank_account_out' => 1,
-        'value' => $total,
-        'due_date' => $installments[0]['due_date'],
-        'status' => AccountsEnum::OPEN->value,
-        'installments' => $installments,
+        'bank_account_id'          => test()->bankAccount->id,
+        'financial_contact_id'     => test()->contact->id,
+        'description'              => 'Gasto',
+        'total'                    => $total,
+        'payment_method'           => 'pix',
+        'payment_condition'        => 'a-vista',
+        'total_installments'       => count($installments),
+        'bank_account_out'         => 1,
+        'value'                    => $total,
+        'due_date'                 => $installments[0]['due_date'],
+        'status'                   => AccountsEnum::OPEN->value,
+        'installments'             => $installments,
     ], test()->tenant);
 }
 
@@ -71,11 +71,11 @@ function makeSpendingPayable(int $categoryId, ?int $subcategoryId, array $instal
  */
 function spendingFlowEntry(array $result, int $categoryId): array
 {
-    return $result['categories']->first(fn ($entry) => $entry['category']['id'] === $categoryId);
+    return $result['categories']->first(fn($entry) => $entry['category']['id'] === $categoryId);
 }
 
 test('categoria sem subcategorias soma seus proprios lancamentos por mes', function () {
-    $category = $this->tenant->run(fn () => FinancialCategory::create([
+    $category = $this->tenant->run(fn() => FinancialCategory::create([
         'name' => 'Despesas Gerais',
         'type' => 'despesa',
     ]));
@@ -103,8 +103,8 @@ test('categoria sem subcategorias soma seus proprios lancamentos por mes', funct
 test('categoria com subcategorias agrega as subcategorias e inclui lancamentos diretos sob sem subcategoria', function () {
     [$category, $subA, $subB] = $this->tenant->run(function () {
         $category = FinancialCategory::create(['name' => 'Despesas', 'type' => 'despesa']);
-        $subA = FinancialSubcategory::create(['financial_category_id' => $category->id, 'name' => 'Sub A']);
-        $subB = FinancialSubcategory::create(['financial_category_id' => $category->id, 'name' => 'Sub B']);
+        $subA     = FinancialSubcategory::create(['financial_category_id' => $category->id, 'name' => 'Sub A']);
+        $subB     = FinancialSubcategory::create(['financial_category_id' => $category->id, 'name' => 'Sub B']);
 
         return [$category, $subA, $subB];
     });
@@ -157,8 +157,8 @@ test('ignora categorias de receita, trazendo apenas despesas', function () {
 
     $result = app(SpendingFlowService::class)->calculateSpendingFlow($this->tenant, null, 2026);
 
-    $names = $result['categories']->pluck('category.name');
-    $receitaEntry = $result['categories']->first(fn ($entry) => $entry['category']['id'] === $receita->id);
+    $names        = $result['categories']->pluck('category.name');
+    $receitaEntry = $result['categories']->first(fn($entry) => $entry['category']['id'] === $receita->id);
 
     expect($names)->toContain('Categoria Despesa')
         ->and($names)->not->toContain('Categoria Receita')
@@ -167,7 +167,7 @@ test('ignora categorias de receita, trazendo apenas despesas', function () {
 });
 
 test('exclui parcelas de outro ano via filtro de due_date', function () {
-    $category = $this->tenant->run(fn () => FinancialCategory::create([
+    $category = $this->tenant->run(fn() => FinancialCategory::create([
         'name' => 'Despesas Anuais',
         'type' => 'despesa',
     ]));
@@ -207,7 +207,7 @@ test('filtra por categoria quando categoryId e informado', function () {
 test('retorna category e subcategory apenas com id e name e calcula as medias', function () {
     [$category, $sub] = $this->tenant->run(function () {
         $category = FinancialCategory::create(['name' => 'Despesas Medias', 'type' => 'despesa']);
-        $sub = FinancialSubcategory::create(['financial_category_id' => $category->id, 'name' => 'Sub Unica']);
+        $sub      = FinancialSubcategory::create(['financial_category_id' => $category->id, 'name' => 'Sub Unica']);
 
         return [$category, $sub];
     });

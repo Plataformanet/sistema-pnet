@@ -3,7 +3,7 @@
 namespace App\Services;
 
 use App\Enums\AccountsEnum;
-use App\Enums\TypeContactEnum;
+use App\Enums\ContactTypeEnum;
 use App\Models\AccountReceivable;
 use App\Models\BankAccount;
 use App\Models\Tenant;
@@ -17,22 +17,22 @@ class AccountReceivableService extends AccountService
         return $tenant->run(function () use ($data) {
             return DB::transaction(function () use ($data) {
 
-                $data['financial_contact_id'] = $this->resolveFinancialContactId($data['financial_contact_id'], TypeContactEnum::CLIENT);
+                $data['financial_contact_id'] = $this->resolveFinancialContactId($data['financial_contact_id'], ContactTypeEnum::CLIENT);
 
                 $data['total_installments'] = $data['payment_condition'] === 'a-vista' ? 1 : $data['payment_condition'];
-                $data['value'] = $data['total'] / $data['total_installments'];
+                $data['value']              = $data['total'] / $data['total_installments'];
 
                 $accountReceivable = AccountReceivable::create($data);
 
-                if (! empty($data['installments'])) {
+                if (!empty($data['installments'])) {
                     foreach ($data['installments'] as $idx => $inst) {
                         $accountReceivable->installments()->create([
                             'installment_number' => $idx + 1,
-                            'value' => $inst['value'],
-                            'description' => $data['description'],
-                            'due_date' => $inst['due_date'],
-                            'payment_date' => $inst['due_date'],
-                            'status' => $data['status'] ?? AccountsEnum::OPEN->value,
+                            'value'              => $inst['value'],
+                            'description'        => $data['description'],
+                            'due_date'           => $inst['due_date'],
+                            'payment_date'       => $inst['due_date'],
+                            'status'             => $data['status'] ?? AccountsEnum::OPEN->value,
                         ]);
                     }
                 } else {
@@ -40,7 +40,7 @@ class AccountReceivableService extends AccountService
                 }
 
                 if ($data['status'] === AccountsEnum::PAID->value) {
-                    $bankAccount = BankAccount::find($data['bank_account_id']);
+                    $bankAccount                   = BankAccount::find($data['bank_account_id']);
                     $bankAccount->current_balance += $data['value'];
                     $bankAccount->save();
                 }
@@ -56,7 +56,7 @@ class AccountReceivableService extends AccountService
             $account = AccountReceivable::findOrFail($id);
 
             if (isset($data['financial_contact_id'])) {
-                $data['financial_contact_id'] = $this->resolveFinancialContactId($data['financial_contact_id'], TypeContactEnum::CLIENT);
+                $data['financial_contact_id'] = $this->resolveFinancialContactId($data['financial_contact_id'], ContactTypeEnum::CLIENT);
             }
 
             if ($account->total != $data['total']) {
@@ -64,27 +64,27 @@ class AccountReceivableService extends AccountService
                 $account->installments()->delete();
 
                 $data['total_installments'] = $data['payment_condition'] === 'a-vista' ? 1 : $data['payment_condition'];
-                $data['value'] = $data['total'] / $data['total_installments'];
+                $data['value']              = $data['total'] / $data['total_installments'];
 
-                $startDate = DateTime::createFromFormat('Y-m-d', $data['due_date']);
+                $startDate   = DateTime::createFromFormat('Y-m-d', $data['due_date']);
                 $originalDay = (int) $startDate->format('d');
-                $year = (int) $startDate->format('Y');
-                $month = (int) $startDate->format('m');
+                $year        = (int) $startDate->format('Y');
+                $month       = (int) $startDate->format('m');
 
                 $count = 0;
                 while ($count < $data['total_installments']) {
 
                     // Calculate the adjusted month and year
                     $monthCurrent = $month + $count;
-                    $yearCurrent = $year + intdiv($monthCurrent - 1, 12);
-                    $monthAdjust = (($monthCurrent - 1) % 12) + 1;
+                    $yearCurrent  = $year + intdiv($monthCurrent - 1, 12);
+                    $monthAdjust  = (($monthCurrent - 1) % 12) + 1;
 
                     // Create the new date
                     $tempDate = new DateTime;
                     $tempDate->setDate($yearCurrent, $monthAdjust, 1);
 
                     $lastDayOfTheMonth = (int) $tempDate->format('t');
-                    $adjustedDay = min($originalDay, $lastDayOfTheMonth);
+                    $adjustedDay       = min($originalDay, $lastDayOfTheMonth);
 
                     $tempDate->setDate($yearCurrent, $monthAdjust, $adjustedDay);
 
@@ -92,11 +92,11 @@ class AccountReceivableService extends AccountService
 
                     $account->installments()->create([
                         'installment_number' => $data['payment_condition'] === 'a-vista' ? 1 : $count + 1,
-                        'value' => $data['value'],
-                        'description' => $data['description'],
-                        'due_date' => $dueDate,
-                        'payment_date' => $dueDate,
-                        'status' => $data['status'] ?? AccountsEnum::OPEN->value,
+                        'value'              => $data['value'],
+                        'description'        => $data['description'],
+                        'due_date'           => $dueDate,
+                        'payment_date'       => $dueDate,
+                        'status'             => $data['status'] ?? AccountsEnum::OPEN->value,
                     ]);
 
                     $count++;
@@ -110,7 +110,7 @@ class AccountReceivableService extends AccountService
                     $account->installments()
                         ->where('id', $installment['installment_id'])
                         ->update([
-                            'value' => $installment['value'],
+                            'value'    => $installment['value'],
                             'due_date' => $installment['due_date'],
                         ]);
                 }
@@ -129,12 +129,12 @@ class AccountReceivableService extends AccountService
 
     public function findById(string $id, Tenant $tenant): AccountReceivable
     {
-        return $tenant->run(fn () => AccountReceivable::with('installments')->findOrFail($id));
+        return $tenant->run(fn() => AccountReceivable::with('installments')->findOrFail($id));
     }
 
     public function showById(string $id, Tenant $tenant): AccountReceivable
     {
-        return $tenant->run(fn () => AccountReceivable::with(
+        return $tenant->run(fn() => AccountReceivable::with(
             [
                 'financialContact:id,contact_id',
                 'financialContact.contact:id,name_corporatereason',

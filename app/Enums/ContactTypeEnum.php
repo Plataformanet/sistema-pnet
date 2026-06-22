@@ -2,7 +2,7 @@
 
 namespace App\Enums;
 
-enum TypeContactEnum: string
+enum ContactTypeEnum: string
 {
     case CLIENT = 'cliente';
     case SUPPLIER = 'fornecedor';

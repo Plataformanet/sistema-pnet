@@ -476,3 +476,4 @@ in code (before → after), and prioritized next steps.
 - Always ask for permission before running git commands.
 - Always ask for permission before running any command.
 - Never make any changes without permission.
+- Please always reply in Brazilian Portuguese.

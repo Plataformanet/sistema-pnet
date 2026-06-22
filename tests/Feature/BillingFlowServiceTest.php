@@ -1,7 +1,7 @@
 <?php
 
 use App\Enums\AccountsEnum;
-use App\Enums\TypeContactEnum;
+use App\Enums\ContactTypeEnum;
 use App\Models\BankAccount;
 use App\Models\Contact;
 use App\Models\FinancialCategory;
@@ -12,12 +12,12 @@ beforeEach(function () {
 
     [$this->contact, $this->category, $this->mainAccount, $this->secondAccount] = $this->tenant->run(function () {
         $contact = Contact::create([
-            'type' => TypeContactEnum::SUPPLIER->value,
+            'type'                 => ContactTypeEnum::SUPPLIER->value,
             'name_corporatereason' => 'Contato Faturamento',
-            'cpf_cnpj' => '12345678000190',
-            'email' => 'faturamento@teste.com',
-            'phone' => '1133334444',
-            'cell_phone' => '11999998888',
+            'cpf_cnpj'             => '12345678000190',
+            'email'                => 'faturamento@teste.com',
+            'phone'                => '1133334444',
+            'cell_phone'           => '11999998888',
         ]);
 
         $category = FinancialCategory::create([
@@ -26,25 +26,25 @@ beforeEach(function () {
         ]);
 
         $mainAccount = BankAccount::create([
-            'name' => 'Conta Principal',
-            'bank' => 'Banco Teste',
-            'agency' => '0001',
-            'account_number' => '111111',
-            'account_type' => 'corrente',
+            'name'            => 'Conta Principal',
+            'bank'            => 'Banco Teste',
+            'agency'          => '0001',
+            'account_number'  => '111111',
+            'account_type'    => 'corrente',
             'initial_balance' => 0,
             'current_balance' => 0,
-            'main_account' => 1,
+            'main_account'    => 1,
         ]);
 
         $secondAccount = BankAccount::create([
-            'name' => 'Conta Secundaria',
-            'bank' => 'Banco Teste',
-            'agency' => '0002',
-            'account_number' => '222222',
-            'account_type' => 'corrente',
+            'name'            => 'Conta Secundaria',
+            'bank'            => 'Banco Teste',
+            'agency'          => '0002',
+            'account_number'  => '222222',
+            'account_type'    => 'corrente',
             'initial_balance' => 0,
             'current_balance' => 0,
-            'main_account' => 0,
+            'main_account'    => 0,
         ]);
 
         return [$contact, $category, $mainAccount, $secondAccount];
@@ -132,8 +132,8 @@ test('formatForChart transforma a comparacao mensal em labels e datasets', funct
     makeReceivable(AccountsEnum::PAID->value, 200000, '2026-03-10', $this->mainAccount->id);
 
     $service = app(BillingFlowService::class);
-    $data = $service->calculateBilling(2025, 2026, $this->tenant);
-    $chart = $service->formatForChart($data);
+    $data    = $service->calculateBilling(2025, 2026, $this->tenant);
+    $chart   = $service->formatForChart($data);
 
     expect($chart['labels'])->toHaveCount(12)
         ->and($chart['labels'][0])->toBe('January')

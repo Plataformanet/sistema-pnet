@@ -1,7 +1,7 @@
 <?php
 
 use App\Enums\AccountsEnum;
-use App\Enums\TypeContactEnum;
+use App\Enums\ContactTypeEnum;
 use App\Models\BankAccount;
 use App\Models\Contact;
 use App\Models\FinancialCategory;
@@ -15,12 +15,12 @@ beforeEach(function () {
 
     [$this->contact, $this->category, $this->mainAccount, $this->secondAccount] = $this->tenant->run(function () {
         $contact = Contact::create([
-            'type' => TypeContactEnum::SUPPLIER->value,
+            'type'                 => ContactTypeEnum::SUPPLIER->value,
             'name_corporatereason' => 'Contato Fluxo',
-            'cpf_cnpj' => '12345678000190',
-            'email' => 'fluxo@teste.com',
-            'phone' => '1133334444',
-            'cell_phone' => '11999998888',
+            'cpf_cnpj'             => '12345678000190',
+            'email'                => 'fluxo@teste.com',
+            'phone'                => '1133334444',
+            'cell_phone'           => '11999998888',
         ]);
 
         $category = FinancialCategory::create([
@@ -29,25 +29,25 @@ beforeEach(function () {
         ]);
 
         $mainAccount = BankAccount::create([
-            'name' => 'Conta Principal',
-            'bank' => 'Banco Teste',
-            'agency' => '0001',
-            'account_number' => '111111',
-            'account_type' => 'corrente',
+            'name'            => 'Conta Principal',
+            'bank'            => 'Banco Teste',
+            'agency'          => '0001',
+            'account_number'  => '111111',
+            'account_type'    => 'corrente',
             'initial_balance' => 0,
             'current_balance' => 0,
-            'main_account' => 1,
+            'main_account'    => 1,
         ]);
 
         $secondAccount = BankAccount::create([
-            'name' => 'Conta Secundaria',
-            'bank' => 'Banco Teste',
-            'agency' => '0002',
-            'account_number' => '222222',
-            'account_type' => 'corrente',
+            'name'            => 'Conta Secundaria',
+            'bank'            => 'Banco Teste',
+            'agency'          => '0002',
+            'account_number'  => '222222',
+            'account_type'    => 'corrente',
             'initial_balance' => 0,
             'current_balance' => 0,
-            'main_account' => 0,
+            'main_account'    => 0,
         ]);
 
         return [$contact, $category, $mainAccount, $secondAccount];
@@ -63,18 +63,18 @@ function makePayable(string $status, int $value, string $dueDate, int $bankAccou
 {
     app(AccountPayableService::class)->create([
         'financial_category_id' => test()->category->id,
-        'bank_account_id' => $bankAccountId,
-        'financial_contact_id' => test()->contact->id,
-        'description' => 'Pagar',
-        'total' => $value,
-        'payment_method' => 'pix',
-        'payment_condition' => 'a-vista',
-        'total_installments' => 1,
-        'bank_account_out' => 1,
-        'value' => $value,
-        'due_date' => $dueDate,
-        'status' => $status,
-        'installments' => [
+        'bank_account_id'       => $bankAccountId,
+        'financial_contact_id'  => test()->contact->id,
+        'description'           => 'Pagar',
+        'total'                 => $value,
+        'payment_method'        => 'pix',
+        'payment_condition'     => 'a-vista',
+        'total_installments'    => 1,
+        'bank_account_out'      => 1,
+        'value'                 => $value,
+        'due_date'              => $dueDate,
+        'status'                => $status,
+        'installments'          => [
             ['value' => $value, 'due_date' => $dueDate],
         ],
     ], test()->tenant);
@@ -84,18 +84,18 @@ function makeReceivable(string $status, int $value, string $dueDate, int $bankAc
 {
     app(AccountReceivableService::class)->create([
         'financial_category_id' => test()->category->id,
-        'bank_account_id' => $bankAccountId,
-        'financial_contact_id' => test()->contact->id,
-        'description' => 'Receber',
-        'total' => $value,
-        'payment_method' => 'pix',
-        'payment_condition' => 'a-vista',
-        'total_installments' => 1,
-        'bank_account_out' => 1,
-        'value' => $value,
-        'due_date' => $dueDate,
-        'status' => $status,
-        'installments' => [
+        'bank_account_id'       => $bankAccountId,
+        'financial_contact_id'  => test()->contact->id,
+        'description'           => 'Receber',
+        'total'                 => $value,
+        'payment_method'        => 'pix',
+        'payment_condition'     => 'a-vista',
+        'total_installments'    => 1,
+        'bank_account_out'      => 1,
+        'value'                 => $value,
+        'due_date'              => $dueDate,
+        'status'                => $status,
+        'installments'          => [
             ['value' => $value, 'due_date' => $dueDate],
         ],
     ], test()->tenant);
@@ -131,7 +131,7 @@ test('calculateAccounts inclui parcelas em aberto e vencidas e exclui as pagas',
         ->calculateAccounts(cashFlowRequest(), '2026-06', $this->tenant);
 
     expect($installments)->toHaveCount(2)
-        ->and($installments->pluck('status')->map(fn ($status) => $status->value)->all())
+        ->and($installments->pluck('status')->map(fn($status) => $status->value)->all())
         ->toEqualCanonicalizing([AccountsEnum::OPEN->value, AccountsEnum::OVERDUE->value]);
 });
 
