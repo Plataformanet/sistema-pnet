@@ -2,8 +2,8 @@
 
 namespace App\Services;
 
-use App\Enums\PermissionTypeDriveEnum;
 use App\Enums\DocumentTypeDriveEnum;
+use App\Enums\PermissionTypeDriveEnum;
 use App\Exceptions\UploadDocumentException;
 use App\Http\Requests\ForceDeleteRequest;
 use App\Http\Requests\ForceDeleteTrashRequest;
@@ -26,14 +26,12 @@ use Illuminate\Support\LazyCollection;
 
 class DriveService
 {
-    public function __construct(protected DriveLogService $driveLogService)
-    {
-    }
+    public function __construct(protected DriveLogService $driveLogService) {}
 
     public function store(StoreDriveRequest $request, Tenant $tenant)
     {
-        return DB::transaction(function () use ($request, $tenant) {
-            return $tenant->run(function () use ($request) {
+        return $tenant->run(function () use ($request) {
+            return DB::transaction(function () use ($request) {
 
                 $folder = DriveFolder::findOrFail($request->validated('folder_id'));
 
@@ -44,29 +42,29 @@ class DriveService
                 $disk = Storage::disk('public');
 
                 $documentName = $request->validated('documents')[0]->getClientOriginalName();
-                $extension    = $request->validated('documents')[0]->getClientOriginalExtension();
+                $extension = $request->validated('documents')[0]->getClientOriginalExtension();
 
-                while ($disk->exists('drive/' . $folder->getPath() . '/' . $documentName)) {
-                    $documentName = $baseName . " ($counter)." . $extension;
+                while ($disk->exists('drive/'.$folder->getPath().'/'.$documentName)) {
+                    $documentName = $baseName." ($counter).".$extension;
                     $counter++;
                 }
 
-                $document_path = 'drive/' . $folder->getPath() . '/' . $documentName;
+                $document_path = 'drive/'.$folder->getPath().'/'.$documentName;
 
                 $drive = Drive::create([
-                    'user_id'         => $request->validated('user_id'),
+                    'user_id' => $request->validated('user_id'),
                     'drive_folder_id' => $request->validated('folder_id'),
-                    'name'            => $documentName,
-                    'document_path'   => $document_path,
-                    'document_size'   => $request->validated('documents')[0]->getSize(),
-                    'document_type'   => $request->validated('documents')[0]->extension(),
-                    'modified_by'     => auth()->user()->id,
-                    'modified_at'     => Carbon::parse($request->validated('modified_at')[0])->utc(),
+                    'name' => $documentName,
+                    'document_path' => $document_path,
+                    'document_size' => $request->validated('documents')[0]->getSize(),
+                    'document_type' => $request->validated('documents')[0]->extension(),
+                    'modified_by' => auth()->user()->id,
+                    'modified_at' => Carbon::parse($request->validated('modified_at')[0])->utc(),
                 ]);
 
                 try {
                     Storage::disk('public')->putFileAs(
-                        'drive/' . $folder->getPath(),
+                        'drive/'.$folder->getPath(),
                         $request->file('documents')[0],
                         $documentName,
                         ['visibility' => 'public']
@@ -83,14 +81,13 @@ class DriveService
 
     public function update(UpdateDriveRequest $request, Tenant $tenant)
     {
-        $drive = null;
-        DB::transaction(function () use ($request, $drive, $tenant) {
-            return $tenant->run(function () use ($request, $drive) {
+        return $tenant->run(function () use ($request) {
+            return DB::transaction(function () use ($request) {
 
                 if ($request['type_drive'] == 1) {
                     $drive = DriveFolder::findOrFail($request['id']);
                     $parts = explode('/', $drive->getPath());
-                    $path  = $drive->getPath();
+                    $path = $drive->getPath();
 
                     $name = $request['name'];
 
@@ -107,61 +104,62 @@ class DriveService
                         Storage::disk('public')->move($oldPath, $newPath);
                     }
 
-                    $drive->nome = $name;
+                    $drive->name = $name;
                     $drive->save();
 
                     $drive->drives()->where('document_type', $request['drive_type'])->update([
-                        'name'           => $name,
-                        'documento_path' => $newPath,
-                        'modified_by'    => auth()->user()->id,
-                        'modified_at'    => Carbon::now(),
+                        'name' => $name,
+                        'document_path' => $newPath,
+                        'modified_by' => auth()->user()->id,
+                        'modified_at' => Carbon::now(),
                     ]);
+
+                    return $drive;
                 }
 
-                if ($request['type_drive'] != 1) {
-                    $drive    = Drive::findOrFail($request['id']);
-                    $path     = $drive->driveFolder->getPath();
-                    $extensao = $drive->document_type->getType();
-                    $name     = $request['name'] . '.' . $extensao;
+                $drive = Drive::findOrFail($request['id']);
+                $path = $drive->driveFolder->getPath();
+                $extension = $drive->document_type->getType();
+                $name = $request['name'].'.'.$extension;
 
-                    // Caminhos
-                    $oldPath = "drive/{$path}/{$drive->nome}";
-                    $newPath = "drive/{$path}/{$name}";
+                // Caminhos
+                $oldPath = "drive/{$path}/{$drive->name}";
+                $newPath = "drive/{$path}/{$name}";
 
-                    // Move se existir
-                    if (Storage::disk('public')->exists($oldPath)) {
-                        Storage::disk('public')->move($oldPath, $newPath);
+                // Move se existir
+                if (Storage::disk('public')->exists($oldPath)) {
+                    Storage::disk('public')->move($oldPath, $newPath);
 
-                        $drive->documento_path = $newPath;
-                        $drive->nome           = $name;
-                        $drive->modified_by    = auth()->user()->id;
-                        $drive->modified_at    = Carbon::now();
-                        $drive->save();
-                    }
+                    $drive->document_path = $newPath;
+                    $drive->name = $name;
+                    $drive->modified_by = auth()->user()->id;
+                    $drive->modified_at = Carbon::now();
+                    $drive->save();
                 }
 
+                return $drive;
             });
         });
-
-        return $drive;
     }
 
     public function delete(string $id, Tenant $tenant)
     {
         return $tenant->run(function () use ($id) {
+            return DB::transaction(function () use ($id) {
 
-            $loggedInUser = Auth::user()->id;
+                $loggedInUser = Auth::user()->id;
 
-            $drive = Drive::findOrFail($id);
+                $drive = Drive::findOrFail($id);
 
-            $drive->modified_by = $loggedInUser;
-            $drive->modified_at = now();
+                $drive->modified_by = $loggedInUser;
+                $drive->modified_at = now();
 
-            $drive->save();
+                $drive->save();
 
-            $drive->delete();
+                $drive->delete();
 
-            return $drive;
+                return $drive;
+            });
         });
     }
 
@@ -184,7 +182,7 @@ class DriveService
 
             $user = Auth::user();
 
-            $drives = Drive::with(['driveFolder', 'drivePermissons', 'createdBy', 'modifiedBy'])
+            $drives = Drive::with(['driveFolder', 'drivePermissions', 'createdBy', 'modifiedBy'])
                 ->where(function ($query) use ($drive_folder_id) {
                     $query->where('document_type', DocumentTypeDriveEnum::FOLDER->value)
                         ->whereHas('driveFolder', function ($q) use ($drive_folder_id) {
@@ -192,10 +190,10 @@ class DriveService
                         });
                 })
                 ->orWhere(function ($query) use ($drive_folder_id) {
-                    $query->where('drive_pasta_id', $drive_folder_id)
+                    $query->where('drive_folder_id', $drive_folder_id)
                         ->where('document_type', '!=', DocumentTypeDriveEnum::FOLDER->value);
                 })
-                ->orderByRaw("CASE WHEN document_type = ? THEN 0 ELSE 1 END", [DocumentTypeDriveEnum::FOLDER->value])
+                ->orderByRaw('CASE WHEN document_type = ? THEN 0 ELSE 1 END', [DocumentTypeDriveEnum::FOLDER->value])
                 ->orderBy('name', 'asc')
                 ->orderBy('created_at', 'desc')
                 ->lazy();
@@ -203,6 +201,7 @@ class DriveService
             // Adiciona atributos de permissão a cada item
             return $drives->map(function ($drive) use ($user) {
                 $drive->permission_attrs = $this->getPermissionAttributes($drive, $user);
+
                 return $drive;
             });
         });
@@ -222,7 +221,7 @@ class DriveService
 
             $user = Auth::user();
 
-            $drives = Drive::with(['drivePermissons', 'createdBy', 'modifiedBy'])->withTrashed()
+            $drives = Drive::with(['drivePermissions', 'createdBy', 'modifiedBy'])->withTrashed()
                 ->where(function ($query) use ($drive_folder_id) {
                     $query->where('document_type', DocumentTypeDriveEnum::FOLDER->value)
                         ->whereHas('driveFolder', function ($q) use ($drive_folder_id) {
@@ -230,15 +229,16 @@ class DriveService
                         });
                 })
                 ->orWhere(function ($query) use ($drive_folder_id) {
-                    $query->where('drive_pasta_id', $drive_folder_id)
+                    $query->where('drive_folder_id', $drive_folder_id)
                         ->where('document_type', '!=', DocumentTypeDriveEnum::FOLDER->value);
                 })
-                ->orderByRaw("CASE WHEN document_type = ? THEN 0 ELSE 1 END", [DocumentTypeDriveEnum::FOLDER->value])
+                ->orderByRaw('CASE WHEN document_type = ? THEN 0 ELSE 1 END', [DocumentTypeDriveEnum::FOLDER->value])
                 ->orderBy('deleted_at', 'desc')
                 ->lazy();
 
             return $drives->map(function ($drive) use ($user) {
                 $drive->permission_attrs = $this->getPermissionAttributes($drive, $user);
+
                 return $drive;
             });
         });
@@ -247,20 +247,22 @@ class DriveService
     public function restore(string $id, string $type, Tenant $tenant)
     {
         return $tenant->run(function () use ($id, $type) {
+            return DB::transaction(function () use ($id, $type) {
 
-            $drive = null;
-            if ($type != DocumentTypeDriveEnum::FOLDER->value) {
-                $drive = Drive::onlyTrashed()->findOrFail($id);
-                $drive->restore();
-            }
+                $drive = null;
+                if ($type != DocumentTypeDriveEnum::FOLDER->value) {
+                    $drive = Drive::onlyTrashed()->findOrFail($id);
+                    $drive->restore();
+                }
 
-            if ($type == DocumentTypeDriveEnum::FOLDER->value) {
-                $drive = DriveFolder::findOrFail($id);
-                $drive->restore();
-                $drive->drives()->withTrashed()->restore();
-            }
+                if ($type == DocumentTypeDriveEnum::FOLDER->value) {
+                    $drive = DriveFolder::findOrFail($id);
+                    $drive->restore();
+                    $drive->drives()->withTrashed()->restore();
+                }
 
-            return $drive;
+                return $drive;
+            });
         });
     }
 
@@ -273,50 +275,58 @@ class DriveService
             if ($request->validated('drive_type') != DocumentTypeDriveEnum::FOLDER->value && $request->validated('confirm_delete') == 1) {
                 $drive = Drive::onlyTrashed()->findOrFail($request->validated('id')); // Drive
 
-                DB::transaction(function () use ($drive) {
-                    Storage::delete('public/' . $drive->documento_path);
+                $documentPath = $drive->document_path;
 
+                DB::transaction(function () use ($drive) {
                     $this->driveLogService->store($drive->toArray());
 
                     $drive->forceDelete();
                 });
+
+                // Remove o arquivo do disco somente após o commit (operação irreversível)
+                Storage::disk('public')->delete($documentPath);
             }
 
             if ($request->validated('drive_type') == DocumentTypeDriveEnum::FOLDER->value && $request->validated('confirm_delete') == 1) {
                 $drive = DriveFolder::findOrFail($request->validated('id')); // Pasta
 
-                DB::transaction(function () use ($drive) {
-                    Storage::deleteDirectory('public/drive/' . $drive->getPath());
+                $folderPath = 'drive/'.$drive->getPath();
 
+                DB::transaction(function () use ($drive) {
                     $this->driveLogService->store($drive->drives()->withTrashed()->first()->toArray());
 
                     $drive->forceDelete();
                 });
+
+                // Remove o diretório do disco somente após o commit (operação irreversível)
+                Storage::disk('public')->deleteDirectory($folderPath);
             }
 
             return $drive;
         });
     }
 
-    public function deleteSelecionados(array $datas, Tenant $tenant)
+    public function deleteSelected(array $ids, Tenant $tenant)
     {
-        return $tenant->run(function () use ($datas) {
+        return $tenant->run(function () use ($ids) {
+            return DB::transaction(function () use ($ids) {
 
-            $loggedInUser = Auth::user()->id;
+                $loggedInUser = Auth::user()->id;
 
-            $drive = null;
-            foreach ($datas as $data) {
-                $drive = Drive::findOrFail($data);
+                $drive = null;
+                foreach ($ids as $id) {
+                    $drive = Drive::findOrFail($id);
 
-                $drive->modified_by = $loggedInUser;
-                $drive->modified_at = now();
+                    $drive->modified_by = $loggedInUser;
+                    $drive->modified_at = now();
 
-                $drive->save();
+                    $drive->save();
 
-                $drive->delete();
-            }
+                    $drive->delete();
+                }
 
-            return $drive;
+                return $drive;
+            });
         });
     }
 
@@ -330,25 +340,31 @@ class DriveService
                 if ($data['drive_type'] != DocumentTypeDriveEnum::FOLDER->value && $request->validated('confirm_delete') == 1) {
                     $drive = Drive::onlyTrashed()->findOrFail($data['id']); // Drive
 
-                    DB::transaction(function () use ($drive) {
-                        Storage::delete('public/' . $drive->documento_path);
+                    $documentPath = $drive->document_path;
 
+                    DB::transaction(function () use ($drive) {
                         $this->driveLogService->store($drive->toArray());
 
                         $drive->forceDelete();
                     });
+
+                    // Remove o arquivo do disco somente após o commit (operação irreversível)
+                    Storage::disk('public')->delete($documentPath);
                 }
 
                 if ($data['drive_type'] == DocumentTypeDriveEnum::FOLDER->value && $request->validated('confirm_delete') == 1) {
                     $drive = DriveFolder::findOrFail($data['id']); // Pasta
 
-                    DB::transaction(function () use ($drive) {
-                        Storage::deleteDirectory('public/drive/' . $drive->getPath());
+                    $folderPath = 'drive/'.$drive->getPath();
 
+                    DB::transaction(function () use ($drive) {
                         $this->driveLogService->store($drive->drives()->withTrashed()->first()->toArray());
 
                         $drive->forceDelete();
                     });
+
+                    // Remove o diretório do disco somente após o commit (operação irreversível)
+                    Storage::disk('public')->deleteDirectory($folderPath);
                 }
             }
 
@@ -356,37 +372,38 @@ class DriveService
         });
     }
 
-    public function storePermissoesAcesso(StorePermissionAccessDriveRequest $request, Tenant $tenant)
+    public function storeAccessPermissions(StorePermissionAccessDriveRequest $request, Tenant $tenant)
     {
         return $tenant->run(function () use ($request) {
+            return DB::transaction(function () use ($request) {
 
-            $drive = Drive::findOrFail($request->validated('drive_id'));
+                $drive = Drive::findOrFail($request->validated('drive_id'));
 
-            $getUsers = $request->validated('users');
+                $getUsers = $request->validated('users');
 
-            $usersWithPermission = $drive->drivePermissons->map(function ($d) {
-                return $d->user_id;
+                $usersWithPermission = $drive->drivePermissions->map(function ($d) {
+                    return $d->user_id;
+                });
+
+                $userAdmin = [];
+
+                if ($request->validated('permission') == PermissionTypeDriveEnum::SOMENTE_PROPRIETARIO->value) {
+                    $userAdmin[] = Auth::user()->id;
+                    $users = array_diff($userAdmin, $usersWithPermission->toArray());
+                } else {
+                    $users = array_diff($getUsers, $usersWithPermission->toArray());
+                }
+
+                foreach ($users as $user) {
+                    $drive->drivePermissions()->create([
+                        'drive_id' => $request->validated('drive_id'),
+                        'user_id' => $user,
+                        'permission_type' => $request->validated('permission'),
+                    ]);
+                }
+
+                return true;
             });
-
-            $userAdmin = [];
-
-            if ($request->validated('permission') == PermissionTypeDriveEnum::SOMENTE_PROPRIETARIO->value) {
-                $userAdmin[] = Auth::user()->id;
-                $users       = array_diff($userAdmin, $usersWithPermission->toArray());
-            } else {
-                $users = array_diff($getUsers, $usersWithPermission->toArray());
-            }
-
-            foreach ($users as $user) {
-                $drive->drivePermissons()->create([
-                    'drive_id'        => $request->validated('drive_id'),
-                    'user_id'         => $user,
-                    'permission_type' => $request->validated('permission'),
-                ]);
-            }
-
-            return true;
-
         });
     }
 
@@ -396,12 +413,12 @@ class DriveService
     public function userCanAccess(Drive $drive, User $user): bool
     {
         // Proprietário sempre pode
-        if (Auth::user()->id === 3) {
+        if ($drive->user_id === $user->id) {
             return true;
         }
 
-        // Garante que drivePermissons é uma collection
-        $permissions = $drive->drivePermissons ?? collect();
+        // Garante que drivePermissions é uma collection
+        $permissions = $drive->drivePermissions ?? collect();
 
         // Verifica se existe restrição
         $hasRestriction = $permissions
@@ -409,7 +426,7 @@ class DriveService
             ->isNotEmpty();
 
         // Sem restrição = acesso liberado
-        if (!$hasRestriction) {
+        if (! $hasRestriction) {
             return true;
         }
 
@@ -431,17 +448,17 @@ class DriveService
         if ($userCanAccess) {
             return [
                 'has_access' => true,
-                'visible'    => '',
-                'disable'    => false,
-                'title'      => null,
+                'visible' => '',
+                'disable' => false,
+                'title' => null,
             ];
         }
 
         return [
             'has_access' => false,
-            'visible'    => 'pointer-events: none; opacity: 0.5;',
-            'disable'    => true,
-            'title'      => 'Acesso somente para o proprietário',
+            'visible' => 'pointer-events: none; opacity: 0.5;',
+            'disable' => true,
+            'title' => 'Acesso somente para o proprietário',
         ];
     }
 
@@ -452,6 +469,7 @@ class DriveService
     {
         return $drives->map(function ($drive) use ($user) {
             $drive->permission_attrs = $this->getPermissionAttributes($drive, $user);
+
             return $drive;
         });
     }
@@ -467,19 +485,19 @@ class DriveService
                 ->get()
                 ->map(function ($permission) {
                     return [
-                        'id'              => $permission->user->id,
-                        'name'            => $permission->user->name,
-                        'tipo_permission' => $permission->tipo_permission->value
+                        'id' => $permission->user->id,
+                        'name' => $permission->user->name,
+                        'tipo_permission' => $permission->permission_type->value,
                     ];
                 });
 
             return response()->json([
                 'success' => true,
-                'data'    => $users,
-                'drive'   => [
-                    'id'   => $drive->id,
+                'data' => $users,
+                'drive' => [
+                    'id' => $drive->id,
                     'name' => $drive->name,
-                ]
+                ],
             ]);
         });
     }
@@ -501,9 +519,9 @@ class DriveService
 
             $user = Auth::user();
 
-            $drives = Drive::with(['driveFolder', 'drivePermissons', 'createdBy', 'modifiedBy'])
-                ->where('name', 'like', '%' . $query . '%')
-                ->orderByRaw("CASE WHEN document_type = ? THEN 0 ELSE 1 END", [DocumentTypeDriveEnum::FOLDER->value])
+            $drives = Drive::with(['driveFolder', 'drivePermissions', 'createdBy', 'modifiedBy'])
+                ->where('name', 'like', '%'.$query.'%')
+                ->orderByRaw('CASE WHEN document_type = ? THEN 0 ELSE 1 END', [DocumentTypeDriveEnum::FOLDER->value])
                 ->orderBy('name', 'asc')
                 ->orderBy('created_at', 'desc')
                 ->lazy();
@@ -511,6 +529,7 @@ class DriveService
             // Adiciona atributos de permissão a cada item
             return $drives->map(function ($drive) use ($user) {
                 $drive->permission_attrs = $this->getPermissionAttributes($drive, $user);
+
                 return $drive;
             });
         });

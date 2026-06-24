@@ -5,76 +5,72 @@ namespace App\Services;
 use App\Enums\DocumentTypeDriveEnum;
 use App\Http\Requests\StoreDriveFolderRequest;
 use App\Models\DriveFolder;
+use App\Models\Tenant;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
-
 class DriveFolderService
 {
-    public function store(StoreDriveFolderRequest $request)
+    public function store(StoreDriveFolderRequest $request, Tenant $tenant)
     {
-        return DB::transaction(function () use ($request) {
+        return $tenant->run(function () use ($request) {
+            return DB::transaction(function () use ($request) {
 
-            $disk           = Storage::disk('public');
-            $nomeSolicitado = $request->validated('nome');
+                $disk = Storage::disk('public');
+                $requestedName = $request->validated('name');
 
-            // Definir parent_id se houver (pasta dentro de pasta)
-            $parentId = $request->validated('parent_id', null);
+                // Definir parent_id se houver (pasta dentro de pasta)
+                $parentId = $request->validated('parent_id', null);
 
-            // Buscar apenas pastas com o mesmo nome e parent no banco
-            $pastaExistente = DriveFolder::where('nome', $nomeSolicitado)
-                ->where('parent_id', $parentId)
-                ->latest('id')
-                ->first();
-
-            // Se existe, incrementar contador
-            $nomeDefinitivo = $nomeSolicitado;
-
-            if ($pastaExistente) {
-                $contador       = $this->extrairContador($pastaExistente->nome, $nomeSolicitado) ?? 1;
-                $nomeDefinitivo = "{$nomeSolicitado} ({$contador})";
-            }
-
-            // Garantir que o nome final é único
-            while (
-                DriveFolder::where('nome', $nomeDefinitivo)
+                // Buscar apenas pastas com o mesmo nome e parent no banco
+                $existingFolder = DriveFolder::where('name', $requestedName)
                     ->where('parent_id', $parentId)
-                    ->exists()
-            ) {
-                $contador       = ($this->extrairContador($nomeDefinitivo, $nomeSolicitado) ?? 0) + 1;
-                $nomeDefinitivo = "{$nomeSolicitado} ({$contador})";
-            }
+                    ->latest('id')
+                    ->first();
 
-            $pasta = DriveFolder::create([
-                'nome'      => $nomeDefinitivo,
-                'parent_id' => $parentId,
-            ]);
+                // Se existe, incrementar contador
+                $finalName = $requestedName;
 
-            // Criar diretório no storage
-            $caminhoPasta = 'drive/' . $pasta->getPath();
+                if ($existingFolder) {
+                    $counter = $this->extractCounter($existingFolder->name, $requestedName) ?? 1;
+                    $finalName = "{$requestedName} ({$counter})";
+                }
 
-            if (!$disk->exists($caminhoPasta)) {
-                Storage::disk('public')->createDirectory(
-                    $caminhoPasta,
-                    [
-                        'visibility'           => 'public',
-                        'directory_visibility' => 'public',
-                    ]
-                );
-            }
+                // Garantir que o nome final é único
+                while (
+                    DriveFolder::where('name', $finalName)
+                        ->where('parent_id', $parentId)
+                        ->exists()
+                ) {
+                    $counter = ($this->extractCounter($finalName, $requestedName) ?? 0) + 1;
+                    $finalName = "{$requestedName} ({$counter})";
+                }
 
-            $pasta->drives()->create([
-                'user_id'           => Auth::id(),
-                'drive_pasta_id'    => $pasta->id,
-                'nome'              => $pasta->nome,
-                'documento_path'    => $caminhoPasta,
-                'tamanho_documento' => null,
-                'tipo_documento'    => DocumentTypeDriveEnum::FOLDER,
-                'modified_by'       => Auth::id(),
-            ]);
+                $folder = DriveFolder::create([
+                    'name' => $finalName,
+                    'parent_id' => $parentId,
+                ]);
 
-            return $pasta;
+                // Criar diretório no storage
+                $folderPath = 'drive/'.$folder->getPath();
+
+                if (! $disk->exists($folderPath)) {
+                    $disk->makeDirectory($folderPath);
+                }
+
+                // drive_folder_id é preenchido automaticamente pela relação drives()
+                $folder->drives()->create([
+                    'user_id' => Auth::id(),
+                    'name' => $folder->name,
+                    'document_path' => $folderPath,
+                    'document_size' => 0,
+                    'document_type' => DocumentTypeDriveEnum::FOLDER,
+                    'modified_by' => Auth::id(),
+                ]);
+
+                return $folder;
+            });
         });
     }
 
@@ -82,43 +78,50 @@ class DriveFolderService
      * Extrai o contador de um nome formatado
      * Ex: "Pasta 01 (2)" retorna 2
      */
-    private function extrairContador(string $nomeCompleto, string $nomeBase): ?int
+    private function extractCounter(string $fullName, string $baseName): ?int
     {
-        $padrao = preg_quote($nomeBase) . '\s*\((\d+)\)$';
+        $pattern = preg_quote($baseName).'\s*\((\d+)\)$';
 
-        if (preg_match("/{$padrao}/", $nomeCompleto, $matches)) {
+        if (preg_match("/{$pattern}/", $fullName, $matches)) {
             return (int) $matches[1];
         }
 
         return null;
     }
 
-    public function delete(string $id)
+    public function delete(string $id, Tenant $tenant)
     {
-        $usuarioLogado = auth()->user()->id;
+        return $tenant->run(function () use ($id) {
+            return DB::transaction(function () use ($id) {
 
-        $drivePasta = DriveFolder::findOrFail($id);
+                $loggedInUser = Auth::user()->id;
 
-        $drivePasta->drives()->update([
-            'modified_by' => $usuarioLogado,
-            'modified_at' => now()
-        ]);
+                $folder = DriveFolder::findOrFail($id);
 
-        $drivePasta->drives()->delete();
-        $drivePasta->delete();
+                $folder->drives()->update([
+                    'modified_by' => $loggedInUser,
+                    'modified_at' => now(),
+                ]);
 
-        return $drivePasta;
+                $folder->drives()->delete();
+                $folder->delete();
+
+                return $folder;
+            });
+        });
     }
 
-    public function findAll()
+    public function findAll(Tenant $tenant)
     {
+        return $tenant->run(function () {
 
-        $pastas = collect();
+            $folders = collect();
 
-        DriveFolder::chunk(500, function ($chunk) use (&$pastas) {
-            $pastas = $pastas->merge($chunk);
+            DriveFolder::chunk(500, function ($chunk) use (&$folders) {
+                $folders = $folders->merge($chunk);
+            });
+
+            return $folders;
         });
-
-        return $pastas;
     }
 }

@@ -5,7 +5,7 @@ description: >
   performance, clean code, architecture, security, and Laravel idioms. Adopt the persona of a
   Laravel developer with 10+ years of experience. Trigger whenever the user asks to review code,
   audit, refactor, find bottlenecks, improve performance, or evaluate quality in a Laravel/PHP
-  project — including phrases like "code review", "revisar esse código", "revisão de código",
+  project — including phrases like "code review", "revise esse código", "revisar esse código", "revisão de código",
   "aponte melhorias", "otimizar performance", "tem N+1 aqui?", "está limpo?", "boas práticas",
   "refatorar", "auditar", "o que dá pra melhorar", or whenever a Laravel controller, model,
   service, job, query, or migration is pasted and the user wants feedback. This project uses
