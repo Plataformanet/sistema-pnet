@@ -29,17 +29,25 @@ class DriveFolder extends Model
         return $this->hasMany(Drive::class);
     }
 
-    /**
-     * Monta o caminho completo da pasta a partir da raiz (ex.: "Documentos/Contratos/2026").
-     */
     public function getPath(): string
     {
-        $segments = [];
-
-        for ($folder = $this; $folder !== null; $folder = $folder->parent) {
-            array_unshift($segments, $folder->name);
+        if ($this->parent) {
+            return $this->parent->getPath().'/'.$this->name;
         }
 
-        return implode('/', $segments);
+        return $this->name;
+    }
+
+    public function getBreadcrumbAttribute()
+    {
+        $breadcrumb = collect();
+        $current = $this;
+
+        while ($current) {
+            $breadcrumb->prepend($current); // adiciona no início
+            $current = $current->parent;
+        }
+
+        return $breadcrumb;
     }
 }

@@ -3,12 +3,11 @@
 namespace App\Models;
 
 use App\Enums\DocumentTypeDriveEnum;
-use App\Services\DriveService;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Carbon\Carbon;
 use Illuminate\Support\Str;
 
 class Drive extends Model
@@ -27,45 +26,41 @@ class Drive extends Model
     ];
 
     protected $casts = [
-        'modified_at'   => 'datetime',
+        'modified_at' => 'datetime',
         'document_type' => DocumentTypeDriveEnum::class,
     ];
 
-    protected $permissionCache = [];
-
-    protected $appends = ['permission_attrs'];
-
     public function getUrlAttribute()
     {
-        if ($this->tipo_documento->value === DocumentTypeDriveEnum::FOLDER->value) {
+        if ($this->document_type->value === DocumentTypeDriveEnum::FOLDER->value) {
             return route('drives.index', [
-                'my-drive'  => $this->id,
+                'my-drive' => $this->id,
                 'parent_id' => $this->driveFolder?->parent_id === null ? $this->driveFolder?->id : $this->driveFolder->parent_id,
                 'folder_id' => $this->drive_folder_id,
-                'folder'    => Str::slug($this->driveFolder?->name),
+                'folder' => Str::slug($this->driveFolder?->name),
             ]);
         }
 
-        return asset('storage/' . $this->documento_path);
+        return asset('storage/'.$this->document_path);
     }
 
     public function getUrlTrashAttribute()
     {
-        if ($this->tipo_documento->value === DocumentTypeDriveEnum::FOLDER->value) {
+        if ($this->document_type->value === DocumentTypeDriveEnum::FOLDER->value) {
             return route('lixeira.index', [
-                'trash'     => $this->id,
+                'trash' => $this->id,
                 'parent_id' => $this->driveFolder?->parent_id === null ? $this->driveFolder?->id : $this->driveFolder->parent_id,
                 'folder_id' => $this->drive_folder_id,
-                'folder'    => Str::slug($this->driveFolder?->name),
+                'folder' => Str::slug($this->driveFolder?->name),
             ]);
         }
 
-        return asset('storage/' . $this->documento_path);
+        return asset('storage/'.$this->document_path);
     }
 
     public function getSizeFormatedAttribute()
     {
-        return $this->formatBytes($this->tamanho_documento);
+        return $this->formatBytes($this->document_size);
     }
 
     private function formatBytes($bytes)
@@ -73,8 +68,8 @@ class Drive extends Model
         $units = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
 
         $bytes = max($bytes, 0);
-        $pow   = floor(($bytes ? log($bytes) : 0) / log(1024));
-        $pow   = min($pow, count($units) - 1);
+        $pow = floor(($bytes ? log($bytes) : 0) / log(1024));
+        $pow = min($pow, count($units) - 1);
 
         $bytes /= (1 << (10 * $pow));
 
@@ -82,7 +77,7 @@ class Drive extends Model
         $formatted = round($bytes);
 
         if ($formatted !== 0.0) {
-            return $formatted . ' ' . $units[$pow];
+            return $formatted.' '.$units[$pow];
         }
 
         return '---';
@@ -90,8 +85,9 @@ class Drive extends Model
 
     public function getModifiedAtLocalAttribute()
     {
-        if (!$this->modified_at)
+        if (! $this->modified_at) {
             return null;
+        }
 
         return Carbon::createFromFormat(
             'Y-m-d H:i:s',
@@ -101,15 +97,14 @@ class Drive extends Model
 
     public function getModificationDateAttribute()
     {
-        return DocumentTypeDriveEnum::FOLDER->value != $this->tipo_documento->value
+        return DocumentTypeDriveEnum::FOLDER->value != $this->document_type->value
             ? $this->modified_at_local->format('d/m/Y')
             : date('d/m/Y', strtotime($this->updated_at));
     }
 
-
     public function getModificationDateTittleAttribute()
     {
-        return DocumentTypeDriveEnum::FOLDER->value != $this->tipo_documento->value
+        return DocumentTypeDriveEnum::FOLDER->value != $this->document_type->value
             ? $this->modified_at_local->format('d/m/Y H:i:s')
             : date('d/m/Y - H:i:s', strtotime($this->updated_at));
     }
@@ -143,10 +138,5 @@ class Drive extends Model
     public function modifiedBy(): BelongsTo
     {
         return $this->belongsTo(User::class);
-    }
-
-    public function getPermissionAttrsAttribute()
-    {
-        return app(DriveService::class)->getPermissionAttributes($this, auth()->user());
     }
 }

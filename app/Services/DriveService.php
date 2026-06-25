@@ -7,8 +7,8 @@ use App\Enums\PermissionTypeDriveEnum;
 use App\Exceptions\UploadDocumentException;
 use App\Http\Requests\ForceDeleteRequest;
 use App\Http\Requests\ForceDeleteTrashRequest;
+use App\Http\Requests\StoreAccessPermissionDriveRequest;
 use App\Http\Requests\StoreDriveRequest;
-use App\Http\Requests\StorePermissionAccessDriveRequest;
 use App\Http\Requests\UpdateDriveRequest;
 use App\Models\Drive;
 use App\Models\DriveFolder;
@@ -84,12 +84,12 @@ class DriveService
         return $tenant->run(function () use ($request) {
             return DB::transaction(function () use ($request) {
 
-                if ($request['type_drive'] == 1) {
-                    $drive = DriveFolder::findOrFail($request['id']);
+                if ($request->validated('type_drive') == 1) {
+                    $drive = DriveFolder::findOrFail($request->validated('id'));
                     $parts = explode('/', $drive->getPath());
                     $path = $drive->getPath();
 
-                    $name = $request['name'];
+                    $name = $request->validated('name');
 
                     // altera o último elemento
                     $parts[count($parts) - 1] = $name;
@@ -107,7 +107,7 @@ class DriveService
                     $drive->name = $name;
                     $drive->save();
 
-                    $drive->drives()->where('document_type', $request['drive_type'])->update([
+                    $drive->drives()->where('document_type', $request->validated('drive_type'))->update([
                         'name' => $name,
                         'document_path' => $newPath,
                         'modified_by' => auth()->user()->id,
@@ -117,10 +117,10 @@ class DriveService
                     return $drive;
                 }
 
-                $drive = Drive::findOrFail($request['id']);
+                $drive = Drive::findOrFail($request->validated('id'));
                 $path = $drive->driveFolder->getPath();
                 $extension = $drive->document_type->getType();
-                $name = $request['name'].'.'.$extension;
+                $name = $request->validated('name').'.'.$extension;
 
                 // Caminhos
                 $oldPath = "drive/{$path}/{$drive->name}";
@@ -167,12 +167,21 @@ class DriveService
     {
         return $tenant->run(function () {
 
-            return Drive::whereHas('driveFolder', function ($query) {
-                $query->whereNull('parent_id');
-            })->where('document_type', DocumentTypeDriveEnum::FOLDER->value)
+            $user = Auth::user();
+
+            $drives = Drive::with(['driveFolder', 'drivePermissions', 'createdBy', 'modifiedBy'])
+                ->whereHas('driveFolder', function ($query) {
+                    $query->whereNull('parent_id');
+                })->where('document_type', DocumentTypeDriveEnum::FOLDER->value)
                 ->orderBy('name', 'asc')
                 ->orderBy('created_at', 'desc')
                 ->lazy();
+
+            return $drives->map(function ($drive) use ($user) {
+                $drive->permission_attrs = $this->getPermissionAttributes($drive, $user);
+
+                return $drive;
+            });
         });
     }
 
@@ -211,7 +220,18 @@ class DriveService
     {
         return $tenant->run(function () {
 
-            return Drive::onlyTrashed()->orderBy('document_type', 'asc')->cursor();
+            $user = Auth::user();
+
+            $drives = Drive::with(['driveFolder', 'drivePermissions', 'createdBy', 'modifiedBy'])
+                ->onlyTrashed()
+                ->orderBy('document_type', 'asc')
+                ->lazy();
+
+            return $drives->map(function ($drive) use ($user) {
+                $drive->permission_attrs = $this->getPermissionAttributes($drive, $user);
+
+                return $drive;
+            });
         });
     }
 
@@ -372,7 +392,7 @@ class DriveService
         });
     }
 
-    public function storeAccessPermissions(StorePermissionAccessDriveRequest $request, Tenant $tenant)
+    public function storeAccessPermissions(StoreAccessPermissionDriveRequest $request, Tenant $tenant)
     {
         return $tenant->run(function () use ($request) {
             return DB::transaction(function () use ($request) {

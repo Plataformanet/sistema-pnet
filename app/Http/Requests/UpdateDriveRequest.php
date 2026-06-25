@@ -18,22 +18,23 @@ class UpdateDriveRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array|string>
+     * @return array<string, ValidationRule|array|string>
      */
     public function rules(): array
     {
         return [
-            'id'         => ['required'],
-            'name'       => ['required'],
+            'id' => ['required'],
+            'type_drive' => ['required'],
+            'name' => ['required'],
             'drive_type' => ['required'],
         ];
     }
 
-
     public function messages(): array
     {
         return [
-            'name.required'       => 'O nome do documento ou da pasta deve ser informado',
+            'type_drive.required' => 'O tipo do registro (pasta ou arquivo) é obrigatório',
+            'name.required' => 'O nome do documento ou da pasta deve ser informado',
             'drive_type.required' => 'O tipo do drive é obrigatório',
         ];
     }
