@@ -2,123 +2,77 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\DocumentTypeDriveEnum;
 use App\Http\Requests\StoreDriveFolderRequest;
-use App\Models\DriveFolder;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
-
+use App\Services\DriveFolderService;
+use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Log;
+use Inertia\Inertia;
 
 class TenantDriveFolderController extends Controller
 {
-    public function store(StoreDriveFolderRequest $request)
+    public function __construct(protected DriveFolderService $driveFolderService) {}
+
+    /**
+     * Display a listing of the resource.
+     */
+    public function index()
     {
-        return DB::transaction(function () use ($request) {
+        $folders = $this->driveFolderService->findAll(tenant());
 
-            $disk          = Storage::disk('public');
-            $requestedName = $request->validated('name');
-
-            // Definir parent_id se houver (pasta dentro de pasta)
-            $parentId = $request->validated('parent_id', null);
-
-            // Buscar apenas pastas com o mesmo nome e parent no banco
-            $existingFolder = DriveFolder::where('name', $requestedName)
-                ->where('parent_id', $parentId)
-                ->latest('id')
-                ->first();
-
-            // Se existe, incrementar contador
-            $finalName = $requestedName;
-
-            if ($existingFolder) {
-                $count     = $this->extractCounter($existingFolder->name, $requestedName) ?? 1;
-                $finalName = "{$requestedName} ({$count})";
-            }
-
-            // Garantir que o nome final é único
-            while (
-                DriveFolder::where('name', $finalName)
-                    ->where('parent_id', $parentId)
-                    ->exists()
-            ) {
-                $count     = ($this->extractCounter($finalName, $requestedName) ?? 0) + 1;
-                $finalName = "{$requestedName} ({$count})";
-            }
-
-            $folder = DriveFolder::create([
-                'name'      => $finalName,
-                'parent_id' => $parentId,
-            ]);
-
-            // Criar diretório no storage
-            $folderPath = 'drive/' . $folder->getPath();
-
-            if (!$disk->exists($folderPath)) {
-                Storage::disk('public')->createDirectory(
-                    $folderPath,
-                    [
-                        'visibility'           => 'public',
-                        'directory_visibility' => 'public',
-                    ]
-                );
-            }
-
-            $folder->drives()->create([
-                'user_id'           => Auth::id(),
-                'drive_pasta_id'    => $folder->id,
-                'name'              => $folder->nome,
-                'documento_path'    => $folderPath,
-                'tamanho_documento' => null,
-                'tipo_documento'    => DocumentTypeDriveEnum::FOLDER,
-                'modified_by'       => Auth::id(),
-            ]);
-
-            return $folder;
-        });
+        return Inertia::render('tenant/drive_folder/List', [
+            'folders' => $folders,
+        ]);
     }
 
     /**
-     * Extrai o contador de um nome formatado
-     * Ex: "Pasta 01 (2)" retorna 2
+     * Show the form for creating a new resource.
      */
-    private function extractCounter(string $fullName, string $nomeBase): ?int
+    public function create()
     {
-        $pattern = preg_quote($nomeBase) . '\s*\((\d+)\)$';
+        return Inertia::render('tenant/drive_folder/Create');
+    }
 
-        if (preg_match("/{$pattern}/", $fullName, $matches)) {
-            return (int) $matches[1];
+    /**
+     * Store a newly created resource in storage.
+     */
+    public function store(StoreDriveFolderRequest $request)
+    {
+        try {
+            $this->driveFolderService->store($request, tenant());
+
+            return redirect()->back()->with('msg_success', 'Pasta cadastrada com sucesso!');
+        } catch (\Throwable $th) {
+            Log::error('Error ao tentar criar pasta:', [$th->getMessage()]);
+
+            return redirect()->back()->with('msg_erro', 'Erro ao tentar fazer cadastro da pasta!');
         }
-
-        return null;
     }
 
-    public function delete(string $id)
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy(string $id)
     {
-        $loggedInUser = auth()->user()->id;
+        try {
+            $this->driveFolderService->delete($id, tenant());
 
-        $driveFolder = DriveFolder::findOrFail($id);
+            return response()->json(
+                [
+                    'success' => true,
+                    'message' => 'Pasta deletada com sucesso!',
+                ],
+                Response::HTTP_OK,
+            );
+        } catch (\Throwable $th) {
+            Log::error('Error ao tentar deletar pasta:', [$th->getMessage()]);
 
-        $driveFolder->drives()->update([
-            'modified_by' => $loggedInUser,
-            'modified_at' => now()
-        ]);
-
-        $driveFolder->drives()->delete();
-        $driveFolder->delete();
-
-        return $driveFolder;
+            return response()->json(
+                [
+                    'success' => false,
+                    'message' => 'Erro ao tentar deletar pasta!',
+                ],
+                Response::HTTP_INTERNAL_SERVER_ERROR,
+            );
+        }
     }
-
-    public function findAll()
-    {
-        $folders = collect();
-
-        DriveFolder::chunk(500, function ($chunk) use (&$folders) {
-            $folders = $folders->merge($chunk);
-        });
-
-        return $folders;
-    }
-
 }

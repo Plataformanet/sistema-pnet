@@ -3,35 +3,33 @@
 namespace App\Http\Controllers;
 
 use App\Exceptions\UploadDocumentException;
+use App\Http\Requests\DeleteSelectedDriveRequest;
 use App\Http\Requests\StoreAccessPermissionDriveRequest;
 use App\Http\Requests\StoreDriveRequest;
 use App\Http\Requests\UpdateDriveRequest;
 use App\Models\DriveFolder;
 use App\Services\DriveService;
-use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 
 class TenantDriveController extends Controller
 {
-    public function __construct(public DriveService $driveService)
-    {
-    }
+    public function __construct(protected DriveService $driveService) {}
 
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        $drive_id  = request('my-drive');
+        $drive_id = request('my-drive');
         $folder_id = request('folder_id');
 
         if ($folder_id) {
             $folders = DriveFolder::findOrFail($folder_id);
 
-            $this->authorize('viewFolder', $folders);
+            Gate::authorize('viewFolder', $folders);
         }
 
         if ($drive_id && $folder_id) {
@@ -41,7 +39,7 @@ class TenantDriveController extends Controller
         }
 
         return Inertia::render('tenant/drive/list/List', [
-            'drives'  => $drives,
+            'drives' => $drives,
             'folders' => $folder_id ? $folders->breadcrumb->toArray() : [],
         ]);
     }
@@ -75,16 +73,6 @@ class TenantDriveController extends Controller
                     'message' => 'Nome do documento ou pasta atualizado com sucesso!',
                 ],
                 Response::HTTP_CREATED,
-            );
-        } catch (ValidationException $e) {
-            Log::error('Error ao tentar fazer atualização do documento ou da pasta:', [$e->getMessage()]);
-
-            return response()->json(
-                [
-                    'success' => false,
-                    'message' => $e->getMessage(),
-                ],
-                Response::HTTP_UNPROCESSABLE_ENTITY,
             );
         } catch (\Throwable $th) {
             Log::error('Error ao tentar fazer atualização do documento ou da pasta:', [$th->getMessage()]);
@@ -127,10 +115,10 @@ class TenantDriveController extends Controller
         }
     }
 
-    public function deleteSelecionados(Request $request)
+    public function deleteSelected(DeleteSelectedDriveRequest $request)
     {
         try {
-            $this->driveService->deleteSelected($request->input('selectedValues'), tenant());
+            $this->driveService->deleteSelected($request->validated('selectedValues'), tenant());
 
             return response()->json(
                 [
@@ -152,7 +140,7 @@ class TenantDriveController extends Controller
         }
     }
 
-    public function storePermissoesAcesso(StoreAccessPermissionDriveRequest $request)
+    public function storeAccessPermissions(StoreAccessPermissionDriveRequest $request)
     {
         try {
 
@@ -178,13 +166,11 @@ class TenantDriveController extends Controller
         }
     }
 
-    public function acessoUsuario(string $id)
+    public function userAccess(string $id)
     {
         try {
 
-            $drive = $this->driveService->userAccess($id, tenant());
-
-            return $drive->content();
+            return $this->driveService->userAccess($id, tenant());
 
         } catch (\Throwable $th) {
             Log::error('Error ao tentar carregar para usuários:', [$th->getMessage()]);
@@ -198,7 +184,7 @@ class TenantDriveController extends Controller
         }
     }
 
-    public function retirarAcessoUsuario(string $drive_id, string $user_id)
+    public function removeUserAccess(string $drive_id, string $user_id)
     {
         try {
             $this->driveService->removeUserAccess($drive_id, $user_id, tenant());
@@ -207,7 +193,7 @@ class TenantDriveController extends Controller
         } catch (\Throwable $th) {
             Log::error('Error ao tentar retirar acesso do usuário:', [$th->getMessage()]);
 
-            return redirect()->back()->with(['msg_erro' => 'Retirada permissão com sucesso']);
+            return redirect()->back()->with(['msg_erro' => 'Erro ao retirar a permissão do usuário']);
         }
     }
 }

@@ -33,7 +33,7 @@ class Drive extends Model
     public function getUrlAttribute()
     {
         if ($this->document_type->value === DocumentTypeDriveEnum::FOLDER->value) {
-            return route('drives.index', [
+            return route('tenant.drive.index', [
                 'my-drive' => $this->id,
                 'parent_id' => $this->driveFolder?->parent_id === null ? $this->driveFolder?->id : $this->driveFolder->parent_id,
                 'folder_id' => $this->drive_folder_id,
@@ -47,7 +47,7 @@ class Drive extends Model
     public function getUrlTrashAttribute()
     {
         if ($this->document_type->value === DocumentTypeDriveEnum::FOLDER->value) {
-            return route('lixeira.index', [
+            return route('tenant.drive.trash.index', [
                 'trash' => $this->id,
                 'parent_id' => $this->driveFolder?->parent_id === null ? $this->driveFolder?->id : $this->driveFolder->parent_id,
                 'folder_id' => $this->drive_folder_id,

@@ -4,18 +4,16 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\ForceDeleteRequest;
 use App\Http\Requests\ForceDeleteTrashRequest;
+use App\Http\Requests\RestoreDriveRequest;
 use App\Models\DriveFolder;
 use App\Services\DriveService;
-use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 
 class TenantDriveTrashController extends Controller
 {
-    public function __construct(public DriveService $driveService)
-    {
-    }
+    public function __construct(protected DriveService $driveService) {}
 
     /**
      * Display a listing of the resource.
@@ -37,7 +35,7 @@ class TenantDriveTrashController extends Controller
         return Inertia::render(
             'tenant/drive/trash/List',
             [
-                'drives'  => $drives,
+                'drives' => $drives,
                 'folders' => $folder_id ? $folders->breadcrumb->toArray() : [],
             ]
         );
@@ -46,25 +44,26 @@ class TenantDriveTrashController extends Controller
     /**
      * Restore the specified resource in storage.
      */
-    public function restore(Request $request)
+    public function restore(RestoreDriveRequest $request)
     {
         try {
 
-            $this->driveService->restore($request->input('id'), $request->input('tipo_drive'), tenant());
+            $this->driveService->restore($request->validated('id'), $request->validated('tipo_drive'), tenant());
 
             return response()->json(
                 [
                     'success' => true,
-                    'message' => 'Documento ou Pasta restaurado com sucesso!'
+                    'message' => 'Documento ou Pasta restaurado com sucesso!',
                 ],
                 Response::HTTP_OK
             );
         } catch (\Throwable $th) {
             Log::error('Error ao tentar restaurar o documento ou a pasta:', [$th->getMessage()]);
+
             return response()->json(
                 [
                     'success' => false,
-                    'message' => 'Erro ao tentar restaurar o documento ou a pasta!'
+                    'message' => 'Erro ao tentar restaurar o documento ou a pasta!',
                 ],
                 Response::HTTP_INTERNAL_SERVER_ERROR
             );
@@ -79,19 +78,20 @@ class TenantDriveTrashController extends Controller
         try {
             $this->driveService->forceDelete($request, tenant());
 
-            return response()->jsDriveFolderon(
+            return response()->json(
                 [
                     'success' => true,
-                    'message' => 'Documento ou Pasta deletado com sucesso!'
+                    'message' => 'Documento ou Pasta deletado com sucesso!',
                 ],
                 Response::HTTP_OK
             );
         } catch (\Throwable $th) {
             Log::error('Error ao tentar deletar o documento ou a pasta:', [$th->getMessage()]);
+
             return response()->json(
                 [
                     'success' => false,
-                    'message' => 'Erro ao tentar deletar o documento ou a pasta!'
+                    'message' => 'Erro ao tentar deletar o documento ou a pasta!',
                 ],
                 Response::HTTP_INTERNAL_SERVER_ERROR
             );
@@ -106,16 +106,17 @@ class TenantDriveTrashController extends Controller
             return response()->json(
                 [
                     'success' => true,
-                    'message' => 'Arquivos da lixeira excluidos com sucesso!'
+                    'message' => 'Arquivos da lixeira excluidos com sucesso!',
                 ],
                 Response::HTTP_OK
             );
         } catch (\Throwable $th) {
             Log::error('Error ao tentar excluir arquivos da lixeira:', [$th->getMessage()]);
+
             return response()->json(
                 [
                     'success' => false,
-                    'message' => 'Error ao tentar excluir arquivos da lixeira!'
+                    'message' => 'Error ao tentar excluir arquivos da lixeira!',
                 ],
                 Response::HTTP_INTERNAL_SERVER_ERROR
             );

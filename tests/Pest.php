@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Tenant;
+use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Str;
 use Tests\Support\TenantRegistry;
 use Tests\TestCase;
@@ -95,4 +96,24 @@ function makeTenant(array $attributes = []): Tenant
         'name' => 'Tenant de teste',
         'is_active' => true,
     ], $attributes)));
+}
+
+/**
+ * Constrói uma instância de FormRequest já resolvida e validada, sem precisar de
+ * rota HTTP. Útil para testar services cujos métodos recebem um FormRequest.
+ *
+ * @template T of \Illuminate\Foundation\Http\FormRequest
+ *
+ * @param  class-string<T>  $class
+ * @param  array<string, mixed>  $data
+ * @param  array<string, mixed>  $files
+ * @return T
+ */
+function formRequest(string $class, array $data = [], array $files = []): FormRequest
+{
+    $request = $class::create('/', 'POST', $data, [], $files);
+    $request->setContainer(app());
+    $request->validateResolved();
+
+    return $request;
 }

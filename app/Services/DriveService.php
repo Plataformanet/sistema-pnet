@@ -20,7 +20,6 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\LazyCollection;
 
@@ -70,7 +69,6 @@ class DriveService
                         ['visibility' => 'public']
                     );
                 } catch (\Throwable $th) {
-                    Log::error('Error ao tentar fazer upload do documento:', [$th->getMessage()]);
                     throw new UploadDocumentException('Erro ao tentar fazer upload do documento.', Response::HTTP_UNPROCESSABLE_ENTITY);
                 }
 
@@ -276,7 +274,7 @@ class DriveService
                 }
 
                 if ($type == DocumentTypeDriveEnum::FOLDER->value) {
-                    $drive = DriveFolder::findOrFail($id);
+                    $drive = DriveFolder::withTrashed()->findOrFail($id);
                     $drive->restore();
                     $drive->drives()->withTrashed()->restore();
                 }
