@@ -307,18 +307,62 @@ class PermissionSeeder extends Seeder
                     ],
                 ],
             ],
-            'drives'        => [
-                'name'         => [
-                    'drives.drives.view',
-                    'drives.drives.edit',
-                    'drives.drives.create',
-                    'drives.drives.delete',
+            'drive'         => [
+                'drives'  => [
+                    'name'         => [
+                        'drive.drives.view',
+                        'drive.drives.edit',
+                        'drive.drives.create',
+                        'drive.drives.delete',
+                    ],
+                    'display_name' => [
+                        'Drives (Visualizar)',
+                        'Drives (Editar)',
+                        'Drives (Criar)',
+                        'Drives (Excluir)',
+                    ],
                 ],
-                'display_name' => [
-                    'Drives (Visualizar)',
-                    'Drives (Editar)',
-                    'Drives (Criar)',
-                    'Drives (Excluir)',
+                'folders' => [
+                    'name'         => [
+                        'drive.folders.view',
+                        'drive.folders.edit',
+                        'drive.folders.create',
+                        'drive.folders.delete',
+                    ],
+                    'display_name' => [
+                        'Drives (Visualizar)',
+                        'Drives (Editar)',
+                        'Drives (Criar)',
+                        'Drives (Excluir)',
+                    ],
+                ],
+                'trash'   => [
+                    'name'         => [
+                        'drive.trash.view',
+                        'drive.trash.edit',
+                        'drive.trash.create',
+                        'drive.trash.delete',
+                    ],
+                    'display_name' => [
+                        'Lixeira (Visualizar)',
+                        'Lixeira (Editar)',
+                        'Lixeira (Criar)',
+                        'Lixeira (Excluir)',
+                    ],
+                ],
+                'logs'    => [
+                    'name'         => [
+                        'drive.logs.view',
+                        'drive.logs.edit',
+                        'drive.logs.create',
+                        'drive.logs.delete',
+                    ],
+                    'display_name' => [
+                        'Logs (Visualizar)',
+                        'Logs (Editar)',
+                        'Logs (Criar)',
+                        'Logs (Excluir)',
+                    ],
                 ],
             ]
         ];
