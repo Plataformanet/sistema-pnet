@@ -28,14 +28,27 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class DriveService
 {
+    /**
+     * Subpasta do módulo dentro da pasta do tenant: tenant<id>/drive/...
+     */
+    private const BASE_PATH = 'drive';
+
     public function __construct(protected DriveLogService $driveLogService) {}
 
     /**
-     * Disco de armazenamento do Drive (isolado por tenant pelo bootstrapper).
+     * Disco de armazenamento (isolado por tenant pelo bootstrapper).
      */
     private function disk(): FilesystemAdapter
     {
-        return Storage::disk(config('drive.disk'));
+        return Storage::disk(config('bucket.disk'));
+    }
+
+    /**
+     * Prefixo (subpasta) do módulo dentro da pasta do tenant.
+     */
+    private function basePath(): string
+    {
+        return self::BASE_PATH;
     }
 
     public function store(StoreDriveRequest $request, Tenant $tenant)
@@ -54,12 +67,12 @@ class DriveService
                 $documentName = $request->validated('documents')[0]->getClientOriginalName();
                 $extension = $request->validated('documents')[0]->getClientOriginalExtension();
 
-                while ($disk->exists('drive/'.$folder->getPath().'/'.$documentName)) {
+                while ($disk->exists($this->basePath().'/'.$folder->getPath().'/'.$documentName)) {
                     $documentName = $baseName." ($counter).".$extension;
                     $counter++;
                 }
 
-                $document_path = 'drive/'.$folder->getPath().'/'.$documentName;
+                $document_path = $this->basePath().'/'.$folder->getPath().'/'.$documentName;
 
                 $drive = Drive::create([
                     'user_id' => $request->validated('user_id'),
@@ -74,7 +87,7 @@ class DriveService
 
                 try {
                     $this->disk()->putFileAs(
-                        'drive/'.$folder->getPath(),
+                        $this->basePath().'/'.$folder->getPath(),
                         $request->file('documents')[0],
                         $documentName,
                     );
@@ -105,9 +118,9 @@ class DriveService
                 abort(Response::HTTP_NOT_FOUND, 'Documento não encontrado no armazenamento.');
             }
 
-            if (config('drive.signed_urls') && $disk->providesTemporaryUrls()) {
+            if (config('bucket.signed_urls') && $disk->providesTemporaryUrls()) {
                 return redirect()->away(
-                    $disk->temporaryUrl($drive->document_path, now()->addMinutes((int) config('drive.url_ttl')))
+                    $disk->temporaryUrl($drive->document_path, now()->addMinutes((int) config('bucket.url_ttl')))
                 );
             }
 
@@ -133,8 +146,8 @@ class DriveService
                     // junta tudo de novo
                     $joinPath = implode('/', $parts);
 
-                    $oldPath = "drive/{$path}";
-                    $newPath = "drive/{$joinPath}";
+                    $oldPath = $this->basePath()."/{$path}";
+                    $newPath = $this->basePath()."/{$joinPath}";
 
                     if ($this->disk()->exists($oldPath)) {
                         $this->disk()->move($oldPath, $newPath);
@@ -159,8 +172,8 @@ class DriveService
                 $name = $request->validated('name').'.'.$extension;
 
                 // Caminhos
-                $oldPath = "drive/{$path}/{$drive->name}";
-                $newPath = "drive/{$path}/{$name}";
+                $oldPath = $this->basePath()."/{$path}/{$drive->name}";
+                $newPath = $this->basePath()."/{$path}/{$name}";
 
                 // Move se existir
                 if ($this->disk()->exists($oldPath)) {
@@ -346,7 +359,7 @@ class DriveService
             if ($request->validated('drive_type') == DocumentTypeDriveEnum::FOLDER->value && $request->validated('confirm_delete') == 1) {
                 $drive = DriveFolder::findOrFail($request->validated('id')); // Pasta
 
-                $folderPath = 'drive/'.$drive->getPath();
+                $folderPath = $this->basePath().'/'.$drive->getPath();
 
                 DB::transaction(function () use ($drive) {
                     $this->driveLogService->store($drive->drives()->withTrashed()->first()->toArray());
@@ -411,7 +424,7 @@ class DriveService
                 if ($data['drive_type'] == DocumentTypeDriveEnum::FOLDER->value && $request->validated('confirm_delete') == 1) {
                     $drive = DriveFolder::findOrFail($data['id']); // Pasta
 
-                    $folderPath = 'drive/'.$drive->getPath();
+                    $folderPath = $this->basePath().'/'.$drive->getPath();
 
                     DB::transaction(function () use ($drive) {
                         $this->driveLogService->store($drive->drives()->withTrashed()->first()->toArray());

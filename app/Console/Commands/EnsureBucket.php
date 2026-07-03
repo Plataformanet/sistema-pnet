@@ -7,28 +7,29 @@ use Illuminate\Console\Command;
 use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Support\Facades\Storage;
 
-class EnsureDriveBucket extends Command
+class EnsureBucket extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'drive:ensure-bucket';
+    protected $signature = 'bucket:ensure
+                            {bucket? : Nome do bucket a criar (padrão: o bucket configurado no disco)}';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Garante que o bucket do Drive exista no storage (idempotente). Seguro para rodar no deploy/CI.';
+    protected $description = 'Garante que o bucket de armazenamento exista (idempotente). Seguro para rodar no deploy/CI.';
 
     /**
      * Execute the console command.
      */
     public function handle(): int
     {
-        $diskName = config('drive.disk');
+        $diskName = config('bucket.disk');
         $disk = Storage::disk($diskName);
 
         if (! $disk instanceof FilesystemAdapter || config("filesystems.disks.{$diskName}.driver") !== 's3') {
@@ -37,12 +38,17 @@ class EnsureDriveBucket extends Command
             return self::SUCCESS;
         }
 
-        $bucket = config("filesystems.disks.{$diskName}.bucket");
+        $configuredBucket = config("filesystems.disks.{$diskName}.bucket");
+        $bucket = $this->argument('bucket') ?: $configuredBucket;
 
         if (! $bucket) {
-            $this->error("Bucket não configurado para o disco '{$diskName}'.");
+            $this->error("Bucket não configurado para o disco '{$diskName}'. Informe um nome: php artisan bucket:ensure meu-bucket");
 
             return self::FAILURE;
+        }
+
+        if ($bucket !== $configuredBucket) {
+            $this->warn("Atenção: '{$bucket}' difere do bucket configurado ('{$configuredBucket}'). A aplicação só usará este bucket se você atualizar AWS_BUCKET no .env.");
         }
 
         $client = $disk->getClient();

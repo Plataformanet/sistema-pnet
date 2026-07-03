@@ -4,17 +4,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Disco de armazenamento do Drive
+    | Disco de armazenamento (bucket)
     |--------------------------------------------------------------------------
     |
-    | Disco (config/filesystems.php) usado para guardar os documentos do módulo
-    | de Drive. Em produção usamos o MinIO/S3, isolado por tenant através do
+    | Disco (config/filesystems.php) usado pelos módulos que guardam arquivos.
+    | Em produção usamos o MinIO/S3, isolado por tenant através do
     | FilesystemTenancyBootstrapper. Nos testes, sobrescreva para um disco
-    | fake (ex.: 'public').
+    | fake (ex.: 'public'). A subpasta de cada módulo (drive, documentacoes,
+    | etc.) é definida por uma constante no service do próprio módulo.
     |
     */
 
-    'disk' => env('DRIVE_DISK', 'minio'),
+    'disk' => env('BUCKET_DISK', 'minio'),
 
     /*
     |--------------------------------------------------------------------------
@@ -30,8 +31,8 @@ return [
     |
     */
 
-    'signed_urls' => (bool) env('DRIVE_SIGNED_URLS', false),
+    'signed_urls' => (bool) env('BUCKET_SIGNED_URLS', false),
 
-    'url_ttl' => (int) env('DRIVE_URL_TTL', 10), // minutos
+    'url_ttl' => (int) env('BUCKET_URL_TTL', 10), // minutos
 
 ];

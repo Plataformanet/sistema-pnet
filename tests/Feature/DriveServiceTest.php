@@ -24,7 +24,7 @@ beforeEach(function () {
 
     $this->actingAs($this->user);
 
-    config(['drive.disk' => 'public']);
+    config(['bucket.disk' => 'public']);
     Storage::fake('public');
 });
 
@@ -276,7 +276,7 @@ test('update renomeia um arquivo e move o conteúdo no disco', function () {
 // ---------------------------------------------------------------------------
 
 test('download transmite o arquivo do disco quando URL assinada está desligada', function () {
-    config(['drive.signed_urls' => false]);
+    config(['bucket.signed_urls' => false]);
 
     $folder = $this->tenant->run(fn () => makeFolder(['name' => 'Docs']));
 
