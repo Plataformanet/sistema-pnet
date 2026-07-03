@@ -45,6 +45,14 @@ class TenantDriveController extends Controller
     }
 
     /**
+     * Serve o documento para download (stream ou URL assinada, conforme config).
+     */
+    public function download(string $id)
+    {
+        return $this->driveService->download($id, tenant());
+    }
+
+    /**
      * Store a newly created resource in storage.
      */
     public function store(StoreDriveRequest $request)

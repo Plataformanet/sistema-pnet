@@ -15,6 +15,7 @@ use App\Models\User;
 use App\Services\DriveService;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 beforeEach(function () {
     $this->tenant = sharedTenant();
@@ -23,6 +24,7 @@ beforeEach(function () {
 
     $this->actingAs($this->user);
 
+    config(['drive.disk' => 'public']);
     Storage::fake('public');
 });
 
@@ -268,6 +270,36 @@ test('update renomeia um arquivo e move o conteúdo no disco', function () {
     Storage::disk('public')->assertExists('drive/Docs/novo.pdf');
     Storage::disk('public')->assertMissing('drive/Docs/antigo.pdf');
 });
+
+// ---------------------------------------------------------------------------
+// Download
+// ---------------------------------------------------------------------------
+
+test('download transmite o arquivo do disco quando URL assinada está desligada', function () {
+    config(['drive.signed_urls' => false]);
+
+    $folder = $this->tenant->run(fn () => makeFolder(['name' => 'Docs']));
+
+    Storage::disk('public')->put('drive/Docs/doc.pdf', 'conteudo');
+
+    $file = $this->tenant->run(fn () => makeFile($folder, [
+        'name' => 'doc.pdf',
+        'document_path' => 'drive/Docs/doc.pdf',
+    ]));
+
+    $response = app(DriveService::class)->download((string) $file->id, $this->tenant);
+
+    expect($response->getStatusCode())->toBe(200)
+        ->and($response->headers->get('content-disposition'))->toContain('doc.pdf');
+});
+
+test('download aborta com 404 quando o arquivo não existe no disco', function () {
+    $file = $this->tenant->run(fn () => makeFile(makeFolder(), [
+        'document_path' => 'drive/Docs/sumiu.pdf',
+    ]));
+
+    app(DriveService::class)->download((string) $file->id, $this->tenant);
+})->throws(NotFoundHttpException::class);
 
 // ---------------------------------------------------------------------------
 // Exclusão permanente (force delete)

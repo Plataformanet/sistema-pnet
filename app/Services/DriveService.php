@@ -16,16 +16,27 @@ use App\Models\DrivePermission;
 use App\Models\Tenant;
 use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Filesystem\FilesystemAdapter;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Response;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\LazyCollection;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class DriveService
 {
     public function __construct(protected DriveLogService $driveLogService) {}
+
+    /**
+     * Disco de armazenamento do Drive (isolado por tenant pelo bootstrapper).
+     */
+    private function disk(): FilesystemAdapter
+    {
+        return Storage::disk(config('drive.disk'));
+    }
 
     public function store(StoreDriveRequest $request, Tenant $tenant)
     {
@@ -38,7 +49,7 @@ class DriveService
 
                 $counter = 1;
 
-                $disk = Storage::disk('public');
+                $disk = $this->disk();
 
                 $documentName = $request->validated('documents')[0]->getClientOriginalName();
                 $extension = $request->validated('documents')[0]->getClientOriginalExtension();
@@ -62,11 +73,10 @@ class DriveService
                 ]);
 
                 try {
-                    Storage::disk('public')->putFileAs(
+                    $this->disk()->putFileAs(
                         'drive/'.$folder->getPath(),
                         $request->file('documents')[0],
                         $documentName,
-                        ['visibility' => 'public']
                     );
                 } catch (\Throwable $th) {
                     throw new UploadDocumentException('Erro ao tentar fazer upload do documento.', Response::HTTP_UNPROCESSABLE_ENTITY);
@@ -74,6 +84,34 @@ class DriveService
 
                 return $drive;
             });
+        });
+    }
+
+    /**
+     * Serve o documento ao usuário.
+     *
+     * Em produção (endpoint público) pode redirecionar para uma URL temporária
+     * assinada; caso contrário, transmite o arquivo pela aplicação — o que
+     * funciona em qualquer ambiente, inclusive com o MinIO do Sail.
+     */
+    public function download(string $id, Tenant $tenant): RedirectResponse|StreamedResponse
+    {
+        return $tenant->run(function () use ($id) {
+            $drive = Drive::findOrFail($id);
+
+            $disk = $this->disk();
+
+            if (! $disk->exists($drive->document_path)) {
+                abort(Response::HTTP_NOT_FOUND, 'Documento não encontrado no armazenamento.');
+            }
+
+            if (config('drive.signed_urls') && $disk->providesTemporaryUrls()) {
+                return redirect()->away(
+                    $disk->temporaryUrl($drive->document_path, now()->addMinutes((int) config('drive.url_ttl')))
+                );
+            }
+
+            return $disk->download($drive->document_path, $drive->name);
         });
     }
 
@@ -98,8 +136,8 @@ class DriveService
                     $oldPath = "drive/{$path}";
                     $newPath = "drive/{$joinPath}";
 
-                    if (Storage::disk('public')->exists($oldPath)) {
-                        Storage::disk('public')->move($oldPath, $newPath);
+                    if ($this->disk()->exists($oldPath)) {
+                        $this->disk()->move($oldPath, $newPath);
                     }
 
                     $drive->name = $name;
@@ -125,8 +163,8 @@ class DriveService
                 $newPath = "drive/{$path}/{$name}";
 
                 // Move se existir
-                if (Storage::disk('public')->exists($oldPath)) {
-                    Storage::disk('public')->move($oldPath, $newPath);
+                if ($this->disk()->exists($oldPath)) {
+                    $this->disk()->move($oldPath, $newPath);
 
                     $drive->document_path = $newPath;
                     $drive->name = $name;
@@ -302,7 +340,7 @@ class DriveService
                 });
 
                 // Remove o arquivo do disco somente após o commit (operação irreversível)
-                Storage::disk('public')->delete($documentPath);
+                $this->disk()->delete($documentPath);
             }
 
             if ($request->validated('drive_type') == DocumentTypeDriveEnum::FOLDER->value && $request->validated('confirm_delete') == 1) {
@@ -317,7 +355,7 @@ class DriveService
                 });
 
                 // Remove o diretório do disco somente após o commit (operação irreversível)
-                Storage::disk('public')->deleteDirectory($folderPath);
+                $this->disk()->deleteDirectory($folderPath);
             }
 
             return $drive;
@@ -367,7 +405,7 @@ class DriveService
                     });
 
                     // Remove o arquivo do disco somente após o commit (operação irreversível)
-                    Storage::disk('public')->delete($documentPath);
+                    $this->disk()->delete($documentPath);
                 }
 
                 if ($data['drive_type'] == DocumentTypeDriveEnum::FOLDER->value && $request->validated('confirm_delete') == 1) {
@@ -382,7 +420,7 @@ class DriveService
                     });
 
                     // Remove o diretório do disco somente após o commit (operação irreversível)
-                    Storage::disk('public')->deleteDirectory($folderPath);
+                    $this->disk()->deleteDirectory($folderPath);
                 }
             }
 
