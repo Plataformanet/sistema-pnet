@@ -40,7 +40,10 @@ class DriveService
      */
     private function disk(): FilesystemAdapter
     {
-        return Storage::disk(config('bucket.disk'));
+        /** @var FilesystemAdapter $disk */
+        $disk = Storage::disk(config('bucket.disk'));
+
+        return $disk;
     }
 
     /**
