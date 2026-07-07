@@ -192,7 +192,7 @@ Route::middleware([
         // Drive - Arquivos
         Route::get('/drive', [TenantDriveController::class, 'index'])->name('tenant.drive.index')->middleware('permission:drive.drives.view');
         Route::get('/drive/search', TenantDriveSearchController::class)->name('tenant.drive.search')->middleware('permission:drive.drives.view');
-        Route::get('/drive/logs', TenantDriveLogController::class)->name('tenant.drive.logs')->middleware('permission:drive.drives.view');
+        Route::get('/drive/logs', TenantDriveLogController::class)->name('tenant.drive.logs')->middleware('permission:drive.logs.view');
         Route::get('/drive/{id}/download', [TenantDriveController::class, 'download'])->name('tenant.drive.download')->whereNumber('id')->middleware('permission:drive.drives.view');
         Route::post('/drive', [TenantDriveController::class, 'store'])->name('tenant.drive.store')->middleware('permission:drive.drives.create');
         Route::put('/drive', [TenantDriveController::class, 'update'])->name('tenant.drive.update')->middleware('permission:drive.drives.edit');
@@ -200,9 +200,9 @@ Route::middleware([
         Route::delete('/drive/{id}', [TenantDriveController::class, 'destroy'])->name('tenant.drive.destroy')->whereNumber('id')->middleware('permission:drive.drives.delete');
 
         // Drive - Permissões de acesso
-        Route::post('/drive/permissions', [TenantDriveController::class, 'storeAccessPermissions'])->name('tenant.drive.permissions.store')->middleware('permission:drives.drives.create');
-        Route::get('/drive/{id}/permissions', [TenantDriveController::class, 'userAccess'])->name('tenant.drive.permissions.users')->whereNumber('id')->middleware('permission:drives.drives.view');
-        Route::delete('/drive/{drive_id}/permissions/{user_id}', [TenantDriveController::class, 'removeUserAccess'])->name('tenant.drive.permissions.remove')->whereNumber(['drive_id', 'user_id'])->middleware('permission:drives.drives.delete');
+        Route::post('/drive/permissions', [TenantDriveController::class, 'storeAccessPermissions'])->name('tenant.drive.permissions.store')->middleware('permission:drive.drives.create');
+        Route::get('/drive/{id}/permissions', [TenantDriveController::class, 'userAccess'])->name('tenant.drive.permissions.users')->whereNumber('id')->middleware('permission:drive.drives.view');
+        Route::delete('/drive/{drive_id}/permissions/{user_id}', [TenantDriveController::class, 'removeUserAccess'])->name('tenant.drive.permissions.remove')->whereNumber(['drive_id', 'user_id'])->middleware('permission:drive.drives.delete');
 
         // Drive - Pastas
         Route::get('/folders', [TenantDriveFolderController::class, 'index'])->name('tenant.drive.folders.index')->middleware('permission:drive.folders.view');
@@ -211,13 +211,10 @@ Route::middleware([
         Route::delete('/folders/{id}', [TenantDriveFolderController::class, 'destroy'])->name('tenant.drive.folders.destroy')->whereNumber('id')->middleware('permission:drive.folders.delete');
 
         // Drive - Lixeira
-        Route::get('/trash', [TenantDriveTrashController::class, 'index'])->name('tenant.drive.trash.index')->middleware('permission:drives.trash.view');
-        Route::post('/trash/restore', [TenantDriveTrashController::class, 'restore'])->name('tenant.drive.trash.restore')->middleware('permission:drives.trash.restore');
-        Route::delete('/trash', [TenantDriveTrashController::class, 'destroy'])->name('tenant.drive.trash.force-delete')->middleware('permission:drives.trash.delete');
-        Route::post('/trash/clear', [TenantDriveTrashController::class, 'clearTrash'])->name('tenant.drive.trash.clear')->middleware('permission:drives.trash.clear');
-
-        // Drive - Logs
-        Route::get('/logs', [TenantDriveLogController::class, 'index'])->name('tenant.drive.logs.index')->middleware('permission:drives.logs.view');
+        Route::get('/trash', [TenantDriveTrashController::class, 'index'])->name('tenant.drive.trash.index')->middleware('permission:drive.trash.view');
+        Route::post('/trash/restore', [TenantDriveTrashController::class, 'restore'])->name('tenant.drive.trash.restore')->middleware('permission:drive.trash.edit');
+        Route::delete('/trash', [TenantDriveTrashController::class, 'destroy'])->name('tenant.drive.trash.force-delete')->middleware('permission:drive.trash.delete');
+        Route::post('/trash/clear', [TenantDriveTrashController::class, 'clearTrash'])->name('tenant.drive.trash.clear')->middleware('permission:drive.trash.delete');
 
     });
 });

@@ -130,7 +130,7 @@ class Drive extends Model
      */
     public function createdBy(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'user_id');
     }
 
     /**
@@ -138,6 +138,6 @@ class Drive extends Model
      */
     public function modifiedBy(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'modified_by');
     }
 }
