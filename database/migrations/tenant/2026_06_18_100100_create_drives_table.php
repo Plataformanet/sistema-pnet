@@ -17,7 +17,7 @@ return new class extends Migration
             $table->foreignId('drive_folder_id')->constrained('drive_folders')->cascadeOnDelete();
             $table->string('name');
             $table->string('document_path');
-            $table->string('document_size');
+            $table->unsignedBigInteger('document_size'); // tamanho em bytes
             $table->string('document_type', 45);
             $table->foreignId('modified_by')->nullable()->constrained('users')->nullOnDelete();
             $table->dateTime('modified_at')->nullable();

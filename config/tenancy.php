@@ -114,6 +114,7 @@ return [
         'disks' => [
             'local',
             'public',
+            'minio', // prefixa cada tenant como "tenant<id>/" dentro do bucket
             // 's3',
         ],
 

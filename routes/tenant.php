@@ -193,6 +193,7 @@ Route::middleware([
         Route::get('/drive', [TenantDriveController::class, 'index'])->name('tenant.drive.index')->middleware('permission:drive.drives.view');
         Route::get('/drive/search', TenantDriveSearchController::class)->name('tenant.drive.search')->middleware('permission:drive.drives.view');
         Route::get('/drive/logs', TenantDriveLogController::class)->name('tenant.drive.logs')->middleware('permission:drive.drives.view');
+        Route::get('/drive/{id}/download', [TenantDriveController::class, 'download'])->name('tenant.drive.download')->whereNumber('id')->middleware('permission:drive.drives.view');
         Route::post('/drive', [TenantDriveController::class, 'store'])->name('tenant.drive.store')->middleware('permission:drive.drives.create');
         Route::put('/drive', [TenantDriveController::class, 'update'])->name('tenant.drive.update')->middleware('permission:drive.drives.edit');
         Route::delete('/drive/selected', [TenantDriveController::class, 'deleteSelected'])->name('tenant.drive.delete-selected')->middleware('permission:drive.drives.delete');

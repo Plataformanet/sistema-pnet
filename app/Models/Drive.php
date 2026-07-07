@@ -28,6 +28,7 @@ class Drive extends Model
     protected $casts = [
         'modified_at' => 'datetime',
         'document_type' => DocumentTypeDriveEnum::class,
+        'document_size' => 'integer',
     ];
 
     public function getUrlAttribute()
@@ -41,7 +42,7 @@ class Drive extends Model
             ]);
         }
 
-        return asset('storage/'.$this->document_path);
+        return route('tenant.drive.download', $this->id);
     }
 
     public function getUrlTrashAttribute()
@@ -55,7 +56,7 @@ class Drive extends Model
             ]);
         }
 
-        return asset('storage/'.$this->document_path);
+        return route('tenant.drive.download', $this->id);
     }
 
     public function getSizeFormatedAttribute()
