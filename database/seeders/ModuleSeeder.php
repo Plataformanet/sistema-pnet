@@ -76,6 +76,15 @@ class ModuleSeeder extends Seeder
                 'requires_modules' => null,
                 'route_prefix' => 'settings',
             ],
+            [
+                'name' => 'Drive',
+                'slug' => 'drive',
+                'description' => 'Gerenciamento de arquivos',
+                'icon' => '',
+                'is_core' => true,
+                'requires_modules' => null,
+                'route_prefix' => 'drive',
+            ],
         ];
 
         foreach ($modules as $module) {

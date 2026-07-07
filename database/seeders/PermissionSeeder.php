@@ -18,8 +18,8 @@ class PermissionSeeder extends Seeder
 
             'registrations' => [
 
-                'clients'   => [
-                    'name'         => [
+                'clients' => [
+                    'name' => [
                         'registrations.clients.view',
                         'registrations.clients.edit',
                         'registrations.clients.create',
@@ -35,7 +35,7 @@ class PermissionSeeder extends Seeder
                 ],
 
                 'suppliers' => [
-                    'name'         => [
+                    'name' => [
                         'registrations.suppliers.view',
                         'registrations.suppliers.edit',
                         'registrations.suppliers.create',
@@ -50,7 +50,7 @@ class PermissionSeeder extends Seeder
                 ],
 
                 'employees' => [
-                    'name'         => [
+                    'name' => [
                         'registrations.employees.view',
                         'registrations.employees.edit',
                         'registrations.employees.create',
@@ -65,8 +65,8 @@ class PermissionSeeder extends Seeder
                 ],
             ],
 
-            'sales'         => [
-                'name'         => [
+            'sales' => [
+                'name' => [
                     'sales.sales.view',
                     'sales.sales.edit',
                     'sales.sales.create',
@@ -88,8 +88,8 @@ class PermissionSeeder extends Seeder
                 ],
             ],
 
-            'services'      => [
-                'name'         => [
+            'services' => [
+                'name' => [
                     'services.services.view',
                     'services.services.edit',
                     'services.services.create',
@@ -112,8 +112,8 @@ class PermissionSeeder extends Seeder
                 ],
             ],
 
-            'products'      => [
-                'name'         => [
+            'products' => [
+                'name' => [
                     'products.products.view',
                     'products.products.edit',
                     'products.products.create',
@@ -135,9 +135,9 @@ class PermissionSeeder extends Seeder
                 ],
             ],
 
-            'finance'       => [
-                'categories'          => [
-                    'name'         => [
+            'finance' => [
+                'categories' => [
+                    'name' => [
                         'finance.categories.view',
                         'finance.categories.edit',
                         'finance.categories.create',
@@ -150,8 +150,8 @@ class PermissionSeeder extends Seeder
                         'Categorias (Excluir)',
                     ],
                 ],
-                'subcategories'       => [
-                    'name'         => [
+                'subcategories' => [
+                    'name' => [
                         'finance.subcategories.view',
                         'finance.subcategories.edit',
                         'finance.subcategories.create',
@@ -164,8 +164,8 @@ class PermissionSeeder extends Seeder
                         'Subcategorias (Excluir)',
                     ],
                 ],
-                'accounts'            => [
-                    'name'         => [
+                'accounts' => [
+                    'name' => [
                         'finance.accounts.view',
                         'finance.accounts.edit',
                         'finance.accounts.create',
@@ -178,8 +178,8 @@ class PermissionSeeder extends Seeder
                         'Contas (Excluir)',
                     ],
                 ],
-                'accounts_payable'    => [
-                    'name'         => [
+                'accounts_payable' => [
+                    'name' => [
                         'finance.accounts_payable.view',
                         'finance.accounts_payable.edit',
                         'finance.accounts_payable.create',
@@ -193,7 +193,7 @@ class PermissionSeeder extends Seeder
                     ],
                 ],
                 'accounts_receivable' => [
-                    'name'         => [
+                    'name' => [
                         'finance.accounts_receivable.view',
                         'finance.accounts_receivable.edit',
                         'finance.accounts_receivable.create',
@@ -206,24 +206,24 @@ class PermissionSeeder extends Seeder
                         'Contas a Receber (Excluir)',
                     ],
                 ],
-                'cash_flow'           => [
-                    'name'         => [
+                'cash_flow' => [
+                    'name' => [
                         'finance.cash_flow.view',
                     ],
                     'display_name' => [
                         'Fluxo de Caixa (Visualizar)',
                     ],
                 ],
-                'spending_flow'       => [
-                    'name'         => [
+                'spending_flow' => [
+                    'name' => [
                         'finance.spending_flow.view',
                     ],
                     'display_name' => [
                         'Fluxo de Gastos (Visualizar)',
                     ],
                 ],
-                'billing'             => [
-                    'name'         => [
+                'billing' => [
+                    'name' => [
                         'finance.billing.view',
                     ],
                     'display_name' => [
@@ -232,9 +232,9 @@ class PermissionSeeder extends Seeder
                 ],
             ],
 
-            'documents'     => [
-                'proposals'       => [
-                    'name'         => [
+            'documents' => [
+                'proposals' => [
+                    'name' => [
                         'documents.proposals.view',
                         'documents.proposals.edit',
                         'documents.proposals.create',
@@ -248,7 +248,7 @@ class PermissionSeeder extends Seeder
                     ],
                 ],
                 'itbi_calculator' => [
-                    'name'         => [
+                    'name' => [
                         'documents.itbi_calculator.view',
                         'documents.itbi_calculator.edit',
                         'documents.itbi_calculator.create',
@@ -261,8 +261,8 @@ class PermissionSeeder extends Seeder
                         'Calculadora de ITBI (Excluir)',
                     ],
                 ],
-                'contracts'       => [
-                    'name'         => [
+                'contracts' => [
+                    'name' => [
                         'documents.contracts.view',
                         'documents.contracts.edit',
                         'documents.contracts.create',
@@ -277,9 +277,9 @@ class PermissionSeeder extends Seeder
                 ],
             ],
 
-            'settings'      => [
+            'settings' => [
                 'roles' => [
-                    'name'         => [
+                    'name' => [
                         'settings.roles.view',
                         'settings.roles.edit',
                         'settings.roles.create',
@@ -293,7 +293,7 @@ class PermissionSeeder extends Seeder
                     ],
                 ],
                 'users' => [
-                    'name'         => [
+                    'name' => [
                         'settings.users.view',
                         'settings.users.edit',
                         'settings.users.create',
@@ -307,9 +307,9 @@ class PermissionSeeder extends Seeder
                     ],
                 ],
             ],
-            'drive'         => [
-                'drives'  => [
-                    'name'         => [
+            'drive' => [
+                'drives' => [
+                    'name' => [
                         'drive.drives.view',
                         'drive.drives.edit',
                         'drive.drives.create',
@@ -323,7 +323,7 @@ class PermissionSeeder extends Seeder
                     ],
                 ],
                 'folders' => [
-                    'name'         => [
+                    'name' => [
                         'drive.folders.view',
                         'drive.folders.edit',
                         'drive.folders.create',
@@ -336,8 +336,8 @@ class PermissionSeeder extends Seeder
                         'Drives (Excluir)',
                     ],
                 ],
-                'trash'   => [
-                    'name'         => [
+                'trash' => [
+                    'name' => [
                         'drive.trash.view',
                         'drive.trash.edit',
                         'drive.trash.create',
@@ -350,8 +350,8 @@ class PermissionSeeder extends Seeder
                         'Lixeira (Excluir)',
                     ],
                 ],
-                'logs'    => [
-                    'name'         => [
+                'logs' => [
+                    'name' => [
                         'drive.logs.view',
                         'drive.logs.edit',
                         'drive.logs.create',
@@ -375,9 +375,9 @@ class PermissionSeeder extends Seeder
                     $slug = explode('.', $name);
                     if ($slug[0] == $module->slug) {
                         Permission::insert([
-                            'name'         => $name,
+                            'name' => $name,
                             'display_name' => $permission['display_name'][$key],
-                            'module_id'    => $module->id,
+                            'module_id' => $module->id,
                         ]);
                     }
                 }
@@ -387,9 +387,9 @@ class PermissionSeeder extends Seeder
                 $slug = explode('.', $permission);
                 if ($slug[0] == $module->slug) {
                     Permission::insert([
-                        'name'         => $permission,
+                        'name' => $permission,
                         'display_name' => $permissions['sales']['display_name'][$key],
-                        'module_id'    => $module->id,
+                        'module_id' => $module->id,
                     ]);
                 }
             }
@@ -398,9 +398,9 @@ class PermissionSeeder extends Seeder
                 $slug = explode('.', $permission);
                 if ($slug[0] == $module->slug) {
                     Permission::insert([
-                        'name'         => $permission,
+                        'name' => $permission,
                         'display_name' => $permissions['services']['display_name'][$key],
-                        'module_id'    => $module->id,
+                        'module_id' => $module->id,
                     ]);
                 }
             }
@@ -409,9 +409,9 @@ class PermissionSeeder extends Seeder
                 $slug = explode('.', $permission);
                 if ($slug[0] == $module->slug) {
                     Permission::insert([
-                        'name'         => $permission,
+                        'name' => $permission,
                         'display_name' => $permissions['products']['display_name'][$key],
-                        'module_id'    => $module->id,
+                        'module_id' => $module->id,
                     ]);
                 }
             }
@@ -421,9 +421,9 @@ class PermissionSeeder extends Seeder
                     $slug = explode('.', $name);
                     if ($slug[0] == $module->slug) {
                         Permission::insert([
-                            'name'         => $name,
+                            'name' => $name,
                             'display_name' => $permission['display_name'][$key],
-                            'module_id'    => $module->id,
+                            'module_id' => $module->id,
                         ]);
                     }
                 }
@@ -434,9 +434,9 @@ class PermissionSeeder extends Seeder
                     $slug = explode('.', $name);
                     if ($slug[0] == $module->slug) {
                         Permission::insert([
-                            'name'         => $name,
+                            'name' => $name,
                             'display_name' => $permission['display_name'][$key],
-                            'module_id'    => $module->id,
+                            'module_id' => $module->id,
                         ]);
                     }
                 }
@@ -447,9 +447,22 @@ class PermissionSeeder extends Seeder
                     $slug = explode('.', $name);
                     if ($slug[0] == $module->slug) {
                         Permission::insert([
-                            'name'         => $name,
+                            'name' => $name,
                             'display_name' => $permission['display_name'][$key],
-                            'module_id'    => $module->id,
+                            'module_id' => $module->id,
+                        ]);
+                    }
+                }
+            }
+
+            foreach ($permissions['drive'] as $permission) {
+                foreach ($permission['name'] as $key => $name) {
+                    $slug = explode('.', $name);
+                    if ($slug[0] == $module->slug) {
+                        Permission::insert([
+                            'name' => $name,
+                            'display_name' => $permission['display_name'][$key],
+                            'module_id' => $module->id,
                         ]);
                     }
                 }

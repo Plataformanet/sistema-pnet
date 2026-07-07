@@ -21,8 +21,8 @@ class TenantPermissionSeeder extends Seeder
 
             'registrations' => [
 
-                'clients'   => [
-                    'name'         => [
+                'clients' => [
+                    'name' => [
                         'registrations.clients.view',
                         'registrations.clients.edit',
                         'registrations.clients.create',
@@ -38,7 +38,7 @@ class TenantPermissionSeeder extends Seeder
                 ],
 
                 'suppliers' => [
-                    'name'         => [
+                    'name' => [
                         'registrations.suppliers.view',
                         'registrations.suppliers.edit',
                         'registrations.suppliers.create',
@@ -53,7 +53,7 @@ class TenantPermissionSeeder extends Seeder
                 ],
 
                 'employees' => [
-                    'name'         => [
+                    'name' => [
                         'registrations.employees.view',
                         'registrations.employees.edit',
                         'registrations.employees.create',
@@ -68,8 +68,8 @@ class TenantPermissionSeeder extends Seeder
                 ],
             ],
 
-            'sales'         => [
-                'name'         => [
+            'sales' => [
+                'name' => [
                     'sales.sales.view',
                     'sales.sales.edit',
                     'sales.sales.create',
@@ -91,8 +91,8 @@ class TenantPermissionSeeder extends Seeder
                 ],
             ],
 
-            'services'      => [
-                'name'         => [
+            'services' => [
+                'name' => [
                     'services.services.view',
                     'services.services.edit',
                     'services.services.create',
@@ -115,8 +115,8 @@ class TenantPermissionSeeder extends Seeder
                 ],
             ],
 
-            'products'      => [
-                'name'         => [
+            'products' => [
+                'name' => [
                     'products.products.view',
                     'products.products.edit',
                     'products.products.create',
@@ -138,9 +138,9 @@ class TenantPermissionSeeder extends Seeder
                 ],
             ],
 
-            'finance'       => [
-                'categories'          => [
-                    'name'         => [
+            'finance' => [
+                'categories' => [
+                    'name' => [
                         'finance.categories.view',
                         'finance.categories.edit',
                         'finance.categories.create',
@@ -153,8 +153,8 @@ class TenantPermissionSeeder extends Seeder
                         'Categorias (Excluir)',
                     ],
                 ],
-                'subcategories'       => [
-                    'name'         => [
+                'subcategories' => [
+                    'name' => [
                         'finance.subcategories.view',
                         'finance.subcategories.edit',
                         'finance.subcategories.create',
@@ -167,8 +167,8 @@ class TenantPermissionSeeder extends Seeder
                         'Subcategorias (Excluir)',
                     ],
                 ],
-                'accounts'            => [
-                    'name'         => [
+                'accounts' => [
+                    'name' => [
                         'finance.accounts.view',
                         'finance.accounts.edit',
                         'finance.accounts.create',
@@ -181,8 +181,8 @@ class TenantPermissionSeeder extends Seeder
                         'Contas (Excluir)',
                     ],
                 ],
-                'accounts_payable'    => [
-                    'name'         => [
+                'accounts_payable' => [
+                    'name' => [
                         'finance.accounts_payable.view',
                         'finance.accounts_payable.edit',
                         'finance.accounts_payable.create',
@@ -196,7 +196,7 @@ class TenantPermissionSeeder extends Seeder
                     ],
                 ],
                 'accounts_receivable' => [
-                    'name'         => [
+                    'name' => [
                         'finance.accounts_receivable.view',
                         'finance.accounts_receivable.edit',
                         'finance.accounts_receivable.create',
@@ -209,24 +209,24 @@ class TenantPermissionSeeder extends Seeder
                         'Contas a Receber (Excluir)',
                     ],
                 ],
-                'cash_flow'           => [
-                    'name'         => [
+                'cash_flow' => [
+                    'name' => [
                         'finance.cash_flow.view',
                     ],
                     'display_name' => [
                         'Fluxo de Caixa (Visualizar)',
                     ],
                 ],
-                'spending_flow'       => [
-                    'name'         => [
+                'spending_flow' => [
+                    'name' => [
                         'finance.spending_flow.view',
                     ],
                     'display_name' => [
                         'Fluxo de Gastos (Visualizar)',
                     ],
                 ],
-                'billing'             => [
-                    'name'         => [
+                'billing' => [
+                    'name' => [
                         'finance.billing.view',
                     ],
                     'display_name' => [
@@ -235,9 +235,9 @@ class TenantPermissionSeeder extends Seeder
                 ],
             ],
 
-            'documents'     => [
-                'proposals'       => [
-                    'name'         => [
+            'documents' => [
+                'proposals' => [
+                    'name' => [
                         'documents.proposals.view',
                         'documents.proposals.edit',
                         'documents.proposals.create',
@@ -251,7 +251,7 @@ class TenantPermissionSeeder extends Seeder
                     ],
                 ],
                 'itbi_calculator' => [
-                    'name'         => [
+                    'name' => [
                         'documents.itbi_calculator.view',
                         'documents.itbi_calculator.edit',
                         'documents.itbi_calculator.create',
@@ -264,8 +264,8 @@ class TenantPermissionSeeder extends Seeder
                         'Calculadora de ITBI (Excluir)',
                     ],
                 ],
-                'contracts'       => [
-                    'name'         => [
+                'contracts' => [
+                    'name' => [
                         'documents.contracts.view',
                         'documents.contracts.edit',
                         'documents.contracts.create',
@@ -280,9 +280,9 @@ class TenantPermissionSeeder extends Seeder
                 ],
             ],
 
-            'settings'      => [
+            'settings' => [
                 'roles' => [
-                    'name'         => [
+                    'name' => [
                         'settings.roles.view',
                         'settings.roles.edit',
                         'settings.roles.create',
@@ -296,7 +296,7 @@ class TenantPermissionSeeder extends Seeder
                     ],
                 ],
                 'users' => [
-                    'name'         => [
+                    'name' => [
                         'settings.users.view',
                         'settings.users.edit',
                         'settings.users.create',
@@ -310,6 +310,64 @@ class TenantPermissionSeeder extends Seeder
                     ],
                 ],
             ],
+            'drive' => [
+                'drives' => [
+                    'name' => [
+                        'drive.drives.view',
+                        'drive.drives.edit',
+                        'drive.drives.create',
+                        'drive.drives.delete',
+                    ],
+                    'display_name' => [
+                        'Drives (Visualizar)',
+                        'Drives (Editar)',
+                        'Drives (Criar)',
+                        'Drives (Excluir)',
+                    ],
+                ],
+                'folders' => [
+                    'name' => [
+                        'drive.folders.view',
+                        'drive.folders.edit',
+                        'drive.folders.create',
+                        'drive.folders.delete',
+                    ],
+                    'display_name' => [
+                        'Drives (Visualizar)',
+                        'Drives (Editar)',
+                        'Drives (Criar)',
+                        'Drives (Excluir)',
+                    ],
+                ],
+                'trash' => [
+                    'name' => [
+                        'drive.trash.view',
+                        'drive.trash.edit',
+                        'drive.trash.create',
+                        'drive.trash.delete',
+                    ],
+                    'display_name' => [
+                        'Lixeira (Visualizar)',
+                        'Lixeira (Editar)',
+                        'Lixeira (Criar)',
+                        'Lixeira (Excluir)',
+                    ],
+                ],
+                'logs' => [
+                    'name' => [
+                        'drive.logs.view',
+                        'drive.logs.edit',
+                        'drive.logs.create',
+                        'drive.logs.delete',
+                    ],
+                    'display_name' => [
+                        'Logs (Visualizar)',
+                        'Logs (Editar)',
+                        'Logs (Criar)',
+                        'Logs (Excluir)',
+                    ],
+                ],
+            ]
         ];
 
         $modules = [
@@ -320,13 +378,14 @@ class TenantPermissionSeeder extends Seeder
             4 => ['id' => 5, 'slug' => 'finance'],
             5 => ['id' => 6, 'slug' => 'documents'],
             6 => ['id' => 7, 'slug' => 'settings'],
+            7 => ['id' => 8, 'slug' => 'drive'],
         ];
 
         $roles = RolesEnum::all();
 
         $roles = collect($roles)->map(function ($role) {
             return [
-                'name'       => $role,
+                'name' => $role,
                 'guard_name' => 'web',
                 'created_at' => now(),
                 'updated_at' => now(),
@@ -344,9 +403,9 @@ class TenantPermissionSeeder extends Seeder
                     $slug = explode('.', $name);
                     if ($slug[0] == $module['slug']) {
                         Permission::insert([
-                            'name'         => $name,
+                            'name' => $name,
                             'display_name' => $permission['display_name'][$key],
-                            'guard_name'   => 'web',
+                            'guard_name' => 'web',
                         ]);
                     }
                 }
@@ -356,9 +415,9 @@ class TenantPermissionSeeder extends Seeder
                 $slug = explode('.', $permission);
                 if ($slug[0] == $module['slug']) {
                     Permission::insert([
-                        'name'         => $permission,
+                        'name' => $permission,
                         'display_name' => $permissions['sales']['display_name'][$key],
-                        'guard_name'   => 'web',
+                        'guard_name' => 'web',
                     ]);
                 }
             }
@@ -367,9 +426,9 @@ class TenantPermissionSeeder extends Seeder
                 $slug = explode('.', $permission);
                 if ($slug[0] == $module['slug']) {
                     Permission::insert([
-                        'name'         => $permission,
+                        'name' => $permission,
                         'display_name' => $permissions['services']['display_name'][$key],
-                        'guard_name'   => 'web',
+                        'guard_name' => 'web',
                     ]);
                 }
             }
@@ -378,9 +437,9 @@ class TenantPermissionSeeder extends Seeder
                 $slug = explode('.', $permission);
                 if ($slug[0] == $module['slug']) {
                     Permission::insert([
-                        'name'         => $permission,
+                        'name' => $permission,
                         'display_name' => $permissions['products']['display_name'][$key],
-                        'guard_name'   => 'web',
+                        'guard_name' => 'web',
                     ]);
                 }
             }
@@ -390,9 +449,9 @@ class TenantPermissionSeeder extends Seeder
                     $slug = explode('.', $name);
                     if ($slug[0] == $module['slug']) {
                         Permission::insert([
-                            'name'         => $name,
+                            'name' => $name,
                             'display_name' => $permission['display_name'][$key],
-                            'guard_name'   => 'web',
+                            'guard_name' => 'web',
                         ]);
                     }
                 }
@@ -403,9 +462,9 @@ class TenantPermissionSeeder extends Seeder
                     $slug = explode('.', $name);
                     if ($slug[0] == $module['slug']) {
                         Permission::insert([
-                            'name'         => $name,
+                            'name' => $name,
                             'display_name' => $permission['display_name'][$key],
-                            'guard_name'   => 'web',
+                            'guard_name' => 'web',
                         ]);
                     }
                 }
@@ -416,9 +475,22 @@ class TenantPermissionSeeder extends Seeder
                     $slug = explode('.', $name);
                     if ($slug[0] == $module['slug']) {
                         Permission::insert([
-                            'name'         => $name,
+                            'name' => $name,
                             'display_name' => $permission['display_name'][$key],
-                            'guard_name'   => 'web',
+                            'guard_name' => 'web',
+                        ]);
+                    }
+                }
+            }
+
+            foreach ($permissions['drive'] as $permission) {
+                foreach ($permission['name'] as $key => $name) {
+                    $slug = explode('.', $name);
+                    if ($slug[0] == $module['slug']) {
+                        Permission::insert([
+                            'name' => $name,
+                            'display_name' => $permission['display_name'][$key],
+                            'guard_name' => 'web',
                         ]);
                     }
                 }
