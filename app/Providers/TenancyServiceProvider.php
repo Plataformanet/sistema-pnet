@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use App\Jobs\SeedTenantDatabase;
 use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
@@ -31,12 +32,13 @@ class TenancyServiceProvider extends ServiceProvider
                     Jobs\MigrateDatabase::class,
                     // Jobs\SeedDatabase::class,
 
-                    // Your own jobs to prepare the tenant.
-                    // Provision API keys, create S3 buckets, anything you want!
+                    // Cria roles, permissões e usuário admin no banco já migrado
+                    // do tenant, a partir do payload guardado em `tenant->seed`.
+                    SeedTenantDatabase::class,
 
                 ])->send(function (Events\TenantCreated $event) {
                     return $event->tenant;
-                })->shouldBeQueued(false), // `false` by default, but you probably want to make this `true` for production.
+                })->shouldBeQueued(true), // Enfileirado: o provisionamento (criar banco + migrar + seed) roda em background.
             ],
             Events\SavingTenant::class => [],
             Events\TenantSaved::class => [],

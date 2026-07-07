@@ -1,6 +1,10 @@
 <?php
 
+use App\Enums\TenantProvisioningStatus;
+use App\Http\Controllers\TenantRegistrationController;
+use App\Jobs\SeedTenantDatabase;
 use App\Models\Module;
+use App\Models\Tenant;
 use App\Models\User;
 use App\Services\TenantService;
 use Spatie\Permission\Models\Permission;
@@ -73,6 +77,19 @@ test('store provisions a tenant with domain, modules and an admin user', functio
     });
 });
 
+test('store marks the tenant as provisioned and clears the transient seed payload', function () {
+    $tenant = app(TenantService::class)->store(tenantPayload([
+        'domain' => 'provisioned.localhost',
+        'email' => 'provisioned@acme.com',
+    ]));
+    TenantRegistry::add($tenant);
+
+    $fresh = $tenant->fresh();
+
+    expect($fresh->isProvisioned())->toBeTrue()
+        ->and($fresh->seed)->toBeNull();
+});
+
 test('hasModule reflects the tenant active modules', function () {
     $tenant = app(TenantService::class)->store(tenantPayload());
     TenantRegistry::add($tenant);
@@ -139,4 +156,41 @@ test('canActivateModule throws when the tenant is blocked', function () {
 
     expect(fn () => app(TenantService::class)->canActivateModule($tenant, $module))
         ->toThrow(Exception::class, 'Tenant bloqueado');
+});
+
+test('status endpoint reports a provisioned tenant as ready', function () {
+    $tenant = makeTenant();
+    $tenant->update(['provisioning_status' => TenantProvisioningStatus::READY->value]);
+
+    $response = app(TenantRegistrationController::class)->status($tenant->id);
+
+    expect($response->getData(true))->toMatchArray([
+        'status' => 'ready',
+        'ready' => true,
+    ]);
+});
+
+test('status endpoint treats a missing tenant as failed', function () {
+    $response = app(TenantRegistrationController::class)->status('inexistente');
+
+    expect($response->getData(true))->toMatchArray([
+        'status' => 'failed',
+        'ready' => false,
+    ]);
+});
+
+test('seeder failed() cleans up the half-provisioned tenant', function () {
+    // Provisiona um tenant real (banco criado/migrado/semeado).
+    $tenant = app(TenantService::class)->store(tenantPayload([
+        'domain' => 'falha.localhost',
+        'email' => 'falha@acme.com',
+    ]));
+
+    // Simula falha no seeder: deve marcar failed e remover o tenant (o cascade
+    // de domains + o DeleteDatabase derrubam domínio e banco). Não registramos
+    // no TenantRegistry porque o próprio failed() faz a limpeza.
+    (new SeedTenantDatabase($tenant))->failed(new Exception('boom'));
+
+    expect(Tenant::find($tenant->id))->toBeNull();
+    $this->assertDatabaseMissing('domains', ['domain' => 'falha.localhost']);
 });

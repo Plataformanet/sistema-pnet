@@ -21,6 +21,13 @@ function submit() {
     </div> -->
 
     <form @submit.prevent="submit" class="ml-1">
+        <div
+            v-if="form.errors.cadastro"
+            class="mb-3 w-50 rounded border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700"
+        >
+            {{ form.errors.cadastro }}
+        </div>
+
         <div class="w-50">
             <label for="name">Empresa:</label>
             <input
