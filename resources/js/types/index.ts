@@ -32,3 +32,6 @@ export * from "./finance/Billing";
 // Documents
 export * from "./documents/Proposal";
 export * from "./documents/ItbiCalculation";
+
+// Drive
+export * from "./drive";

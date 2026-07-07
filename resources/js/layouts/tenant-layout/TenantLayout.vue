@@ -214,6 +214,27 @@ const data: TenantNav = {
             ],
         },
         {
+            title: "Meu Drive",
+            url: "#",
+            items: [
+                {
+                    title: "Lista",
+                    permission: "drive.drives.view",
+                    url: "/drive",
+                },
+                {
+                    title: "Lixeira",
+                    permission: "drive.trash.view",
+                    url: "/trash",
+                },
+                {
+                    title: "Logs",
+                    permission: "drive.logs.view",
+                    url: "/drive/logs",
+                },
+            ],
+        },
+        {
             title: "Configurações",
             module: "settings",
             url: "/settings/roles/list",

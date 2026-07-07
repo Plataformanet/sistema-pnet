@@ -131,3 +131,28 @@ settings.users.edit
 settings.users.create
 settings.users.delete
 
+//MÓDULO: Drive (Arquivos)
+
+//Drives
+drive.drives.view
+drive.drives.edit
+drive.drives.create
+drive.drives.delete
+
+//Pastas
+drive.folders.view
+drive.folders.edit
+drive.folders.create
+drive.folders.delete
+
+//Lixeira
+drive.trash.view
+drive.trash.edit
+drive.trash.create
+drive.trash.delete
+
+//Logs
+drive.logs.view
+drive.logs.edit
+drive.logs.create
+drive.logs.delete
