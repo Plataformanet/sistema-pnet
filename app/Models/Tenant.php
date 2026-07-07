@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\TenantProvisioningStatus;
 use Illuminate\Support\Str;
 use Stancl\Tenancy\Contracts\TenantWithDatabase;
 use Stancl\Tenancy\Database\Concerns\HasDatabase;
@@ -38,6 +39,23 @@ class Tenant extends BaseTenant implements TenantWithDatabase
     public function plan()
     {
         return $this->belongsTo(Plan::class);
+    }
+
+    /**
+     * Status atual do provisionamento do banco do tenant.
+     */
+    public function provisioningStatus(): TenantProvisioningStatus
+    {
+        return TenantProvisioningStatus::tryFrom((string) $this->provisioning_status)
+            ?? TenantProvisioningStatus::PENDING;
+    }
+
+    /**
+     * Indica se o banco do tenant já foi criado, migrado e semeado.
+     */
+    public function isProvisioned(): bool
+    {
+        return $this->provisioningStatus() === TenantProvisioningStatus::READY;
     }
 
     public function modules()
