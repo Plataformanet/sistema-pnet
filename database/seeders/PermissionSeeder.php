@@ -330,10 +330,10 @@ class PermissionSeeder extends Seeder
                         'drive.folders.delete',
                     ],
                     'display_name' => [
-                        'Drives (Visualizar)',
-                        'Drives (Editar)',
-                        'Drives (Criar)',
-                        'Drives (Excluir)',
+                        'Pastas (Visualizar)',
+                        'Pastas (Editar)',
+                        'Pastas (Criar)',
+                        'Pastas (Excluir)',
                     ],
                 ],
                 'trash' => [
@@ -364,7 +364,7 @@ class PermissionSeeder extends Seeder
                         'Logs (Excluir)',
                     ],
                 ],
-            ]
+            ],
         ];
 
         $modules = Module::where('is_core', 1)->get();

@@ -14,7 +14,9 @@ use App\Models\DrivePermission;
 use App\Models\User;
 use App\Services\DriveService;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 beforeEach(function () {
@@ -361,6 +363,87 @@ test('clearTrash exclui definitivamente os drives selecionados', function () {
     $this->tenant->run(fn () => expect(Drive::withTrashed()->find($file->id))->toBeNull());
 });
 
+test('forceDelete de pasta na lixeira exclui a pasta e o diretório do disco', function () {
+    // Regressão: a pasta na lixeira está soft-deleted; findOrFail sem withTrashed
+    // lançava ModelNotFoundException ("No query results for model DriveFolder").
+    $folder = $this->tenant->run(function () {
+        $folder = makeFolder(['name' => 'Docs']);
+        $folderDrive = makeFolderDrive($folder);
+
+        $folderDrive->delete();
+        $folder->delete();
+
+        return $folder;
+    });
+
+    Storage::disk('public')->put('drive/Docs/dentro.pdf', 'x');
+
+    $this->tenant->run(fn () => app(DriveService::class)->forceDelete(
+        formRequest(ForceDeleteRequest::class, [
+            'id' => $folder->id,
+            'drive_type' => DocumentTypeDriveEnum::FOLDER->value,
+            'confirm_delete' => 1,
+        ]),
+        $this->tenant
+    ));
+
+    Storage::disk('public')->assertMissing('drive/Docs/dentro.pdf');
+
+    $this->tenant->run(fn () => expect(DriveFolder::withTrashed()->find($folder->id))->toBeNull());
+});
+
+test('clearTrash exclui definitivamente uma pasta na lixeira', function () {
+    $folder = $this->tenant->run(function () {
+        $folder = makeFolder(['name' => 'Docs']);
+        $folderDrive = makeFolderDrive($folder);
+
+        $folderDrive->delete();
+        $folder->delete();
+
+        return $folder;
+    });
+
+    Storage::disk('public')->put('drive/Docs/x.pdf', 'x');
+
+    $this->tenant->run(fn () => app(DriveService::class)->clearTrash(
+        formRequest(ForceDeleteTrashRequest::class, [
+            'confirm_delete' => 1,
+            'selected_drives' => [
+                ['id' => $folder->id, 'drive_type' => DocumentTypeDriveEnum::FOLDER->value],
+            ],
+        ]),
+        $this->tenant
+    ));
+
+    Storage::disk('public')->assertMissing('drive/Docs/x.pdf');
+
+    $this->tenant->run(fn () => expect(DriveFolder::withTrashed()->find($folder->id))->toBeNull());
+});
+
+test('forceDelete de pasta sem drives associados não quebra ao gravar o log', function () {
+    // Blindagem: sem drive filho, o first() é null e o log não deve ser gravado.
+    $folder = $this->tenant->run(function () {
+        $folder = makeFolder(['name' => 'Vazia']);
+        $folder->delete();
+
+        return $folder;
+    });
+
+    $this->tenant->run(fn () => app(DriveService::class)->forceDelete(
+        formRequest(ForceDeleteRequest::class, [
+            'id' => $folder->id,
+            'drive_type' => DocumentTypeDriveEnum::FOLDER->value,
+            'confirm_delete' => 1,
+        ]),
+        $this->tenant
+    ));
+
+    $this->tenant->run(function () use ($folder) {
+        expect(DriveFolder::withTrashed()->find($folder->id))->toBeNull()
+            ->and(DriveLog::count())->toBe(0);
+    });
+});
+
 // ---------------------------------------------------------------------------
 // Permissões de acesso
 // ---------------------------------------------------------------------------
@@ -504,6 +587,49 @@ test('userAccess retorna os usuários com permissão no drive', function () {
         ->and($data['data'][0]['name'])->toBe('Maria')
         ->and($data['data'][0]['tipo_permission'])->toBe(PermissionTypeDriveEnum::ACESSO_TOTAL->value);
 });
+
+// ---------------------------------------------------------------------------
+// Policy de pasta (viewFolder) — resolução via Gate
+// ---------------------------------------------------------------------------
+
+test('Gate resolve viewFolder para DriveFolder e libera pasta sem restrição', function () {
+    $folder = $this->tenant->run(function () {
+        $folder = makeFolder(['name' => 'Livre']);
+        makeFolderDrive($folder);
+
+        return $folder;
+    });
+
+    $this->tenant->run(fn () => expect(
+        Gate::forUser($this->user)->allows('viewFolder', $folder)
+    )->toBeTrue());
+});
+
+test('viewFolder libera pasta sem drive representante (folder legado/vazio)', function () {
+    $folder = $this->tenant->run(fn () => makeFolder(['name' => 'SemDrive']));
+
+    $this->tenant->run(fn () => expect(
+        Gate::forUser($this->user)->allows('viewFolder', $folder)
+    )->toBeTrue());
+});
+
+test('viewFolder aborta 403 quando pasta tem restrição somente proprietário e usuário não é dono', function () {
+    [$folder, $other] = $this->tenant->run(function () {
+        $owner = User::factory()->create();
+        $other = User::factory()->create();
+
+        $folder = makeFolder(['name' => 'Restrita']);
+        $folderDrive = makeFolderDrive($folder, ['user_id' => $owner->id]);
+        $folderDrive->drivePermissions()->create([
+            'user_id' => $owner->id,
+            'permission_type' => PermissionTypeDriveEnum::SOMENTE_PROPRIETARIO->value,
+        ]);
+
+        return [$folder, $other];
+    });
+
+    $this->tenant->run(fn () => Gate::forUser($other)->authorize('viewFolder', $folder));
+})->throws(HttpException::class);
 
 test('removeUserAccess remove a permissão do usuário', function () {
     [$drive, $u1] = $this->tenant->run(function () {

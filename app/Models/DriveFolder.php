@@ -2,9 +2,12 @@
 
 namespace App\Models;
 
+use App\Policies\DrivePolicy;
+use Illuminate\Database\Eloquent\Attributes\UsePolicy;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+#[UsePolicy(DrivePolicy::class)]
 class DriveFolder extends Model
 {
     use SoftDeletes;

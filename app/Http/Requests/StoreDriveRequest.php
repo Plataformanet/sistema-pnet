@@ -6,7 +6,6 @@ use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rules\File;
 
-
 class StoreDriveRequest extends FormRequest
 {
     /**
@@ -20,20 +19,18 @@ class StoreDriveRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array|string>
+     * @return array<string, ValidationRule|array|string>
      */
     public function rules(): array
     {
         return [
-            'drive_id'      => ['required'],
-            // 'parent_id' => ['required'],
-            'user_id'       => ['required'],
-            'folder_id'     => ['required'],
+            'user_id' => ['required'],
+            'folder_id' => ['required'],
             'modified_by.*' => ['sometimes'],
             'modified_at.*' => ['sometimes'],
-            'documents.*'   => [
+            'documents.*' => [
                 'required',
-                File::types(['doc', 'docx', 'pdf', 'jpg', 'jpeg', 'png', 'bmp', 'zip', 'txt', 'xlsx'])
+                File::types(['doc', 'docx', 'pdf', 'jpg', 'jpeg', 'png', 'bmp', 'zip', 'txt', 'xlsx']),
             ],
         ];
     }
@@ -42,7 +39,7 @@ class StoreDriveRequest extends FormRequest
     {
         return [
             'documents.*.mimes' => 'O documento deve conter uma extensão válida',
-            'documents.*.max'   => 'O tamanho do documento tem que ser no máximo 3GB',
+            'documents.*.max' => 'O tamanho do documento tem que ser no máximo 3GB',
         ];
     }
 }

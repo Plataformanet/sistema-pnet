@@ -22,6 +22,7 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\LazyCollection;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -95,6 +96,8 @@ class DriveService
                         $documentName,
                     );
                 } catch (\Throwable $th) {
+                    Log::error('Falha no upload do documento para o storage', ['exception' => $th]);
+
                     throw new UploadDocumentException('Erro ao tentar fazer upload do documento.', Response::HTTP_UNPROCESSABLE_ENTITY);
                 }
 
@@ -360,12 +363,16 @@ class DriveService
             }
 
             if ($request->validated('drive_type') == DocumentTypeDriveEnum::FOLDER->value && $request->validated('confirm_delete') == 1) {
-                $drive = DriveFolder::findOrFail($request->validated('id')); // Pasta
+                $drive = DriveFolder::withTrashed()->findOrFail($request->validated('id')); // Pasta
 
                 $folderPath = $this->basePath().'/'.$drive->getPath();
 
                 DB::transaction(function () use ($drive) {
-                    $this->driveLogService->store($drive->drives()->withTrashed()->first()->toArray());
+                    $firstDrive = $drive->drives()->withTrashed()->first();
+
+                    if ($firstDrive) {
+                        $this->driveLogService->store($firstDrive->toArray());
+                    }
 
                     $drive->forceDelete();
                 });
@@ -425,12 +432,16 @@ class DriveService
                 }
 
                 if ($data['drive_type'] == DocumentTypeDriveEnum::FOLDER->value && $request->validated('confirm_delete') == 1) {
-                    $drive = DriveFolder::findOrFail($data['id']); // Pasta
+                    $drive = DriveFolder::withTrashed()->findOrFail($data['id']); // Pasta
 
                     $folderPath = $this->basePath().'/'.$drive->getPath();
 
                     DB::transaction(function () use ($drive) {
-                        $this->driveLogService->store($drive->drives()->withTrashed()->first()->toArray());
+                        $firstDrive = $drive->drives()->withTrashed()->first();
+
+                        if ($firstDrive) {
+                            $this->driveLogService->store($firstDrive->toArray());
+                        }
 
                         $drive->forceDelete();
                     });

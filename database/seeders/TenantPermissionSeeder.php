@@ -333,10 +333,10 @@ class TenantPermissionSeeder extends Seeder
                         'drive.folders.delete',
                     ],
                     'display_name' => [
-                        'Drives (Visualizar)',
-                        'Drives (Editar)',
-                        'Drives (Criar)',
-                        'Drives (Excluir)',
+                        'Pastas (Visualizar)',
+                        'Pastas (Editar)',
+                        'Pastas (Criar)',
+                        'Pastas (Excluir)',
                     ],
                 ],
                 'trash' => [

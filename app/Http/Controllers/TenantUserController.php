@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreUserRequest;
 use App\Http\Requests\UpdateUserRequest;
+use App\Models\Permission;
 use App\Services\UserService;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Spatie\Permission\Models\Role;
@@ -28,6 +30,8 @@ class TenantUserController extends Controller
 
         return Inertia::render('tenant/settings/users/create/Create', [
             'roles' => $roles,
+            'systemPermissions' => $this->systemPermissions(),
+            'rolesWithPermissions' => $this->rolesWithPermissions(),
         ]);
     }
 
@@ -54,6 +58,8 @@ class TenantUserController extends Controller
             'user' => $user,
             'roles' => $roles,
             'role' => $user->getRoleNames()->first(),
+            'systemPermissions' => $this->systemPermissions(),
+            'rolesWithPermissions' => $this->rolesWithPermissions(),
         ]);
     }
 
@@ -81,5 +87,27 @@ class TenantUserController extends Controller
 
             return redirect()->back()->with('error', 'Erro ao deletar usuário!');
         }
+    }
+
+    /**
+     * Lista todas as permissões do sistema para o formulário de usuário.
+     *
+     * @return Collection<int, array{name: string, display_name: string}>
+     */
+    private function systemPermissions()
+    {
+        return Permission::orderBy('name')->get(['name', 'display_name']);
+    }
+
+    /**
+     * Mapeia cada cargo para a lista de nomes de permissões que ele possui.
+     *
+     * @return Collection<string, Collection<int, string>>
+     */
+    private function rolesWithPermissions()
+    {
+        return Role::with('permissions:id,name')
+            ->get()
+            ->mapWithKeys(fn (Role $role) => [$role->name => $role->permissions->pluck('name')]);
     }
 }
