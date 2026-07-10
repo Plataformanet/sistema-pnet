@@ -60,7 +60,7 @@ class TenantDriveController extends Controller
         try {
             $this->driveService->store($request, tenant());
 
-            return response()->json(['success' => 'Upload realizado com sucesso!'], Response::HTTP_CREATED);
+            return redirect()->back();
         } catch (\Throwable $th) {
             Log::error('Error ao tentar fazer upload do documento:', [$th->getMessage()]);
             throw new UploadDocumentException('Erro ao tentar fazer upload do documento', Response::HTTP_INTERNAL_SERVER_ERROR);
@@ -75,23 +75,11 @@ class TenantDriveController extends Controller
         try {
             $this->driveService->update($request, tenant());
 
-            return response()->json(
-                [
-                    'success' => true,
-                    'message' => 'Nome do documento ou pasta atualizado com sucesso!',
-                ],
-                Response::HTTP_CREATED,
-            );
+            return redirect()->back();
         } catch (\Throwable $th) {
             Log::error('Error ao tentar fazer atualização do documento ou da pasta:', [$th->getMessage()]);
 
-            return response()->json(
-                [
-                    'success' => false,
-                    'message' => 'Erro ao atualizar documento ou pasta!',
-                ],
-                Response::HTTP_INTERNAL_SERVER_ERROR,
-            );
+            return redirect()->back()->withErrors(['error' => 'Erro ao atualizar documento ou pasta!']);
         }
     }
 
@@ -103,23 +91,11 @@ class TenantDriveController extends Controller
         try {
             $this->driveService->delete($id, tenant());
 
-            return response()->json(
-                [
-                    'success' => true,
-                    'message' => 'Documento ou pasta deletado com sucesso!',
-                ],
-                Response::HTTP_OK,
-            );
+            return redirect()->back();
         } catch (\Throwable $th) {
             Log::error('Error ao tentar deletar documento ou pasta:', [$th->getMessage()]);
 
-            return response()->json(
-                [
-                    'success' => false,
-                    'message' => 'Erro ao tentar deletar o documento ou pasta!',
-                ],
-                Response::HTTP_INTERNAL_SERVER_ERROR,
-            );
+            return redirect()->back()->withErrors(['error' => 'Erro ao tentar deletar o documento ou pasta!']);
         }
     }
 
@@ -128,23 +104,11 @@ class TenantDriveController extends Controller
         try {
             $this->driveService->deleteSelected($request->validated('selectedValues'), tenant());
 
-            return response()->json(
-                [
-                    'success' => true,
-                    'message' => 'Documento ou pasta deletado com sucesso!',
-                ],
-                Response::HTTP_OK,
-            );
+            return redirect()->back();
         } catch (\Throwable $th) {
             Log::error('Error ao tentar deletar documento ou pasta:', [$th->getMessage()]);
 
-            return response()->json(
-                [
-                    'success' => false,
-                    'message' => 'Erro ao tentar deletar o documento ou pasta!',
-                ],
-                Response::HTTP_INTERNAL_SERVER_ERROR,
-            );
+            return redirect()->back()->withErrors(['error' => 'Erro ao tentar deletar o documento ou pasta!']);
         }
     }
 

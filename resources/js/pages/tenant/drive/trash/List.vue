@@ -7,6 +7,16 @@ import axios from "axios";
 import { toast } from "vue-sonner";
 import { Button } from "@/components/ui/button";
 import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
     Folder,
     FileText,
     FileCode,
@@ -30,6 +40,9 @@ const props = defineProps<{
 
 const isClearingTrash = ref(false);
 const isProcessingAction = ref<number | null>(null);
+const isDeleteConfirmOpen = ref(false);
+const itemToDelete = ref<Drive | null>(null);
+const isClearTrashConfirmOpen = ref(false);
 
 // Icones por tipo
 function getFileIcon(type: string) {
@@ -125,15 +138,15 @@ async function restoreItem(item: Drive) {
 }
 
 // Excluir permanentemente
-async function forceDeleteItem(item: Drive) {
-    if (
-        !confirm(
-            `Tem certeza que deseja excluir permanentemente "${item.name}"? Esta ação não pode ser desfeita.`,
-        )
-    ) {
-        return;
-    }
+function forceDeleteItem(item: Drive) {
+    itemToDelete.value = item;
+    isDeleteConfirmOpen.value = true;
+}
 
+async function executeDeletePermanent() {
+    if (!itemToDelete.value) return;
+    const item = itemToDelete.value;
+    isDeleteConfirmOpen.value = false;
     isProcessingAction.value = item.id;
     try {
         const res = await axios.delete(
@@ -158,21 +171,18 @@ async function forceDeleteItem(item: Drive) {
         toast.error("Erro ao excluir o item permanentemente.");
     } finally {
         isProcessingAction.value = null;
+        itemToDelete.value = null;
     }
 }
 
 // Esvaziar Lixeira
-async function clearTrash() {
+function clearTrash() {
     if (props.drives.length === 0) return;
+    isClearTrashConfirmOpen.value = true;
+}
 
-    if (
-        !confirm(
-            "Tem certeza que deseja esvaziar a lixeira? Todos os itens listados serão excluídos permanentemente!",
-        )
-    ) {
-        return;
-    }
-
+async function executeClearTrash() {
+    isClearTrashConfirmOpen.value = false;
     isClearingTrash.value = true;
 
     // Mapeia todos os itens da lixeira
@@ -242,7 +252,7 @@ async function clearTrash() {
         >
             <button
                 @click="navigateToBreadcrumb(null)"
-                class="flex items-center gap-1 text-indigo-600 transition-colors hover:text-indigo-800"
+                class="flex items-center gap-1 cursor-pointer text-indigo-600 transition-colors hover:text-indigo-800"
             >
                 Lixeira principal
             </button>
@@ -255,7 +265,7 @@ async function clearTrash() {
                     :class="
                         index === folders.length - 1
                             ? 'pointer-events-none cursor-default font-semibold text-slate-800'
-                            : 'text-indigo-600'
+                            : 'cursor-pointer text-indigo-600'
                     "
                 >
                     {{ folder.name }}
@@ -410,4 +420,42 @@ async function clearTrash() {
             </div>
         </div>
     </div>
+
+    <!-- DIÁLOGO DE CONFIRMAÇÃO DE EXCLUSÃO PERMANENTE -->
+    <AlertDialog :open="isDeleteConfirmOpen" @update:open="isDeleteConfirmOpen = $event">
+        <AlertDialogContent>
+            <AlertDialogHeader>
+                <AlertDialogTitle>Excluir Permanentemente</AlertDialogTitle>
+                <AlertDialogDescription>
+                    <span v-if="itemToDelete">
+                        Tem certeza que deseja excluir permanentemente "{{ itemToDelete.name }}"? Esta ação não pode ser desfeita.
+                    </span>
+                </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+                <AlertDialogCancel @click="isDeleteConfirmOpen = false">Cancelar</AlertDialogCancel>
+                <AlertDialogAction @click="executeDeletePermanent" class="bg-rose-600 text-white hover:bg-rose-700">
+                    Excluir permanentemente
+                </AlertDialogAction>
+            </AlertDialogFooter>
+        </AlertDialogContent>
+    </AlertDialog>
+
+    <!-- DIÁLOGO DE CONFIRMAÇÃO DE ESVAZIAR LIXEIRA -->
+    <AlertDialog :open="isClearTrashConfirmOpen" @update:open="isClearTrashConfirmOpen = $event">
+        <AlertDialogContent>
+            <AlertDialogHeader>
+                <AlertDialogTitle>Esvaziar Lixeira</AlertDialogTitle>
+                <AlertDialogDescription>
+                    Tem certeza que deseja esvaziar a lixeira? Todos os itens listados serão excluídos permanentemente e esta ação não poderá ser desfeita!
+                </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+                <AlertDialogCancel @click="isClearTrashConfirmOpen = false">Cancelar</AlertDialogCancel>
+                <AlertDialogAction @click="executeClearTrash" class="bg-rose-600 text-white hover:bg-rose-700">
+                    Esvaziar lixeira
+                </AlertDialogAction>
+            </AlertDialogFooter>
+        </AlertDialogContent>
+    </AlertDialog>
 </template>

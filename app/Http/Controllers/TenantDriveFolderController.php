@@ -56,23 +56,11 @@ class TenantDriveFolderController extends Controller
         try {
             $this->driveFolderService->delete($id, tenant());
 
-            return response()->json(
-                [
-                    'success' => true,
-                    'message' => 'Pasta deletada com sucesso!',
-                ],
-                Response::HTTP_OK,
-            );
+            return redirect()->back();
         } catch (\Throwable $th) {
             Log::error('Error ao tentar deletar pasta:', [$th->getMessage()]);
 
-            return response()->json(
-                [
-                    'success' => false,
-                    'message' => 'Erro ao tentar deletar pasta!',
-                ],
-                Response::HTTP_INTERNAL_SERVER_ERROR,
-            );
+            return redirect()->back()->withErrors(['error' => 'Erro ao tentar deletar pasta!']);
         }
     }
 }

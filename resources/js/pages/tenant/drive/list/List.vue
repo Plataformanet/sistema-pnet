@@ -8,6 +8,16 @@ import { toast } from "vue-sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
     Folder,
     FileText,
     FileCode,
@@ -46,6 +56,9 @@ const renameItem = ref<Drive | null>(null);
 const renameName = ref("");
 const isShareModalOpen = ref(false);
 const shareItem = ref<Drive | null>(null);
+const isDeleteConfirmOpen = ref(false);
+const itemToDelete = ref<Drive | null>(null);
+const isDeletingBulk = ref(false);
 
 // Estados de permissão/compartilhamento
 const selectedPermissionType = ref<
@@ -262,9 +275,35 @@ function handleFileUpload(event: Event) {
 
 // Excluir item
 function confirmDelete(item: Drive) {
-    if (
-        confirm(`Tem certeza que deseja mover "${item.name}" para a lixeira?`)
-    ) {
+    itemToDelete.value = item;
+    isDeletingBulk.value = false;
+    isDeleteConfirmOpen.value = true;
+}
+
+// Excluir selecionados em lote
+function deleteSelectedDrives() {
+    if (selectedDrives.value.length === 0) return;
+    itemToDelete.value = null;
+    isDeletingBulk.value = true;
+    isDeleteConfirmOpen.value = true;
+}
+
+// Executar exclusão confirmada
+function executeDelete() {
+    isDeleteConfirmOpen.value = false;
+
+    if (isDeletingBulk.value) {
+        router.delete(route("tenant.drive.delete-selected"), {
+            data: { selectedValues: selectedDrives.value },
+            onSuccess: () => {
+                selectedDrives.value = [];
+                toast.success("Itens movidos para a lixeira com sucesso!");
+            },
+            onError: () =>
+                toast.error("Erro ao excluir os itens selecionados."),
+        });
+    } else if (itemToDelete.value) {
+        const item = itemToDelete.value;
         if (item.document_type === "folder") {
             router.delete(
                 route("tenant.drive.folders.destroy", item.drive_folder_id),
@@ -281,27 +320,6 @@ function confirmDelete(item: Drive) {
                 onError: () => toast.error("Erro ao excluir o arquivo."),
             });
         }
-    }
-}
-
-// Excluir selecionados em lote
-function deleteSelectedDrives() {
-    if (selectedDrives.value.length === 0) return;
-
-    if (
-        confirm(
-            `Tem certeza que deseja mover os ${selectedDrives.value.length} itens selecionados para a lixeira?`,
-        )
-    ) {
-        router.delete(route("tenant.drive.delete-selected"), {
-            data: { selectedValues: selectedDrives.value },
-            onSuccess: () => {
-                selectedDrives.value = [];
-                toast.success("Itens movidos para a lixeira com sucesso!");
-            },
-            onError: () =>
-                toast.error("Erro ao excluir os itens selecionados."),
-        });
     }
 }
 
@@ -507,7 +525,7 @@ const availableUsersToShare = computed(() => {
                 </div>
                 <Button
                     @click="handleSearch"
-                    class="cursor-pointer rounded-lg bg-indigo-600 px-4 text-white hover:bg-indigo-700"
+                    class="cursor-pointer rounded-lg px-4"
                 >
                     Pesquisar
                 </Button>
@@ -525,6 +543,7 @@ const availableUsersToShare = computed(() => {
                 <button
                     @click="navigateToBreadcrumb(null)"
                     class="flex items-center gap-1 text-indigo-600 transition-colors hover:text-indigo-800"
+                    :class="folders.length > 0 ? 'cursor-pointer' : 'pointer-events-none cursor-default text-slate-800 font-semibold'"
                 >
                     Meu Drive
                 </button>
@@ -537,7 +556,7 @@ const availableUsersToShare = computed(() => {
                         :class="
                             index === folders.length - 1
                                 ? 'pointer-events-none cursor-default font-semibold text-slate-800'
-                                : 'text-indigo-600'
+                                : 'cursor-pointer text-indigo-600'
                         "
                     >
                         {{ folder.name }}
@@ -568,7 +587,7 @@ const availableUsersToShare = computed(() => {
 
                 <Button
                     @click="openNewFolderModal"
-                    class="flex cursor-pointer items-center gap-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700"
+                    class="flex cursor-pointer items-center gap-2 rounded-lg"
                 >
                     <Plus class="h-4 w-4" />
                     Nova Pasta
@@ -875,7 +894,7 @@ const availableUsersToShare = computed(() => {
                 >
                 <Button
                     @click="createFolder"
-                    class="cursor-pointer bg-indigo-600 text-white hover:bg-indigo-700"
+                    class="cursor-pointer"
                     >Criar Pasta</Button
                 >
             </div>
@@ -929,7 +948,7 @@ const availableUsersToShare = computed(() => {
                 >
                 <Button
                     @click="saveRename"
-                    class="cursor-pointer bg-indigo-600 text-white hover:bg-indigo-700"
+                    class="cursor-pointer"
                     >Salvar</Button
                 >
             </div>
@@ -1074,7 +1093,7 @@ const availableUsersToShare = computed(() => {
                         <div class="flex justify-end">
                             <Button
                                 @click="savePermission"
-                                class="flex cursor-pointer items-center gap-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700"
+                                class="flex cursor-pointer items-center gap-2 rounded-lg"
                                 :disabled="isSavingPermission"
                             >
                                 <Loader2
@@ -1146,6 +1165,29 @@ const availableUsersToShare = computed(() => {
             </div>
         </div>
     </div>
+
+    <!-- DIÁLOGO DE CONFIRMAÇÃO DE EXCLUSÃO -->
+    <AlertDialog :open="isDeleteConfirmOpen" @update:open="isDeleteConfirmOpen = $event">
+        <AlertDialogContent>
+            <AlertDialogHeader>
+                <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
+                <AlertDialogDescription>
+                    <span v-if="isDeletingBulk">
+                        Tem certeza que deseja mover os {{ selectedDrives.length }} itens selecionados para a lixeira?
+                    </span>
+                    <span v-else-if="itemToDelete">
+                        Tem certeza que deseja mover "{{ itemToDelete.name }}" para a lixeira?
+                    </span>
+                </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+                <AlertDialogCancel @click="isDeleteConfirmOpen = false">Cancelar</AlertDialogCancel>
+                <AlertDialogAction @click="executeDelete" class="bg-rose-600 text-white hover:bg-rose-700">
+                    Mover para a lixeira
+                </AlertDialogAction>
+            </AlertDialogFooter>
+        </AlertDialogContent>
+    </AlertDialog>
 </template>
 
 <style scoped>
