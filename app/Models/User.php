@@ -47,6 +47,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'position' => RolesEnum::class,
+            'status' => 'boolean',
         ];
     }
 }

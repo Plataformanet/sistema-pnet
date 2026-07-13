@@ -254,6 +254,19 @@ test('findById retorna o usuário com os cargos carregados', function () {
         ->and($found->roles->pluck('name')->all())->toBe(['Gestor']);
 });
 
+test('findById retorna status como booleano', function () {
+    // Regressão: sem o cast, o tinyInteger chegava como 1/0 no Inertia e o checkbox
+    // "Usuário Ativo" da tela de edição nunca marcava (v-model compara com `true`).
+    $ativo = app(UserService::class)->store(userPayload(['status' => true]), $this->tenant);
+    $inativo = app(UserService::class)->store(userPayload([
+        'email' => 'inativo@teste.com',
+        'status' => false,
+    ]), $this->tenant);
+
+    expect(app(UserService::class)->findById((string) $ativo->id, $this->tenant)->status)->toBeTrue()
+        ->and(app(UserService::class)->findById((string) $inativo->id, $this->tenant)->status)->toBeFalse();
+});
+
 test('findAll retorna os usuários com id, nome, email, cargo e status', function () {
     $user = app(UserService::class)->store(userPayload(), $this->tenant);
 
