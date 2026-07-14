@@ -1,6 +1,6 @@
 # Detalhamento Técnico dos Módulos Principais (Sistema PNET)
 
-Este documento detalha o funcionamento técnico, a modelagem de banco de dados e as regras de implementação dos módulos de **Cadastros**, **Catálogo** e **Financeiro** da aplicação atual.
+Este documento detalha o funcionamento técnico, a modelagem de banco de dados e as regras de implementação dos módulos de **Cadastros**, **Catálogo**, **Financeiro** e **Drive (Documentos)** da aplicação atual.
 
 ---
 
@@ -147,3 +147,56 @@ erDiagram
 
 *   **Fluxo de Caixa (`TenantCashFlowController`):** A leitura do fluxo de caixa diário/mensal é consolidada analisando diretamente as datas de vencimento (`due_date`) e pagamento (`payment_date`) da tabela `installments`, e não dos cabeçalhos das contas.
 *   **Fluxo de Gastos (`TenantSpendingFlowController`):** Consolida saídas financeiras atreladas a `account_payables` e permite a exportação do relatório financeiro consolidado em PDF.
+
+---
+
+## 4. Módulo de Gestão de Documentos (Drive)
+
+O sistema de arquivos gerencia a organização física e lógica de documentos, contendo pastas dinâmicas, controle de permissões por usuário (ACL) e auditoria de ações de download/upload.
+
+### 4.1. Modelagem do Banco de Dados
+```mermaid
+erDiagram
+    DRIVE_FOLDERS ||--o{ DRIVE_FOLDERS : "parent_id"
+    DRIVE_FOLDERS ||--o{ DRIVES : "contém (1:N)"
+    DRIVES ||--o{ DRIVE_PERMISSIONS : "restringe (1:N)"
+    DRIVES ||--o{ DRIVE_LOGS : "audita (1:N)"
+    
+    DRIVE_FOLDERS {
+        id bigint PK
+        parent_id bigint FK "Auto-relacionamento"
+        name string
+        created_by bigint FK
+    }
+
+    DRIVES {
+        id bigint PK
+        drive_folder_id bigint FK "Opcional"
+        name string
+        path string "Caminho lógico real no storage"
+        extension string
+        size bigint "Tamanho do arquivo em bytes"
+        created_by bigint FK
+    }
+
+    DRIVE_PERMISSIONS {
+        id bigint PK
+        drive_id bigint FK
+        user_id bigint FK
+        can_edit boolean
+    }
+
+    DRIVE_LOGS {
+        id bigint PK
+        user_id bigint FK
+        drive_id bigint FK "Opcional"
+        action string "upload/download/deleted/restored"
+        ip_address string
+    }
+```
+
+### 4.2. Regras e Endpoints de Documentos
+*   **Isolamento Físico de Storage:** Arquivos são salvos em subdiretórios baseados no ID do Tenant para evitar o compartilhamento não autorizado de arquivos físicos.
+*   **Controle de Acesso ACL:** Ao realizar download, a rota `/drive/{id}/download` executa um check de segurança na tabela `drive_permissions`. Se o usuário atual não for o criador do arquivo (`created_by`) e não possuir uma flag ativa na tabela de permissões, o download é abortado com erro HTTP `403`.
+*   **Auditoria de Arquivos:** Todo upload, download ou deleção lógica insere um log na tabela `drive_logs` com fins de segurança e rastreamento.
+
