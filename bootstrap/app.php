@@ -4,6 +4,8 @@ use App\Http\Middleware\HandleInertiaRequests;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Request;
+use Illuminate\Session\TokenMismatchException;
 use Illuminate\Support\Facades\Route;
 use Spatie\Permission\Middleware\PermissionMiddleware;
 use Spatie\Permission\Middleware\RoleMiddleware;
@@ -27,6 +29,17 @@ return Application::configure(basePath: dirname(__DIR__))
             Route::middleware('web')->group(base_path('routes/tenant.php'));
         }
     )->withExceptions(function (Exceptions $exceptions) {
+        $exceptions->render(function (TokenMismatchException $e, Request $request) {
+            if ($request->expectsJson()) {
+                return null;
+            }
+
+            $loginUrl = Route::has('tenant.login') ? route('tenant.login') : route('login');
+
+            return redirect()->guest($loginUrl)
+                ->with('error', 'Sua sessão expirou. Faça login novamente para continuar.');
+        });
+
         $exceptions->render(function (TenantCouldNotBeIdentifiedOnDomainException $e, $request) {
             $centralDomain = 'http://localhost:8005/cadastro';
             $invalidDomain = $request->getHost();

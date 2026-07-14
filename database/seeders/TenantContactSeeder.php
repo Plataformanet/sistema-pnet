@@ -3,9 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Address;
-use App\Models\Client;
 use App\Models\Contact;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class TenantContactSeeder extends Seeder

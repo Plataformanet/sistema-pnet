@@ -46,6 +46,9 @@ function submit() {
                         Faça o login da sua conta
                     </p>
                 </div>
+                <Field v-if="flash.error">
+                    <FieldError>{{ flash.error }}</FieldError>
+                </Field>
                 <Field>
                     <FieldLabel for="email"> Email </FieldLabel>
                     <Input
