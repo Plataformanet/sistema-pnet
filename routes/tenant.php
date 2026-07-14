@@ -85,11 +85,12 @@ Route::middleware([
         Route::get('/registrations/employees/get-contact-by-cpf-cnpj/{cpf_cnpj}', [TenantEmployeeController::class, 'getContactByCpfCnpj'])->name('tenant.registrations.employees.get-contact-by-cpf-cnpj')->middleware('permission:registrations.employees.view');
 
         // Configurações - Usuários
-        Route::get('/settings/users/list', [TenantUserController::class, 'index'])->name('tenant.settings.users.list');
-        Route::get('/settings/users/create', [TenantUserController::class, 'create'])->name('tenant.settings.users.create');
-        Route::post('/settings/users/store', [TenantUserController::class, 'store'])->name('tenant.settings.users.store');
-        Route::get('/settings/users/{id}/edit', [TenantUserController::class, 'edit'])->name('tenant.settings.users.edit');
-        Route::put('/settings/users/{id}', [TenantUserController::class, 'update'])->name('tenant.settings.users.update');
+        Route::get('/settings/users/list', [TenantUserController::class, 'index'])->name('tenant.settings.users.list')->middleware('permission:settings.users.view');
+        Route::get('/settings/users/create', [TenantUserController::class, 'create'])->name('tenant.settings.users.create')->middleware('permission:settings.users.create');
+        Route::post('/settings/users/store', [TenantUserController::class, 'store'])->name('tenant.settings.users.store')->middleware('permission:settings.users.create');
+        Route::get('/settings/users/{id}/edit', [TenantUserController::class, 'edit'])->name('tenant.settings.users.edit')->middleware('permission:settings.users.edit');
+        Route::put('/settings/users/{id}', [TenantUserController::class, 'update'])->name('tenant.settings.users.update')->middleware('permission:settings.users.edit');
+        Route::delete('/settings/users/{id}', [TenantUserController::class, 'delete'])->name('tenant.settings.users.destroy')->middleware('permission:settings.users.delete');
 
         // Services
         Route::get('/services/services/list', [TenantServiceController::class, 'index'])->name('tenant.services.services.list')->middleware('permission:services.services.view');
@@ -200,6 +201,7 @@ Route::middleware([
         Route::delete('/drive/{id}', [TenantDriveController::class, 'destroy'])->name('tenant.drive.destroy')->whereNumber('id')->middleware('permission:drive.drives.delete');
 
         // Drive - Permissões de acesso
+        Route::get('/drive/users', [TenantDriveController::class, 'shareableUsers'])->name('tenant.drive.users')->middleware('permission:drive.drives.view');
         Route::post('/drive/permissions', [TenantDriveController::class, 'storeAccessPermissions'])->name('tenant.drive.permissions.store')->middleware('permission:drive.drives.create');
         Route::get('/drive/{id}/permissions', [TenantDriveController::class, 'userAccess'])->name('tenant.drive.permissions.users')->whereNumber('id')->middleware('permission:drive.drives.view');
         Route::delete('/drive/{drive_id}/permissions/{user_id}', [TenantDriveController::class, 'removeUserAccess'])->name('tenant.drive.permissions.remove')->whereNumber(['drive_id', 'user_id'])->middleware('permission:drive.drives.delete');

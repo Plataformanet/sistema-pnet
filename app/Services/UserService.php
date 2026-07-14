@@ -24,6 +24,11 @@ class UserService
 
                 $user->assignRole($data['role']);
 
+                // Permissões diretas (extras às herdadas do cargo)
+                if (array_key_exists('permissions', $data)) {
+                    $user->syncPermissions($data['permissions'] ?? []);
+                }
+
                 DB::commit();
 
                 return $user;
@@ -51,10 +56,21 @@ class UserService
                     $fields['password'] = Hash::make($data['password']);
                 }
 
+                // isset (e não empty) para que desativar o usuário (false) realmente persista.
+                if (isset($data['status'])) {
+                    $fields['status'] = $data['status'];
+                }
+
                 $user->update($fields);
 
                 if (! empty($data['role'])) {
                     $user->syncRoles([$data['role']]);
+                }
+
+                // Permissões diretas (extras às herdadas do cargo).
+                // array_key_exists (e não empty) para que desmarcar todas realmente limpe.
+                if (array_key_exists('permissions', $data)) {
+                    $user->syncPermissions($data['permissions'] ?? []);
                 }
 
                 DB::commit();
@@ -83,13 +99,13 @@ class UserService
         ]));
     }
 
-    public function destroy(User $user, Tenant $tenant): void
+    public function destroy(string $id, Tenant $tenant): void
     {
-        $tenant->run(function () use ($user) {
+        $tenant->run(function () use ($id) {
             DB::beginTransaction();
 
             try {
-                $user->delete();
+                User::findOrFail($id)->delete();
                 DB::commit();
             } catch (\Throwable $th) {
                 DB::rollBack();

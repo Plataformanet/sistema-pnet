@@ -22,6 +22,8 @@ class StoreUserRequest extends FormRequest
             'password' => 'required|min:6|confirmed',
             'role' => 'required|exists:roles,name',
             'status' => 'nullable|boolean',
+            'permissions' => 'sometimes|array',
+            'permissions.*' => 'string|exists:permissions,name',
         ];
     }
 
