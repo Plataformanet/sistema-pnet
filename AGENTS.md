@@ -1,3 +1,25 @@
+# Project Documentation (`docs/`) — ALWAYS READ FIRST
+
+**At the start of every new session, before planning or changing any code, consult the [docs/](docs/) folder.** It is the source of truth for architecture, modules, and planning. Never infer how the system works from isolated code without first checking the matching documentation.
+
+Minimum routine per session:
+
+1. List `docs/` to see what currently exists (the folder evolves).
+2. Read [docs/arquitetura/project_overview.md](docs/arquitetura/project_overview.md) and [docs/arquitetura/architecture_guide.md](docs/arquitetura/architecture_guide.md) for general context.
+3. Read the module document(s) the task touches, under `docs/modulos/<module>/`.
+4. Before touching the database or routes, check [docs/arquitetura/database_dictionary.md](docs/arquitetura/database_dictionary.md) and [docs/arquitetura/system_routes.md](docs/arquitetura/system_routes.md).
+5. For scope/sprint work, see [docs/planejamento/](docs/planejamento/).
+
+Current structure:
+
+- `docs/arquitetura/` — `project_overview.md`, `architecture_guide.md`, `database_dictionary.md`, `system_routes.md`
+- `docs/modulos/` — functional documentation per module (`cadastros/`, `drive/`, `financeiro/`, …)
+- `docs/planejamento/` — `sprints_planning.md`, `epic_template.md`
+
+If the documentation diverges from the code, the code is the real state: point the divergence out to the user and ask whether the document should be updated (remembering that documentation files are only created or changed on explicit request).
+
+**Whenever a file under `docs/` is created or updated, its content MUST be written in Brazilian Portuguese (pt-BR)** — headings, prose, tables, and comments alike. Keep the existing pt-BR terminology and folder naming of the docs; only code identifiers, commands, and file paths stay as they are.
+
 <laravel-boost-guidelines>
 === .ai/rtk rules ===
 
