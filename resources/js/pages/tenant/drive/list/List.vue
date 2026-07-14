@@ -380,25 +380,15 @@ async function openShareModal(item: Drive) {
             usersWithAccess.value = accessRes.data.data || [];
         }
 
-        // 2. Carrega todos os usuários do sistema usando a rota do Inertia via Axios
+        // 2. Carrega todos os usuários do sistema (endpoint JSON dedicado)
         if (allUsers.value.length === 0) {
-            const usersRes = await axios.get(
-                route("tenant.settings.users.list"),
-                {
-                    headers: { "X-Inertia": "true" },
-                },
-            );
-            if (
-                usersRes.data &&
-                usersRes.data.props &&
-                usersRes.data.props.users
-            ) {
-                // O retorno findAll do UserService retorna os usuários
-                allUsers.value =
-                    usersRes.data.props.users.map((u: any) => ({
-                        id: u.id,
-                        name: u.name || u.contact?.name_corporatereason,
-                    })) || [];
+            const usersRes = await axios.get(route("tenant.drive.users"));
+
+            if (usersRes.data && usersRes.data.success) {
+                allUsers.value = (usersRes.data.data || []).map((u: any) => ({
+                    id: u.id,
+                    name: u.name,
+                }));
             }
         }
     } catch (e) {

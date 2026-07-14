@@ -23,30 +23,30 @@ O sistema é dividido estruturalmente em três camadas modulares:
 
 ```mermaid
 graph TD
-    subgraph Módulos Verticais (Segmentos específicos)
+    subgraph MV ["Módulos Verticais (Segmentos específicos)"]
         MV1[Documentação Imobiliária]
-        MV2[Emissão de Certidões & Pesquisas]
+        MV2["Emissão de Certidões & Pesquisas"]
     end
 
-    subgraph Módulos Horizontais (Funcionalidades de negócio)
-        MH1[CRM & Propostas]
+    subgraph MH ["Módulos Horizontais (Funcionalidades de negócio)"]
+        MH1["CRM & Propostas"]
         MH2[Gestão de Processos]
-        MH3[Agenda & Compromissos]
+        MH3["Agenda & Compromissos"]
         MH4[Drive de Documentos]
-        MH5[Comunicação]
+        MH5["Comunicação"]
     end
 
-    subgraph Espinha Dorsal (Core do Sistema)
-        Core1[Autenticação & 2FA]
+    subgraph Core ["Espinha Dorsal (Core do Sistema)"]
+        Core1["Autenticação & 2FA"]
         Core2[Cadastros Base]
-        Core3[Catálogo de Produtos/Serviços]
+        Core3["Catálogo de Produtos/Serviços"]
         Core4[Módulo Financeiro]
         Core5[Configurações de Tenant]
         Core6[Infraestrutura de Workflow]
     end
 
-    Módulos Verticais --> Módulos Horizontais
-    Módulos Horizontais --> Espinha Dorsal
+    MV --> MH
+    MH --> Core
 ```
 
 ### 3.1. Espinha Dorsal (Core)

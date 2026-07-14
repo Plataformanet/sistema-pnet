@@ -9,6 +9,7 @@ use App\Http\Requests\StoreDriveRequest;
 use App\Http\Requests\UpdateDriveRequest;
 use App\Models\DriveFolder;
 use App\Services\DriveService;
+use App\Services\UserService;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
@@ -132,6 +133,35 @@ class TenantDriveController extends Controller
                 [
                     'success' => false,
                     'message' => 'Erro ao tentar inserir permissão para o usuário!',
+                ],
+                Response::HTTP_INTERNAL_SERVER_ERROR,
+            );
+        }
+    }
+
+    /**
+     * Lista os usuários do tenant que podem receber acesso a um item do drive.
+     */
+    public function shareableUsers(UserService $userService)
+    {
+        try {
+            $users = $userService->findAll(tenant())
+                ->map(fn (array $user) => [
+                    'id' => $user['id'],
+                    'name' => $user['name'],
+                ])
+                ->values();
+
+            return response()->json([
+                'success' => true,
+                'data' => $users,
+            ]);
+        } catch (\Throwable $th) {
+            Log::error('Erro ao carregar a lista de usuários para compartilhamento', ['exception' => $th]);
+
+            return response()->json(
+                [
+                    'success' => false,
                 ],
                 Response::HTTP_INTERNAL_SERVER_ERROR,
             );

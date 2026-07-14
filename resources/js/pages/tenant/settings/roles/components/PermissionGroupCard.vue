@@ -68,10 +68,10 @@ function toggleAll() {
                 :key="permission.id" 
                 class="flex items-center space-x-3 group/item rounded-md p-2 hover:bg-accent/50 transition-colors cursor-pointer font-normal"
             >
-                <Checkbox 
-                    :id="permission.id" 
-                    :checked="modelValue.includes(permission.id)"
-                    @update:checked="togglePermission(permission.id)"
+                <Checkbox
+                    :id="permission.id"
+                    :model-value="modelValue.includes(permission.id)"
+                    @update:model-value="togglePermission(permission.id)"
                     class="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                 />
                 <span class="text-sm font-medium leading-none flex-1 group-hover/item:text-foreground text-muted-foreground transition-colors">

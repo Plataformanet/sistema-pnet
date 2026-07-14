@@ -60,6 +60,7 @@ class TenantUserController extends Controller
             'role' => $user->getRoleNames()->first(),
             'systemPermissions' => $this->systemPermissions(),
             'rolesWithPermissions' => $this->rolesWithPermissions(),
+            'userPermissions' => $user->getDirectPermissions()->pluck('name'),
         ]);
     }
 

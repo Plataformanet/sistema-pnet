@@ -207,9 +207,9 @@ function onSubmit() {
                         >
                             <Checkbox
                                 :id="permission.id"
-                                :checked="isChecked(permission.id)"
+                                :model-value="isChecked(permission.id)"
                                 :disabled="isInherited(permission.id)"
-                                @update:checked="togglePermission(permission.id)"
+                                @update:model-value="togglePermission(permission.id)"
                                 class="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                             />
                             <span class="text-sm font-medium leading-none flex-1 transition-colors flex items-center justify-between"
