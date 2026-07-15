@@ -191,9 +191,23 @@ class TenantDriveController extends Controller
         try {
             $this->driveService->removeUserAccess($drive_id, $user_id, tenant());
 
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Retirada permissão com sucesso',
+                ]);
+            }
+
             return redirect()->back()->with(['msg_success' => 'Retirada permissão com sucesso']);
         } catch (\Throwable $th) {
             Log::error('Error ao tentar retirar acesso do usuário:', [$th->getMessage()]);
+
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Erro ao retirar a permissão do usuário',
+                ], 500);
+            }
 
             return redirect()->back()->with(['msg_erro' => 'Erro ao retirar a permissão do usuário']);
         }

@@ -18,18 +18,13 @@ import {
 } from "@/components/ui/alert-dialog";
 import {
     Folder,
-    FileText,
-    FileCode,
-    FileSpreadsheet,
-    FileImage,
-    FileArchive,
-    File,
     Undo,
     Trash2,
     X,
     FolderSync,
 } from "lucide-vue-next";
 import type { Drive } from "@/types";
+import { getFileIcon, getIconColorClass, formatSize } from "../utils/drive-helpers";
 
 defineOptions({ layout: TenantLayout });
 
@@ -43,62 +38,6 @@ const isProcessingAction = ref<number | null>(null);
 const isDeleteConfirmOpen = ref(false);
 const itemToDelete = ref<Drive | null>(null);
 const isClearTrashConfirmOpen = ref(false);
-
-// Icones por tipo
-function getFileIcon(type: string) {
-    switch (type) {
-        case "folder":
-            return Folder;
-        case "pdf":
-            return FileText;
-        case "docx":
-            return FileText;
-        case "xlsx":
-            return FileSpreadsheet;
-        case "txt":
-            return FileText;
-        case "jpg":
-        case "png":
-            return FileImage;
-        case "zip":
-        case "tar":
-            return FileArchive;
-        default:
-            return File;
-    }
-}
-
-// Cores por tipo de icone
-function getIconColorClass(type: string) {
-    switch (type) {
-        case "folder":
-            return "text-amber-500 fill-amber-500";
-        case "pdf":
-            return "text-rose-500 fill-rose-50";
-        case "docx":
-            return "text-blue-500 fill-blue-50";
-        case "xlsx":
-            return "text-emerald-600 fill-emerald-50";
-        case "txt":
-            return "text-slate-500";
-        case "jpg":
-        case "png":
-            return "text-violet-500 fill-violet-50";
-        case "zip":
-        case "tar":
-            return "text-orange-500 fill-orange-50";
-        default:
-            return "text-slate-400";
-    }
-}
-
-// Formatar Bytes para exibição amigável
-function formatSize(bytes: number): string {
-    if (bytes === 0) return "---";
-    const units = ["Bytes", "KB", "MB", "GB", "TB"];
-    const i = Math.floor(Math.log(bytes) / Math.log(1024));
-    return parseFloat((bytes / Math.pow(1024, i)).toFixed(1)) + " " + units[i];
-}
 
 // Navegar na lixeira se for pasta deletada
 function navigateToTrashFolder(item: Drive) {

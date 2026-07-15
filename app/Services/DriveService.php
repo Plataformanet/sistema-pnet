@@ -471,7 +471,7 @@ class DriveService
                 $userAdmin = [];
 
                 if ($request->validated('permission') == PermissionTypeDriveEnum::SOMENTE_PROPRIETARIO->value) {
-                    $userAdmin[] = Auth::user()->id;
+                    $userAdmin[] = $drive->user_id;
                     $users = array_diff($userAdmin, $usersWithPermission->toArray());
                 } else {
                     $users = array_diff($getUsers, $usersWithPermission->toArray());

@@ -23,7 +23,7 @@ class StoreAccessPermissionDriveRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'users' => ['required_if:permission,2'],
+            'users' => ['nullable', 'array'],
             'drive_id' => ['required'],
             'permission' => ['required'],
         ];

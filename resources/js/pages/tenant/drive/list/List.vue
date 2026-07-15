@@ -1,42 +1,36 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue";
+import { ref, computed } from "vue";
 import { Head, Link, useForm, router, usePage } from "@inertiajs/vue3";
 import TenantLayout from "@/layouts/tenant-layout/TenantLayout.vue";
 import { route } from "ziggy-js";
-import axios from "axios";
 import { toast } from "vue-sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import {
     Folder,
+    Search,
+    Plus,
+    Upload,
+    ArrowLeft,
+    Share2,
+    Edit2,
+    Trash2,
+    X,
     FileText,
     FileCode,
     FileSpreadsheet,
     FileImage,
     FileArchive,
     File,
-    Share2,
-    Edit2,
-    Trash2,
-    Search,
-    Plus,
-    Upload,
-    ArrowLeft,
-    X,
-    Check,
     Loader2,
 } from "lucide-vue-next";
-import type { Drive, DriveFolder, DrivePermission, User } from "@/types";
+import type { Drive } from "@/types";
+import { getFileIcon, getIconColorClass, formatSize } from "../utils/drive-helpers";
+
+// Subcomponentes extraídos
+import ShareModal from "./components/ShareModal.vue";
+import FolderModal from "./components/FolderModal.vue";
+import DeleteConfirmModal from "./components/DeleteConfirmModal.vue";
 
 defineOptions({ layout: TenantLayout });
 
@@ -47,30 +41,16 @@ const props = defineProps<{
 
 const page = usePage();
 
-// Estados Reativos
+// Estados Reativos Principais
 const searchQuery = ref("");
 const isNewFolderModalOpen = ref(false);
-const newFolderName = ref("");
 const isRenameModalOpen = ref(false);
 const renameItem = ref<Drive | null>(null);
-const renameName = ref("");
 const isShareModalOpen = ref(false);
 const shareItem = ref<Drive | null>(null);
 const isDeleteConfirmOpen = ref(false);
 const itemToDelete = ref<Drive | null>(null);
 const isDeletingBulk = ref(false);
-
-// Estados de permissão/compartilhamento
-const selectedPermissionType = ref<
-    "somente_proprietario" | "somente_leitura" | "acesso_total"
->("somente_leitura");
-const allUsers = ref<{ id: number; name: string }[]>([]);
-const usersWithAccess = ref<
-    { id: number; name: string; tipo_permission: string }[]
->([]);
-const selectedUsersToShare = ref<number[]>([]);
-const isLoadingUsers = ref(false);
-const isSavingPermission = ref(false);
 
 // Seleção múltipla
 const selectedDrives = ref<number[]>([]);
@@ -79,6 +59,13 @@ const selectedDrives = ref<number[]>([]);
 const fileInput = ref<HTMLInputElement | null>(null);
 const isUploading = ref(false);
 const uploadProgress = ref(0);
+
+// ID da pasta atual baseada na URL
+const currentFolderId = computed(() => {
+    return page.url.includes("folder_id=")
+        ? new URLSearchParams(page.url.split("?")[1]).get("folder_id")
+        : null;
+});
 
 // Computed para checar se todos os itens estão selecionados
 const isAllSelected = computed(() => {
@@ -95,62 +82,6 @@ function toggleSelectAll() {
     } else {
         selectedDrives.value = props.drives.map((d) => d.id);
     }
-}
-
-// Icones por tipo
-function getFileIcon(type: string) {
-    switch (type) {
-        case "folder":
-            return Folder;
-        case "pdf":
-            return FileText;
-        case "docx":
-            return FileText;
-        case "xlsx":
-            return FileSpreadsheet;
-        case "txt":
-            return FileText;
-        case "jpg":
-        case "png":
-            return FileImage;
-        case "zip":
-        case "tar":
-            return FileArchive;
-        default:
-            return File;
-    }
-}
-
-// Cores por tipo de icone
-function getIconColorClass(type: string) {
-    switch (type) {
-        case "folder":
-            return "text-amber-500 fill-amber-500";
-        case "pdf":
-            return "text-rose-500 fill-rose-50";
-        case "docx":
-            return "text-blue-500 fill-blue-50";
-        case "xlsx":
-            return "text-emerald-600 fill-emerald-50";
-        case "txt":
-            return "text-slate-500";
-        case "jpg":
-        case "png":
-            return "text-violet-500 fill-violet-50";
-        case "zip":
-        case "tar":
-            return "text-orange-500 fill-orange-50";
-        default:
-            return "text-slate-400";
-    }
-}
-
-// Formatar Bytes para exibição amigável no frontend (caso o assessor size_formated falhe)
-function formatSize(bytes: number): string {
-    if (bytes === 0) return "---";
-    const units = ["Bytes", "KB", "MB", "GB", "TB"];
-    const i = Math.floor(Math.log(bytes) / Math.log(1024));
-    return parseFloat((bytes / Math.pow(1024, i)).toFixed(1)) + " " + units[i];
 }
 
 // Ações do Drive
@@ -183,7 +114,6 @@ function navigateToBreadcrumb(folderId: number | null) {
     if (!folderId) {
         router.visit(route("tenant.drive.index"));
     } else {
-        // Encontra o drive correspondente ao folderId
         router.visit(route("tenant.drive.index"), {
             data: { folder_id: folderId },
         });
@@ -192,36 +122,7 @@ function navigateToBreadcrumb(folderId: number | null) {
 
 // Criar nova pasta
 function openNewFolderModal() {
-    newFolderName.value = "";
     isNewFolderModalOpen.value = true;
-}
-
-function createFolder() {
-    if (!newFolderName.value.trim()) {
-        toast.error("O nome da pasta não pode ser vazio.");
-        return;
-    }
-
-    const currentFolderId = page.url.includes("folder_id=")
-        ? new URLSearchParams(page.url.split("?")[1]).get("folder_id")
-        : null;
-
-    router.post(
-        route("tenant.drive.folders.store"),
-        {
-            name: newFolderName.value,
-            parent_id: currentFolderId,
-        },
-        {
-            onSuccess: () => {
-                isNewFolderModalOpen.value = false;
-                toast.success("Pasta criada com sucesso!");
-            },
-            onError: (errors) => {
-                toast.error(errors.name || "Erro ao criar pasta.");
-            },
-        },
-    );
 }
 
 // Upload de arquivo
@@ -234,19 +135,17 @@ function handleFileUpload(event: Event) {
     if (!target.files || target.files.length === 0) return;
 
     const file = target.files[0];
-    const currentFolderId = page.url.includes("folder_id=")
-        ? new URLSearchParams(page.url.split("?")[1]).get("folder_id")
-        : null;
+    const folderId = currentFolderId.value;
 
-    if (!currentFolderId) {
+    if (!folderId) {
         toast.error("Selecione ou crie uma pasta para realizar o upload.");
         return;
     }
 
     const form = useForm({
         documents: [file],
-        folder_id: currentFolderId,
-        user_id: page.props.auth.user.id,
+        folder_id: folderId,
+        user_id: (page.props as any).auth?.user?.id,
         modified_at: [new Date().toISOString()],
     });
 
@@ -257,7 +156,7 @@ function handleFileUpload(event: Event) {
         forceFormData: true,
         onProgress: (progress) => {
             if (progress) {
-                uploadProgress.value = progress.percentage;
+                uploadProgress.value = progress.percentage ?? 0;
             }
         },
         onSuccess: () => {
@@ -291,6 +190,7 @@ function deleteSelectedDrives() {
 // Executar exclusão confirmada
 function executeDelete() {
     isDeleteConfirmOpen.value = false;
+    const folderId = currentFolderId.value;
 
     if (isDeletingBulk.value) {
         router.delete(route("tenant.drive.delete-selected"), {
@@ -299,8 +199,7 @@ function executeDelete() {
                 selectedDrives.value = [];
                 toast.success("Itens movidos para a lixeira com sucesso!");
             },
-            onError: () =>
-                toast.error("Erro ao excluir os itens selecionados."),
+            onError: () => toast.error("Erro ao excluir os itens selecionados."),
         });
     } else if (itemToDelete.value) {
         const item = itemToDelete.value;
@@ -308,15 +207,19 @@ function executeDelete() {
             router.delete(
                 route("tenant.drive.folders.destroy", item.drive_folder_id),
                 {
-                    onSuccess: () =>
-                        toast.success("Pasta movida para a lixeira!"),
+                    onSuccess: () => {
+                        toast.success("Pasta movida para a lixeira!");
+                        itemToDelete.value = null;
+                    },
                     onError: () => toast.error("Erro ao excluir a pasta."),
                 },
             );
         } else {
             router.delete(route("tenant.drive.destroy", item.id), {
-                onSuccess: () =>
-                    toast.success("Arquivo movido para a lixeira!"),
+                onSuccess: () => {
+                    toast.success("Arquivo movido para a lixeira!");
+                    itemToDelete.value = null;
+                },
                 onError: () => toast.error("Erro ao excluir o arquivo."),
             });
         }
@@ -326,151 +229,18 @@ function executeDelete() {
 // Renomear item
 function openRenameModal(item: Drive) {
     renameItem.value = item;
-    // Remove a extensão do nome no input se for arquivo para facilitar
-    if (item.document_type !== "folder" && item.name.includes(".")) {
-        const parts = item.name.split(".");
-        parts.pop();
-        renameName.value = parts.join(".");
-    } else {
-        renameName.value = item.name;
-    }
     isRenameModalOpen.value = true;
 }
 
-function saveRename() {
-    if (!renameItem.value || !renameName.value.trim()) return;
-
-    router.put(
-        route("tenant.drive.update"),
-        {
-            id: renameItem.value.id,
-            name: renameName.value,
-            type_drive: renameItem.value.document_type === "folder" ? 1 : 2,
-            drive_type:
-                renameItem.value.document_type === "folder"
-                    ? "folder"
-                    : renameItem.value.document_type,
-        },
-        {
-            onSuccess: () => {
-                isRenameModalOpen.value = false;
-                toast.success("Item renomeado com sucesso!");
-            },
-            onError: (err) => {
-                toast.error("Erro ao renomear o item.");
-            },
-        },
-    );
-}
-
 // Compartilhar / Permissões
-async function openShareModal(item: Drive) {
+function openShareModal(item: Drive) {
     shareItem.value = item;
     isShareModalOpen.value = true;
-    isLoadingUsers.value = true;
-    selectedUsersToShare.value = [];
-    selectedPermissionType.value = "somente_leitura";
-
-    try {
-        // 1. Carrega os usuários com acesso atual
-        const accessRes = await axios.get(
-            route("tenant.drive.permissions.users", item.id),
-        );
-        if (accessRes.data && accessRes.data.success) {
-            usersWithAccess.value = accessRes.data.data || [];
-        }
-
-        // 2. Carrega todos os usuários do sistema (endpoint JSON dedicado)
-        if (allUsers.value.length === 0) {
-            const usersRes = await axios.get(route("tenant.drive.users"));
-
-            if (usersRes.data && usersRes.data.success) {
-                allUsers.value = (usersRes.data.data || []).map((u: any) => ({
-                    id: u.id,
-                    name: u.name,
-                }));
-            }
-        }
-    } catch (e) {
-        console.error("Erro ao carregar dados do compartilhamento:", e);
-        toast.error("Erro ao carregar a lista de usuários.");
-    } finally {
-        isLoadingUsers.value = false;
-    }
 }
 
-// Adicionar permissão
-async function savePermission() {
-    if (!shareItem.value || selectedUsersToShare.value.length === 0) {
-        toast.error("Selecione pelo menos um usuário.");
-        return;
-    }
-
-    isSavingPermission.value = true;
-    try {
-        const res = await axios.post(route("tenant.drive.permissions.store"), {
-            drive_id: shareItem.value.id,
-            users: selectedUsersToShare.value,
-            permission: selectedPermissionType.value,
-        });
-
-        if (res.data && res.data.success) {
-            toast.success("Permissões de acesso compartilhadas!");
-
-            // Recarrega as permissões do item
-            const accessRes = await axios.get(
-                route("tenant.drive.permissions.users", shareItem.value.id),
-            );
-            if (accessRes.data && accessRes.data.success) {
-                usersWithAccess.value = accessRes.data.data || [];
-            }
-            selectedUsersToShare.value = [];
-        } else {
-            toast.error("Erro ao salvar as permissões.");
-        }
-    } catch (e) {
-        console.error("Erro ao salvar permissões:", e);
-        toast.error("Erro ao compartilhar acesso.");
-    } finally {
-        isSavingPermission.value = false;
-    }
+function handleRefreshData() {
+    router.reload();
 }
-
-// Remover permissão de um usuário
-async function removePermission(userId: number) {
-    if (!shareItem.value) return;
-
-    if (confirm("Deseja remover o acesso deste usuário?")) {
-        try {
-            await axios.delete(
-                route("tenant.drive.permissions.remove", {
-                    drive_id: shareItem.value.id,
-                    user_id: userId,
-                }),
-            );
-
-            toast.success("Acesso removido com sucesso!");
-
-            // Filtra o usuário removido da lista local
-            usersWithAccess.value = usersWithAccess.value.filter(
-                (u) => u.id !== userId,
-            );
-        } catch (e) {
-            console.error("Erro ao remover permissão:", e);
-            toast.error("Erro ao remover a permissão.");
-        }
-    }
-}
-
-// Filtrar usuários que ainda não possuem permissão
-const availableUsersToShare = computed(() => {
-    const activeUserIds = usersWithAccess.value.map((u) => u.id);
-    // Exclui também o proprietário do item
-    if (shareItem.value) {
-        activeUserIds.push(shareItem.value.user_id);
-    }
-    return allUsers.value.filter((u) => !activeUserIds.includes(u.id));
-});
 </script>
 
 <template>
@@ -837,347 +607,34 @@ const availableUsersToShare = computed(() => {
         </div>
     </div>
 
-    <!-- MODAL: NOVA PASTA -->
-    <div
-        v-if="isNewFolderModalOpen"
-        class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-xs"
-    >
-        <div
-            class="w-full max-w-md animate-in overflow-hidden rounded-xl border border-slate-100 bg-white shadow-xl duration-200 zoom-in-95 fade-in"
-        >
-            <div
-                class="flex items-center justify-between border-b border-slate-100 bg-slate-50 px-6 py-4"
-            >
-                <h3 class="flex items-center gap-2 font-bold text-slate-800">
-                    <Folder class="h-5 w-5 fill-amber-500 text-amber-500" />
-                    Criar Nova Pasta
-                </h3>
-                <button
-                    @click="isNewFolderModalOpen = false"
-                    class="text-slate-400 hover:text-slate-600"
-                >
-                    <X class="h-5 w-5" />
-                </button>
-            </div>
-            <div class="space-y-4 p-6">
-                <div class="space-y-1">
-                    <label
-                        class="text-xs font-semibold tracking-wider text-slate-500 uppercase"
-                        >Nome da Pasta</label
-                    >
-                    <Input
-                        v-model="newFolderName"
-                        placeholder="Digite o nome da pasta..."
-                        class="focus-visible:ring-indigo-500"
-                        @keyup.enter="createFolder"
-                    />
-                </div>
-            </div>
-            <div
-                class="flex items-center justify-end gap-2 border-t border-slate-100 bg-slate-50 px-6 py-4"
-            >
-                <Button
-                    @click="isNewFolderModalOpen = false"
-                    variant="ghost"
-                    class="text-slate-600"
-                    >Cancelar</Button
-                >
-                <Button
-                    @click="createFolder"
-                    class="cursor-pointer"
-                    >Criar Pasta</Button
-                >
-            </div>
-        </div>
-    </div>
+    <!-- Componentes de Modais Extraídos -->
+    <FolderModal
+        v-model:isOpen="isNewFolderModalOpen"
+        mode="create"
+        :currentFolderId="currentFolderId"
+        @saved="handleRefreshData"
+    />
 
-    <!-- MODAL: RENOMEAR -->
-    <div
-        v-if="isRenameModalOpen"
-        class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-xs"
-    >
-        <div
-            class="w-full max-w-md animate-in overflow-hidden rounded-xl border border-slate-100 bg-white shadow-xl duration-200 zoom-in-95 fade-in"
-        >
-            <div
-                class="flex items-center justify-between border-b border-slate-100 bg-slate-50 px-6 py-4"
-            >
-                <h3 class="flex items-center gap-2 font-bold text-slate-800">
-                    <Edit2 class="h-4.5 w-4.5 text-blue-600" />
-                    Renomear Item
-                </h3>
-                <button
-                    @click="isRenameModalOpen = false"
-                    class="text-slate-400 hover:text-slate-600"
-                >
-                    <X class="h-5 w-5" />
-                </button>
-            </div>
-            <div class="space-y-4 p-6">
-                <div class="space-y-1">
-                    <label
-                        class="text-xs font-semibold tracking-wider text-slate-500 uppercase"
-                        >Novo Nome</label
-                    >
-                    <Input
-                        v-model="renameName"
-                        placeholder="Digite o novo nome..."
-                        class="focus-visible:ring-indigo-500"
-                        @keyup.enter="saveRename"
-                    />
-                </div>
-            </div>
-            <div
-                class="flex items-center justify-end gap-2 border-t border-slate-100 bg-slate-50 px-6 py-4"
-            >
-                <Button
-                    @click="isRenameModalOpen = false"
-                    variant="ghost"
-                    class="text-slate-600"
-                    >Cancelar</Button
-                >
-                <Button
-                    @click="saveRename"
-                    class="cursor-pointer"
-                    >Salvar</Button
-                >
-            </div>
-        </div>
-    </div>
+    <FolderModal
+        v-model:isOpen="isRenameModalOpen"
+        mode="rename"
+        :item="renameItem"
+        @saved="handleRefreshData"
+    />
 
-    <!-- MODAL: COMPARTILHAR / PERMISSÕES -->
-    <div
-        v-if="isShareModalOpen"
-        class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-xs"
-    >
-        <div
-            class="w-full max-w-lg animate-in overflow-hidden rounded-xl border border-slate-100 bg-white shadow-xl duration-200 zoom-in-95 fade-in"
-        >
-            <!-- Header -->
-            <div
-                class="flex items-center justify-between border-b border-slate-100 bg-slate-50 px-6 py-4"
-            >
-                <h3 class="flex items-center gap-2 font-bold text-slate-800">
-                    <Share2 class="h-5 w-5 text-emerald-600" />
-                    Compartilhar Acesso
-                </h3>
-                <button
-                    @click="isShareModalOpen = false"
-                    class="text-slate-400 hover:text-slate-600"
-                >
-                    <X class="h-5 w-5" />
-                </button>
-            </div>
+    <ShareModal
+        v-model:isOpen="isShareModalOpen"
+        :item="shareItem"
+        @saved="handleRefreshData"
+    />
 
-            <!-- Body -->
-            <div class="max-h-[60vh] space-y-6 overflow-y-auto p-6">
-                <div
-                    v-if="shareItem"
-                    class="flex items-center gap-3 rounded-lg border border-slate-100 bg-slate-50 p-3"
-                >
-                    <component
-                        :is="getFileIcon(shareItem.document_type)"
-                        class="h-5.5 w-5.5 shrink-0"
-                        :class="getIconColorClass(shareItem.document_type)"
-                    />
-                    <span class="truncate font-semibold text-slate-700">{{
-                        shareItem.name
-                    }}</span>
-                </div>
-
-                <!-- Formulário para Adicionar Acesso -->
-                <div class="space-y-3">
-                    <h4
-                        class="text-xs font-bold tracking-wider text-slate-400 uppercase"
-                    >
-                        Conceder Acesso a Usuários
-                    </h4>
-
-                    <div
-                        v-if="isLoadingUsers"
-                        class="flex items-center justify-center py-4"
-                    >
-                        <Loader2 class="h-6 w-6 animate-spin text-indigo-600" />
-                    </div>
-
-                    <div
-                        v-else-if="availableUsersToShare.length === 0"
-                        class="py-2 text-sm text-slate-400"
-                    >
-                        Todos os usuários do sistema já possuem permissões de
-                        acesso configuradas para este item.
-                    </div>
-
-                    <div v-else class="space-y-3">
-                        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                            <!-- Seleção do Usuário -->
-                            <div class="space-y-1">
-                                <label
-                                    class="text-xs font-semibold text-slate-500"
-                                    >Usuários</label
-                                >
-                                <select
-                                    v-model="selectedUsersToShare"
-                                    multiple
-                                    class="h-24 w-full rounded-lg border border-slate-200 bg-white p-2 text-sm focus:border-indigo-500 focus:ring-indigo-500"
-                                >
-                                    <option
-                                        v-for="user in availableUsersToShare"
-                                        :key="user.id"
-                                        :value="user.id"
-                                    >
-                                        {{ user.name }}
-                                    </option>
-                                </select>
-                                <span
-                                    class="mt-1 block text-[10px] text-slate-400"
-                                    >Dica: Segure Ctrl para selecionar
-                                    múltiplos.</span
-                                >
-                            </div>
-
-                            <!-- Seleção da Permissão -->
-                            <div class="space-y-2">
-                                <label
-                                    class="text-xs font-semibold text-slate-500"
-                                    >Nível de Permissão</label
-                                >
-                                <div class="space-y-2">
-                                    <label
-                                        class="flex cursor-pointer items-center gap-2 text-sm font-medium text-slate-600"
-                                    >
-                                        <input
-                                            type="radio"
-                                            v-model="selectedPermissionType"
-                                            value="somente_leitura"
-                                            class="text-indigo-600 focus:ring-indigo-500"
-                                        />
-                                        Somente Leitura
-                                    </label>
-                                    <label
-                                        class="flex cursor-pointer items-center gap-2 text-sm font-medium text-slate-600"
-                                    >
-                                        <input
-                                            type="radio"
-                                            v-model="selectedPermissionType"
-                                            value="acesso_total"
-                                            class="text-indigo-600 focus:ring-indigo-500"
-                                        />
-                                        Acesso Total (Leitura e Escrita)
-                                    </label>
-                                    <label
-                                        class="flex cursor-pointer items-center gap-2 text-sm font-medium text-slate-600"
-                                    >
-                                        <input
-                                            type="radio"
-                                            v-model="selectedPermissionType"
-                                            value="somente_proprietario"
-                                            class="text-indigo-600 focus:ring-indigo-500"
-                                        />
-                                        Bloquear (Somente Proprietário)
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="flex justify-end">
-                            <Button
-                                @click="savePermission"
-                                class="flex cursor-pointer items-center gap-2 rounded-lg"
-                                :disabled="isSavingPermission"
-                            >
-                                <Loader2
-                                    v-if="isSavingPermission"
-                                    class="h-4 w-4 animate-spin"
-                                />
-                                Compartilhar
-                            </Button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Lista de Usuários que já têm Acesso -->
-                <div class="space-y-3">
-                    <h4
-                        class="text-xs font-bold tracking-wider text-slate-400 uppercase"
-                    >
-                        Usuários com Acesso Atual
-                    </h4>
-
-                    <div
-                        v-if="usersWithAccess.length === 0"
-                        class="py-2 text-sm text-slate-400"
-                    >
-                        Nenhum acesso compartilhado configurado para outros
-                        usuários (somente o proprietário).
-                    </div>
-
-                    <div
-                        v-else
-                        class="max-h-48 divide-y divide-slate-100 overflow-y-auto pr-1"
-                    >
-                        <div
-                            v-for="user in usersWithAccess"
-                            :key="user.id"
-                            class="flex items-center justify-between py-2 text-sm"
-                        >
-                            <span class="font-medium text-slate-700">{{
-                                user.name
-                            }}</span>
-                            <div class="flex items-center gap-2">
-                                <span
-                                    class="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600 capitalize"
-                                >
-                                    {{ user.tipo_permission.replace("_", " ") }}
-                                </span>
-                                <button
-                                    @click="removePermission(user.id)"
-                                    class="cursor-pointer rounded-md p-1 text-rose-600 transition-colors hover:bg-rose-50 hover:text-rose-800"
-                                    title="Remover Acesso"
-                                >
-                                    <X class="h-4 w-4" />
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Footer -->
-            <div
-                class="flex items-center justify-end border-t border-slate-100 bg-slate-50 px-6 py-4"
-            >
-                <Button
-                    @click="isShareModalOpen = false"
-                    class="cursor-pointer rounded-lg bg-slate-800 text-white hover:bg-slate-700"
-                    >Fechar</Button
-                >
-            </div>
-        </div>
-    </div>
-
-    <!-- DIÁLOGO DE CONFIRMAÇÃO DE EXCLUSÃO -->
-    <AlertDialog :open="isDeleteConfirmOpen" @update:open="isDeleteConfirmOpen = $event">
-        <AlertDialogContent>
-            <AlertDialogHeader>
-                <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
-                <AlertDialogDescription>
-                    <span v-if="isDeletingBulk">
-                        Tem certeza que deseja mover os {{ selectedDrives.length }} itens selecionados para a lixeira?
-                    </span>
-                    <span v-else-if="itemToDelete">
-                        Tem certeza que deseja mover "{{ itemToDelete.name }}" para a lixeira?
-                    </span>
-                </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-                <AlertDialogCancel @click="isDeleteConfirmOpen = false">Cancelar</AlertDialogCancel>
-                <AlertDialogAction @click="executeDelete" class="bg-rose-600 text-white hover:bg-rose-700">
-                    Mover para a lixeira
-                </AlertDialogAction>
-            </AlertDialogFooter>
-        </AlertDialogContent>
-    </AlertDialog>
+    <DeleteConfirmModal
+        v-model:isOpen="isDeleteConfirmOpen"
+        :item="itemToDelete"
+        :isBulk="isDeletingBulk"
+        :selectedCount="selectedDrives.length"
+        @confirm="executeDelete"
+    />
 </template>
 
 <style scoped>

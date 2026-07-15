@@ -2,72 +2,16 @@
 import { Head } from "@inertiajs/vue3";
 import TenantLayout from "@/layouts/tenant-layout/TenantLayout.vue";
 import {
-    Folder,
-    FileText,
-    FileCode,
-    FileSpreadsheet,
-    FileImage,
-    FileArchive,
-    File,
     ClipboardList,
 } from "lucide-vue-next";
 import type { DriveLogData } from "@/types";
+import { getFileIcon, getIconColorClass } from "../utils/drive-helpers";
 
 defineOptions({ layout: TenantLayout });
 
 defineProps<{
     logs: DriveLogData[];
 }>();
-
-// Icones por tipo
-function getFileIcon(type: string | null) {
-    if (!type) return File;
-    switch (type) {
-        case "folder":
-            return Folder;
-        case "pdf":
-            return FileText;
-        case "docx":
-            return FileText;
-        case "xlsx":
-            return FileSpreadsheet;
-        case "txt":
-            return FileText;
-        case "jpg":
-        case "png":
-            return FileImage;
-        case "zip":
-        case "tar":
-            return FileArchive;
-        default:
-            return File;
-    }
-}
-
-// Cores por tipo de icone
-function getIconColorClass(type: string | null) {
-    if (!type) return "text-slate-400";
-    switch (type) {
-        case "folder":
-            return "text-amber-500 fill-amber-500";
-        case "pdf":
-            return "text-rose-500 fill-rose-50";
-        case "docx":
-            return "text-blue-500 fill-blue-50";
-        case "xlsx":
-            return "text-emerald-600 fill-emerald-50";
-        case "txt":
-            return "text-slate-500";
-        case "jpg":
-        case "png":
-            return "text-violet-500 fill-violet-50";
-        case "zip":
-        case "tar":
-            return "text-orange-500 fill-orange-50";
-        default:
-            return "text-slate-400";
-    }
-}
 </script>
 
 <template>
