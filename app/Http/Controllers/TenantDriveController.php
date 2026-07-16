@@ -127,7 +127,11 @@ class TenantDriveController extends Controller
 
             return redirect()->back();
         } catch (\Throwable $th) {
-            Log::error('Erro ao tentar mover documento ou pasta:', [$th->getMessage()]);
+            Log::error('Erro ao tentar mover documento ou pasta:', [
+                'message' => $th->getMessage(),
+                'previous' => $th->getPrevious()?->getPrevious()?->getMessage()
+                    ?? $th->getPrevious()?->getMessage(),
+            ]);
 
             return redirect()->back()->withErrors(['error' => $th->getMessage() ?: 'Erro ao mover o documento ou pasta!']);
         }
