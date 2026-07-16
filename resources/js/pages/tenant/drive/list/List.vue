@@ -4,6 +4,7 @@ import { Head, Link, useForm, router, usePage } from "@inertiajs/vue3";
 import TenantLayout from "@/layouts/tenant-layout/TenantLayout.vue";
 import { route } from "ziggy-js";
 import { toast } from "vue-sonner";
+import axios from "axios";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -16,6 +17,8 @@ import {
     Edit2,
     Trash2,
     X,
+    Check,
+    Move,
     FileText,
     FileCode,
     FileSpreadsheet,
@@ -31,12 +34,13 @@ import { getFileIcon, getIconColorClass, formatSize } from "../utils/drive-helpe
 import ShareModal from "./components/ShareModal.vue";
 import FolderModal from "./components/FolderModal.vue";
 import DeleteConfirmModal from "./components/DeleteConfirmModal.vue";
+import MoveModal from "./components/MoveModal.vue";
 
 defineOptions({ layout: TenantLayout });
 
 const props = defineProps<{
     drives: Drive[];
-    folders: { id: number; name: string }[];
+    folders: { id: number; name: string; parent_id: number | null }[];
 }>();
 
 const page = usePage();
@@ -51,14 +55,36 @@ const shareItem = ref<Drive | null>(null);
 const isDeleteConfirmOpen = ref(false);
 const itemToDelete = ref<Drive | null>(null);
 const isDeletingBulk = ref(false);
+const isMoveModalOpen = ref(false);
+const itemsToMove = ref<{ id: number; name: string; type: "file" | "folder" }[]>([]);
 
 // Seleção múltipla
 const selectedDrives = ref<number[]>([]);
 
+interface UploadItem {
+    id: string;
+    name: string;
+    progress: number;
+    status: "pending" | "uploading" | "success" | "error";
+}
+
 // Upload de arquivos
 const fileInput = ref<HTMLInputElement | null>(null);
-const isUploading = ref(false);
-const uploadProgress = ref(0);
+const uploadQueue = ref<UploadItem[]>([]);
+
+// Computed para checar se há arquivos subindo
+const isUploading = computed(() => {
+    return uploadQueue.value.some((item) => item.status === "uploading");
+});
+
+// Contador de uploads ativos
+const activeUploadsCount = computed(() => {
+    return uploadQueue.value.filter((item) => item.status === "uploading").length;
+});
+
+function clearCompletedUploads() {
+    uploadQueue.value = uploadQueue.value.filter((item) => item.status === "uploading");
+}
 
 // ID da pasta atual baseada na URL
 const currentFolderId = computed(() => {
@@ -67,20 +93,25 @@ const currentFolderId = computed(() => {
         : null;
 });
 
-// Computed para checar se todos os itens estão selecionados
+// Computed para filtrar apenas os itens selecionáveis (que o usuário tem permissão)
+const selectableDrives = computed(() => {
+    return props.drives.filter((d) => !d.permission_attrs.disable);
+});
+
+// Computed para checar se todos os itens selecionáveis estão selecionados
 const isAllSelected = computed(() => {
     return (
-        props.drives.length > 0 &&
-        selectedDrives.value.length === props.drives.length
+        selectableDrives.value.length > 0 &&
+        selectedDrives.value.length === selectableDrives.value.length
     );
 });
 
-// Toggle selecionar todos
+// Toggle selecionar todos (apenas elegíveis)
 function toggleSelectAll() {
     if (isAllSelected.value) {
         selectedDrives.value = [];
     } else {
-        selectedDrives.value = props.drives.map((d) => d.id);
+        selectedDrives.value = selectableDrives.value.map((d) => d.id);
     }
 }
 
@@ -134,7 +165,11 @@ function handleFileUpload(event: Event) {
     const target = event.target as HTMLInputElement;
     if (!target.files || target.files.length === 0) return;
 
-    const file = target.files[0];
+    const files = Array.from(target.files);
+    uploadFiles(files);
+}
+
+async function uploadFiles(files: File[]) {
     const folderId = currentFolderId.value;
 
     if (!folderId) {
@@ -142,34 +177,124 @@ function handleFileUpload(event: Event) {
         return;
     }
 
-    const form = useForm({
-        documents: [file],
-        folder_id: folderId,
-        user_id: (page.props as any).auth?.user?.id,
-        modified_at: [new Date().toISOString()],
-    });
+    // Cria os itens na fila visual
+    const newItems: UploadItem[] = files.map((file) => ({
+        id: `${Date.now()}-${Math.random().toString(36).substring(2, 9)}-${file.name}`,
+        name: file.name,
+        progress: 0,
+        status: "uploading",
+    }));
 
-    isUploading.value = true;
-    uploadProgress.value = 0;
+    uploadQueue.value = [...uploadQueue.value, ...newItems];
 
-    form.post(route("tenant.drive.store"), {
-        forceFormData: true,
-        onProgress: (progress) => {
-            if (progress) {
-                uploadProgress.value = progress.percentage ?? 0;
+    // Dispara as requisições paralelas via Axios
+    const promises = files.map((file, index) => {
+        const itemId = newItems[index].id;
+        const formData = new FormData();
+        formData.append("documents[]", file);
+        formData.append("folder_id", String(folderId));
+        formData.append("user_id", String((page.props as any).auth?.user?.id));
+        formData.append("modified_at[]", new Date().toISOString());
+
+        // Inicia incremento visual simulado de progresso (para suavidade em arquivos rápidos)
+        const progressInterval = setInterval(() => {
+            const queueItem = uploadQueue.value.find((item) => item.id === itemId);
+            if (queueItem && queueItem.progress < 90 && queueItem.status === "uploading") {
+                queueItem.progress += Math.floor(Math.random() * 6) + 2;
             }
-        },
-        onSuccess: () => {
-            isUploading.value = false;
-            toast.success("Upload de arquivo realizado com sucesso!");
-            if (fileInput.value) fileInput.value.value = "";
-        },
-        onError: (err) => {
-            isUploading.value = false;
-            toast.error("Erro ao realizar upload do arquivo.");
-            if (fileInput.value) fileInput.value.value = "";
-        },
+        }, 120);
+
+        return axios
+            .post(route("tenant.drive.store"), formData, {
+                headers: {
+                    "Content-Type": "multipart/form-data",
+                },
+                onUploadProgress: (progressEvent) => {
+                    if (progressEvent.total) {
+                        const percent = Math.round(
+                            (progressEvent.loaded * 100) / progressEvent.total
+                        );
+                        const queueItem = uploadQueue.value.find((item) => item.id === itemId);
+                        // Apenas substitui se o progresso real da rede for maior
+                        if (queueItem && percent > queueItem.progress) {
+                            queueItem.progress = percent;
+                        }
+                    }
+                },
+            })
+            .then(() => {
+                clearInterval(progressInterval);
+                
+                // Faz a barra e porcentagem visual correrem suavemente de onde estiverem até 100%
+                const queueItem = uploadQueue.value.find((item) => item.id === itemId);
+                if (!queueItem) return;
+
+                const currentProgress = queueItem.progress;
+                const steps = 10; // 10 passos de incremento
+                const increment = Math.max(1, Math.ceil((100 - currentProgress) / steps));
+
+                const finishInterval = setInterval(() => {
+                    const qItem = uploadQueue.value.find((item) => item.id === itemId);
+                    if (!qItem) {
+                        clearInterval(finishInterval);
+                        return;
+                    }
+                    if (qItem.progress < 100) {
+                        qItem.progress = Math.min(100, qItem.progress + increment);
+                        if (qItem.progress >= 100) {
+                            clearInterval(finishInterval);
+                            qItem.status = "success";
+                        }
+                    } else {
+                        clearInterval(finishInterval);
+                        qItem.status = "success";
+                    }
+                }, 30); // 30ms por passo (300ms no total de animação)
+            })
+            .catch((err) => {
+                clearInterval(progressInterval);
+                console.error("Erro ao subir arquivo:", file.name, err);
+                const queueItem = uploadQueue.value.find((item) => item.id === itemId);
+                if (queueItem) {
+                    queueItem.status = "error";
+                }
+            });
     });
+
+    // Aguarda todos os uploads terminarem
+    await Promise.all(promises);
+
+    // Atualiza a listagem da página Inertia
+    router.reload({ only: ["drives"] });
+
+    const totalSuccess = newItems.filter((i) => i.status === "success").length;
+    const totalError = newItems.filter((i) => i.status === "error").length;
+
+    if (totalSuccess > 0) {
+        toast.success(
+            totalSuccess > 1
+                ? `${totalSuccess} arquivos enviados com sucesso!`
+                : "Arquivo enviado com sucesso!"
+        );
+    }
+    if (totalError > 0) {
+        toast.error(
+            totalError > 1
+                ? `Falha no envio de ${totalError} arquivos.`
+                : `Falha no envio de "${newItems.find(i => i.status === 'error')?.name}".`
+        );
+    }
+
+    if (fileInput.value) {
+        fileInput.value.value = "";
+    }
+
+    // Auto-limpa a fila após 4 segundos
+    setTimeout(() => {
+        uploadQueue.value = uploadQueue.value.filter(
+            (item) => item.status !== "success"
+        );
+    }, 4000);
 }
 
 // Excluir item
@@ -238,6 +363,64 @@ function openShareModal(item: Drive) {
     isShareModalOpen.value = true;
 }
 
+function openMoveModal(item: Drive) {
+    itemsToMove.value = [
+        {
+            id: item.document_type === "folder" ? item.drive_folder_id! : item.id,
+            name: item.name,
+            type: item.document_type === "folder" ? "folder" : "file",
+        },
+    ];
+    isMoveModalOpen.value = true;
+}
+
+function openBulkMoveModal() {
+    if (selectedDrives.value.length === 0) return;
+
+    itemsToMove.value = selectedDrives.value.map((id) => {
+        const drive = props.drives.find((d) => d.id === id);
+        return {
+            id: drive?.document_type === "folder" ? drive.drive_folder_id! : id,
+            name: drive?.name ?? "",
+            type: drive?.document_type === "folder" ? ("folder" as const) : ("file" as const),
+        };
+    });
+    isMoveModalOpen.value = true;
+}
+
+const isDragging = ref(false);
+const dragCounter = ref(0);
+
+function handleDragEnter(event: DragEvent) {
+    event.preventDefault();
+    dragCounter.value++;
+    isDragging.value = true;
+}
+
+function handleDragLeave(event: DragEvent) {
+    event.preventDefault();
+    dragCounter.value--;
+    if (dragCounter.value === 0) {
+        isDragging.value = false;
+    }
+}
+
+function handleDragOver(event: DragEvent) {
+    event.preventDefault();
+    isDragging.value = true;
+}
+
+function handleFileDrop(event: DragEvent) {
+    event.preventDefault();
+    isDragging.value = false;
+    dragCounter.value = 0;
+
+    if (!event.dataTransfer?.files || event.dataTransfer.files.length === 0) return;
+
+    const files = Array.from(event.dataTransfer.files);
+    uploadFiles(files);
+}
+
 function handleRefreshData() {
     router.reload();
 }
@@ -246,7 +429,24 @@ function handleRefreshData() {
 <template>
     <Head title="Meu Drive" />
 
-    <div class="space-y-6">
+    <div
+        class="space-y-6 relative"
+        @dragenter="handleDragEnter"
+        @dragover="handleDragOver"
+        @dragleave="handleDragLeave"
+        @drop="handleFileDrop"
+    >
+        <!-- Overlay Visual de Drag & Drop -->
+        <div
+            v-if="isDragging"
+            class="absolute inset-0 z-40 flex flex-col items-center justify-center border-4 border-dashed border-indigo-500 bg-white/85 p-6 backdrop-blur-xs transition-all duration-200 animate-in fade-in zoom-in-95 rounded-2xl"
+        >
+            <div class="flex flex-col items-center gap-4 text-indigo-600">
+                <Upload class="h-16 w-16 animate-bounce" />
+                <h3 class="text-xl font-bold">Solte seus arquivos aqui</h3>
+                <p class="text-sm text-slate-500 font-medium">Os arquivos serão carregados na pasta atual</p>
+            </div>
+        </div>
         <!-- Header da Página -->
         <div
             class="flex flex-col gap-4 border-b border-slate-100 pb-5 md:flex-row md:items-center md:justify-between"
@@ -331,6 +531,7 @@ function handleRefreshData() {
                     type="file"
                     ref="fileInput"
                     class="hidden"
+                    multiple
                     @change="handleFileUpload"
                 />
 
@@ -355,25 +556,62 @@ function handleRefreshData() {
             </div>
         </div>
 
-        <!-- Barra de Progresso do Upload -->
+        <!-- Painel Flutuante de Uploads Estilo Google Drive -->
         <div
-            v-if="isUploading"
-            class="animate-pulse space-y-2 rounded-xl border border-indigo-100 bg-indigo-50 p-4"
+            v-if="uploadQueue.length > 0"
+            class="fixed right-6 bottom-6 z-50 w-80 rounded-xl border border-slate-100 bg-white shadow-2xl overflow-hidden animate-in slide-in-from-bottom duration-300"
         >
-            <div
-                class="flex items-center justify-between text-xs font-semibold text-indigo-700"
-            >
-                <span class="flex items-center gap-2">
-                    <Loader2 class="h-4.5 w-4.5 animate-spin" />
-                    Realizando upload do arquivo...
+            <!-- Header do Painel -->
+            <div class="flex items-center justify-between bg-slate-900 px-4 py-3 text-white">
+                <span class="text-xs font-semibold">
+                    {{ activeUploadsCount > 0 ? `Carregando ${activeUploadsCount} itens` : 'Uploads finalizados' }}
                 </span>
-                <span>{{ Math.round(uploadProgress) }}%</span>
+                <button
+                    @click="clearCompletedUploads"
+                    class="text-slate-400 hover:text-white transition-colors cursor-pointer"
+                >
+                    <X class="h-4 w-4" />
+                </button>
             </div>
-            <div class="h-2 w-full rounded-full bg-slate-200">
+
+            <!-- Lista de Arquivos -->
+            <div class="max-h-60 overflow-y-auto divide-y divide-slate-100 p-2">
                 <div
-                    class="h-2 rounded-full bg-indigo-600 transition-all duration-300"
-                    :style="{ width: `${uploadProgress}%` }"
-                ></div>
+                    v-for="item in uploadQueue"
+                    :key="item.id"
+                    class="flex items-center justify-between p-2 text-xs"
+                >
+                    <div class="flex flex-col gap-1 min-w-[70%] max-w-[70%]">
+                        <span class="truncate font-medium text-slate-700" :title="item.name">
+                            {{ item.name }}
+                        </span>
+                        <!-- Barra de progresso para este arquivo -->
+                        <div class="h-1.5 w-full rounded-full bg-slate-100 overflow-hidden">
+                            <div
+                                class="h-1.5 rounded-full transition-all duration-300"
+                                :class="[
+                                    item.status === 'error' ? 'bg-rose-500' : 'bg-indigo-600'
+                                ]"
+                                :style="{ width: `${item.progress}%` }"
+                            ></div>
+                        </div>
+                    </div>
+
+                    <!-- Status e Ações -->
+                    <div class="flex items-center justify-end min-w-[25%] font-medium">
+                        <span v-if="item.status === 'uploading'" class="text-slate-400">
+                            {{ item.progress }}%
+                        </span>
+                        <span v-else-if="item.status === 'success'" class="text-emerald-600 flex items-center gap-1 font-semibold">
+                            <Check class="h-3.5 w-3.5 stroke-[2.5]" />
+                            Pronto
+                        </span>
+                        <span v-else-if="item.status === 'error'" class="text-rose-600 flex items-center gap-1 font-semibold">
+                            <X class="h-3.5 w-3.5 stroke-[2.5]" />
+                            Erro
+                        </span>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -390,14 +628,24 @@ function handleRefreshData() {
                         : "itens selecionados"
                 }}
             </span>
-            <Button
-                @click="deleteSelectedDrives"
-                variant="destructive"
-                class="flex cursor-pointer items-center gap-2 rounded-lg"
-            >
-                <Trash2 class="h-4 w-4" />
-                Mover Selecionados para Lixeira
-            </Button>
+            <div class="flex items-center gap-2">
+                <Button
+                    @click="openBulkMoveModal"
+                    variant="outline"
+                    class="flex cursor-pointer items-center gap-2 rounded-lg border-indigo-200 text-indigo-700 bg-white hover:bg-indigo-50"
+                >
+                    <Move class="h-4 w-4" />
+                    Mover Selecionados
+                </Button>
+                <Button
+                    @click="deleteSelectedDrives"
+                    variant="destructive"
+                    class="flex cursor-pointer items-center gap-2 rounded-lg"
+                >
+                    <Trash2 class="h-4 w-4" />
+                    Mover para Lixeira
+                </Button>
+            </div>
         </div>
 
         <!-- Tabela Listagem do Drive -->
@@ -415,7 +663,9 @@ function handleRefreshData() {
                                     type="checkbox"
                                     :checked="isAllSelected"
                                     @change="toggleSelectAll"
-                                    class="h-4 w-4 cursor-pointer rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                                    :disabled="selectableDrives.length === 0"
+                                    class="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                                    :class="selectableDrives.length === 0 ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'"
                                 />
                             </th>
                             <th class="px-4 py-4 font-semibold">Nome</th>
@@ -587,6 +837,18 @@ function handleRefreshData() {
                                         <Edit2 class="h-4.5 w-4.5" />
                                     </button>
 
+                                     <!-- Mover (Índigo) -->
+                                     <button
+                                         @click="openMoveModal(item)"
+                                         class="cursor-pointer rounded-md p-1.5 text-indigo-600 transition-colors hover:bg-indigo-50 hover:text-indigo-700"
+                                         title="Mover item"
+                                         :disabled="
+                                             item.permission_attrs.disable
+                                         "
+                                     >
+                                         <Move class="h-4.5 w-4.5" />
+                                     </button>
+
                                     <!-- Excluir (Vermelho) -->
                                     <button
                                         @click="confirmDelete(item)"
@@ -634,6 +896,12 @@ function handleRefreshData() {
         :isBulk="isDeletingBulk"
         :selectedCount="selectedDrives.length"
         @confirm="executeDelete"
+    />
+
+    <MoveModal
+        v-model:isOpen="isMoveModalOpen"
+        :itemsToMove="itemsToMove"
+        @saved="handleRefreshData"
     />
 </template>
 

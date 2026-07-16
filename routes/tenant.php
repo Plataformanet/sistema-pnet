@@ -194,11 +194,13 @@ Route::middleware([
         Route::get('/drive', [TenantDriveController::class, 'index'])->name('tenant.drive.index')->middleware('permission:drive.drives.view');
         Route::get('/drive/search', TenantDriveSearchController::class)->name('tenant.drive.search')->middleware('permission:drive.drives.view');
         Route::get('/drive/logs', TenantDriveLogController::class)->name('tenant.drive.logs')->middleware('permission:drive.logs.view');
+        Route::get('/drive/folders/list', [TenantDriveController::class, 'listFolders'])->name('tenant.drive.folders.list')->middleware('permission:drive.drives.view');
         Route::get('/drive/{id}/download', [TenantDriveController::class, 'download'])->name('tenant.drive.download')->whereNumber('id')->middleware('permission:drive.drives.view');
         Route::post('/drive', [TenantDriveController::class, 'store'])->name('tenant.drive.store')->middleware('permission:drive.drives.create');
         Route::put('/drive', [TenantDriveController::class, 'update'])->name('tenant.drive.update')->middleware('permission:drive.drives.edit');
         Route::delete('/drive/selected', [TenantDriveController::class, 'deleteSelected'])->name('tenant.drive.delete-selected')->middleware('permission:drive.drives.delete');
         Route::delete('/drive/{id}', [TenantDriveController::class, 'destroy'])->name('tenant.drive.destroy')->whereNumber('id')->middleware('permission:drive.drives.delete');
+        Route::post('/drive/move', [TenantDriveController::class, 'move'])->name('tenant.drive.move')->middleware('permission:drive.drives.edit');
 
         // Drive - Permissões de acesso
         Route::get('/drive/users', [TenantDriveController::class, 'shareableUsers'])->name('tenant.drive.users')->middleware('permission:drive.drives.view');

@@ -16,6 +16,7 @@ use App\Models\DrivePermission;
 use App\Models\Tenant;
 use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Response;
@@ -61,47 +62,55 @@ class DriveService
             return DB::transaction(function () use ($request) {
 
                 $folder = DriveFolder::findOrFail($request->validated('folder_id'));
-
-                $baseName = pathinfo($request->validated('documents')[0]->getClientOriginalName(), PATHINFO_FILENAME);
-
-                $counter = 1;
-
                 $disk = $this->disk();
+                $uploadedDrives = [];
 
-                $documentName = $request->validated('documents')[0]->getClientOriginalName();
-                $extension = $request->validated('documents')[0]->getClientOriginalExtension();
+                $files = $request->file('documents') ?? [];
+                $modifiedDates = $request->validated('modified_at') ?? [];
 
-                while ($disk->exists($this->basePath().'/'.$folder->getPath().'/'.$documentName)) {
-                    $documentName = $baseName." ($counter).".$extension;
-                    $counter++;
+                foreach ($files as $index => $file) {
+                    $baseName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
+                    $counter = 1;
+                    $documentName = $file->getClientOriginalName();
+                    $extension = $file->getClientOriginalExtension();
+
+                    while ($disk->exists($this->basePath().'/'.$folder->getPath().'/'.$documentName)) {
+                        $documentName = $baseName." ($counter).".$extension;
+                        $counter++;
+                    }
+
+                    $document_path = $this->basePath().'/'.$folder->getPath().'/'.$documentName;
+
+                    $modifiedAt = isset($modifiedDates[$index])
+                        ? Carbon::parse($modifiedDates[$index])->utc()
+                        : now()->utc();
+
+                    $drive = Drive::create([
+                        'user_id' => $request->validated('user_id'),
+                        'drive_folder_id' => $request->validated('folder_id'),
+                        'name' => $documentName,
+                        'document_path' => $document_path,
+                        'document_size' => $file->getSize(),
+                        'document_type' => $file->extension() ?: $file->getClientOriginalExtension(),
+                        'modified_by' => auth()->user()->id,
+                        'modified_at' => $modifiedAt,
+                    ]);
+
+                    try {
+                        $disk->putFileAs(
+                            $this->basePath().'/'.$folder->getPath(),
+                            $file,
+                            $documentName,
+                        );
+                    } catch (\Throwable $th) {
+                        Log::error('Falha no upload do documento para o storage', ['exception' => $th]);
+                        throw new UploadDocumentException('Erro ao tentar fazer upload do documento.', Response::HTTP_UNPROCESSABLE_ENTITY);
+                    }
+
+                    $uploadedDrives[] = $drive;
                 }
 
-                $document_path = $this->basePath().'/'.$folder->getPath().'/'.$documentName;
-
-                $drive = Drive::create([
-                    'user_id' => $request->validated('user_id'),
-                    'drive_folder_id' => $request->validated('folder_id'),
-                    'name' => $documentName,
-                    'document_path' => $document_path,
-                    'document_size' => $request->validated('documents')[0]->getSize(),
-                    'document_type' => $request->validated('documents')[0]->extension(),
-                    'modified_by' => auth()->user()->id,
-                    'modified_at' => Carbon::parse($request->validated('modified_at')[0])->utc(),
-                ]);
-
-                try {
-                    $this->disk()->putFileAs(
-                        $this->basePath().'/'.$folder->getPath(),
-                        $request->file('documents')[0],
-                        $documentName,
-                    );
-                } catch (\Throwable $th) {
-                    Log::error('Falha no upload do documento para o storage', ['exception' => $th]);
-
-                    throw new UploadDocumentException('Erro ao tentar fazer upload do documento.', Response::HTTP_UNPROCESSABLE_ENTITY);
-                }
-
-                return $drive;
+                return count($uploadedDrives) === 1 ? $uploadedDrives[0] : $uploadedDrives;
             });
         });
     }
@@ -616,5 +625,122 @@ class DriveService
                 return $drive;
             });
         });
+    }
+
+    public function moveSelected(array $items, int $destinationFolderId, Tenant $tenant): bool
+    {
+        return $tenant->run(function () use ($items, $destinationFolderId) {
+            return DB::transaction(function () use ($items, $destinationFolderId) {
+                $destinationFolder = $destinationFolderId > 0
+                    ? DriveFolder::findOrFail($destinationFolderId)
+                    : null;
+                $disk = $this->disk();
+
+                foreach ($items as $item) {
+                    if ($item['type'] === 'file') {
+                        // Arquivos não podem viver na raiz (drive_folder_id é NOT NULL)
+                        if ($destinationFolder === null) {
+                            throw new \InvalidArgumentException('Não é possível mover arquivos diretamente para a raiz do drive.');
+                        }
+
+                        // Valida se o usuário tem acesso à pasta destino
+                        $destinationFolderDrive = Drive::where('drive_folder_id', $destinationFolderId)
+                            ->where('document_type', DocumentTypeDriveEnum::FOLDER)
+                            ->first();
+
+                        if ($destinationFolderDrive && ! $this->userCanAccess($destinationFolderDrive, Auth::user())) {
+                            throw new AuthorizationException('Você não tem permissão para mover itens para esta pasta.');
+                        }
+
+                        $drive = Drive::findOrFail($item['id']);
+                        $oldPath = $drive->document_path;
+
+                        // Resolve conflitos de nomes se o arquivo já existir na pasta de destino
+                        $baseName = pathinfo($drive->name, PATHINFO_FILENAME);
+                        $extension = pathinfo($drive->name, PATHINFO_EXTENSION);
+                        $documentName = $drive->name;
+                        $counter = 1;
+
+                        while ($disk->exists($this->basePath().'/'.$destinationFolder->getPath().'/'.$documentName)) {
+                            $documentName = $baseName." ($counter).".$extension;
+                            $counter++;
+                        }
+
+                        $newPath = $this->basePath().'/'.$destinationFolder->getPath().'/'.$documentName;
+
+                        if ($disk->exists($oldPath)) {
+                            $disk->move($oldPath, $newPath);
+                        }
+
+                        $drive->update([
+                            'drive_folder_id' => $destinationFolderId,
+                            'name' => $documentName,
+                            'document_path' => $newPath,
+                        ]);
+
+                    } elseif ($item['type'] === 'folder') {
+                        $folder = DriveFolder::findOrFail($item['id']);
+
+                        // Valida se a pasta destino é ela mesma ou descendente dela
+                        if ($destinationFolder !== null) {
+                            if ($folder->id === $destinationFolderId || $destinationFolder->isDescendantOf($folder)) {
+                                throw new \InvalidArgumentException('Não é possível mover uma pasta para dentro dela mesma.');
+                            }
+
+                            // Valida se o usuário tem acesso à pasta destino
+                            $destinationFolderDrive = Drive::where('drive_folder_id', $destinationFolderId)
+                                ->where('document_type', DocumentTypeDriveEnum::FOLDER)
+                                ->first();
+
+                            if ($destinationFolderDrive && ! $this->userCanAccess($destinationFolderDrive, Auth::user())) {
+                                throw new AuthorizationException('Você não tem permissão para mover itens para esta pasta.');
+                            }
+                        }
+
+                        $oldFolderPath = $folder->getPath();
+
+                        // Atualiza a pasta pai (0 vira null no banco)
+                        $folder->update([
+                            'parent_id' => $destinationFolderId > 0 ? $destinationFolderId : null,
+                        ]);
+
+                        // Move os arquivos e subpastas fisicamente no disco e atualiza caminhos no banco
+                        $this->movePhysicalFolderContents($folder, $oldFolderPath);
+                    }
+                }
+
+                return true;
+            });
+        });
+    }
+
+    private function movePhysicalFolderContents(DriveFolder $folder, string $oldFolderPath): void
+    {
+        $disk = $this->disk();
+        $newFolderPath = $folder->getPath(); // O parent_id já mudou no banco, logo retorna o novo caminho!
+
+        // 1. Move os arquivos diretamente vinculados a esta pasta
+        foreach ($folder->drives as $drive) {
+            $oldFilePath = $drive->document_path;
+            $newFilePath = str_replace(
+                $this->basePath().'/'.$oldFolderPath,
+                $this->basePath().'/'.$newFolderPath,
+                $oldFilePath
+            );
+
+            if ($disk->exists($oldFilePath)) {
+                $disk->move($oldFilePath, $newFilePath);
+            }
+
+            $drive->update([
+                'document_path' => $newFilePath,
+            ]);
+        }
+
+        // 2. Recursão em cascata para subpastas
+        foreach ($folder->children as $child) {
+            $oldChildPath = $oldFolderPath.'/'.$child->name;
+            $this->movePhysicalFolderContents($child, $oldChildPath);
+        }
     }
 }

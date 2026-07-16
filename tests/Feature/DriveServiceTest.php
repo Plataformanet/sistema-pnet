@@ -649,3 +649,68 @@ test('removeUserAccess remove a permissão do usuário', function () {
         DrivePermission::where('drive_id', $drive->id)->where('user_id', $u1->id)->exists()
     )->toBeFalse());
 });
+
+test('moveSelected move um arquivo para outra pasta e atualiza o storage', function () {
+    $origem = $this->tenant->run(fn () => makeFolder(['name' => 'Origem']));
+    $destino = $this->tenant->run(fn () => makeFolder(['name' => 'Destino']));
+
+    Storage::disk('public')->put('drive/Origem/arquivo.pdf', 'conteudo');
+
+    $drive = $this->tenant->run(fn () => Drive::create([
+        'user_id' => $this->user->id,
+        'drive_folder_id' => $origem->id,
+        'name' => 'arquivo.pdf',
+        'document_path' => 'drive/Origem/arquivo.pdf',
+        'document_size' => 10,
+        'document_type' => 'pdf',
+        'modified_by' => $this->user->id,
+    ]));
+
+    app(DriveService::class)->moveSelected([
+        ['id' => $drive->id, 'type' => 'file'],
+    ], $destino->id, $this->tenant);
+
+    Storage::disk('public')->assertExists('drive/Destino/arquivo.pdf');
+    Storage::disk('public')->assertMissing('drive/Origem/arquivo.pdf');
+
+    $this->tenant->run(fn () => expect(
+        Drive::where('id', $drive->id)->first()->document_path
+    )->toBe('drive/Destino/arquivo.pdf'));
+});
+
+test('moveSelected move uma pasta com subpastas e arquivos recursivamente', function () {
+    $pastaPai = $this->tenant->run(fn () => makeFolder(['name' => 'PastaPai']));
+    $subpasta = $this->tenant->run(fn () => makeFolder(['name' => 'Subpasta', 'parent_id' => $pastaPai->id]));
+    $destino = $this->tenant->run(fn () => makeFolder(['name' => 'Destino']));
+
+    Storage::disk('public')->put('drive/PastaPai/Subpasta/arquivo.txt', 'conteudo');
+
+    $drive = $this->tenant->run(fn () => Drive::create([
+        'user_id' => $this->user->id,
+        'drive_folder_id' => $subpasta->id,
+        'name' => 'arquivo.txt',
+        'document_path' => 'drive/PastaPai/Subpasta/arquivo.txt',
+        'document_size' => 10,
+        'document_type' => 'txt',
+        'modified_by' => $this->user->id,
+    ]));
+
+    app(DriveService::class)->moveSelected([
+        ['id' => $pastaPai->id, 'type' => 'folder'],
+    ], $destino->id, $this->tenant);
+
+    Storage::disk('public')->assertExists('drive/Destino/PastaPai/Subpasta/arquivo.txt');
+    Storage::disk('public')->assertMissing('drive/PastaPai/Subpasta/arquivo.txt');
+
+    $this->tenant->run(fn () => expect(
+        Drive::where('id', $drive->id)->first()->document_path
+    )->toBe('drive/Destino/PastaPai/Subpasta/arquivo.txt'));
+});
+
+test('moveSelected impede mover uma pasta para dentro de si mesma', function () {
+    $folder = $this->tenant->run(fn () => makeFolder(['name' => 'Pasta']));
+
+    app(DriveService::class)->moveSelected([
+        ['id' => $folder->id, 'type' => 'folder'],
+    ], $folder->id, $this->tenant);
+})->throws(InvalidArgumentException::class, 'Não é possível mover uma pasta para dentro dela mesma.');

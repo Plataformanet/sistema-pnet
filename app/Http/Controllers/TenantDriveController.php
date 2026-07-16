@@ -4,13 +4,16 @@ namespace App\Http\Controllers;
 
 use App\Exceptions\UploadDocumentException;
 use App\Http\Requests\DeleteSelectedDriveRequest;
+use App\Http\Requests\MoveDriveRequest;
 use App\Http\Requests\StoreAccessPermissionDriveRequest;
 use App\Http\Requests\StoreDriveRequest;
 use App\Http\Requests\UpdateDriveRequest;
 use App\Models\DriveFolder;
+use App\Services\DriveFolderService;
 use App\Services\DriveService;
 use App\Services\UserService;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
@@ -110,6 +113,45 @@ class TenantDriveController extends Controller
             Log::error('Error ao tentar deletar documento ou pasta:', [$th->getMessage()]);
 
             return redirect()->back()->withErrors(['error' => 'Erro ao tentar deletar o documento ou pasta!']);
+        }
+    }
+
+    public function move(MoveDriveRequest $request)
+    {
+        try {
+            $this->driveService->moveSelected(
+                $request->validated('items'),
+                $request->validated('destination_folder_id'),
+                tenant()
+            );
+
+            return redirect()->back();
+        } catch (\Throwable $th) {
+            Log::error('Erro ao tentar mover documento ou pasta:', [$th->getMessage()]);
+
+            return redirect()->back()->withErrors(['error' => $th->getMessage() ?: 'Erro ao mover o documento ou pasta!']);
+        }
+    }
+
+    public function listFolders()
+    {
+        try {
+            $user = Auth::user();
+            $folders = app(DriveFolderService::class)->findAll(tenant());
+
+            $filteredFolders = $folders->filter(function ($folder) use ($user) {
+                try {
+                    return $user->can('viewFolder', $folder);
+                } catch (\Throwable $e) {
+                    return false;
+                }
+            })->values();
+
+            return response()->json($filteredFolders);
+        } catch (\Throwable $th) {
+            Log::error('Erro ao listar pastas do drive:', [$th->getMessage()]);
+
+            return response()->json(['error' => 'Erro ao listar pastas.'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 

@@ -53,4 +53,17 @@ class DriveFolder extends Model
 
         return $breadcrumb;
     }
+
+    public function isDescendantOf(DriveFolder $folder): bool
+    {
+        $current = $this->parent;
+        while ($current) {
+            if ($current->id === $folder->id) {
+                return true;
+            }
+            $current = $current->parent;
+        }
+
+        return false;
+    }
 }
