@@ -66,6 +66,13 @@ return [
          * Não defina "root" aqui: o FilesystemTenancyBootstrapper sufixa o root
          * com "tenant<id>", isolando os arquivos de cada tenant por prefixo
          * dentro do mesmo bucket. Um "root" fixo geraria uma chave com "/" inicial.
+         *
+         * "retain_visibility" => false: sem isso, todo copy/move dispara um
+         * GetObjectAcl na origem para preservar a visibilidade do objeto, o que
+         * exige a permissão s3:GetObjectAcl na credencial. Como os arquivos aqui
+         * são sempre privados e servidos pela aplicação, não há visibilidade por
+         * objeto a preservar — a chamada extra só adiciona latência e um ponto
+         * de falha.
          */
         'minio' => [
             'driver' => 's3',
@@ -76,6 +83,7 @@ return [
             'url' => env('AWS_URL'),
             'endpoint' => env('AWS_ENDPOINT'),
             'use_path_style_endpoint' => true,
+            'retain_visibility' => false,
             'throw' => true,
             'report' => false,
         ],
