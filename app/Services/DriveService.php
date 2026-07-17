@@ -26,6 +26,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\LazyCollection;
+use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class DriveService
@@ -630,11 +631,32 @@ class DriveService
     public function moveSelected(array $items, int $destinationFolderId, Tenant $tenant): bool
     {
         return $tenant->run(function () use ($items, $destinationFolderId) {
-            return DB::transaction(function () use ($items, $destinationFolderId) {
+            /** @var array<int, array{0: string, 1: string}> $pendingMoves */
+            $pendingMoves = [];
+
+            DB::transaction(function () use ($items, $destinationFolderId, &$pendingMoves) {
                 $destinationFolder = $destinationFolderId > 0
                     ? DriveFolder::findOrFail($destinationFolderId)
                     : null;
+
                 $disk = $this->disk();
+                $user = Auth::user();
+
+                // Resolve o drive que representa a pasta destino uma única vez (fora do loop)
+                // e já com as permissões carregadas para evitar N+1 na checagem de acesso.
+                $destinationFolderDrive = $destinationFolder !== null
+                    ? Drive::with('drivePermissions')
+                        ->where('drive_folder_id', $destinationFolderId)
+                        ->where('document_type', DocumentTypeDriveEnum::FOLDER->value)
+                        ->first()
+                    : null;
+
+                $canAccessDestination = $destinationFolderDrive === null
+                    || $this->userCanAccess($destinationFolderDrive, $user);
+
+                // Nomes já reservados nesta operação (os moves só ocorrem após o commit,
+                // então o disco ainda não reflete os arquivos movidos ao resolver conflitos).
+                $reservedPaths = [];
 
                 foreach ($items as $item) {
                     if ($item['type'] === 'file') {
@@ -643,12 +665,7 @@ class DriveService
                             throw new \InvalidArgumentException('Não é possível mover arquivos diretamente para a raiz do drive.');
                         }
 
-                        // Valida se o usuário tem acesso à pasta destino
-                        $destinationFolderDrive = Drive::where('drive_folder_id', $destinationFolderId)
-                            ->where('document_type', DocumentTypeDriveEnum::FOLDER)
-                            ->first();
-
-                        if ($destinationFolderDrive && ! $this->userCanAccess($destinationFolderDrive, Auth::user())) {
+                        if (! $canAccessDestination) {
                             throw new AuthorizationException('Você não tem permissão para mover itens para esta pasta.');
                         }
 
@@ -660,22 +677,26 @@ class DriveService
                         $extension = pathinfo($drive->name, PATHINFO_EXTENSION);
                         $documentName = $drive->name;
                         $counter = 1;
+                        $newPath = $this->basePath().'/'.$destinationFolder->getPath().'/'.$documentName;
 
-                        while ($disk->exists($this->basePath().'/'.$destinationFolder->getPath().'/'.$documentName)) {
+                        while ($disk->exists($newPath) || in_array($newPath, $reservedPaths, true)) {
                             $documentName = $baseName." ($counter).".$extension;
+                            $newPath = $this->basePath().'/'.$destinationFolder->getPath().'/'.$documentName;
                             $counter++;
                         }
 
-                        $newPath = $this->basePath().'/'.$destinationFolder->getPath().'/'.$documentName;
+                        $reservedPaths[] = $newPath;
 
-                        if ($disk->exists($oldPath)) {
-                            $disk->move($oldPath, $newPath);
+                        if ($oldPath !== $newPath) {
+                            $pendingMoves[] = [$oldPath, $newPath];
                         }
 
                         $drive->update([
                             'drive_folder_id' => $destinationFolderId,
                             'name' => $documentName,
                             'document_path' => $newPath,
+                            'modified_by' => $user->id,
+                            'modified_at' => now(),
                         ]);
 
                     } elseif ($item['type'] === 'folder') {
@@ -687,12 +708,7 @@ class DriveService
                                 throw new \InvalidArgumentException('Não é possível mover uma pasta para dentro dela mesma.');
                             }
 
-                            // Valida se o usuário tem acesso à pasta destino
-                            $destinationFolderDrive = Drive::where('drive_folder_id', $destinationFolderId)
-                                ->where('document_type', DocumentTypeDriveEnum::FOLDER)
-                                ->first();
-
-                            if ($destinationFolderDrive && ! $this->userCanAccess($destinationFolderDrive, Auth::user())) {
+                            if (! $canAccessDestination) {
                                 throw new AuthorizationException('Você não tem permissão para mover itens para esta pasta.');
                             }
                         }
@@ -704,43 +720,68 @@ class DriveService
                             'parent_id' => $destinationFolderId > 0 ? $destinationFolderId : null,
                         ]);
 
-                        // Move os arquivos e subpastas fisicamente no disco e atualiza caminhos no banco
-                        $this->movePhysicalFolderContents($folder, $oldFolderPath);
+                        // Deriva o novo caminho a partir do destino (não de $folder->getPath(),
+                        // cuja relação parent fica em cache e devolveria o caminho antigo).
+                        $newFolderPath = $destinationFolder !== null
+                            ? $destinationFolder->getPath().'/'.$folder->name
+                            : $folder->name;
+
+                        // Atualiza os caminhos no banco e agenda os moves de disco para depois do commit.
+                        $this->collectPhysicalFolderMoves($folder, $oldFolderPath, $newFolderPath, $user->id, $pendingMoves);
                     }
                 }
-
-                return true;
             });
+
+            // Operações de disco só após o commit: move() no S3/MinIO é copy+delete (irreversível),
+            // e um rollback do banco deixaria disco e banco divergentes.
+            $disk = $this->disk();
+
+            foreach ($pendingMoves as [$oldPath, $newPath]) {
+                if ($disk->exists($oldPath)) {
+                    $disk->move($oldPath, $newPath);
+                }
+            }
+
+            return true;
         });
     }
 
-    private function movePhysicalFolderContents(DriveFolder $folder, string $oldFolderPath): void
+    /**
+     * Atualiza no banco os caminhos dos drives da pasta (e subpastas, recursivamente)
+     * e acumula em $pendingMoves os pares [origem, destino] a serem movidos no disco.
+     *
+     * @param  array<int, array{0: string, 1: string}>  $pendingMoves
+     */
+    private function collectPhysicalFolderMoves(DriveFolder $folder, string $oldFolderPath, string $newFolderPath, int $userId, array &$pendingMoves): void
     {
-        $disk = $this->disk();
-        $newFolderPath = $folder->getPath(); // O parent_id já mudou no banco, logo retorna o novo caminho!
+        $folder->loadMissing(['drives', 'children']);
 
-        // 1. Move os arquivos diretamente vinculados a esta pasta
+        // 1. Arquivos (e o próprio drive representante) vinculados diretamente a esta pasta
         foreach ($folder->drives as $drive) {
             $oldFilePath = $drive->document_path;
-            $newFilePath = str_replace(
+            $newFilePath = Str::replaceFirst(
                 $this->basePath().'/'.$oldFolderPath,
                 $this->basePath().'/'.$newFolderPath,
                 $oldFilePath
             );
 
-            if ($disk->exists($oldFilePath)) {
-                $disk->move($oldFilePath, $newFilePath);
+            if ($oldFilePath !== $newFilePath) {
+                $pendingMoves[] = [$oldFilePath, $newFilePath];
             }
 
             $drive->update([
                 'document_path' => $newFilePath,
+                'modified_by' => $userId,
+                'modified_at' => now(),
             ]);
         }
 
-        // 2. Recursão em cascata para subpastas
+        // 2. Recursão nas subpastas — o caminho é derivado (não recalculado via getPath),
+        // evitando cache de relação e N+1 na cadeia de parents.
         foreach ($folder->children as $child) {
             $oldChildPath = $oldFolderPath.'/'.$child->name;
-            $this->movePhysicalFolderContents($child, $oldChildPath);
+            $newChildPath = $newFolderPath.'/'.$child->name;
+            $this->collectPhysicalFolderMoves($child, $oldChildPath, $newChildPath, $userId, $pendingMoves);
         }
     }
 }

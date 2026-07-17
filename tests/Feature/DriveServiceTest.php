@@ -707,6 +707,104 @@ test('moveSelected move uma pasta com subpastas e arquivos recursivamente', func
     )->toBe('drive/Destino/PastaPai/Subpasta/arquivo.txt'));
 });
 
+test('moveSelected move os arquivos vinculados diretamente à pasta movida', function () {
+    // Regressão: getPath() usava a relação parent em cache após o update do parent_id,
+    // devolvendo o caminho antigo e deixando os arquivos diretos da pasta sem mover.
+    $pasta = $this->tenant->run(fn () => makeFolder(['name' => 'Origem']));
+    $destino = $this->tenant->run(fn () => makeFolder(['name' => 'Destino']));
+
+    Storage::disk('public')->put('drive/Origem/direto.pdf', 'conteudo');
+
+    $folderDrive = $this->tenant->run(fn () => makeFolderDrive($pasta));
+
+    $arquivo = $this->tenant->run(fn () => makeFile($pasta, [
+        'name' => 'direto.pdf',
+        'document_path' => 'drive/Origem/direto.pdf',
+    ]));
+
+    app(DriveService::class)->moveSelected([
+        ['id' => $pasta->id, 'type' => 'folder'],
+    ], $destino->id, $this->tenant);
+
+    Storage::disk('public')->assertExists('drive/Destino/Origem/direto.pdf');
+    Storage::disk('public')->assertMissing('drive/Origem/direto.pdf');
+
+    $this->tenant->run(function () use ($arquivo, $folderDrive) {
+        expect(Drive::find($arquivo->id)->document_path)->toBe('drive/Destino/Origem/direto.pdf')
+            ->and(Drive::find($folderDrive->id)->document_path)->toBe('drive/Destino/Origem');
+    });
+});
+
+test('moveSelected move uma pasta para a raiz (parent_id null)', function () {
+    $pai = $this->tenant->run(fn () => makeFolder(['name' => 'Pai']));
+    $filha = $this->tenant->run(fn () => makeFolder(['name' => 'Filha', 'parent_id' => $pai->id]));
+
+    Storage::disk('public')->put('drive/Pai/Filha/doc.txt', 'conteudo');
+
+    $arquivo = $this->tenant->run(fn () => makeFile($filha, [
+        'name' => 'doc.txt',
+        'document_path' => 'drive/Pai/Filha/doc.txt',
+        'document_type' => 'txt',
+    ]));
+
+    // destino 0 => raiz
+    app(DriveService::class)->moveSelected([
+        ['id' => $filha->id, 'type' => 'folder'],
+    ], 0, $this->tenant);
+
+    Storage::disk('public')->assertExists('drive/Filha/doc.txt');
+    Storage::disk('public')->assertMissing('drive/Pai/Filha/doc.txt');
+
+    $this->tenant->run(function () use ($filha, $arquivo) {
+        expect(DriveFolder::find($filha->id)->parent_id)->toBeNull()
+            ->and(Drive::find($arquivo->id)->document_path)->toBe('drive/Filha/doc.txt');
+    });
+});
+
+test('moveSelected resolve conflito de nome ao mover arquivos para pasta com arquivo homônimo', function () {
+    $origem = $this->tenant->run(fn () => makeFolder(['name' => 'Origem']));
+    $destino = $this->tenant->run(fn () => makeFolder(['name' => 'Destino']));
+
+    // Já existe um arquivo com o mesmo nome no destino
+    Storage::disk('public')->put('drive/Destino/arquivo.pdf', 'existente');
+    Storage::disk('public')->put('drive/Origem/arquivo.pdf', 'novo');
+
+    $drive = $this->tenant->run(fn () => makeFile($origem, [
+        'name' => 'arquivo.pdf',
+        'document_path' => 'drive/Origem/arquivo.pdf',
+    ]));
+
+    app(DriveService::class)->moveSelected([
+        ['id' => $drive->id, 'type' => 'file'],
+    ], $destino->id, $this->tenant);
+
+    Storage::disk('public')->assertExists('drive/Destino/arquivo.pdf');
+    Storage::disk('public')->assertExists('drive/Destino/arquivo (1).pdf');
+
+    $this->tenant->run(fn () => expect(Drive::find($drive->id))
+        ->name->toBe('arquivo (1).pdf')
+        ->document_path->toBe('drive/Destino/arquivo (1).pdf'));
+});
+
+test('moveSelected registra modified_by ao mover um arquivo', function () {
+    $origem = $this->tenant->run(fn () => makeFolder(['name' => 'Origem']));
+    $destino = $this->tenant->run(fn () => makeFolder(['name' => 'Destino']));
+
+    Storage::disk('public')->put('drive/Origem/arquivo.pdf', 'conteudo');
+
+    $drive = $this->tenant->run(fn () => makeFile($origem, [
+        'name' => 'arquivo.pdf',
+        'document_path' => 'drive/Origem/arquivo.pdf',
+        'modified_by' => null,
+    ]));
+
+    app(DriveService::class)->moveSelected([
+        ['id' => $drive->id, 'type' => 'file'],
+    ], $destino->id, $this->tenant);
+
+    $this->tenant->run(fn () => expect(Drive::find($drive->id)->modified_by)->toBe($this->user->id));
+});
+
 test('moveSelected impede mover uma pasta para dentro de si mesma', function () {
     $folder = $this->tenant->run(fn () => makeFolder(['name' => 'Pasta']));
 
