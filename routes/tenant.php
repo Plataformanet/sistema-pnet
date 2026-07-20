@@ -64,6 +64,7 @@ Route::middleware([
         Route::get('/registrations/clients/{id}/edit', [TenantClientController::class, 'edit'])->name('tenant.registrations.clients.edit')->middleware('permission:registrations.clients.edit');
         Route::put('/registrations/clients/{id}', [TenantClientController::class, 'update'])->name('tenant.registrations.clients.update')->middleware('permission:registrations.clients.edit');
         Route::delete('/registrations/clients/{id}', [TenantClientController::class, 'destroy'])->name('tenant.registrations.clients.destroy')->middleware('permission:registrations.clients.delete');
+        Route::patch('/registrations/clients/{id}/toggle-active', [TenantClientController::class, 'toggleActive'])->name('tenant.registrations.clients.toggle-active')->middleware('permission:registrations.clients.edit');
         Route::get('/registrations/clients/get-contact-by-cpf-cnpj/{cpf_cnpj}', [TenantClientController::class, 'getContactByCpfCnpj'])->name('tenant.registrations.clients.get-contact-by-cpf-cnpj')->middleware('permission:registrations.clients.view');
 
         // Suppliers
@@ -73,6 +74,7 @@ Route::middleware([
         Route::get('/registrations/suppliers/{id}/edit', [TenantSupplierController::class, 'edit'])->name('tenant.registrations.suppliers.edit')->middleware('permission:registrations.suppliers.edit');
         Route::put('/registrations/suppliers/{id}', [TenantSupplierController::class, 'update'])->name('tenant.registrations.suppliers.update')->middleware('permission:registrations.suppliers.edit');
         Route::delete('/registrations/suppliers/{id}', [TenantSupplierController::class, 'destroy'])->name('tenant.registrations.suppliers.destroy')->middleware('permission:registrations.suppliers.delete');
+        Route::patch('/registrations/suppliers/{id}/toggle-active', [TenantSupplierController::class, 'toggleActive'])->name('tenant.registrations.suppliers.toggle-active')->middleware('permission:registrations.suppliers.edit');
         Route::get('/registrations/suppliers/get-contact-by-cpf-cnpj/{cpf_cnpj}', [TenantSupplierController::class, 'getContactByCpfCnpj'])->name('tenant.registrations.suppliers.get-contact-by-cpf-cnpj')->middleware('permission:registrations.suppliers.view');
 
         // Employees
@@ -82,6 +84,7 @@ Route::middleware([
         Route::get('/registrations/employees/{id}/edit', [TenantEmployeeController::class, 'edit'])->name('tenant.registrations.employees.edit')->middleware('permission:registrations.employees.edit');
         Route::put('/registrations/employees/{id}', [TenantEmployeeController::class, 'update'])->name('tenant.registrations.employees.update')->middleware('permission:registrations.employees.edit');
         Route::delete('/registrations/employees/{id}', [TenantEmployeeController::class, 'destroy'])->name('tenant.registrations.employees.destroy')->middleware('permission:registrations.employees.delete');
+        Route::patch('/registrations/employees/{id}/toggle-active', [TenantEmployeeController::class, 'toggleActive'])->name('tenant.registrations.employees.toggle-active')->middleware('permission:registrations.employees.edit');
         Route::get('/registrations/employees/get-contact-by-cpf-cnpj/{cpf_cnpj}', [TenantEmployeeController::class, 'getContactByCpfCnpj'])->name('tenant.registrations.employees.get-contact-by-cpf-cnpj')->middleware('permission:registrations.employees.view');
 
         // Configurações - Usuários

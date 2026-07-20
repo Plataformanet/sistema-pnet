@@ -22,6 +22,8 @@ return new class extends Migration
             $table->string('cell_phone');
             $table->softDeletes();
             $table->timestamps();
+
+            $table->index('cpf_cnpj');
         });
     }
 

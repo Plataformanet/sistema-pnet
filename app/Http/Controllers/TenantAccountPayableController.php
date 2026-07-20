@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exceptions\InactiveContactException;
 use App\Exceptions\UpdateInstallmentException;
 use App\Http\Requests\IndexAccountPayableRequest;
 use App\Http\Requests\StoreAccountPayableRequest;
@@ -125,6 +126,8 @@ class TenantAccountPayableController extends Controller
 
             return redirect()->route('tenant.finance.accounts-payable.list', $request->query())->with('success', 'Conta a pagar criada com sucesso');
 
+        } catch (InactiveContactException $th) {
+            return redirect()->back()->with('warning', $th->getMessage());
         } catch (\Throwable $th) {
             Log::error('Erro ao criar contas a pagar: '.$th->getMessage());
 

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exceptions\InactiveContactException;
 use App\Exceptions\UpdateInstallmentException;
 use App\Http\Requests\IndexAccountReceivableRequest;
 use App\Http\Requests\StoreAccountReceivableRequest;
@@ -125,6 +126,8 @@ class TenantAccountReceivableController extends Controller
 
             return redirect()->route('tenant.finance.accounts-receivable.list')->with('success', 'Conta a receber criada com sucesso!');
 
+        } catch (InactiveContactException $th) {
+            return redirect()->back()->with('warning', $th->getMessage());
         } catch (\Throwable $th) {
             Log::error('Erro ao criar contas a receber: '.$th->getMessage());
 

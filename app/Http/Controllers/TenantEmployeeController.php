@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Exceptions\ContactHasFinancialEntriesException;
 use App\Http\Requests\StoreEmployeeRequest;
 use App\Http\Requests\UpdateEmployeeRequest;
 use App\Models\Contact;
 use App\Services\ContactService;
 use App\Services\EmployeesService;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 
@@ -54,7 +56,7 @@ class TenantEmployeeController extends Controller
 
     public function show(string $id)
     {
-        $employee = $this->employeesService->findById($id, tenant());
+        $employee = $this->employeesService->findByContactId($id, tenant());
 
         return Inertia::render('tenant/registrations/employees/show/Show', [
             'employee' => $employee,
@@ -63,7 +65,7 @@ class TenantEmployeeController extends Controller
 
     public function edit(string $id)
     {
-        $employee = $this->employeesService->findById($id, tenant());
+        $employee = $this->employeesService->findByContactId($id, tenant());
 
         return Inertia::render('tenant/registrations/employees/edit/Edit', [
             'employee' => $employee->toArray(),
@@ -88,13 +90,30 @@ class TenantEmployeeController extends Controller
     public function destroy(string $id)
     {
         try {
-            $this->contactService->destroy(tenant(), $id);
+            $this->employeesService->destroy(tenant(), $id);
 
             return redirect()->route('tenant.registrations.employees.list')->with('success', 'Funcionário excluído com sucesso!');
+        } catch (ContactHasFinancialEntriesException $th) {
+            return redirect()->back()->with('warning', $th->getMessage());
         } catch (\Throwable $th) {
             Log::error('Erro ao excluir funcionário: '.$th->getMessage());
 
             return redirect()->back()->with('error', 'Erro ao excluir funcionário!');
+        }
+    }
+
+    public function toggleActive(Request $request, string $id)
+    {
+        try {
+            $active = $this->employeesService->setActive(tenant(), $id, $request->boolean('active'));
+
+            $message = $active ? 'Funcionário ativado com sucesso!' : 'Funcionário inativado com sucesso!';
+
+            return redirect()->route('tenant.registrations.employees.list')->with('success', $message);
+        } catch (\Throwable $th) {
+            Log::error('Erro ao alterar status do funcionário: '.$th->getMessage());
+
+            return redirect()->back()->with('error', 'Erro ao alterar status do funcionário!');
         }
     }
 

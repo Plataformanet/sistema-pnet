@@ -16,7 +16,18 @@ class Employee extends Model
         'position',
         'salary',
         'hire_date',
+        'active',
     ];
+
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'active' => 'boolean',
+        ];
+    }
 
     public function contact()
     {

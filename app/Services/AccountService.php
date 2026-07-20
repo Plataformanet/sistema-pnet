@@ -4,10 +4,14 @@ namespace App\Services;
 
 use App\Enums\AccountsEnum;
 use App\Enums\ContactTypeEnum;
+use App\Exceptions\InactiveContactException;
 use App\Models\BankAccount;
+use App\Models\Client;
 use App\Models\Contact;
+use App\Models\Employee;
 use App\Models\FinancialContact;
 use App\Models\Installment;
+use App\Models\Supplier;
 use App\Models\Tenant;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
@@ -38,11 +42,11 @@ abstract class AccountService
         for ($count = 0; $count < $data['total_installments']; $count++) {
             $account->installments()->create([
                 'installment_number' => $count + 1,
-                'value'              => $installmentValue,
-                'description'        => $data['description'],
-                'due_date'           => $dueDate->copy()->addMonthsNoOverflow($count),
-                'payment_date'       => $dueDate->copy()->addMonthsNoOverflow($count),
-                'status'             => $data['status'] ?? AccountsEnum::OPEN->value,
+                'value' => $installmentValue,
+                'description' => $data['description'],
+                'due_date' => $dueDate->copy()->addMonthsNoOverflow($count),
+                'payment_date' => $dueDate->copy()->addMonthsNoOverflow($count),
+                'status' => $data['status'] ?? AccountsEnum::OPEN->value,
             ]);
         }
     }
@@ -50,13 +54,42 @@ abstract class AccountService
     /**
      * Resolve (ou cria) o financial_contact correspondente ao contato selecionado
      * no formulário e devolve o id da tabela financial_contacts para o FK.
+     *
+     * @throws InactiveContactException quando o papel do contato está inativo.
      */
     protected function resolveFinancialContactId(int $contactId, ContactTypeEnum $type): int
     {
+        $this->assertContactCanReceiveEntry($contactId, $type);
+
         return FinancialContact::firstOrCreate([
             'contact_id' => $contactId,
-            'type'       => $type->value,
+            'type' => $type->value,
         ])->id;
+    }
+
+    /**
+     * Impede que um cliente ou fornecedor inativo receba novos lançamentos.
+     *
+     * A checagem é por papel: só bloqueia quando existe a linha do papel e ela
+     * está inativa. Contatos sem o papel cadastrado seguem o fluxo normal.
+     *
+     * @throws InactiveContactException
+     */
+    protected function assertContactCanReceiveEntry(int $contactId, ContactTypeEnum $type): void
+    {
+        $roleModel = match ($type) {
+            ContactTypeEnum::CLIENT => Client::class,
+            ContactTypeEnum::SUPPLIER => Supplier::class,
+            ContactTypeEnum::EMPLOYEE => Employee::class,
+        };
+
+        $isInactive = $roleModel::where('contact_id', $contactId)
+            ->where('active', false)
+            ->exists();
+
+        if ($isInactive) {
+            throw new InactiveContactException($type);
+        }
     }
 
     public function findAll($request, string $periodo, Tenant $tenant)
@@ -98,7 +131,7 @@ abstract class AccountService
                             });
 
                         if (is_numeric($search)) {
-                            $value  = (float) $search;
+                            $value = (float) $search;
                             $margin = 100;
                             $query->orWhereBetween('total', [$value - $margin, $value + $margin])
                                 ->orWhereHas('installments', function (Builder $query) use ($value, $margin) {
@@ -128,28 +161,28 @@ abstract class AccountService
                                 ->where('status', AccountsEnum::OPEN->value);
                         });
                 })->with([
-                        'bankAccount',
-                        'financialCategory',
-                        'financialSubcategory',
-                        'installments' => function ($query) use ($inicio, $fim, $request, $hoje) {
-                            $query->whereBetween('due_date', [$inicio, $fim])
-                                ->when($request->query('status') === 'pago', function (Builder $query) {
-                                    $query->where('status', AccountsEnum::PAID->value);
-                                })
-                                ->when($request->query('status') === 'a-vencer', function (Builder $query) {
-                                    $query->where('status', AccountsEnum::OPEN->value)
-                                        ->whereDate('due_date', '>=', Carbon::today());
-                                })
-                                ->when($request->query('status') === 'vencem-hoje', function (Builder $query) use ($hoje) {
-                                    $query->whereDate('due_date', $hoje)
-                                        ->where('status', AccountsEnum::OPEN->value);
-                                })
-                                ->when($request->query('status') === 'vencidos', function (Builder $query) use ($hoje) {
-                                    $query->whereDate('due_date', '<', $hoje)
-                                        ->where('status', AccountsEnum::OPEN->value);
-                                });
-                        },
-                    ])->orderByDesc('id')
+                    'bankAccount',
+                    'financialCategory',
+                    'financialSubcategory',
+                    'installments' => function ($query) use ($inicio, $fim, $request, $hoje) {
+                        $query->whereBetween('due_date', [$inicio, $fim])
+                            ->when($request->query('status') === 'pago', function (Builder $query) {
+                                $query->where('status', AccountsEnum::PAID->value);
+                            })
+                            ->when($request->query('status') === 'a-vencer', function (Builder $query) {
+                                $query->where('status', AccountsEnum::OPEN->value)
+                                    ->whereDate('due_date', '>=', Carbon::today());
+                            })
+                            ->when($request->query('status') === 'vencem-hoje', function (Builder $query) use ($hoje) {
+                                $query->whereDate('due_date', $hoje)
+                                    ->where('status', AccountsEnum::OPEN->value);
+                            })
+                            ->when($request->query('status') === 'vencidos', function (Builder $query) use ($hoje) {
+                                $query->whereDate('due_date', '<', $hoje)
+                                    ->where('status', AccountsEnum::OPEN->value);
+                            });
+                    },
+                ])->orderByDesc('id')
                 ->paginate($request->query('quantidade', 10))
                 ->appends($request->all());
         });
@@ -157,7 +190,7 @@ abstract class AccountService
 
     public function delete(string $id, Tenant $tenant)
     {
-        return $tenant->run(fn() => $this->model::findOrFail($id)->delete());
+        return $tenant->run(fn () => $this->model::findOrFail($id)->delete());
     }
 
     public function updateInstallment(string $id, Tenant $tenant): bool
@@ -195,15 +228,15 @@ abstract class AccountService
     public function paymentConditions()
     {
         return [
-            '1'  => '1x',
-            '2'  => '2x',
-            '3'  => '3x',
-            '4'  => '4x',
-            '5'  => '5x',
-            '6'  => '6x',
-            '7'  => '7x',
-            '8'  => '8x',
-            '9'  => '9x',
+            '1' => '1x',
+            '2' => '2x',
+            '3' => '3x',
+            '4' => '4x',
+            '5' => '5x',
+            '6' => '6x',
+            '7' => '7x',
+            '8' => '8x',
+            '9' => '9x',
             '10' => '10x',
             '11' => '11x',
             '12' => '12x',
@@ -275,14 +308,14 @@ abstract class AccountService
     {
         return $tenant->run(function () use ($request, $period, $bankAccountId) {
             $statusOpen = AccountsEnum::OPEN->value;
-            $today      = Carbon::today();
+            $today = Carbon::today();
 
             if ($request->query('inicio') && $request->query('fim')) {
                 $start = Carbon::parse($request->query('inicio'))->startOfDay();
-                $end   = Carbon::parse($request->query('fim'))->endOfDay();
+                $end = Carbon::parse($request->query('fim'))->endOfDay();
             } else {
                 $start = Carbon::createFromFormat('Y-m', $period)->startOfMonth();
-                $end   = Carbon::createFromFormat('Y-m', $period)->endOfMonth();
+                $end = Carbon::createFromFormat('Y-m', $period)->endOfMonth();
             }
 
             // We only want outstanding items, so due_date must be >= today
@@ -317,11 +350,11 @@ abstract class AccountService
     {
         return $tenant->run(function () use ($request, $period, $bankAccountId) {
             $statusOpen = AccountsEnum::OPEN->value;
-            $today      = now()->startOfDay();
+            $today = now()->startOfDay();
 
             if ($request->query('inicio') && $request->query('fim')) {
                 $intervalStart = Carbon::parse($request->query('inicio'))->startOfDay();
-                $intervalEnd   = Carbon::parse($request->query('fim'))->endOfDay();
+                $intervalEnd = Carbon::parse($request->query('fim'))->endOfDay();
 
                 if ($today->lt($intervalStart) || $today->gt($intervalEnd)) {
                     return 0;
@@ -357,14 +390,14 @@ abstract class AccountService
     {
         return $tenant->run(function () use ($request, $period, $bankAccountId) {
             $statusOpen = AccountsEnum::OPEN->value;
-            $today      = Carbon::today();
+            $today = Carbon::today();
 
             if ($request->query('inicio') && $request->query('fim')) {
                 $start = Carbon::parse($request->query('inicio'))->startOfDay();
-                $end   = Carbon::parse($request->query('fim'))->endOfDay();
+                $end = Carbon::parse($request->query('fim'))->endOfDay();
             } else {
                 $start = Carbon::createFromFormat('Y-m', $period)->startOfMonth();
-                $end   = Carbon::createFromFormat('Y-m', $period)->endOfMonth();
+                $end = Carbon::createFromFormat('Y-m', $period)->endOfMonth();
             }
 
             $query = Installment::where('status', $statusOpen)
@@ -421,13 +454,13 @@ abstract class AccountService
                 $query->whereBetween('due_date', [$start, $end]);
             })->paginate($request->query('quantidade', 10))
                 ->appends([
-                    'periodo'      => $request->query('periodo'),
-                    'quantidade'   => $request->query('quantidade'),
-                    'inicio'       => $request->query('inicio'),
-                    'fim'          => $request->query('fim'),
+                    'periodo' => $request->query('periodo'),
+                    'quantidade' => $request->query('quantidade'),
+                    'inicio' => $request->query('inicio'),
+                    'fim' => $request->query('fim'),
                     'categoria_id' => $request->query('categoria_id'),
-                    'tipo_conta'   => $request->query('tipo_conta'),
-                    'search'       => $request->query('search'),
+                    'tipo_conta' => $request->query('tipo_conta'),
+                    'search' => $request->query('search'),
                 ]);
         });
     }
@@ -435,7 +468,7 @@ abstract class AccountService
     public function searchContact($request)
     {
         $search = $request->query('search');
-        $type   = $request->query('type');
+        $type = $request->query('type');
 
         $query = Contact::select('id', 'name_corporatereason');
 
@@ -460,7 +493,7 @@ abstract class AccountService
 
     protected function applySearchFilter(Builder $query, ?string $search)
     {
-        if (!$search) {
+        if (! $search) {
             return;
         }
 
@@ -474,7 +507,7 @@ abstract class AccountService
                 });
 
             if (is_numeric($search)) {
-                $value  = (float) $search;
+                $value = (float) $search;
                 $margin = 100;
                 $q->orWhereBetween('value', [$value - $margin, $value + $margin]);
             }

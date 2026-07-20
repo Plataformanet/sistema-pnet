@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('clients', function (Blueprint $table) {
             $table->id();
             $table->foreignId('contact_id')->constrained('contacts')->onDelete('cascade');
+            $table->boolean('active')->default(true);
             $table->softDeletes();
             $table->timestamps();
 

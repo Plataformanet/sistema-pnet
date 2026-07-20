@@ -7,6 +7,7 @@ export interface Employee {
     salary?: string;
     hire_date?: string;
     contact?: Contact;
+    active?: boolean;
     status?: string;
     role?: string;
     created_at?: string;

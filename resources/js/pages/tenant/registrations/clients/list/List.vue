@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-vue-next";
 import { Client } from "@/types";
 import { usePermission } from "@/composables/usePermission";
+import { computed, ref } from "vue";
 
 defineOptions({ layout: TenantLayout });
 
@@ -16,6 +17,25 @@ const props = defineProps<{
 }>();
 
 const { permissions } = usePermission();
+
+type StatusFilter = "all" | "active" | "inactive";
+
+const statusFilter = ref<StatusFilter>("all");
+
+const statusOptions: { label: string; value: StatusFilter }[] = [
+    { label: "Todos", value: "all" },
+    { label: "Ativos", value: "active" },
+    { label: "Inativos", value: "inactive" },
+];
+
+const filteredClients = computed(() =>
+    props.clients.filter((client) => {
+        const isActive = client.active ?? true;
+        if (statusFilter.value === "active") return isActive;
+        if (statusFilter.value === "inactive") return !isActive;
+        return true;
+    }),
+);
 
 </script>
 
@@ -35,6 +55,19 @@ const { permissions } = usePermission();
                 <Link :href="route('tenant.registrations.clients.create')"><Plus /> Novo cliente</Link>
             </Button>
         </div>
-        <DataTable :columns="columns" :data="clients" />
+        <div class="mb-4 flex gap-2">
+            <Button
+                v-for="option in statusOptions"
+                :key="option.value"
+                type="button"
+                size="sm"
+                :variant="statusFilter === option.value ? 'default' : 'outline'"
+                class="cursor-pointer"
+                @click="statusFilter = option.value"
+            >
+                {{ option.label }}
+            </Button>
+        </div>
+        <DataTable :columns="columns" :data="filteredClients" />
     </div>
 </template>

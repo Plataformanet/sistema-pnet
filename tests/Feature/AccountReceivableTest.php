@@ -2,8 +2,10 @@
 
 use App\Enums\AccountsEnum;
 use App\Enums\ContactTypeEnum;
+use App\Exceptions\InactiveContactException;
 use App\Http\Requests\UpdateAccountReceivableRequest;
 use App\Models\BankAccount;
+use App\Models\Client;
 use App\Models\Contact;
 use App\Models\FinancialCategory;
 use App\Models\FinancialSubcategory;
@@ -15,12 +17,12 @@ beforeEach(function () {
 
     [$this->contact, $this->category, $this->subcategory, $this->bankAccount] = $this->tenant->run(function () {
         $contact = Contact::create([
-            'type'                 => ContactTypeEnum::CLIENT->value,
+            'type' => ContactTypeEnum::CLIENT->value,
             'name_corporatereason' => 'Cliente Teste',
-            'cpf_cnpj'             => '12345678000190',
-            'email'                => 'cliente@teste.com',
-            'phone'                => '1133334444',
-            'cell_phone'           => '11999998888',
+            'cpf_cnpj' => '12345678000190',
+            'email' => 'cliente@teste.com',
+            'phone' => '1133334444',
+            'cell_phone' => '11999998888',
         ]);
 
         $category = FinancialCategory::create([
@@ -30,18 +32,18 @@ beforeEach(function () {
 
         $subcategory = FinancialSubcategory::create([
             'financial_category_id' => $category->id,
-            'name'                  => 'Subcategoria Teste',
+            'name' => 'Subcategoria Teste',
         ]);
 
         $bankAccount = BankAccount::create([
-            'name'            => 'Conta Principal',
-            'bank'            => 'Banco Teste',
-            'agency'          => '0001',
-            'account_number'  => '123456',
-            'account_type'    => 'corrente',
+            'name' => 'Conta Principal',
+            'bank' => 'Banco Teste',
+            'agency' => '0001',
+            'account_number' => '123456',
+            'account_type' => 'corrente',
             'initial_balance' => 0,
             'current_balance' => 0,
-            'main_account'    => 1,
+            'main_account' => 1,
         ]);
 
         return [$contact, $category, $subcategory, $bankAccount];
@@ -51,33 +53,54 @@ beforeEach(function () {
 function receivablePayload(array $overrides = []): array
 {
     return array_merge([
-        'financial_category_id'    => test()->category->id,
+        'financial_category_id' => test()->category->id,
         'financial_subcategory_id' => test()->subcategory->id,
-        'bank_account_id'          => test()->bankAccount->id,
-        'financial_contact_id'     => test()->contact->id,
-        'description'              => 'Conta a receber de teste',
-        'total'                    => 100000,
-        'payment_method'           => 'pix',
-        'payment_condition'        => '2',
-        'total_installments'       => 2,
-        'bank_account_out'         => 1,
-        'value'                    => 50000,
-        'due_date'                 => '2026-06-12',
-        'status'                   => AccountsEnum::OPEN->value,
-        'installments'             => [
+        'bank_account_id' => test()->bankAccount->id,
+        'financial_contact_id' => test()->contact->id,
+        'description' => 'Conta a receber de teste',
+        'total' => 100000,
+        'payment_method' => 'pix',
+        'payment_condition' => '2',
+        'total_installments' => 2,
+        'bank_account_out' => 1,
+        'value' => 50000,
+        'due_date' => '2026-06-12',
+        'status' => AccountsEnum::OPEN->value,
+        'installments' => [
             ['value' => 50000, 'due_date' => '2026-06-12'],
             ['value' => 50000, 'due_date' => '2026-07-12'],
         ],
     ], $overrides);
 }
 
+test('bloqueia lançamento a receber quando o cliente está inativo', function () {
+    $this->tenant->run(fn () => Client::create([
+        'contact_id' => $this->contact->id,
+        'active' => false,
+    ]));
+
+    expect(fn () => app(AccountReceivableService::class)->create(receivablePayload(), $this->tenant))
+        ->toThrow(InactiveContactException::class);
+});
+
+test('permite lançamento a receber quando o cliente está ativo', function () {
+    $this->tenant->run(fn () => Client::create([
+        'contact_id' => $this->contact->id,
+        'active' => true,
+    ]));
+
+    $account = app(AccountReceivableService::class)->create(receivablePayload(), $this->tenant);
+
+    expect($account)->not->toBeNull();
+});
+
 test('creates a single installment for a-vista when the front sends no installments', function () {
     $account = app(AccountReceivableService::class)->create(receivablePayload([
-        'payment_condition'  => 'a-vista',
+        'payment_condition' => 'a-vista',
         'total_installments' => 1,
-        'total'              => 50000,
-        'value'              => 50000,
-        'installments'       => [],
+        'total' => 50000,
+        'value' => 50000,
+        'installments' => [],
     ]), $this->tenant);
 
     $this->tenant->run(function () use ($account) {
@@ -86,19 +109,19 @@ test('creates a single installment for a-vista when the front sends no installme
         $this->assertDatabaseHas('installments', [
             'installmentable_id' => $account->id,
             'installment_number' => 1,
-            'value'              => 50000,
-            'due_date'           => '2026-06-12',
+            'value' => 50000,
+            'due_date' => '2026-06-12',
         ]);
     });
 });
 
 test('creates a single installment for one parcela when the front sends no installments', function () {
     $account = app(AccountReceivableService::class)->create(receivablePayload([
-        'payment_condition'  => '1',
+        'payment_condition' => '1',
         'total_installments' => 1,
-        'total'              => 50000,
-        'value'              => 50000,
-        'installments'       => [],
+        'total' => 50000,
+        'value' => 50000,
+        'installments' => [],
     ]), $this->tenant);
 
     $this->tenant->run(function () use ($account) {
@@ -107,8 +130,8 @@ test('creates a single installment for one parcela when the front sends no insta
         $this->assertDatabaseHas('installments', [
             'installmentable_id' => $account->id,
             'installment_number' => 1,
-            'value'              => 50000,
-            'due_date'           => '2026-06-12',
+            'value' => 50000,
+            'due_date' => '2026-06-12',
         ]);
     });
 });
@@ -134,7 +157,7 @@ test('update edits each installment by installment_id when total is unchanged', 
     $account = $service->create(receivablePayload(), $this->tenant);
 
     $installments = $this->tenant->run(
-        fn() => $account->installments()->orderBy('installment_number')->get()
+        fn () => $account->installments()->orderBy('installment_number')->get()
     );
 
     $service->update($account->id, receivablePayload([
@@ -146,14 +169,14 @@ test('update edits each installment by installment_id when total is unchanged', 
 
     $this->tenant->run(function () use ($installments) {
         $this->assertDatabaseHas('installments', [
-            'id'       => $installments[0]->id,
-            'value'    => 70000,
+            'id' => $installments[0]->id,
+            'value' => 70000,
             'due_date' => '2026-06-15',
         ]);
 
         $this->assertDatabaseHas('installments', [
-            'id'       => $installments[1]->id,
-            'value'    => 30000,
+            'id' => $installments[1]->id,
+            'value' => 30000,
             'due_date' => '2026-07-20',
         ]);
     });

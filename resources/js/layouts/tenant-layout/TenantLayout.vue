@@ -309,6 +309,9 @@ watch(
         if (newFlash.error) {
             toast.error(newFlash.error);
         }
+        if (newFlash.warning) {
+            toast.warning(newFlash.warning);
+        }
     },
     { deep: true, immediate: true },
 );

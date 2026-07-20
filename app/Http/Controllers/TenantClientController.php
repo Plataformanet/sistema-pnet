@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Exceptions\ContactHasFinancialEntriesException;
 use App\Http\Requests\StoreClientRequest;
 use App\Http\Requests\UpdateClientRequest;
 use App\Models\Contact;
 use App\Services\ClientService;
 use App\Services\ContactService;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 
@@ -54,7 +56,7 @@ class TenantClientController extends Controller
 
     public function show(string $id)
     {
-        $client = $this->clientService->findById($id, tenant());
+        $client = $this->clientService->findByContactId($id, tenant());
 
         return Inertia::render('tenant/registrations/clients/show/Show', [
             'client' => $client,
@@ -63,7 +65,7 @@ class TenantClientController extends Controller
 
     public function edit(string $id)
     {
-        $client = $this->clientService->findById($id, tenant());
+        $client = $this->clientService->findByContactId($id, tenant());
 
         return Inertia::render('tenant/registrations/clients/edit/Edit', [
             'client' => $client,
@@ -88,13 +90,30 @@ class TenantClientController extends Controller
     public function destroy(string $id)
     {
         try {
-            $this->contactService->destroy(tenant(), $id);
+            $this->clientService->destroy(tenant(), $id);
 
             return redirect()->route('tenant.registrations.clients.list')->with('success', 'Cliente excluído com sucesso!');
+        } catch (ContactHasFinancialEntriesException $th) {
+            return redirect()->back()->with('warning', $th->getMessage());
         } catch (\Throwable $th) {
             Log::error('Erro ao excluir cliente: '.$th->getMessage());
 
             return redirect()->back()->with('error', 'Erro ao excluir cliente!');
+        }
+    }
+
+    public function toggleActive(Request $request, string $id)
+    {
+        try {
+            $active = $this->clientService->setActive(tenant(), $id, $request->boolean('active'));
+
+            $message = $active ? 'Cliente ativado com sucesso!' : 'Cliente inativado com sucesso!';
+
+            return redirect()->route('tenant.registrations.clients.list')->with('success', $message);
+        } catch (\Throwable $th) {
+            Log::error('Erro ao alterar status do cliente: '.$th->getMessage());
+
+            return redirect()->back()->with('error', 'Erro ao alterar status do cliente!');
         }
     }
 

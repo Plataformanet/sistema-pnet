@@ -71,18 +71,6 @@ class ContactService
         });
     }
 
-    public function destroy(Tenant $tenant, string $id)
-    {
-        return $tenant->run(function () use ($id) {
-            return DB::transaction(function () use ($id) {
-                $contact = Contact::findOrFail($id);
-                $contact->delete();
-
-                return $contact;
-            });
-        });
-    }
-
     public function getContactByCpfCnpj(string $cpfCnpj, Tenant $tenant)
     {
         return $tenant->run(function () use ($cpfCnpj) {

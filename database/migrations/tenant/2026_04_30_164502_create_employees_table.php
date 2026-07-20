@@ -19,6 +19,7 @@ return new class extends Migration
             $table->string('position');
             $table->integer('salary');
             $table->date('hire_date');
+            $table->boolean('active')->default(true);
             $table->softDeletes();
             $table->timestamps();
 

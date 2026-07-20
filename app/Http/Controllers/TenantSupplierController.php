@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Exceptions\ContactHasFinancialEntriesException;
 use App\Http\Requests\StoreSupplierRequest;
 use App\Http\Requests\UpdateSupplierRequest;
 use App\Models\Contact;
 use App\Services\ContactService;
 use App\Services\SuppliersService;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 
@@ -54,7 +56,7 @@ class TenantSupplierController extends Controller
 
     public function show($id)
     {
-        $supplier = $this->supplierService->findById($id, tenant());
+        $supplier = $this->supplierService->findByContactId($id, tenant());
 
         return Inertia::render('tenant/registrations/suppliers/show/Show', [
             'supplier' => $supplier,
@@ -63,7 +65,7 @@ class TenantSupplierController extends Controller
 
     public function edit($id)
     {
-        $supplier = $this->supplierService->findById($id, tenant());
+        $supplier = $this->supplierService->findByContactId($id, tenant());
 
         return Inertia::render('tenant/registrations/suppliers/edit/Edit', [
             'supplier' => $supplier,
@@ -88,13 +90,30 @@ class TenantSupplierController extends Controller
     public function destroy($id)
     {
         try {
-            $this->contactService->destroy(tenant(), $id);
+            $this->supplierService->destroy(tenant(), $id);
 
             return redirect()->route('tenant.registrations.suppliers.list')->with('success', 'Fornecedor excluído com sucesso!');
+        } catch (ContactHasFinancialEntriesException $th) {
+            return redirect()->back()->with('warning', $th->getMessage());
         } catch (\Throwable $th) {
             Log::error('Erro ao excluir fornecedor: '.$th->getMessage());
 
             return redirect()->back()->with('error', 'Erro ao excluir fornecedor!');
+        }
+    }
+
+    public function toggleActive(Request $request, string $id)
+    {
+        try {
+            $active = $this->supplierService->setActive(tenant(), $id, $request->boolean('active'));
+
+            $message = $active ? 'Fornecedor ativado com sucesso!' : 'Fornecedor inativado com sucesso!';
+
+            return redirect()->route('tenant.registrations.suppliers.list')->with('success', $message);
+        } catch (\Throwable $th) {
+            Log::error('Erro ao alterar status do fornecedor: '.$th->getMessage());
+
+            return redirect()->back()->with('error', 'Erro ao alterar status do fornecedor!');
         }
     }
 

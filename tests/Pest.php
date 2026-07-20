@@ -1,5 +1,11 @@
 <?php
 
+use App\Enums\ContactTypeEnum;
+use App\Models\AccountPayable;
+use App\Models\AccountReceivable;
+use App\Models\BankAccount;
+use App\Models\FinancialCategory;
+use App\Models\FinancialContact;
 use App\Models\Tenant;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Str;
@@ -96,6 +102,50 @@ function makeTenant(array $attributes = []): Tenant
         'name' => 'Tenant de teste',
         'is_active' => true,
     ], $attributes)));
+}
+
+/**
+ * Cria um lançamento financeiro real (conta a pagar ou a receber) para o contato,
+ * vinculado ao papel informado. É o que bloqueia a exclusão do papel nos cadastros.
+ *
+ * @param  class-string<AccountPayable|AccountReceivable>  $accountClass
+ */
+function createFinancialEntry(Tenant $tenant, int $contactId, ContactTypeEnum $type, string $accountClass): void
+{
+    $tenant->run(function () use ($contactId, $type, $accountClass) {
+        $financialContact = FinancialContact::create([
+            'contact_id' => $contactId,
+            'type' => $type->value,
+        ]);
+
+        $category = FinancialCategory::create([
+            'name' => 'Categoria Teste',
+            'type' => $accountClass === AccountReceivable::class ? 'receita' : 'despesa',
+        ]);
+
+        $bankAccount = BankAccount::create([
+            'name' => 'Conta Principal',
+            'bank' => 'Banco Teste',
+            'agency' => '0001',
+            'account_number' => '123456',
+            'account_type' => 'corrente',
+            'initial_balance' => 0,
+            'current_balance' => 0,
+            'main_account' => 1,
+        ]);
+
+        $accountClass::create([
+            'financial_category_id' => $category->id,
+            'bank_account_id' => $bankAccount->id,
+            'financial_contact_id' => $financialContact->id,
+            'description' => 'Lançamento de teste',
+            'total' => 10000,
+            'payment_method' => 'pix',
+            'payment_condition' => '1',
+            'total_installments' => 1,
+            'bank_account_out' => 1,
+        ]);
+    });
 }
 
 /**

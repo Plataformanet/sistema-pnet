@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ref } from "vue";
-import { MoreHorizontal, Eye, Pencil, Trash } from "lucide-vue-next";
+import { computed, ref } from "vue";
+import { MoreHorizontal, Eye, Pencil, Trash, Power, PowerOff } from "lucide-vue-next";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -32,6 +32,8 @@ const props = defineProps<{
 const { permissions } = usePermission();
 const showDeleteDialog = ref(false);
 
+const isActive = computed(() => props.client.active ?? true);
+
 const deleteClient = () => {
     if (props.client.contact?.id) {
         router.delete(route('tenant.registrations.clients.destroy', props.client.contact.id), {
@@ -39,6 +41,16 @@ const deleteClient = () => {
             onSuccess: () => {
                 showDeleteDialog.value = false;
             }
+        });
+    }
+};
+
+const toggleActive = () => {
+    if (props.client.contact?.id) {
+        router.patch(route('tenant.registrations.clients.toggle-active', props.client.contact.id), {
+            active: !isActive.value,
+        }, {
+            preserveScroll: true,
         });
     }
 };
@@ -77,6 +89,14 @@ const deleteClient = () => {
                     >
                         <Pencil class="mr-2 h-4 w-4" /> Editar
                     </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                    v-if="permissions.includes('registrations.clients.edit')"
+                    @click="toggleActive"
+                    class="cursor-pointer"
+                >
+                    <component :is="isActive ? PowerOff : Power" class="mr-2 h-4 w-4" />
+                    {{ isActive ? "Inativar" : "Ativar" }}
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem

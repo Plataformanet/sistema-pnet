@@ -14,7 +14,18 @@ class Supplier extends Model
         'responsible_person',
         'description',
         'supply_category',
+        'active',
     ];
+
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'active' => 'boolean',
+        ];
+    }
 
     public function contact()
     {

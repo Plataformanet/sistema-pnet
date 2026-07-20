@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('responsible_person')->nullable();
             $table->text('description');
             $table->string('supply_category');
+            $table->boolean('active')->default(true);
             $table->softDeletes();
             $table->timestamps();
 

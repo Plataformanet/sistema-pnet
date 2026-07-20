@@ -2,6 +2,7 @@ import { h } from "vue";
 import { ArrowUpDown } from "lucide-vue-next";
 import { ColumnDef } from "@tanstack/vue-table";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import ActionDropdown from "./ActionDropdown.vue";
 import { Supplier } from "@/types";
 
@@ -70,6 +71,18 @@ export const columns: ColumnDef<Supplier>[] = [
                         column.toggleSorting(column.getIsSorted() === "asc"),
                 },
                 () => ["E-mail", h(ArrowUpDown, { class: "ml-2 h-4 w-4" })],
+            );
+        },
+    },
+    {
+        accessorKey: "active",
+        header: "Status",
+        cell: ({ row }) => {
+            const active = row.original.active ?? true;
+            return h(
+                Badge,
+                { variant: active ? "default" : "secondary" },
+                () => (active ? "Ativo" : "Inativo"),
             );
         },
     },
