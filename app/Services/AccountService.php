@@ -473,9 +473,9 @@ abstract class AccountService
         $query = Contact::select('id', 'name_corporatereason');
 
         if ($type === 'client') {
-            $query->whereHas('client');
+            $query->whereHas('client', fn (Builder $q) => $q->where('active', true));
         } elseif ($type === 'supplier') {
-            $query->whereHas('supplier');
+            $query->whereHas('supplier', fn (Builder $q) => $q->where('active', true));
         }
 
         if ($search) {

@@ -10,6 +10,7 @@ use App\Models\Contact;
 use App\Models\FinancialCategory;
 use App\Models\FinancialSubcategory;
 use App\Services\AccountReceivableService;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
 beforeEach(function () {
@@ -72,6 +73,32 @@ function receivablePayload(array $overrides = []): array
         ],
     ], $overrides);
 }
+
+test('searchContact não retorna clientes inativos', function () {
+    $this->tenant->run(fn () => Client::create([
+        'contact_id' => $this->contact->id,
+        'active' => false,
+    ]));
+
+    $request = Request::create('/', 'GET', ['type' => 'client']);
+
+    $contacts = $this->tenant->run(fn () => app(AccountReceivableService::class)->searchContact($request));
+
+    expect($contacts->pluck('id'))->not->toContain($this->contact->id);
+});
+
+test('searchContact retorna clientes ativos', function () {
+    $this->tenant->run(fn () => Client::create([
+        'contact_id' => $this->contact->id,
+        'active' => true,
+    ]));
+
+    $request = Request::create('/', 'GET', ['type' => 'client']);
+
+    $contacts = $this->tenant->run(fn () => app(AccountReceivableService::class)->searchContact($request));
+
+    expect($contacts->pluck('id'))->toContain($this->contact->id);
+});
 
 test('bloqueia lançamento a receber quando o cliente está inativo', function () {
     $this->tenant->run(fn () => Client::create([

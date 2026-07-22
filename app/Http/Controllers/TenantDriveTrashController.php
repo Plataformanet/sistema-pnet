@@ -23,7 +23,8 @@ class TenantDriveTrashController extends Controller
         $folder_id = request('folder_id');
 
         if ($folder_id) {
-            $folders = DriveFolder::findOrFail($folder_id);
+            // A pasta está na lixeira (soft-deleted); precisa incluir os trashed.
+            $folders = DriveFolder::withTrashed()->findOrFail($folder_id);
         }
 
         if ($folder_id) {

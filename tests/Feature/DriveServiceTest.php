@@ -148,6 +148,26 @@ test('findByTrash retorna somente drives na lixeira', function () {
         ->and($drives->first()->name)->toBe('lixo.pdf');
 });
 
+test('findByTrash não lista arquivos cuja pasta também está na lixeira', function () {
+    $this->tenant->run(function () {
+        $folder = makeFolder(['name' => 'Pasta de Teste']);
+        $folderDrive = makeFolderDrive($folder);
+        $file = makeFile($folder, ['name' => 'Teste.docx', 'document_type' => DocumentTypeDriveEnum::WORD->value]);
+
+        // Exclui a pasta inteira (arquivo + drive representante + pasta).
+        $file->delete();
+        $folderDrive->delete();
+        $folder->delete();
+    });
+
+    $drives = $this->tenant->run(fn () => app(DriveService::class)->findByTrash($this->tenant)->collect());
+
+    // A raiz da lixeira deve exibir somente a pasta, com o arquivo "dentro" dela.
+    expect($drives)->toHaveCount(1)
+        ->and($drives->first()->document_type->value)->toBe(DocumentTypeDriveEnum::FOLDER->value)
+        ->and($drives->first()->name)->toBe('Pasta de Teste');
+});
+
 // ---------------------------------------------------------------------------
 // Exclusão / restauração (soft delete)
 // ---------------------------------------------------------------------------
@@ -191,6 +211,32 @@ test('restore restaura um arquivo da lixeira', function () {
     app(DriveService::class)->restore((string) $file->id, DocumentTypeDriveEnum::PDF->value, $this->tenant);
 
     $this->tenant->run(fn () => expect(Drive::find($file->id))->not->toBeNull());
+});
+
+test('restore de arquivo também restaura a pasta que ainda está na lixeira', function () {
+    [$folder, $file] = $this->tenant->run(function () {
+        $folder = makeFolder(['name' => 'Pasta de Teste']);
+        $folderDrive = makeFolderDrive($folder);
+        $file = makeFile($folder, ['name' => 'Teste.docx', 'document_type' => DocumentTypeDriveEnum::WORD->value]);
+
+        $file->delete();
+        $folderDrive->delete();
+        $folder->delete();
+
+        return [$folder, $file];
+    });
+
+    app(DriveService::class)->restore((string) $file->id, DocumentTypeDriveEnum::WORD->value, $this->tenant);
+
+    $this->tenant->run(function () use ($folder, $file) {
+        expect(Drive::find($file->id))->not->toBeNull()               // arquivo restaurado
+            ->and(DriveFolder::find($folder->id))->not->toBeNull()    // pasta restaurada
+            ->and(
+                Drive::where('drive_folder_id', $folder->id)          // drive representante restaurado
+                    ->where('document_type', DocumentTypeDriveEnum::FOLDER->value)
+                    ->exists()
+            )->toBeTrue();
+    });
 });
 
 test('restore de pasta restaura a pasta e seus drives filhos', function () {

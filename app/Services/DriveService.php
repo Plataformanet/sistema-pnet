@@ -289,6 +289,26 @@ class DriveService
 
             $drives = Drive::with(['driveFolder', 'drivePermissions', 'createdBy', 'modifiedBy'])
                 ->onlyTrashed()
+                ->where(function ($outer) {
+                    // Arquivos: só aparecem na raiz da lixeira se a pasta que os contém
+                    // NÃO estiver também na lixeira (senão são exibidos dentro dela).
+                    $outer->where(function ($query) {
+                        $query->where('document_type', '!=', DocumentTypeDriveEnum::FOLDER->value)
+                            ->whereHas('driveFolder');
+                    })
+                        // Pastas: só aparecem na raiz se forem de topo (sem pai) ou se o
+                        // pai não estiver na lixeira.
+                        ->orWhere(function ($query) {
+                            $query->where('document_type', DocumentTypeDriveEnum::FOLDER->value)
+                                ->whereHas('driveFolder', function ($folderQuery) {
+                                    $folderQuery->withTrashed()
+                                        ->where(function ($q) {
+                                            $q->whereNull('parent_id')
+                                                ->orWhereHas('parent');
+                                        });
+                                });
+                        });
+                })
                 ->orderBy('document_type', 'asc')
                 ->lazy();
 
@@ -334,21 +354,87 @@ class DriveService
         return $tenant->run(function () use ($id, $type) {
             return DB::transaction(function () use ($id, $type) {
 
-                $drive = null;
-                if ($type != DocumentTypeDriveEnum::FOLDER->value) {
-                    $drive = Drive::onlyTrashed()->findOrFail($id);
-                    $drive->restore();
+                if ($type == DocumentTypeDriveEnum::FOLDER->value) {
+                    // Para pastas, o identificador recebido é o id da DriveFolder.
+                    $folder = DriveFolder::withTrashed()->findOrFail($id);
+
+                    // Restaura a cadeia de ancestrais para a pasta voltar a ser visível.
+                    $this->restoreFolderAncestors($folder);
+
+                    // Restaura a própria pasta e toda a sua subárvore (subpastas + arquivos).
+                    $this->restoreFolderTree($folder);
+
+                    return $folder;
                 }
 
-                if ($type == DocumentTypeDriveEnum::FOLDER->value) {
-                    $drive = DriveFolder::withTrashed()->findOrFail($id);
-                    $drive->restore();
-                    $drive->drives()->withTrashed()->restore();
+                // Arquivo: além de restaurá-lo, garante que a pasta que o contém (e a
+                // cadeia de ancestrais) também esteja restaurada, senão o arquivo ficaria
+                // invisível dentro de uma pasta que continua na lixeira.
+                $drive = Drive::onlyTrashed()->findOrFail($id);
+                $drive->restore();
+
+                $folder = DriveFolder::withTrashed()->find($drive->drive_folder_id);
+
+                if ($folder) {
+                    $this->restoreFolderAncestors($folder);
+
+                    if ($folder->trashed()) {
+                        $folder->restore();
+
+                        // Restaura apenas o drive que representa a pasta (não os arquivos
+                        // irmãos, que permanecem na lixeira até serem restaurados).
+                        $folder->drives()
+                            ->onlyTrashed()
+                            ->where('document_type', DocumentTypeDriveEnum::FOLDER->value)
+                            ->restore();
+                    }
                 }
 
                 return $drive;
             });
         });
+    }
+
+    /**
+     * Restaura recursivamente a pasta, seu drive representante, os arquivos diretos
+     * e todas as subpastas (com seus conteúdos) que estejam na lixeira.
+     */
+    private function restoreFolderTree(DriveFolder $folder): void
+    {
+        if ($folder->trashed()) {
+            $folder->restore();
+        }
+
+        // Restaura o drive representante da pasta e os arquivos diretamente contidos.
+        $folder->drives()->onlyTrashed()->restore();
+
+        $children = DriveFolder::withTrashed()->where('parent_id', $folder->id)->get();
+
+        foreach ($children as $child) {
+            $this->restoreFolderTree($child);
+        }
+    }
+
+    /**
+     * Restaura a cadeia de pastas ancestrais (e seus drives representantes) que
+     * estejam na lixeira, garantindo que a pasta alvo volte a ter um caminho visível.
+     */
+    private function restoreFolderAncestors(DriveFolder $folder): void
+    {
+        $parent = DriveFolder::withTrashed()->find($folder->parent_id);
+
+        while ($parent) {
+            if ($parent->trashed()) {
+                $parent->restore();
+
+                $parent->drives()
+                    ->onlyTrashed()
+                    ->where('document_type', DocumentTypeDriveEnum::FOLDER->value)
+                    ->restore();
+            }
+
+            $parent = DriveFolder::withTrashed()->find($parent->parent_id);
+        }
     }
 
     public function forceDelete(ForceDeleteRequest $request, Tenant $tenant)

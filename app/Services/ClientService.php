@@ -34,7 +34,7 @@ class ClientService
      */
     private function persist(Contact $contact): Client
     {
-        $client = $contact->client()->withTrashed()->first() ?? $contact->client()->make();
+        $client = $contact->client()->withTrashed()->first() ?? $contact->client()->make(['active' => true]);
 
         $client->deleted_at = null;
         $client->save();

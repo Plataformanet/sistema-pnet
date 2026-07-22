@@ -12,6 +12,7 @@ use App\Models\FinancialSubcategory;
 use App\Models\Supplier;
 use App\Services\AccountPayableService;
 use App\Services\AccountReceivableService;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
 beforeEach(function () {
@@ -73,6 +74,38 @@ function payablePayload(array $overrides = []): array
         ],
     ], $overrides);
 }
+
+test('searchContact não retorna fornecedores inativos', function () {
+    $this->tenant->run(fn () => Supplier::create([
+        'contact_id' => $this->contact->id,
+        'responsible_person' => 'Responsável',
+        'description' => 'Fornecedor de teste',
+        'supply_category' => 'Materiais',
+        'active' => false,
+    ]));
+
+    $request = Request::create('/', 'GET', ['type' => 'supplier']);
+
+    $contacts = $this->tenant->run(fn () => app(AccountPayableService::class)->searchContact($request));
+
+    expect($contacts->pluck('id'))->not->toContain($this->contact->id);
+});
+
+test('searchContact retorna fornecedores ativos', function () {
+    $this->tenant->run(fn () => Supplier::create([
+        'contact_id' => $this->contact->id,
+        'responsible_person' => 'Responsável',
+        'description' => 'Fornecedor de teste',
+        'supply_category' => 'Materiais',
+        'active' => true,
+    ]));
+
+    $request = Request::create('/', 'GET', ['type' => 'supplier']);
+
+    $contacts = $this->tenant->run(fn () => app(AccountPayableService::class)->searchContact($request));
+
+    expect($contacts->pluck('id'))->toContain($this->contact->id);
+});
 
 test('bloqueia lançamento a pagar quando o fornecedor está inativo', function () {
     $this->tenant->run(fn () => Supplier::create([

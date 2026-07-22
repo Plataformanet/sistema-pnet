@@ -53,12 +53,18 @@ function navigateToBreadcrumb(folderId: number | null) {
     });
 }
 
+// Para pastas o backend opera sobre a DriveFolder, cujo id é o drive_folder_id
+// do registro. Para arquivos, o próprio id do drive.
+function trashTargetId(item: Drive) {
+    return item.document_type === "folder" ? item.drive_folder_id : item.id;
+}
+
 // Restaurar item
 async function restoreItem(item: Drive) {
     isProcessingAction.value = item.id;
     try {
         const res = await axios.post(route("tenant.drive.trash.restore"), {
-            id: item.id,
+            id: trashTargetId(item),
             tipo_drive: item.document_type,
         });
 
@@ -92,7 +98,7 @@ async function executeDeletePermanent() {
             route("tenant.drive.trash.force-delete"),
             {
                 data: {
-                    id: item.id,
+                    id: trashTargetId(item),
                     drive_type: item.document_type,
                     confirm_delete: 1,
                 },
@@ -126,7 +132,7 @@ async function executeClearTrash() {
 
     // Mapeia todos os itens da lixeira
     const selectedDrives = props.drives.map((d) => ({
-        id: d.id,
+        id: trashTargetId(d),
         drive_type: d.document_type,
     }));
 
