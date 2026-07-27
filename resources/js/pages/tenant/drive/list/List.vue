@@ -133,11 +133,7 @@ function clearSearch() {
 function navigateToFolder(item: Drive) {
     if (item.document_type !== "folder") return;
     router.visit(route("tenant.drive.index"), {
-        data: {
-            "my-drive": item.id,
-            folder_id: item.drive_folder_id,
-            parent_id: item.id,
-        },
+        data: { folder_id: item.drive_folder_id },
     });
 }
 

@@ -27,16 +27,13 @@ class TenantDriveController extends Controller
      */
     public function index()
     {
-        $drive_id = request('my-drive');
         $folder_id = request('folder_id');
 
         if ($folder_id) {
-            $folders = DriveFolder::findOrFail($folder_id);
+            $folder = DriveFolder::findOrFail($folder_id);
 
-            Gate::authorize('viewFolder', $folders);
-        }
+            Gate::authorize('viewFolder', $folder);
 
-        if ($drive_id && $folder_id) {
             $drives = $this->driveService->findByFolder($folder_id, tenant());
         } else {
             $drives = $this->driveService->findAll(tenant());
@@ -44,7 +41,7 @@ class TenantDriveController extends Controller
 
         return Inertia::render('tenant/drive/list/List', [
             'drives' => $drives,
-            'folders' => $folder_id ? $folders->breadcrumb->toArray() : [],
+            'folders' => $folder_id ? $folder->breadcrumb->toArray() : [],
         ]);
     }
 
