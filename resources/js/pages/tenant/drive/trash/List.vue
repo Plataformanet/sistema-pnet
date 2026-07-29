@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from "vue";
+import { ref } from "vue";
 import { Head, router } from "@inertiajs/vue3";
 import TenantLayout from "@/layouts/tenant-layout/TenantLayout.vue";
 import { route } from "ziggy-js";
@@ -16,13 +16,7 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import {
-    Folder,
-    Undo,
-    Trash2,
-    X,
-    FolderSync,
-} from "lucide-vue-next";
+import { Undo, Trash2 } from "lucide-vue-next";
 import type { Drive } from "@/types";
 import { getFileIcon, getIconColorClass, formatSize } from "../utils/drive-helpers";
 
@@ -30,7 +24,6 @@ defineOptions({ layout: TenantLayout });
 
 const props = defineProps<{
     drives: Drive[];
-    folders: { id: number; name: string }[];
 }>();
 
 const isClearingTrash = ref(false);
@@ -39,24 +32,18 @@ const isDeleteConfirmOpen = ref(false);
 const itemToDelete = ref<Drive | null>(null);
 const isClearTrashConfirmOpen = ref(false);
 
-// Navegar na lixeira se for pasta deletada
-function navigateToTrashFolder(item: Drive) {
-    if (item.document_type !== "folder") return;
-    router.visit(route("tenant.drive.trash.index"), {
-        data: { folder_id: item.drive_folder_id },
-    });
-}
-
-function navigateToBreadcrumb(folderId: number | null) {
-    router.visit(route("tenant.drive.trash.index"), {
-        data: folderId ? { folder_id: folderId } : {},
-    });
-}
-
 // Para pastas o backend opera sobre a DriveFolder, cujo id é o drive_folder_id
 // do registro. Para arquivos, o próprio id do drive.
 function trashTargetId(item: Drive) {
     return item.document_type === "folder" ? item.drive_folder_id : item.id;
+}
+
+// Mensagens de erro do backend (ex.: 403 por falta de permissão) chegam no corpo
+// da resposta; sem isso o usuário veria apenas um erro genérico.
+function errorMessage(e: unknown, fallback: string): string {
+    return axios.isAxiosError(e)
+        ? (e.response?.data?.message ?? fallback)
+        : fallback;
 }
 
 // Restaurar item
@@ -76,7 +63,7 @@ async function restoreItem(item: Drive) {
         }
     } catch (e) {
         console.error("Erro ao restaurar item:", e);
-        toast.error("Erro ao restaurar o item.");
+        toast.error(errorMessage(e, "Erro ao restaurar o item."));
     } finally {
         isProcessingAction.value = null;
     }
@@ -113,7 +100,7 @@ async function executeDeletePermanent() {
         }
     } catch (e) {
         console.error("Erro ao excluir permanentemente:", e);
-        toast.error("Erro ao excluir o item permanentemente.");
+        toast.error(errorMessage(e, "Erro ao excluir o item permanentemente."));
     } finally {
         isProcessingAction.value = null;
         itemToDelete.value = null;
@@ -150,7 +137,7 @@ async function executeClearTrash() {
         }
     } catch (e) {
         console.error("Erro ao esvaziar a lixeira:", e);
-        toast.error("Erro ao esvaziar a lixeira.");
+        toast.error(errorMessage(e, "Erro ao esvaziar a lixeira."));
     } finally {
         isClearingTrash.value = false;
     }
@@ -188,34 +175,6 @@ async function executeClearTrash() {
                 <Trash2 class="h-4.5 w-4.5" />
                 {{ isClearingTrash ? "Esvaziando..." : "Esvaziar Lixeira" }}
             </Button>
-        </div>
-
-        <!-- Trilha de Navegação (Breadcrumbs) na Lixeira -->
-        <div
-            v-if="folders.length > 0"
-            class="flex items-center gap-2 rounded-xl border border-slate-100 bg-slate-50 p-4 text-sm font-medium text-slate-600"
-        >
-            <button
-                @click="navigateToBreadcrumb(null)"
-                class="flex items-center gap-1 cursor-pointer text-indigo-600 transition-colors hover:text-indigo-800"
-            >
-                Lixeira principal
-            </button>
-
-            <template v-for="(folder, index) in folders" :key="folder.id">
-                <span class="text-slate-400">/</span>
-                <button
-                    @click="navigateToBreadcrumb(folder.id)"
-                    class="transition-colors hover:text-indigo-800"
-                    :class="
-                        index === folders.length - 1
-                            ? 'pointer-events-none cursor-default font-semibold text-slate-800'
-                            : 'cursor-pointer text-indigo-600'
-                    "
-                >
-                    {{ folder.name }}
-                </button>
-            </template>
         </div>
 
         <!-- Tabela Lixeira -->
@@ -281,20 +240,7 @@ async function executeClearTrash() {
                                             )
                                         "
                                     />
-                                    <span
-                                        v-if="item.document_type === 'folder'"
-                                    >
-                                        <button
-                                            @click="navigateToTrashFolder(item)"
-                                            class="cursor-pointer text-left font-medium text-indigo-600 transition-all hover:text-indigo-800 hover:underline"
-                                        >
-                                            {{ item.name }}
-                                        </button>
-                                    </span>
-                                    <span
-                                        v-else
-                                        class="font-medium text-slate-800"
-                                    >
+                                    <span class="font-medium text-slate-800">
                                         {{ item.name }}
                                     </span>
                                 </div>

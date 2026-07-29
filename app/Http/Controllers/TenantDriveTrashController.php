@@ -5,8 +5,8 @@ namespace App\Http\Controllers;
 use App\Http\Requests\ForceDeleteRequest;
 use App\Http\Requests\ForceDeleteTrashRequest;
 use App\Http\Requests\RestoreDriveRequest;
-use App\Models\DriveFolder;
 use App\Services\DriveService;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
@@ -20,24 +20,12 @@ class TenantDriveTrashController extends Controller
      */
     public function index()
     {
-        $folder_id = request('folder_id');
-
-        if ($folder_id) {
-            // A pasta está na lixeira (soft-deleted); precisa incluir os trashed.
-            $folders = DriveFolder::withTrashed()->findOrFail($folder_id);
-        }
-
-        if ($folder_id) {
-            $drives = $this->driveService->findByTrashFolder($folder_id, tenant());
-        } else {
-            $drives = $this->driveService->findByTrash(tenant());
-        }
-
+        // A lixeira não permite navegação: pastas excluídas são exibidas como
+        // itens, e seu conteúdo só volta a ser acessível após a restauração.
         return Inertia::render(
             'tenant/drive/trash/List',
             [
-                'drives' => $drives,
-                'folders' => $folder_id ? $folders->breadcrumb->toArray() : [],
+                'drives' => $this->driveService->findByTrash(tenant()),
             ]
         );
     }
@@ -57,6 +45,14 @@ class TenantDriveTrashController extends Controller
                     'message' => 'Documento ou Pasta restaurado com sucesso!',
                 ],
                 Response::HTTP_OK
+            );
+        } catch (AuthorizationException $th) {
+            return response()->json(
+                [
+                    'success' => false,
+                    'message' => $th->getMessage(),
+                ],
+                Response::HTTP_FORBIDDEN
             );
         } catch (\Throwable $th) {
             Log::error('Error ao tentar restaurar o documento ou a pasta:', [$th->getMessage()]);
@@ -86,6 +82,14 @@ class TenantDriveTrashController extends Controller
                 ],
                 Response::HTTP_OK
             );
+        } catch (AuthorizationException $th) {
+            return response()->json(
+                [
+                    'success' => false,
+                    'message' => $th->getMessage(),
+                ],
+                Response::HTTP_FORBIDDEN
+            );
         } catch (\Throwable $th) {
             Log::error('Error ao tentar deletar o documento ou a pasta:', [$th->getMessage()]);
 
@@ -110,6 +114,14 @@ class TenantDriveTrashController extends Controller
                     'message' => 'Arquivos da lixeira excluidos com sucesso!',
                 ],
                 Response::HTTP_OK
+            );
+        } catch (AuthorizationException $th) {
+            return response()->json(
+                [
+                    'success' => false,
+                    'message' => $th->getMessage(),
+                ],
+                Response::HTTP_FORBIDDEN
             );
         } catch (\Throwable $th) {
             Log::error('Error ao tentar excluir arquivos da lixeira:', [$th->getMessage()]);

@@ -312,46 +312,85 @@ class DriveService
                 ->orderBy('document_type', 'asc')
                 ->lazy();
 
-            return $drives->map(function ($drive) use ($user) {
-                $drive->permission_attrs = $this->getPermissionAttributes($drive, $user);
+            // Itens sem acesso não são apenas desabilitados na lixeira: eles são
+            // omitidos da listagem, já que aqui não há como pedir permissão.
+            return $drives
+                ->filter(fn ($drive) => $this->userCanAccess($drive, $user))
+                ->map(function ($drive) use ($user) {
+                    $drive->permission_attrs = $this->getPermissionAttributes($drive, $user);
 
-                return $drive;
-            });
+                    return $drive;
+                });
         });
     }
 
-    public function findByTrashFolder(string $drive_folder_id, Tenant $tenant): LazyCollection
+    // Desativado: a lixeira não permite mais navegar dentro de pastas excluídas.
+    // Mantido comentado caso a navegação volte a ser necessária.
+    // public function findByTrashFolder(string $drive_folder_id, Tenant $tenant): LazyCollection
+    // {
+    //     return $tenant->run(function () use ($drive_folder_id) {
+    //
+    //         $user = Auth::user();
+    //
+    //         $drives = Drive::with(['drivePermissions', 'createdBy', 'modifiedBy'])->withTrashed()
+    //             ->where(function ($query) use ($drive_folder_id) {
+    //                 $query->where('document_type', DocumentTypeDriveEnum::FOLDER->value)
+    //                     ->whereHas('driveFolder', function ($q) use ($drive_folder_id) {
+    //                         $q->where('parent_id', $drive_folder_id);
+    //                     });
+    //             })
+    //             ->orWhere(function ($query) use ($drive_folder_id) {
+    //                 $query->where('drive_folder_id', $drive_folder_id)
+    //                     ->where('document_type', '!=', DocumentTypeDriveEnum::FOLDER->value);
+    //             })
+    //             ->orderByRaw('CASE WHEN document_type = ? THEN 0 ELSE 1 END', [DocumentTypeDriveEnum::FOLDER->value])
+    //             ->orderBy('deleted_at', 'desc')
+    //             ->lazy();
+    //
+    //         return $drives->map(function ($drive) use ($user) {
+    //             $drive->permission_attrs = $this->getPermissionAttributes($drive, $user);
+    //
+    //             return $drive;
+    //         });
+    //     });
+    // }
+
+    /**
+     * Garante que o usuário autenticado pode manipular um item da lixeira.
+     *
+     * Para pastas o identificador recebido é o id da DriveFolder, e quem carrega as
+     * permissões é o drive que a representa; para arquivos, o próprio id do Drive.
+     *
+     * @throws AuthorizationException
+     */
+    private function authorizeTrashAccess(string $id, string $type): void
     {
-        return $tenant->run(function () use ($drive_folder_id) {
+        $user = Auth::user();
 
-            $user = Auth::user();
+        $query = Drive::withTrashed()->with('drivePermissions');
 
-            $drives = Drive::with(['drivePermissions', 'createdBy', 'modifiedBy'])->withTrashed()
-                ->where(function ($query) use ($drive_folder_id) {
-                    $query->where('document_type', DocumentTypeDriveEnum::FOLDER->value)
-                        ->whereHas('driveFolder', function ($q) use ($drive_folder_id) {
-                            $q->where('parent_id', $drive_folder_id);
-                        });
-                })
-                ->orWhere(function ($query) use ($drive_folder_id) {
-                    $query->where('drive_folder_id', $drive_folder_id)
-                        ->where('document_type', '!=', DocumentTypeDriveEnum::FOLDER->value);
-                })
-                ->orderByRaw('CASE WHEN document_type = ? THEN 0 ELSE 1 END', [DocumentTypeDriveEnum::FOLDER->value])
-                ->orderBy('deleted_at', 'desc')
-                ->lazy();
+        $drive = $type === DocumentTypeDriveEnum::FOLDER->value
+            ? $query->where('drive_folder_id', $id)
+                ->where('document_type', DocumentTypeDriveEnum::FOLDER->value)
+                ->first()
+            : $query->find($id);
 
-            return $drives->map(function ($drive) use ($user) {
-                $drive->permission_attrs = $this->getPermissionAttributes($drive, $user);
+        // Sem drive representante não há permissões a avaliar (mesma regra da DrivePolicy).
+        if (! $drive) {
+            return;
+        }
 
-                return $drive;
-            });
-        });
+        if (! $this->userCanAccess($drive, $user)) {
+            throw new AuthorizationException('Você não tem permissão para acessar este item da lixeira.');
+        }
     }
 
     public function restore(string $id, string $type, Tenant $tenant)
     {
         return $tenant->run(function () use ($id, $type) {
+
+            $this->authorizeTrashAccess($id, $type);
+
             return DB::transaction(function () use ($id, $type) {
 
                 if ($type == DocumentTypeDriveEnum::FOLDER->value) {
@@ -441,6 +480,8 @@ class DriveService
     {
         return $tenant->run(function () use ($request) {
 
+            $this->authorizeTrashAccess($request->validated('id'), $request->validated('drive_type'));
+
             $drive = null;
 
             if ($request->validated('drive_type') != DocumentTypeDriveEnum::FOLDER->value && $request->validated('confirm_delete') == 1) {
@@ -508,6 +549,12 @@ class DriveService
     public function clearTrash(ForceDeleteTrashRequest $request, Tenant $tenant)
     {
         return $tenant->run(function () use ($request) {
+
+            // Valida o acesso de todos os itens antes de destruir qualquer um deles,
+            // já que cada exclusão é irreversível e roda na sua própria transação.
+            foreach ($request->validated('selected_drives') as $data) {
+                $this->authorizeTrashAccess($data['id'], $data['drive_type']);
+            }
 
             $drive = null;
 

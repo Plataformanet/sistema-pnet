@@ -45,19 +45,21 @@ class Drive extends Model
         return route('tenant.drive.download', $this->id);
     }
 
-    public function getUrlTrashAttribute()
-    {
-        if ($this->document_type->value === DocumentTypeDriveEnum::FOLDER->value) {
-            return route('tenant.drive.trash.index', [
-                'trash' => $this->id,
-                'parent_id' => $this->driveFolder?->parent_id === null ? $this->driveFolder?->id : $this->driveFolder->parent_id,
-                'folder_id' => $this->drive_folder_id,
-                'folder' => Str::slug($this->driveFolder?->name),
-            ]);
-        }
-
-        return route('tenant.drive.download', $this->id);
-    }
+    // Desativado: a lixeira não permite mais navegar dentro de pastas excluídas.
+    // Mantido comentado caso a navegação volte a ser necessária.
+    // public function getUrlTrashAttribute()
+    // {
+    //     if ($this->document_type->value === DocumentTypeDriveEnum::FOLDER->value) {
+    //         return route('tenant.drive.trash.index', [
+    //             'trash' => $this->id,
+    //             'parent_id' => $this->driveFolder?->parent_id === null ? $this->driveFolder?->id : $this->driveFolder->parent_id,
+    //             'folder_id' => $this->drive_folder_id,
+    //             'folder' => Str::slug($this->driveFolder?->name),
+    //         ]);
+    //     }
+    //
+    //     return route('tenant.drive.download', $this->id);
+    // }
 
     public function getSizeFormatedAttribute()
     {
