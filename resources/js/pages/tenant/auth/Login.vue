@@ -2,7 +2,8 @@
 <script setup lang="ts">
 import { Link, usePage } from "@inertiajs/vue3";
 import { useForm } from "@inertiajs/vue3";
-import { computed, HTMLAttributes } from "vue";
+import { computed, HTMLAttributes, ref } from "vue";
+import { Eye, EyeOff } from "lucide-vue-next";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -22,6 +23,8 @@ const props = defineProps<{
 }>();
 
 const flash: any = computed(() => usePage().props.flash);
+
+const showPassword = ref(false);
 
 const form = useForm({
     email: flash.value.email ?? "", // pré-preenche se vier do cadastro
@@ -72,12 +75,24 @@ function submit() {
                             Esqueceu sua senha?
                         </Link>
                     </div>
-                    <Input
-                        id="password"
-                        type="password"
-                        required
-                        v-model="form.password"
-                    />
+                    <div class="relative">
+                        <Input
+                            id="password"
+                            :type="showPassword ? 'text' : 'password'"
+                            required
+                            v-model="form.password"
+                            class="pr-10"
+                        />
+                        <button
+                            type="button"
+                            @click="showPassword = !showPassword"
+                            class="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-muted-foreground transition-colors hover:text-foreground focus:outline-none"
+                            :title="showPassword ? 'Ocultar senha' : 'Exibir senha'"
+                        >
+                            <EyeOff v-if="showPassword" class="h-4 w-4" />
+                            <Eye v-else class="h-4 w-4" />
+                        </button>
+                    </div>
                     <FieldError v-if="form.errors.password">{{
                         form.errors.password
                     }}</FieldError>

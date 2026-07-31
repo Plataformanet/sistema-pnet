@@ -1,7 +1,8 @@
 import { watch, ref } from "vue";
 import { toast } from "vue-sonner";
+import type { InertiaForm } from "@inertiajs/vue3";
 
-interface AddressForm {
+export interface AddressFormFields {
     zip_code: string;
     street: string;
     neighborhood: string;
@@ -10,7 +11,7 @@ interface AddressForm {
     [key: string]: any;
 }
 
-export function useCepLookup(form: AddressForm) {
+export function useCepLookup<T extends AddressFormFields>(form: InertiaForm<T> | T) {
     const isLoadingCep = ref(false);
 
     watch(

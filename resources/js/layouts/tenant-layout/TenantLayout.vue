@@ -32,19 +32,19 @@ import { LogOut, User } from "lucide-vue-next";
 import { Toaster } from "@/components/ui/sonner";
 import { toast } from "vue-sonner";
 
-export interface TenantNav {
-    navMain: TenantNavItem[];
+export interface TenantSidebarNavigation {
+    navMain: SidebarNavItem[];
 }
 
-export interface TenantNavItem {
+export interface SidebarNavItem {
     title: string;
     module?: string;
     permission?: string;
     url: string;
-    items?: TenantNavItem[];
+    items?: SidebarNavItem[];
 }
 
-const data: TenantNav = {
+const sidebarNavigation: TenantSidebarNavigation = {
     navMain: [
         {
             title: "Dashboard",
@@ -261,7 +261,7 @@ const breadcrumbs = computed(() => {
     let match: { title: string; url: string }[] = [];
     let longestMatchLen = -1;
 
-    for (const parent of data.navMain) {
+    for (const parent of sidebarNavigation.navMain) {
         if (
             currentPath === parent.url ||
             currentPath.startsWith(parent.url + "/")
@@ -293,6 +293,7 @@ const breadcrumbs = computed(() => {
 });
 
 const { tenant } = useTenant();
+const user = computed(() => (page.props.auth as any)?.user);
 
 const flash = computed(() => page.props.flash as any);
 
@@ -319,7 +320,7 @@ watch(
 
 <template>
     <SidebarProvider>
-        <TenantSidebar :data="data" />
+        <TenantSidebar :navigation="sidebarNavigation" />
         <SidebarInset>
             <header
                 class="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-2 border-b bg-background px-4"
@@ -364,7 +365,7 @@ watch(
                         </DropdownMenuTrigger>
                         <DropdownMenuContent class="mr-4">
                             <DropdownMenuLabel>{{
-                                tenant?.name
+                                user?.name
                             }}</DropdownMenuLabel>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem><User />Perfil</DropdownMenuItem>

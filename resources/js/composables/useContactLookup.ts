@@ -1,10 +1,11 @@
 import { watch, ref } from "vue";
 import axios from "axios";
 import { toast } from "vue-sonner";
+import type { InertiaForm } from "@inertiajs/vue3";
 
-interface ContactForm {
-    type?: string;
+export interface ContactFormFields {
     cpf_cnpj: string;
+    type?: string;
     name_corporatereason?: string;
     fantasy_name?: string;
     email?: string;
@@ -20,8 +21,8 @@ interface ContactForm {
     [key: string]: any;
 }
 
-export function useContactLookup(
-    form: ContactForm,
+export function useContactLookup<T extends ContactFormFields>(
+    form: InertiaForm<T> | T,
     entityType: "clients" | "suppliers" | "employees",
     isEdit: boolean = false
 ) {

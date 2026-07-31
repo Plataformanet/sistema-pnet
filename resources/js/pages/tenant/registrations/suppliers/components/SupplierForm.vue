@@ -19,6 +19,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useCepLookup } from "@/composables/useCepLookup";
 import { useContactLookup } from "@/composables/useContactLookup";
 import { UFS_LIST } from "@/lib/constants";
+import { isValidCPF } from "@/lib/validators";
 
 const ufs = UFS_LIST;
 
@@ -38,7 +39,7 @@ const props = withDefaults(
 
 const emit = defineEmits(["submit"]);
 
-useCepLookup(props.form as any);
+useCepLookup(props.form);
 useContactLookup(props.form, "suppliers", props.isEdit);
 
 const supplierType = ref<"PF" | "PJ">(props.form.type || "PJ");
@@ -50,6 +51,24 @@ watch(supplierType, (val) => {
         props.form.clearErrors();
     }
 });
+
+watch(
+    () => props.form.cpf_cnpj,
+    (newVal) => {
+        if (supplierType.value === "PF") {
+            const clean = newVal ? newVal.replace(/\D/g, "") : "";
+            if (clean.length === 11) {
+                if (!isValidCPF(newVal)) {
+                    props.form.errors.cpf_cnpj = "O CPF informado é inválido.";
+                } else if (props.form.errors.cpf_cnpj === "O CPF informado é inválido.") {
+                    delete props.form.errors.cpf_cnpj;
+                }
+            } else if (props.form.errors.cpf_cnpj === "O CPF informado é inválido.") {
+                delete props.form.errors.cpf_cnpj;
+            }
+        }
+    }
+);
 
 function onSubmit() {
     emit("submit");

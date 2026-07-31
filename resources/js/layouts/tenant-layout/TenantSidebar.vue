@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import type { SidebarProps } from "@/components/ui/sidebar";
-import { ChevronRight, CloudCog } from "lucide-vue-next";
-import SearchForm from "@/layouts/tenant-layout/SearchForm.vue";
+import { ChevronRight } from "lucide-vue-next";
 import {
     Collapsible,
     CollapsibleContent,
@@ -20,12 +19,16 @@ import {
     SidebarRail,
 } from "@/components/ui/sidebar";
 import { Link, usePage } from "@inertiajs/vue3";
-import type { TenantNav } from "./TenantLayout.vue";
+import type {
+    TenantSidebarNavigation,
+    SidebarNavItem,
+} from "./TenantLayout.vue";
 import { useTenant } from "@/composables/useTenant";
 import { usePermission } from "@/composables/usePermission";
 import { computed } from "vue";
 
-const props = defineProps<SidebarProps & { data: TenantNav }>();
+const props =
+    defineProps<SidebarProps & { navigation: TenantSidebarNavigation }>();
 
 const page = usePage();
 
@@ -36,31 +39,54 @@ function isActive(url?: string) {
     if (!url) return false;
 
     const currentPath = page.url.split("?")[0];
-
     const menuUrl = url.startsWith("/") ? url : `/${url}`;
 
     return currentPath === menuUrl;
 }
 
-// This is sample data.
-const data = props.data;
+const visibleNavigationItems = computed(() => {
+    return props.navigation.navMain
+        .map((navGroup) => {
+            // Check if module is enabled for tenant
+            if (
+                navGroup.module &&
+                tenant.value?.hasModules &&
+                !tenant.value.hasModules[navGroup.module]
+            ) {
+                return null;
+            }
 
-const dataFiltered = computed(() => {
-    return data.navMain.filter((item) => {
-        if (
-            !item.module ||
-            !tenant.value?.hasModules.hasOwnProperty(item.module)
-        ) {
-            return item;
-        }
+            // Check group direct permission (if specified)
+            if (
+                navGroup.permission &&
+                !permissions.value.includes(navGroup.permission)
+            ) {
+                return null;
+            }
 
-        if (
-            tenant.value?.hasModules.hasOwnProperty(item.module) &&
-            tenant.value?.hasModules[item.module] === true
-        ) {
-            return item;
-        }
-    });
+            // Check group sub-items (if specified)
+            if (navGroup.items && navGroup.items.length > 0) {
+                const visibleSubItems = navGroup.items.filter((subItem) => {
+                    if (!subItem.permission) return true;
+                    return permissions.value.includes(subItem.permission);
+                });
+
+                // Hide module if user has no permissions for any of its sub-items
+                if (visibleSubItems.length === 0) {
+                    return null;
+                }
+
+                return {
+                    ...navGroup,
+                    items: visibleSubItems,
+                };
+            }
+
+            return navGroup;
+        })
+        .filter(
+            (navGroup): navGroup is SidebarNavItem => navGroup !== null,
+        );
 });
 </script>
 
@@ -72,25 +98,27 @@ const dataFiltered = computed(() => {
                 alt="Logo PlataformaNet"
                 class="mx-auto block h-16 max-w-full"
             />
-            <!-- <SearchForm /> -->
         </SidebarHeader>
         <SidebarContent class="gap-0">
-            <template v-for="item in dataFiltered" :key="item.title">
+            <template
+                v-for="navGroup in visibleNavigationItems"
+                :key="navGroup.title"
+            >
                 <Collapsible
-                    :title="item.title"
+                    :title="navGroup.title"
                     class="group/collapsible"
                     :default-open="
-                        item.items?.some((child) => isActive(child.url))
+                        navGroup.items?.some((subItem) => isActive(subItem.url))
                     "
                 >
                     <SidebarGroup>
                         <SidebarGroupLabel
                             as-child
                             class="group/label text-sm text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-                            v-if="item.items"
+                            v-if="navGroup.items"
                         >
                             <CollapsibleTrigger>
-                                {{ item.title }}
+                                {{ navGroup.title }}
                                 <ChevronRight
                                     class="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-90"
                                 />
@@ -100,31 +128,27 @@ const dataFiltered = computed(() => {
                             <SidebarMenuButton
                                 as-child
                                 class="font-semibold"
-                                :is-active="isActive(item.url)"
+                                :is-active="isActive(navGroup.url)"
                             >
-                                <Link :href="item.url">{{ item.title }}</Link>
+                                <Link :href="navGroup.url">{{
+                                    navGroup.title
+                                }}</Link>
                             </SidebarMenuButton>
                         </SidebarMenuItem>
-                        <CollapsibleContent v-if="item.items">
+                        <CollapsibleContent v-if="navGroup.items">
                             <SidebarGroupContent>
                                 <SidebarMenu>
                                     <SidebarMenuItem
-                                        v-for="childItem in item.items"
-                                        :key="childItem.title"
-                                        :title="childItem.title"
+                                        v-for="subItem in navGroup.items"
+                                        :key="subItem.title"
+                                        :title="subItem.title"
                                     >
                                         <SidebarMenuButton
                                             as-child
-                                            :is-active="isActive(childItem.url)"
-                                            v-if="
-                                                !childItem.permission ||
-                                                permissions.includes(
-                                                    childItem.permission,
-                                                )
-                                            "
+                                            :is-active="isActive(subItem.url)"
                                         >
-                                            <Link :href="childItem.url">{{
-                                                childItem.title
+                                            <Link :href="subItem.url">{{
+                                                subItem.title
                                             }}</Link>
                                         </SidebarMenuButton>
                                     </SidebarMenuItem>

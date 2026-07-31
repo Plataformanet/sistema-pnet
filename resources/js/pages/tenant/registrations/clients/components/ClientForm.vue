@@ -18,6 +18,7 @@ import { useForm } from "@inertiajs/vue3";
 import { useCepLookup } from "@/composables/useCepLookup";
 import { useContactLookup } from "@/composables/useContactLookup";
 import { UFS_LIST } from "@/lib/constants";
+import { isValidCPF } from "@/lib/validators";
 
 const ufs = UFS_LIST;
 
@@ -44,7 +45,25 @@ watch(clientType, (val) => {
     }
 });
 
-useCepLookup(props.form as any);
+watch(
+    () => props.form.cpf_cnpj,
+    (newVal) => {
+        if (clientType.value === "PF") {
+            const clean = newVal ? newVal.replace(/\D/g, "") : "";
+            if (clean.length === 11) {
+                if (!isValidCPF(newVal)) {
+                    props.form.errors.cpf_cnpj = "O CPF informado é inválido.";
+                } else if (props.form.errors.cpf_cnpj === "O CPF informado é inválido.") {
+                    delete props.form.errors.cpf_cnpj;
+                }
+            } else if (props.form.errors.cpf_cnpj === "O CPF informado é inválido.") {
+                delete props.form.errors.cpf_cnpj;
+            }
+        }
+    }
+);
+
+useCepLookup(props.form);
 useContactLookup(props.form, "clients", props.isEdit);
 
 function onSubmit() {

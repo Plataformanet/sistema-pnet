@@ -2,8 +2,10 @@
 
 namespace App\Http\Requests;
 
+use App\Rules\CpfRule;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreContactRequest extends FormRequest
 {
@@ -26,7 +28,11 @@ class StoreContactRequest extends FormRequest
             'type' => 'sometimes|in:PF,PJ',
             'name_corporatereason' => 'required|string|max:255',
             'fantasy_name' => 'nullable|string|max:255',
-            'cpf_cnpj' => 'required|string',
+            'cpf_cnpj' => [
+                'required',
+                'string',
+                Rule::when($this->input('type') === 'PF', [new CpfRule]),
+            ],
             'email' => 'required|email|max:255',
             'phone' => 'required|string',
             'cell_phone' => 'required|string',
