@@ -436,21 +436,21 @@ function handleRefreshData() {
     <Head title="Meu Drive" />
 
     <div
-        class="space-y-6 relative"
+        class="space-y-6 relative min-h-[calc(100vh-10rem)]"
         @dragenter="handleDragEnter"
         @dragover="handleDragOver"
         @dragleave="handleDragLeave"
         @drop="handleFileDrop"
     >
-        <!-- Overlay Visual de Drag & Drop Externo (Upload SO) -->
+        <!-- Overlay Visual de Drag & Drop Externo (Upload SO - Tela Cheia) -->
         <div
             v-if="isDraggingExternal"
-            class="absolute inset-0 z-40 flex flex-col items-center justify-center border-4 border-dashed border-indigo-500 bg-white/85 p-6 backdrop-blur-xs transition-all duration-200 animate-in fade-in zoom-in-95 rounded-2xl"
+            class="fixed inset-6 z-50 flex flex-col items-center justify-center border-4 border-dashed border-indigo-500 bg-white/90 p-6 backdrop-blur-sm transition-all duration-200 animate-in fade-in zoom-in-95 rounded-2xl shadow-2xl"
         >
             <div class="flex flex-col items-center gap-4 text-indigo-600">
-                <Upload class="h-16 w-16 animate-bounce" />
-                <h3 class="text-xl font-bold">Solte seus arquivos aqui</h3>
-                <p class="text-sm text-slate-500 font-medium">Os arquivos serão carregados na pasta atual</p>
+                <Upload class="h-20 w-20 animate-bounce" />
+                <h3 class="text-2xl font-bold">Solte seus arquivos aqui</h3>
+                <p class="text-base text-slate-500 font-medium">Os arquivos serão carregados nesta pasta</p>
             </div>
         </div>
 
