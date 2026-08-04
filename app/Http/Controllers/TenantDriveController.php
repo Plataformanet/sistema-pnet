@@ -122,6 +122,13 @@ class TenantDriveController extends Controller
                 tenant()
             );
 
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Itens movidos com sucesso!',
+                ]);
+            }
+
             return redirect()->back();
         } catch (\Throwable $th) {
             $root = $th;
@@ -134,6 +141,13 @@ class TenantDriveController extends Controller
                 'message' => $th->getMessage(),
                 'root_cause' => $root::class.': '.$root->getMessage(),
             ]);
+
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $th->getMessage() ?: 'Erro ao mover o documento ou pasta!',
+                ], Response::HTTP_UNPROCESSABLE_ENTITY);
+            }
 
             return redirect()->back()->withErrors(['error' => $th->getMessage() ?: 'Erro ao mover o documento ou pasta!']);
         }

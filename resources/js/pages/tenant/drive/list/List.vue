@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed } from "vue";
-import { Head, Link, useForm, router, usePage } from "@inertiajs/vue3";
+import { Head, usePage, router } from "@inertiajs/vue3";
 import TenantLayout from "@/layouts/tenant-layout/TenantLayout.vue";
 import { route } from "ziggy-js";
 import { toast } from "vue-sonner";
@@ -19,16 +19,13 @@ import {
     X,
     Check,
     Move,
-    FileText,
-    FileCode,
-    FileSpreadsheet,
-    FileImage,
-    FileArchive,
-    File,
-    Loader2,
 } from "lucide-vue-next";
 import type { Drive } from "@/types";
 import { getFileIcon, getIconColorClass, formatSize } from "../utils/drive-helpers";
+
+// Composables extraídos (Clean Architecture)
+import { useDriveSelection } from "./composables/useDriveSelection";
+import { useDriveDragDrop, type ItemToMove } from "./composables/useDriveDragDrop";
 
 // Subcomponentes extraídos
 import ShareModal from "./components/ShareModal.vue";
@@ -45,6 +42,26 @@ const props = defineProps<{
 
 const page = usePage();
 
+// Composable de Seleção Múltipla Avançada (Ctrl/Cmd + Click, Shift + Click)
+const {
+    selectedDrives,
+    clearSelection,
+    isSelected,
+    handleRowClick,
+    toggleSelectAll: executeToggleSelectAll,
+} = useDriveSelection();
+
+// Composable de Drag & Drop Interno (Mover Arquivos / Pastas)
+const {
+    activeDropTargetId,
+    isDraggingInternal,
+    handleDragStart,
+    handleDragOverFolder,
+    handleDragLeaveFolder,
+    handleDropOnFolder,
+    handleDragEnd,
+} = useDriveDragDrop();
+
 // Estados Reativos Principais
 const searchQuery = ref("");
 const isNewFolderModalOpen = ref(false);
@@ -58,9 +75,6 @@ const isDeletingBulk = ref(false);
 const isMoveModalOpen = ref(false);
 const itemsToMove = ref<{ id: number; name: string; type: "file" | "folder" }[]>([]);
 
-// Seleção múltipla
-const selectedDrives = ref<number[]>([]);
-
 interface UploadItem {
     id: string;
     name: string;
@@ -68,7 +82,7 @@ interface UploadItem {
     status: "pending" | "uploading" | "success" | "error";
 }
 
-// Upload de arquivos
+// Upload de arquivos externos do SO
 const fileInput = ref<HTMLInputElement | null>(null);
 const uploadQueue = ref<UploadItem[]>([]);
 
@@ -95,7 +109,7 @@ const currentFolderId = computed(() => {
 
 // Computed para filtrar apenas os itens selecionáveis (que o usuário tem permissão)
 const selectableDrives = computed(() => {
-    return props.drives.filter((d) => !d.permission_attrs.disable);
+    return props.drives.filter((d) => !d.permission_attrs?.disable);
 });
 
 // Computed para checar se todos os itens selecionáveis estão selecionados
@@ -106,13 +120,38 @@ const isAllSelected = computed(() => {
     );
 });
 
-// Toggle selecionar todos (apenas elegíveis)
 function toggleSelectAll() {
-    if (isAllSelected.value) {
-        selectedDrives.value = [];
-    } else {
-        selectedDrives.value = selectableDrives.value.map((d) => d.id);
-    }
+    executeToggleSelectAll(selectableDrives.value);
+}
+
+// Executar movimentação via Drag & Drop ou Modal
+function executeMoveItems(items: ItemToMove[], destinationFolderId: number) {
+    const payload = {
+        items: items.map((item) => ({
+            id: item.id,
+            type: item.type,
+        })),
+        destination_folder_id: destinationFolderId,
+    };
+
+    axios
+        .post(route("tenant.drive.move"), payload)
+        .then(() => {
+            clearSelection();
+            toast.success(
+                items.length > 1
+                    ? `${items.length} itens movidos com sucesso!`
+                    : `"${items[0].name}" movido com sucesso!`
+            );
+            handleRefreshData();
+        })
+        .catch((err: any) => {
+            const errorMsg =
+                err.response?.data?.errors?.error?.[0] ||
+                err.response?.data?.message ||
+                "Erro ao mover os itens selecionados.";
+            toast.error(errorMsg);
+        });
 }
 
 // Ações do Drive
@@ -132,12 +171,14 @@ function clearSearch() {
 // Navegar para subpasta
 function navigateToFolder(item: Drive) {
     if (item.document_type !== "folder") return;
+    clearSelection();
     router.visit(route("tenant.drive.index"), {
         data: { folder_id: item.drive_folder_id },
     });
 }
 
 function navigateToBreadcrumb(folderId: number | null) {
+    clearSelection();
     if (!folderId) {
         router.visit(route("tenant.drive.index"));
     } else {
@@ -152,100 +193,65 @@ function openNewFolderModal() {
     isNewFolderModalOpen.value = true;
 }
 
-// Upload de arquivo
+// Upload de arquivos
 function triggerFileInput() {
-    fileInput.value?.click();
+    if (fileInput.value) {
+        fileInput.value.click();
+    }
 }
 
 function handleFileUpload(event: Event) {
     const target = event.target as HTMLInputElement;
-    if (!target.files || target.files.length === 0) return;
-
-    const files = Array.from(target.files);
-    uploadFiles(files);
+    if (target.files && target.files.length > 0) {
+        const files = Array.from(target.files);
+        uploadFiles(files);
+    }
 }
 
 async function uploadFiles(files: File[]) {
-    const folderId = currentFolderId.value;
-
-    if (!folderId) {
-        toast.error("Selecione ou crie uma pasta para realizar o upload.");
-        return;
-    }
-
-    // Cria os itens na fila visual
     const newItems: UploadItem[] = files.map((file) => ({
-        id: `${Date.now()}-${Math.random().toString(36).substring(2, 9)}-${file.name}`,
+        id: Math.random().toString(36).substring(2, 9),
         name: file.name,
         progress: 0,
-        status: "uploading",
+        status: "pending",
     }));
 
     uploadQueue.value = [...uploadQueue.value, ...newItems];
 
-    // Dispara as requisições paralelas via Axios
     const promises = files.map((file, index) => {
         const itemId = newItems[index].id;
-        const formData = new FormData();
-        formData.append("documents[]", file);
-        formData.append("folder_id", String(folderId));
-        formData.append("user_id", String((page.props as any).auth?.user?.id));
-        formData.append("modified_at[]", new Date().toISOString());
 
-        // Inicia incremento visual simulado de progresso (para suavidade em arquivos rápidos)
+        const formData = new FormData();
+        formData.append("user_id", String((page.props as any).auth?.user?.id ?? ""));
+        formData.append("folder_id", String(currentFolderId.value ?? ""));
+        formData.append("documents[]", file);
+
+        const queueItem = uploadQueue.value.find((item) => item.id === itemId);
+        if (queueItem) {
+            queueItem.status = "uploading";
+        }
+
         const progressInterval = setInterval(() => {
-            const queueItem = uploadQueue.value.find((item) => item.id === itemId);
-            if (queueItem && queueItem.progress < 90 && queueItem.status === "uploading") {
-                queueItem.progress += Math.floor(Math.random() * 6) + 2;
+            const item = uploadQueue.value.find((i) => i.id === itemId);
+            if (item && item.progress < 90 && item.status === "uploading") {
+                item.progress += Math.floor(Math.random() * 15) + 5;
+                if (item.progress > 90) item.progress = 90;
             }
-        }, 120);
+        }, 200);
 
         return axios
             .post(route("tenant.drive.store"), formData, {
                 headers: {
                     "Content-Type": "multipart/form-data",
                 },
-                onUploadProgress: (progressEvent) => {
-                    if (progressEvent.total) {
-                        const percent = Math.round(
-                            (progressEvent.loaded * 100) / progressEvent.total
-                        );
-                        const queueItem = uploadQueue.value.find((item) => item.id === itemId);
-                        // Apenas substitui se o progresso real da rede for maior
-                        if (queueItem && percent > queueItem.progress) {
-                            queueItem.progress = percent;
-                        }
-                    }
-                },
             })
             .then(() => {
                 clearInterval(progressInterval);
-                
-                // Faz a barra e porcentagem visual correrem suavemente de onde estiverem até 100%
                 const queueItem = uploadQueue.value.find((item) => item.id === itemId);
-                if (!queueItem) return;
-
-                const currentProgress = queueItem.progress;
-                const steps = 10; // 10 passos de incremento
-                const increment = Math.max(1, Math.ceil((100 - currentProgress) / steps));
-
-                const finishInterval = setInterval(() => {
-                    const qItem = uploadQueue.value.find((item) => item.id === itemId);
-                    if (!qItem) {
-                        clearInterval(finishInterval);
-                        return;
-                    }
-                    if (qItem.progress < 100) {
-                        qItem.progress = Math.min(100, qItem.progress + increment);
-                        if (qItem.progress >= 100) {
-                            clearInterval(finishInterval);
-                            qItem.status = "success";
-                        }
-                    } else {
-                        clearInterval(finishInterval);
-                        qItem.status = "success";
-                    }
-                }, 30); // 30ms por passo (300ms no total de animação)
+                if (queueItem) {
+                    queueItem.progress = 100;
+                    queueItem.status = "success";
+                }
             })
             .catch((err) => {
                 clearInterval(progressInterval);
@@ -257,10 +263,8 @@ async function uploadFiles(files: File[]) {
             });
     });
 
-    // Aguarda todos os uploads terminarem
     await Promise.all(promises);
 
-    // Atualiza a listagem da página Inertia
     router.reload({ only: ["drives"] });
 
     const totalSuccess = newItems.filter((i) => i.status === "success").length;
@@ -277,7 +281,7 @@ async function uploadFiles(files: File[]) {
         toast.error(
             totalError > 1
                 ? `Falha no envio de ${totalError} arquivos.`
-                : `Falha no envio de "${newItems.find(i => i.status === 'error')?.name}".`
+                : `Falha no envio de "${newItems.find((i) => i.status === "error")?.name}".`
         );
     }
 
@@ -285,7 +289,6 @@ async function uploadFiles(files: File[]) {
         fileInput.value.value = "";
     }
 
-    // Auto-limpa a fila após 4 segundos
     setTimeout(() => {
         uploadQueue.value = uploadQueue.value.filter(
             (item) => item.status !== "success"
@@ -311,13 +314,12 @@ function deleteSelectedDrives() {
 // Executar exclusão confirmada
 function executeDelete() {
     isDeleteConfirmOpen.value = false;
-    const folderId = currentFolderId.value;
 
     if (isDeletingBulk.value) {
         router.delete(route("tenant.drive.delete-selected"), {
             data: { selectedValues: selectedDrives.value },
             onSuccess: () => {
-                selectedDrives.value = [];
+                clearSelection();
                 toast.success("Itens movidos para a lixeira com sucesso!");
             },
             onError: () => toast.error("Erro ao excluir os itens selecionados."),
@@ -333,7 +335,7 @@ function executeDelete() {
                         itemToDelete.value = null;
                     },
                     onError: () => toast.error("Erro ao excluir a pasta."),
-                },
+                }
             );
         } else {
             router.delete(route("tenant.drive.destroy", item.id), {
@@ -384,31 +386,39 @@ function openBulkMoveModal() {
     isMoveModalOpen.value = true;
 }
 
-const isDragging = ref(false);
+// Manipulação de Upload por Arraste de Arquivos do SO
+const isDraggingExternal = ref(false);
 const dragCounter = ref(0);
 
 function handleDragEnter(event: DragEvent) {
+    if (isDraggingInternal.value) return;
+    if (!event.dataTransfer?.types.includes("Files")) return;
+
     event.preventDefault();
     dragCounter.value++;
-    isDragging.value = true;
+    isDraggingExternal.value = true;
 }
 
 function handleDragLeave(event: DragEvent) {
+    if (isDraggingInternal.value) return;
     event.preventDefault();
     dragCounter.value--;
     if (dragCounter.value === 0) {
-        isDragging.value = false;
+        isDraggingExternal.value = false;
     }
 }
 
 function handleDragOver(event: DragEvent) {
+    if (isDraggingInternal.value) return;
+    if (!event.dataTransfer?.types.includes("Files")) return;
     event.preventDefault();
-    isDragging.value = true;
+    isDraggingExternal.value = true;
 }
 
 function handleFileDrop(event: DragEvent) {
+    if (isDraggingInternal.value) return;
     event.preventDefault();
-    isDragging.value = false;
+    isDraggingExternal.value = false;
     dragCounter.value = 0;
 
     if (!event.dataTransfer?.files || event.dataTransfer.files.length === 0) return;
@@ -432,9 +442,9 @@ function handleRefreshData() {
         @dragleave="handleDragLeave"
         @drop="handleFileDrop"
     >
-        <!-- Overlay Visual de Drag & Drop -->
+        <!-- Overlay Visual de Drag & Drop Externo (Upload SO) -->
         <div
-            v-if="isDragging"
+            v-if="isDraggingExternal"
             class="absolute inset-0 z-40 flex flex-col items-center justify-center border-4 border-dashed border-indigo-500 bg-white/85 p-6 backdrop-blur-xs transition-all duration-200 animate-in fade-in zoom-in-95 rounded-2xl"
         >
             <div class="flex flex-col items-center gap-4 text-indigo-600">
@@ -443,63 +453,62 @@ function handleRefreshData() {
                 <p class="text-sm text-slate-500 font-medium">Os arquivos serão carregados na pasta atual</p>
             </div>
         </div>
+
         <!-- Header da Página -->
         <div
             class="flex flex-col gap-4 border-b border-slate-100 pb-5 md:flex-row md:items-center md:justify-between"
         >
             <div>
-                <h1
-                    class="flex items-center gap-2 text-3xl font-bold tracking-tight text-slate-800"
-                >
-                    Meu Drive
-                </h1>
-                <p class="mt-1 text-sm text-slate-500">
-                    Gerencie, armazene e compartilhe arquivos e pastas com
-                    facilidade.
+                <h1 class="text-2xl font-bold text-slate-800">Gerenciador de Arquivos</h1>
+                <p class="text-sm text-slate-500">
+                    Gerencie, organize e compartilhe seus arquivos de forma segura.
                 </p>
             </div>
 
-            <!-- Barra de Busca -->
-            <div class="flex w-full max-w-md items-center gap-2 md:w-auto">
-                <div class="relative w-full">
+            <!-- Busca de Arquivos -->
+            <div class="flex items-center gap-3">
+                <div class="relative w-full md:w-72">
                     <Search
-                        class="absolute top-2.5 left-3 h-4.5 w-4.5 text-slate-400"
+                        class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
                     />
                     <Input
                         v-model="searchQuery"
-                        placeholder="Pesquisar no Drive..."
-                        class="w-full rounded-lg border-slate-200 py-2 pr-8 pl-10 focus-visible:ring-indigo-500"
+                        type="text"
+                        placeholder="Pesquisar arquivos..."
+                        class="pl-9 pr-8"
                         @keyup.enter="handleSearch"
                     />
                     <button
                         v-if="searchQuery"
-                        class="absolute top-3 right-2.5 text-slate-400 hover:text-slate-600"
                         @click="clearSearch"
+                        class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
                     >
                         <X class="h-4 w-4" />
                     </button>
                 </div>
-                <Button
-                    @click="handleSearch"
-                    class="cursor-pointer rounded-lg px-4"
-                >
-                    Pesquisar
-                </Button>
             </div>
         </div>
 
-        <!-- Trilha de Navegação (Breadcrumbs) e Ações Principais -->
+        <!-- Navegação Breadcrumb (Com Suporte a Drop Zones para Mover) -->
         <div
-            class="flex flex-col gap-4 rounded-xl border border-slate-100 bg-slate-50 p-4 sm:flex-row sm:items-center sm:justify-between"
+            class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between"
         >
-            <!-- Breadcrumbs -->
-            <div
-                class="flex flex-wrap items-center gap-2 text-sm font-medium text-slate-600"
-            >
+            <div class="flex items-center gap-1.5 text-sm">
+                <!-- Raiz "Meu Drive" -->
                 <button
                     @click="navigateToBreadcrumb(null)"
-                    class="flex items-center gap-1 text-indigo-600 transition-colors hover:text-indigo-800"
-                    :class="folders.length > 0 ? 'cursor-pointer' : 'pointer-events-none cursor-default text-slate-800 font-semibold'"
+                    @dragover="handleDragOverFolder($event, null)"
+                    @dragleave="handleDragLeaveFolder($event, null)"
+                    @drop="handleDropOnFolder($event, null, executeMoveItems)"
+                    class="flex items-center gap-1 font-medium transition-all rounded-md px-2 py-1 select-none"
+                    :class="[
+                        folders.length > 0
+                            ? 'cursor-pointer text-indigo-600 hover:bg-indigo-50 hover:text-indigo-800'
+                            : 'pointer-events-none cursor-default text-slate-800 font-semibold',
+                        activeDropTargetId === 'root'
+                            ? 'bg-indigo-100 ring-2 ring-indigo-500 text-indigo-900 font-bold scale-105'
+                            : ''
+                    ]"
                 >
                     Meu Drive
                 </button>
@@ -508,12 +517,18 @@ function handleRefreshData() {
                     <span class="text-slate-400">/</span>
                     <button
                         @click="navigateToBreadcrumb(folder.id)"
-                        class="transition-colors hover:text-indigo-800"
-                        :class="
+                        @dragover="handleDragOverFolder($event, folder.id)"
+                        @dragleave="handleDragLeaveFolder($event, folder.id)"
+                        @drop="handleDropOnFolder($event, folder.id, executeMoveItems)"
+                        class="transition-all rounded-md px-2 py-1 select-none"
+                        :class="[
                             index === folders.length - 1
                                 ? 'pointer-events-none cursor-default font-semibold text-slate-800'
-                                : 'cursor-pointer text-indigo-600'
-                        "
+                                : 'cursor-pointer text-indigo-600 hover:bg-indigo-50 hover:text-indigo-800',
+                            activeDropTargetId === folder.id
+                                ? 'bg-indigo-100 ring-2 ring-indigo-500 text-indigo-900 font-bold scale-105'
+                                : ''
+                        ]"
                     >
                         {{ folder.name }}
                     </button>
@@ -522,7 +537,6 @@ function handleRefreshData() {
 
             <!-- Botões Nova Pasta / Upload -->
             <div class="flex items-center gap-2">
-                <!-- Só exibe seletor de arquivos se estiver em alguma pasta (currentFolderId existe) -->
                 <input
                     type="file"
                     ref="fileInput"
@@ -557,7 +571,6 @@ function handleRefreshData() {
             v-if="uploadQueue.length > 0"
             class="fixed right-6 bottom-6 z-50 w-80 rounded-xl border border-slate-100 bg-white shadow-2xl overflow-hidden animate-in slide-in-from-bottom duration-300"
         >
-            <!-- Header do Painel -->
             <div class="flex items-center justify-between bg-slate-900 px-4 py-3 text-white">
                 <span class="text-xs font-semibold">
                     {{ activeUploadsCount > 0 ? `Carregando ${activeUploadsCount} itens` : 'Uploads finalizados' }}
@@ -570,7 +583,6 @@ function handleRefreshData() {
                 </button>
             </div>
 
-            <!-- Lista de Arquivos -->
             <div class="max-h-60 overflow-y-auto divide-y divide-slate-100 p-2">
                 <div
                     v-for="item in uploadQueue"
@@ -581,7 +593,6 @@ function handleRefreshData() {
                         <span class="truncate font-medium text-slate-700" :title="item.name">
                             {{ item.name }}
                         </span>
-                        <!-- Barra de progresso para este arquivo -->
                         <div class="h-1.5 w-full rounded-full bg-slate-100 overflow-hidden">
                             <div
                                 class="h-1.5 rounded-full transition-all duration-300"
@@ -593,7 +604,6 @@ function handleRefreshData() {
                         </div>
                     </div>
 
-                    <!-- Status e Ações -->
                     <div class="flex items-center justify-end min-w-[25%] font-medium">
                         <span v-if="item.status === 'uploading'" class="text-slate-400">
                             {{ item.progress }}%
@@ -649,7 +659,7 @@ function handleRefreshData() {
             class="overflow-hidden rounded-xl border border-slate-100 bg-white shadow-sm"
         >
             <div class="overflow-x-auto">
-                <table class="w-full border-collapse text-left">
+                <table class="w-full border-collapse text-left select-none">
                     <thead>
                         <tr
                             class="border-b border-slate-100 bg-slate-50/70 text-xs font-bold tracking-wider text-slate-600 uppercase"
@@ -666,55 +676,64 @@ function handleRefreshData() {
                             </th>
                             <th class="px-4 py-4 font-semibold">Nome</th>
                             <th class="px-4 py-4 font-semibold">Criado por</th>
-                            <th class="px-4 py-4 font-semibold">
-                                Data da criação
-                            </th>
-                            <th class="px-4 py-4 font-semibold">
-                                Data da modificação
-                            </th>
+                            <th class="px-4 py-4 font-semibold">Data da criação</th>
+                            <th class="px-4 py-4 font-semibold">Data da modificação</th>
                             <th class="px-4 py-4 font-semibold">Tamanho</th>
-                            <th
-                                class="w-36 px-4 py-4 text-center font-semibold"
-                            >
-                                Ação
-                            </th>
+                            <th class="w-36 px-4 py-4 text-center font-semibold">Ação</th>
                         </tr>
                     </thead>
-                    <tbody
-                        class="divide-y divide-slate-100 text-sm text-slate-700"
-                    >
+                    <tbody class="divide-y divide-slate-100 text-sm text-slate-700">
                         <tr v-if="drives.length === 0">
-                            <td
-                                colspan="7"
-                                class="py-12 text-center text-slate-400"
-                            >
-                                <Folder
-                                    class="mx-auto mb-3 h-12 w-12 stroke-[1.5] text-slate-300"
-                                />
-                                Nenhum arquivo ou pasta encontrado neste
-                                diretório.
+                            <td colspan="7" class="py-12 text-center text-slate-400">
+                                <Folder class="mx-auto mb-3 h-12 w-12 stroke-[1.5] text-slate-300" />
+                                Nenhum arquivo ou pasta encontrado neste diretório.
                             </td>
                         </tr>
 
                         <tr
-                            v-for="item in drives"
+                            v-for="(item, index) in drives"
                             :key="item.id"
-                            class="transition-colors hover:bg-slate-50/50"
-                            :class="
-                                item.permission_attrs.disable
-                                    ? 'pointer-events-none opacity-60'
-                                    : ''
+                            :draggable="!item.permission_attrs?.disable"
+                            @dragstart="handleDragStart($event, item, selectedDrives, drives)"
+                            @dragend="handleDragEnd"
+                            @dragover="
+                                item.document_type === 'folder'
+                                    ? handleDragOverFolder($event, item.drive_folder_id, item)
+                                    : null
                             "
-                            :title="item.permission_attrs.title || ''"
+                            @dragleave="
+                                item.document_type === 'folder'
+                                    ? handleDragLeaveFolder($event, item.drive_folder_id)
+                                    : null
+                            "
+                            @drop="
+                                item.document_type === 'folder'
+                                    ? handleDropOnFolder($event, item.drive_folder_id, executeMoveItems)
+                                    : null
+                            "
+                            @click="handleRowClick($event, item, index, drives)"
+                            class="transition-all duration-150"
+                            :class="[
+                                item.permission_attrs?.disable
+                                    ? 'pointer-events-none opacity-60'
+                                    : 'cursor-pointer',
+                                isSelected(item.id)
+                                    ? 'bg-indigo-50/80 font-medium text-indigo-950'
+                                    : 'hover:bg-slate-50/60',
+                                activeDropTargetId === item.drive_folder_id
+                                    ? 'bg-indigo-100/90 ring-2 ring-indigo-500 scale-[1.002] shadow-sm font-semibold'
+                                    : ''
+                            ]"
+                            :title="item.permission_attrs?.title || ''"
                         >
                             <!-- Checkbox Seleção -->
-                            <td class="px-4 py-3 text-center">
+                            <td class="px-4 py-3 text-center" @click.stop>
                                 <input
                                     type="checkbox"
                                     v-model="selectedDrives"
                                     :value="item.id"
                                     class="h-4 w-4 cursor-pointer rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
-                                    :disabled="item.permission_attrs.disable"
+                                    :disabled="item.permission_attrs?.disable"
                                 />
                             </td>
 
@@ -723,27 +742,18 @@ function handleRefreshData() {
                                 <div class="flex items-center gap-3">
                                     <component
                                         :is="getFileIcon(item.document_type)"
-                                        class="h-5.5 w-5.5 shrink-0"
-                                        :class="
-                                            getIconColorClass(
-                                                item.document_type,
-                                            )
-                                        "
+                                        class="h-5.5 w-5.5 shrink-0 transition-transform"
+                                        :class="getIconColorClass(item.document_type)"
                                     />
-                                    <span
-                                        v-if="item.document_type === 'folder'"
-                                    >
+                                    <span v-if="item.document_type === 'folder'">
                                         <button
-                                            @click="navigateToFolder(item)"
+                                            @click.stop="navigateToFolder(item)"
                                             class="cursor-pointer text-left font-medium text-indigo-600 transition-all hover:text-indigo-800 hover:underline"
                                         >
                                             {{ item.name }}
                                         </button>
                                     </span>
-                                    <span
-                                        v-else
-                                        class="font-medium text-slate-800"
-                                    >
+                                    <span v-else class="font-medium text-slate-800">
                                         {{ item.name }}
                                     </span>
                                 </div>
@@ -756,53 +766,33 @@ function handleRefreshData() {
 
                             <!-- Data Criação -->
                             <td class="px-4 py-3 text-slate-500">
-                                {{
-                                    new Date(
-                                        item.created_at,
-                                    ).toLocaleDateString("pt-BR")
-                                }}
+                                {{ new Date(item.created_at).toLocaleDateString("pt-BR") }}
                             </td>
 
                             <!-- Data Modificação -->
                             <td class="px-4 py-3 text-slate-500">
                                 {{
                                     item.modification_date ||
-                                    new Date(
-                                        item.updated_at,
-                                    ).toLocaleDateString("pt-BR")
+                                    new Date(item.updated_at).toLocaleDateString("pt-BR")
                                 }}
-                                <span
-                                    v-if="item.modified_by_user"
-                                    class="text-xs text-slate-400"
-                                >
+                                <span v-if="item.modified_by_user" class="text-xs text-slate-400">
                                     - {{ item.modified_by_user.name }}
                                 </span>
                             </td>
 
                             <!-- Tamanho -->
-                            <td
-                                class="px-4 py-3 font-mono text-xs text-slate-500"
-                            >
-                                {{
-                                    item.size_formated ||
-                                    formatSize(item.document_size)
-                                }}
+                            <td class="px-4 py-3 font-mono text-xs text-slate-500">
+                                {{ item.size_formated || formatSize(item.document_size) }}
                             </td>
 
                             <!-- Ações -->
-                            <td class="px-4 py-3">
-                                <div
-                                    class="flex items-center justify-center gap-1"
-                                >
+                            <td class="px-4 py-3" @click.stop>
+                                <div class="flex items-center justify-center gap-1">
                                     <!-- Baixar Arquivo -->
                                     <a
                                         v-if="item.document_type !== 'folder'"
-                                        :href="
-                                            route(
-                                                'tenant.drive.download',
-                                                item.id,
-                                            )
-                                        "
+                                        :href="route('tenant.drive.download', item.id)"
+                                        @click.stop
                                         class="rounded-md p-1.5 text-slate-500 transition-colors hover:bg-slate-100 hover:text-indigo-600"
                                         title="Baixar arquivo"
                                     >
@@ -814,9 +804,7 @@ function handleRefreshData() {
                                         @click="openShareModal(item)"
                                         class="cursor-pointer rounded-md p-1.5 text-emerald-600 transition-colors hover:bg-emerald-50 hover:text-emerald-700"
                                         title="Compartilhar acesso"
-                                        :disabled="
-                                            item.permission_attrs.disable
-                                        "
+                                        :disabled="item.permission_attrs?.disable"
                                     >
                                         <Share2 class="h-4.5 w-4.5" />
                                     </button>
@@ -826,33 +814,27 @@ function handleRefreshData() {
                                         @click="openRenameModal(item)"
                                         class="cursor-pointer rounded-md p-1.5 text-blue-600 transition-colors hover:bg-blue-50 hover:text-blue-700"
                                         title="Renomear"
-                                        :disabled="
-                                            item.permission_attrs.disable
-                                        "
+                                        :disabled="item.permission_attrs?.disable"
                                     >
                                         <Edit2 class="h-4.5 w-4.5" />
                                     </button>
 
-                                     <!-- Mover (Índigo) -->
-                                     <button
-                                         @click="openMoveModal(item)"
-                                         class="cursor-pointer rounded-md p-1.5 text-indigo-600 transition-colors hover:bg-indigo-50 hover:text-indigo-700"
-                                         title="Mover item"
-                                         :disabled="
-                                             item.permission_attrs.disable
-                                         "
-                                     >
-                                         <Move class="h-4.5 w-4.5" />
-                                     </button>
+                                    <!-- Mover (Índigo) -->
+                                    <button
+                                        @click="openMoveModal(item)"
+                                        class="cursor-pointer rounded-md p-1.5 text-indigo-600 transition-colors hover:bg-indigo-50 hover:text-indigo-700"
+                                        title="Mover item"
+                                        :disabled="item.permission_attrs?.disable"
+                                    >
+                                        <Move class="h-4.5 w-4.5" />
+                                    </button>
 
                                     <!-- Excluir (Vermelho) -->
                                     <button
                                         @click="confirmDelete(item)"
                                         class="cursor-pointer rounded-md p-1.5 text-rose-600 transition-colors hover:bg-rose-50 hover:text-rose-700"
                                         title="Mover para lixeira"
-                                        :disabled="
-                                            item.permission_attrs.disable
-                                        "
+                                        :disabled="item.permission_attrs?.disable"
                                     >
                                         <Trash2 class="h-4.5 w-4.5" />
                                     </button>

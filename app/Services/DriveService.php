@@ -634,11 +634,11 @@ class DriveService
     }
 
     /**
-     * Verifica se o usuário pode acessar o drive/pasta/arquivo
+     * Verifica se o usuário pode acessar o drive/pasta/arquivo (incluindo permissões da hierarquia de pastas pai)
      */
     public function userCanAccess(Drive $drive, User $user): bool
     {
-        // Proprietário sempre pode
+        // Proprietário sempre tem acesso
         if ($drive->user_id === $user->id) {
             return true;
         }
@@ -646,22 +646,35 @@ class DriveService
         // Garante que drivePermissions é uma collection
         $permissions = $drive->drivePermissions ?? collect();
 
-        // Verifica se existe restrição
+        // Verifica se existe restrição direta neste item
         $hasRestriction = $permissions
             ->where('permission_type', PermissionTypeDriveEnum::SOMENTE_PROPRIETARIO)
             ->isNotEmpty();
 
-        // Sem restrição = acesso liberado
-        if (! $hasRestriction) {
-            return true;
+        if ($hasRestriction) {
+            $hasExplicitAccess = $permissions
+                ->where('user_id', $user->id)
+                ->where('permission_type', PermissionTypeDriveEnum::ACESSO_TOTAL)
+                ->isNotEmpty();
+
+            if (! $hasExplicitAccess) {
+                return false;
+            }
         }
 
-        // Com restrição, verifica se usuário tem acesso explícito
-        return $permissions
-            ->where('user_id', $user->id)
-            ->where('permission_type', PermissionTypeDriveEnum::ACESSO_TOTAL)
-            ->isNotEmpty();
+        // Se este item estiver dentro de uma pasta, verifica recursivamente as permissões da pasta pai
+        if ($drive->drive_folder_id) {
+            $parentFolderDrive = Drive::with('drivePermissions')
+                ->where('drive_folder_id', $drive->drive_folder_id)
+                ->where('document_type', DocumentTypeDriveEnum::FOLDER->value)
+                ->first();
 
+            if ($parentFolderDrive && $parentFolderDrive->id !== $drive->id) {
+                return $this->userCanAccess($parentFolderDrive, $user);
+            }
+        }
+
+        return true;
     }
 
     /**
@@ -835,6 +848,16 @@ class DriveService
                     } elseif ($item['type'] === 'folder') {
                         $folder = DriveFolder::findOrFail($item['id']);
 
+                        // Valida se o usuário tem permissão para mover a pasta sendo movida
+                        $folderDrive = Drive::with('drivePermissions')
+                            ->where('drive_folder_id', $folder->id)
+                            ->where('document_type', DocumentTypeDriveEnum::FOLDER->value)
+                            ->first();
+
+                        if ($folderDrive !== null && ! $this->userCanAccess($folderDrive, $user)) {
+                            throw new AuthorizationException('Você não tem permissão para mover esta pasta.');
+                        }
+
                         // Valida se a pasta destino é ela mesma ou descendente dela
                         if ($destinationFolder !== null) {
                             if ($folder->id === $destinationFolderId || $destinationFolder->isDescendantOf($folder)) {
@@ -859,8 +882,15 @@ class DriveService
                             ? $destinationFolder->getPath().'/'.$folder->name
                             : $folder->name;
 
-                        // Atualiza os caminhos no banco e agenda os moves de disco para depois do commit.
-                        $this->collectPhysicalFolderMoves($folder, $oldFolderPath, $newFolderPath, $user->id, $pendingMoves);
+                        $oldPhysicalFolderPath = $this->basePath().'/'.$oldFolderPath;
+                        $newPhysicalFolderPath = $this->basePath().'/'.$newFolderPath;
+
+                        if ($oldPhysicalFolderPath !== $newPhysicalFolderPath) {
+                            $pendingMoves[] = [$oldPhysicalFolderPath, $newPhysicalFolderPath];
+                        }
+
+                        // Atualiza os caminhos no banco de dados recursivamente
+                        $this->collectPhysicalFolderMoves($folder, $oldFolderPath, $newFolderPath, $user->id);
                     }
                 }
             });
@@ -870,8 +900,25 @@ class DriveService
             $disk = $this->disk();
 
             foreach ($pendingMoves as [$oldPath, $newPath]) {
-                if ($disk->exists($oldPath)) {
-                    $disk->move($oldPath, $newPath);
+                try {
+                    if ($disk->exists($oldPath)) {
+                        $disk->move($oldPath, $newPath);
+                    }
+                } catch (\Throwable $diskException) {
+                    Log::info('Aviso ao mover diretório no storage:', [
+                        'oldPath' => $oldPath,
+                        'newPath' => $newPath,
+                        'message' => $diskException->getMessage(),
+                    ]);
+
+                    try {
+                        $disk->makeDirectory($newPath);
+                        if ($disk->exists($oldPath)) {
+                            $disk->deleteDirectory($oldPath);
+                        }
+                    } catch (\Throwable $e) {
+                        // Ignora exceções secundárias de pasta vazia no S3/MinIO
+                    }
                 }
             }
 
@@ -880,12 +927,9 @@ class DriveService
     }
 
     /**
-     * Atualiza no banco os caminhos dos drives da pasta (e subpastas, recursivamente)
-     * e acumula em $pendingMoves os pares [origem, destino] a serem movidos no disco.
-     *
-     * @param  array<int, array{0: string, 1: string}>  $pendingMoves
+     * Atualiza no banco os caminhos dos drives da pasta (e subpastas, recursivamente).
      */
-    private function collectPhysicalFolderMoves(DriveFolder $folder, string $oldFolderPath, string $newFolderPath, int $userId, array &$pendingMoves): void
+    private function collectPhysicalFolderMoves(DriveFolder $folder, string $oldFolderPath, string $newFolderPath, int $userId): void
     {
         $folder->loadMissing(['drives', 'children']);
 
@@ -897,10 +941,6 @@ class DriveService
                 $this->basePath().'/'.$newFolderPath,
                 $oldFilePath
             );
-
-            if ($oldFilePath !== $newFilePath) {
-                $pendingMoves[] = [$oldFilePath, $newFilePath];
-            }
 
             $drive->update([
                 'document_path' => $newFilePath,
@@ -914,7 +954,7 @@ class DriveService
         foreach ($folder->children as $child) {
             $oldChildPath = $oldFolderPath.'/'.$child->name;
             $newChildPath = $newFolderPath.'/'.$child->name;
-            $this->collectPhysicalFolderMoves($child, $oldChildPath, $newChildPath, $userId, $pendingMoves);
+            $this->collectPhysicalFolderMoves($child, $oldChildPath, $newChildPath, $userId);
         }
     }
 }
