@@ -4,8 +4,6 @@ use App\Http\Requests\StoreContactRequest;
 use Illuminate\Support\Facades\Validator;
 
 it('validates CPF when type is PF', function () {
-    $request = new StoreContactRequest;
-
     $invalidData = [
         'type' => 'PF',
         'name_corporatereason' => 'Test User',
@@ -21,18 +19,20 @@ it('validates CPF when type is PF', function () {
         'state' => 'SP',
     ];
 
+    $request = StoreContactRequest::create('/', 'POST', $invalidData);
+    $request->setContainer(app());
     $validator = Validator::make($invalidData, $request->rules());
     expect($validator->fails())->toBeTrue()
         ->and($validator->errors()->has('cpf_cnpj'))->toBeTrue();
 
     $validData = array_merge($invalidData, ['cpf_cnpj' => '529.982.247-25']);
-    $validatorValid = Validator::make($validData, $request->rules());
+    $requestValid = StoreContactRequest::create('/', 'POST', $validData);
+    $requestValid->setContainer(app());
+    $validatorValid = Validator::make($validData, $requestValid->rules());
     expect($validatorValid->fails())->toBeFalse();
 });
 
 it('does not trigger CpfRule when type is PJ', function () {
-    $request = new StoreContactRequest;
-
     $pjData = [
         'type' => 'PJ',
         'name_corporatereason' => 'Empresa Teste LTDA',
@@ -48,6 +48,8 @@ it('does not trigger CpfRule when type is PJ', function () {
         'state' => 'SP',
     ];
 
+    $request = StoreContactRequest::create('/', 'POST', $pjData);
+    $request->setContainer(app());
     $validator = Validator::make($pjData, $request->rules());
     expect($validator->fails())->toBeFalse();
 });
