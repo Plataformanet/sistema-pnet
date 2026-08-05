@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { Head, usePage, router } from "@inertiajs/vue3";
 import TenantLayout from "@/layouts/tenant-layout/TenantLayout.vue";
 import { route } from "ziggy-js";
@@ -61,6 +61,30 @@ const {
     handleDropOnFolder,
     handleDragEnd,
 } = useDriveDragDrop();
+
+// Detecção de Dispositivos Touch (Mobile/Tablets)
+const isTouchDevice = ref(false);
+
+onMounted(() => {
+    isTouchDevice.value = window.matchMedia("(pointer: coarse)").matches;
+});
+
+function onRowClick(
+    event: MouseEvent,
+    item: Drive,
+    index: number,
+    allDrives: Drive[]
+) {
+    if (item.permission_attrs?.disable) return;
+
+    // Em telas de toque (mobile/tablet), o toque simples na linha de uma pasta abre o diretório
+    if (isTouchDevice.value && item.document_type === "folder") {
+        navigateToFolder(item);
+        return;
+    }
+
+    handleRowClick(event, item, index, allDrives);
+}
 
 // Estados Reativos Principais
 const searchQuery = ref("");
@@ -428,6 +452,7 @@ function handleFileDrop(event: DragEvent) {
 }
 
 function handleRefreshData() {
+    clearSelection();
     router.reload();
 }
 </script>
@@ -566,48 +591,53 @@ function handleRefreshData() {
             </div>
         </div>
 
-        <!-- Painel Flutuante de Uploads Estilo Google Drive -->
-        <div
-            v-if="uploadQueue.length > 0"
-            class="fixed right-6 bottom-6 z-50 w-80 rounded-xl border border-slate-100 bg-white shadow-2xl overflow-hidden animate-in slide-in-from-bottom duration-300"
-        >
-            <div class="flex items-center justify-between bg-slate-900 px-4 py-3 text-white">
-                <span class="text-xs font-semibold">
-                    {{ activeUploadsCount > 0 ? `Carregando ${activeUploadsCount} itens` : 'Uploads finalizados' }}
-                </span>
-                <button
-                    @click="clearCompletedUploads"
-                    class="text-slate-400 hover:text-white transition-colors cursor-pointer"
-                >
-                    <X class="h-4 w-4" />
-                </button>
-            </div>
+        <!-- Barra de Busca -->
+        <div class="relative max-w-md">
+            <Search class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <Input
+                v-model="searchQuery"
+                type="text"
+                placeholder="Buscar arquivos ou pastas..."
+                class="pl-9 pr-8 rounded-xl border-slate-200 text-xs"
+                @keyup.enter="handleSearch"
+            />
+            <button
+                v-if="searchQuery"
+                @click="clearSearch"
+                class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+            >
+                <X class="h-4 w-4" />
+            </button>
+        </div>
 
-            <div class="max-h-60 overflow-y-auto divide-y divide-slate-100 p-2">
+        <!-- Fila / Card de Status dos Uploads em Andamento -->
+        <div v-if="uploadQueue.length > 0" class="space-y-2 rounded-xl border border-indigo-100 bg-indigo-50/50 p-4">
+            <h4 class="text-xs font-bold text-indigo-900 flex items-center gap-2">
+                <Upload class="h-4 w-4 animate-bounce text-indigo-600" />
+                Uploads em andamento ({{ uploadQueue.length }})
+            </h4>
+            <div class="space-y-2 max-h-36 overflow-y-auto pr-1">
                 <div
                     v-for="item in uploadQueue"
                     :key="item.id"
-                    class="flex items-center justify-between p-2 text-xs"
+                    class="flex items-center justify-between rounded-lg bg-white p-2.5 text-xs shadow-2xs border border-indigo-50/80"
                 >
-                    <div class="flex flex-col gap-1 min-w-[70%] max-w-[70%]">
-                        <span class="truncate font-medium text-slate-700" :title="item.name">
-                            {{ item.name }}
-                        </span>
-                        <div class="h-1.5 w-full rounded-full bg-slate-100 overflow-hidden">
-                            <div
-                                class="h-1.5 rounded-full transition-all duration-300"
-                                :class="[
-                                    item.status === 'error' ? 'bg-rose-500' : 'bg-indigo-600'
-                                ]"
-                                :style="{ width: `${item.progress}%` }"
-                            ></div>
-                        </div>
+                    <div class="flex items-center gap-2 truncate max-w-[60%]">
+                        <component :is="getFileIcon(item.name)" class="h-4 w-4 shrink-0 text-indigo-500" />
+                        <span class="truncate font-medium text-slate-700">{{ item.name }}</span>
                     </div>
 
-                    <div class="flex items-center justify-end min-w-[25%] font-medium">
-                        <span v-if="item.status === 'uploading'" class="text-slate-400">
-                            {{ item.progress }}%
-                        </span>
+                    <div class="flex items-center gap-3">
+                        <div v-if="item.status === 'uploading'" class="flex items-center gap-2">
+                            <div class="h-1.5 w-20 rounded-full bg-slate-100 overflow-hidden">
+                                <div
+                                    class="h-full bg-indigo-600 transition-all duration-300 rounded-full"
+                                    :style="{ width: `${item.progress}%` }"
+                                ></div>
+                            </div>
+                            <span class="text-[10px] font-semibold text-slate-500 w-7 text-right">{{ item.progress }}%</span>
+                        </div>
+
                         <span v-else-if="item.status === 'success'" class="text-emerald-600 flex items-center gap-1 font-semibold">
                             <Check class="h-3.5 w-3.5 stroke-[2.5]" />
                             Pronto
@@ -621,36 +651,48 @@ function handleRefreshData() {
             </div>
         </div>
 
-        <!-- Barra de Ações em Lote (Seleção Múltipla) -->
+        <!-- Barra Flutuante de Ações em Lote (Seleção Múltipla - Responsiva) -->
         <div
             v-if="selectedDrives.length > 0"
-            class="animate-fade-in flex items-center justify-between rounded-xl border border-indigo-100 bg-indigo-50 p-4"
+            class="fixed bottom-4 left-4 right-4 z-50 flex items-center justify-between gap-3 rounded-2xl border border-slate-800 bg-slate-900 px-4 py-3 text-white shadow-2xl animate-in slide-in-from-bottom-5 duration-200 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 sm:gap-6 sm:px-5"
         >
-            <span class="text-sm font-semibold text-indigo-800">
-                {{ selectedDrives.length }}
-                {{
-                    selectedDrives.length === 1
-                        ? "item selecionado"
-                        : "itens selecionados"
-                }}
-            </span>
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-2 sm:gap-3 shrink-0">
+                <span class="flex h-6 w-6 items-center justify-center rounded-full bg-indigo-600 text-xs font-bold text-white">
+                    {{ selectedDrives.length }}
+                </span>
+                <span class="text-xs sm:text-sm font-medium">
+                    <span class="sm:hidden">{{ selectedDrives.length === 1 ? 'item' : 'itens' }}</span>
+                    <span class="hidden sm:inline">
+                        {{ selectedDrives.length === 1 ? 'item selecionado' : 'itens selecionados' }}
+                    </span>
+                </span>
+            </div>
+            <div class="flex items-center gap-1.5 sm:gap-2">
                 <Button
                     @click="openBulkMoveModal"
                     variant="outline"
-                    class="flex cursor-pointer items-center gap-2 rounded-lg border-indigo-200 text-indigo-700 bg-white hover:bg-indigo-50"
+                    class="flex cursor-pointer items-center gap-1.5 text-xs sm:text-sm px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg border-slate-700 bg-slate-800 text-slate-100 hover:bg-slate-700 hover:text-white"
                 >
-                    <Move class="h-4 w-4" />
-                    Mover Selecionados
+                    <Move class="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                    <span class="hidden sm:inline">Mover Selecionados</span>
+                    <span class="sm:hidden">Mover</span>
                 </Button>
                 <Button
                     @click="deleteSelectedDrives"
                     variant="destructive"
-                    class="flex cursor-pointer items-center gap-2 rounded-lg"
+                    class="flex cursor-pointer items-center gap-1.5 text-xs sm:text-sm px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg"
                 >
-                    <Trash2 class="h-4 w-4" />
-                    Mover para Lixeira
+                    <Trash2 class="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                    <span class="hidden sm:inline">Mover para Lixeira</span>
+                    <span class="sm:hidden">Lixeira</span>
                 </Button>
+                <button
+                    @click="clearSelection"
+                    class="ml-1 cursor-pointer rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 hover:text-white transition-colors"
+                    title="Desmarcar seleção"
+                >
+                    <X class="h-4 w-4" />
+                </button>
             </div>
         </div>
 
@@ -711,12 +753,13 @@ function handleRefreshData() {
                                     ? handleDropOnFolder($event, item.drive_folder_id, executeMoveItems)
                                     : null
                             "
-                            @click="handleRowClick($event, item, index, drives)"
+                            @click="onRowClick($event, item, index, drives)"
+                            @dblclick="navigateToFolder(item)"
                             class="transition-all duration-150"
                             :class="[
                                 item.permission_attrs?.disable
                                     ? 'pointer-events-none opacity-60'
-                                    : 'cursor-pointer',
+                                    : 'cursor-default',
                                 isSelected(item.id)
                                     ? 'bg-indigo-50/80 font-medium text-indigo-950'
                                     : 'hover:bg-slate-50/60',
@@ -727,7 +770,7 @@ function handleRefreshData() {
                             :title="item.permission_attrs?.title || ''"
                         >
                             <!-- Checkbox Seleção -->
-                            <td class="px-4 py-3 text-center" @click.stop>
+                            <td class="px-4 py-3 text-center" @click.stop @dblclick.stop>
                                 <input
                                     type="checkbox"
                                     v-model="selectedDrives"
@@ -745,15 +788,7 @@ function handleRefreshData() {
                                         class="h-5.5 w-5.5 shrink-0 transition-transform"
                                         :class="getIconColorClass(item.document_type)"
                                     />
-                                    <span v-if="item.document_type === 'folder'">
-                                        <button
-                                            @click.stop="navigateToFolder(item)"
-                                            class="cursor-pointer text-left font-medium text-indigo-600 transition-all hover:text-indigo-800 hover:underline"
-                                        >
-                                            {{ item.name }}
-                                        </button>
-                                    </span>
-                                    <span v-else class="font-medium text-slate-800">
+                                    <span class="font-medium text-slate-800">
                                         {{ item.name }}
                                     </span>
                                 </div>
@@ -786,7 +821,7 @@ function handleRefreshData() {
                             </td>
 
                             <!-- Ações -->
-                            <td class="px-4 py-3" @click.stop>
+                            <td class="px-4 py-3" @click.stop @dblclick.stop>
                                 <div class="flex items-center justify-center gap-1">
                                     <!-- Baixar Arquivo -->
                                     <a
@@ -845,6 +880,9 @@ function handleRefreshData() {
                 </table>
             </div>
         </div>
+
+        <!-- Espaço de respiro no final da página (fora do card da tabela) -->
+        <div v-if="selectedDrives.length > 0" class="h-28"></div>
     </div>
 
     <!-- Componentes de Modais Extraídos -->

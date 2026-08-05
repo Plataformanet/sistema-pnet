@@ -23,6 +23,9 @@ export function useDriveSelection() {
         // Se o item estiver desabilitado por falta de permissão, ignora
         if (item.permission_attrs?.disable) return;
 
+        // Evita desmarcar/alternar a seleção no segundo clique de um duplo clique
+        if (event.detail > 1) return;
+
         const isToggleKey = event.ctrlKey || event.metaKey;
         const isShiftKey = event.shiftKey;
 
