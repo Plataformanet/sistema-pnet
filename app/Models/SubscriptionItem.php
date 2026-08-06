@@ -20,11 +20,17 @@ class SubscriptionItem extends Model
         'total_price',
     ];
 
-    protected $casts = [
-        'quantity' => 'integer',
-        'unit_price' => 'integer',
-        'total_price' => 'integer',
-    ];
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'quantity' => 'integer',
+            'unit_price' => 'integer',
+            'total_price' => 'integer',
+        ];
+    }
 
     public function subscription(): BelongsTo
     {

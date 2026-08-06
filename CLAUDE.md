@@ -9,13 +9,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 Minimum routine per session:
 
 1. List `docs/` to see what currently exists (the folder evolves).
-2. Read [docs/arquitetura/project_overview.md](docs/arquitetura/project_overview.md) and [docs/arquitetura/architecture_guide.md](docs/arquitetura/architecture_guide.md) for general context.
-3. Read the module document(s) the task touches, under `docs/modulos/<module>/`.
-4. Before touching the database or routes, check [docs/arquitetura/database_dictionary.md](docs/arquitetura/database_dictionary.md) and [docs/arquitetura/system_routes.md](docs/arquitetura/system_routes.md).
-5. For scope/sprint work, see [docs/planejamento/](docs/planejamento/).
+2. **Before writing or changing ANY code, read [docs/convencoes_de_desenvolvimento.md](docs/convencoes_de_desenvolvimento.md)** — the mandatory conventions guide (migrations, models, services, form requests, controllers, routes, permissions, frontend, tests). Never invent a new approach: copy the existing pattern described there.
+3. Read [docs/arquitetura/project_overview.md](docs/arquitetura/project_overview.md) and [docs/arquitetura/architecture_guide.md](docs/arquitetura/architecture_guide.md) for general context.
+4. Read the module document(s) the task touches, under `docs/modulos/<module>/`.
+5. Before touching the database or routes, check [docs/arquitetura/database_dictionary.md](docs/arquitetura/database_dictionary.md) and [docs/arquitetura/system_routes.md](docs/arquitetura/system_routes.md).
+6. For scope/sprint work, see [docs/planejamento/](docs/planejamento/).
 
 Current structure:
 
+- `docs/convencoes_de_desenvolvimento.md` — **mandatory** code conventions for every new feature
 - `docs/arquitetura/` — `project_overview.md`, `architecture_guide.md`, `database_dictionary.md`, `system_routes.md`
 - `docs/modulos/` — functional documentation per module (`cadastros/`, `drive/`, `financeiro/`, …)
 - `docs/planejamento/` — `sprints_planning.md`, `epic_template.md`

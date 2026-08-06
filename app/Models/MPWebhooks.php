@@ -21,10 +21,16 @@ class MPWebhooks extends Model
         'attempts',
     ];
 
-    protected $casts = [
-        'payload' => 'array',
-        'processed' => 'boolean',
-        'processed_at' => 'datetime',
-        'attempts' => 'integer',
-    ];
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'payload' => 'array',
+            'processed' => 'boolean',
+            'processed_at' => 'datetime',
+            'attempts' => 'integer',
+        ];
+    }
 }

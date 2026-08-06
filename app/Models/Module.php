@@ -21,10 +21,16 @@ class Module extends Model
         'route_prefix',
     ];
 
-    protected $casts = [
-        'is_core' => 'boolean',
-        'requires_modules' => 'array',
-    ];
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'is_core' => 'boolean',
+            'requires_modules' => 'array',
+        ];
+    }
 
     // 1. Module PERTENCE A MUITOS Plans através de pivot (many to many)
     public function plans()

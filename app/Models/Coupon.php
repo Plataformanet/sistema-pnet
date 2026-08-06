@@ -24,18 +24,24 @@ class Coupon extends Model
         'applies_to_plans',
     ];
 
-    protected $casts = [
-        'type' => 'integer',
-        'value' => 'integer',
-        'duration' => 'integer',
-        'duration_in_months' => 'integer',
-        'max_redemptions' => 'integer',
-        'times_redeemed' => 'integer',
-        'valid_from' => 'datetime',
-        'valid_until' => 'datetime',
-        'is_active' => 'boolean',
-        'applies_to_plans' => 'array',
-    ];
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'type' => 'integer',
+            'value' => 'integer',
+            'duration' => 'integer',
+            'duration_in_months' => 'integer',
+            'max_redemptions' => 'integer',
+            'times_redeemed' => 'integer',
+            'valid_from' => 'datetime',
+            'valid_until' => 'datetime',
+            'is_active' => 'boolean',
+            'applies_to_plans' => 'array',
+        ];
+    }
 
     public function redemptions(): HasMany
     {

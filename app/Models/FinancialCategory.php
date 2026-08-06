@@ -18,10 +18,16 @@ class FinancialCategory extends Model
         'active',
     ];
 
-    protected $casts = [
-        'type' => FinancialCategoryEnum::class,
-        'active' => 'boolean',
-    ];
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'type' => FinancialCategoryEnum::class,
+            'active' => 'boolean',
+        ];
+    }
 
     public function subcategories(): HasMany
     {

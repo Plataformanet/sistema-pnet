@@ -22,12 +22,18 @@ class BankAccount extends Model
         'main_account',
     ];
 
-    protected $casts = [
-        'initial_balance' => 'integer',
-        'current_balance' => 'integer',
-        'active' => 'boolean',
-        'main_account' => 'boolean',
-    ];
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'initial_balance' => 'integer',
+            'current_balance' => 'integer',
+            'active' => 'boolean',
+            'main_account' => 'boolean',
+        ];
+    }
 
     public function accountsPayable(): HasMany
     {

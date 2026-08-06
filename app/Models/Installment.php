@@ -22,13 +22,19 @@ class Installment extends Model
         'status',
     ];
 
-    protected $casts = [
-        'installment_number' => 'integer',
-        'value' => 'integer',
-        'status' => AccountsEnum::class,
-        'due_date' => 'date',
-        'payment_date' => 'date',
-    ];
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'installment_number' => 'integer',
+            'value' => 'integer',
+            'status' => AccountsEnum::class,
+            'due_date' => 'date',
+            'payment_date' => 'date',
+        ];
+    }
 
     public function installmentable(): MorphTo
     {

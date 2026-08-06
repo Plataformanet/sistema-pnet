@@ -24,14 +24,20 @@ class Product extends Model
         'status',
     ];
 
-    protected $casts = [
-        'cost_value' => 'integer',
-        'sell_value' => 'integer',
-        'manage_stock' => 'boolean',
-        'current_stock' => 'integer',
-        'min_stock' => 'integer',
-        'status' => 'boolean',
-    ];
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'cost_value' => 'integer',
+            'sell_value' => 'integer',
+            'manage_stock' => 'boolean',
+            'current_stock' => 'integer',
+            'min_stock' => 'integer',
+            'status' => 'boolean',
+        ];
+    }
 
     public function productCategory()
     {

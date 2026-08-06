@@ -32,11 +32,17 @@ class TenantSetting extends Model
         'description',
     ];
 
-    protected $casts = [
-        'type'       => SettingTypeEnum::class,
-        'is_public'  => 'boolean',
-        'updated_at' => 'datetime',
-    ];
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'type' => SettingTypeEnum::class,
+            'is_public' => 'boolean',
+            'updated_at' => 'datetime',
+        ];
+    }
 
     /**
      * Relacionamento com usuário que atualizou
@@ -113,7 +119,7 @@ class TenantSetting extends Model
             $setting->validateValue();
 
             // Registrar quem está salvando
-            if (!$setting->user_id && auth()->check()) {
+            if (! $setting->user_id && auth()->check()) {
                 $setting->user_id = auth()->id();
             }
         });
@@ -125,17 +131,17 @@ class TenantSetting extends Model
     public function validateValue(): void
     {
         $validators = [
-            'email'   => fn($v) => filter_var($v, FILTER_VALIDATE_EMAIL),
-            'url'     => fn($v) => filter_var($v, FILTER_VALIDATE_URL),
-            'integer' => fn($v) => is_numeric($v),
-            'boolean' => fn($v) => in_array(strtolower($v), ['true', 'false', '1', '0']),
-            'json'    => fn($v) => json_decode($v) !== null,
+            'email' => fn ($v) => filter_var($v, FILTER_VALIDATE_EMAIL),
+            'url' => fn ($v) => filter_var($v, FILTER_VALIDATE_URL),
+            'integer' => fn ($v) => is_numeric($v),
+            'boolean' => fn ($v) => in_array(strtolower($v), ['true', 'false', '1', '0']),
+            'json' => fn ($v) => json_decode($v) !== null,
         ];
 
         $type = $this->type?->value;
 
         if (isset($validators[$type])) {
-            if (!$validators[$type]($this->value)) {
+            if (! $validators[$type]($this->value)) {
                 throw new \InvalidArgumentException(
                     "Valor inválido para tipo {$type}"
                 );

@@ -21,13 +21,19 @@ class Plan extends Model
         'is_active',
     ];
 
-    protected $casts = [
-        'price' => 'decimal:2',
-        'max_users' => 'integer',
-        'max_storage_gb' => 'integer',
-        'features' => 'array',
-        'is_active' => 'boolean',
-    ];
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'price' => 'decimal:2',
+            'max_users' => 'integer',
+            'max_storage_gb' => 'integer',
+            'features' => 'array',
+            'is_active' => 'boolean',
+        ];
+    }
 
     // 1. Plan TEM MUITOS Tenants (has many)
     public function tenants()

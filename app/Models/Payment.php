@@ -30,13 +30,19 @@ class Payment extends Model
         'error_message',
     ];
 
-    protected $casts = [
-        'status' => PaymentStatusEnum::class,
-        'amount' => 'decimal:2',
-        'paid_at' => 'datetime',
-        'refunded_at' => 'datetime',
-        'metadata' => 'array',
-    ];
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'status' => PaymentStatusEnum::class,
+            'amount' => 'decimal:2',
+            'paid_at' => 'datetime',
+            'refunded_at' => 'datetime',
+            'metadata' => 'array',
+        ];
+    }
 
     // === RELACIONAMENTOS ===
 

@@ -23,13 +23,19 @@ class Proponents extends Model
         'out_of_obligation',
     ];
 
-    protected $casts = [
-        'income_tax_return' => 'boolean',
-        'out_of_obligation' => 'boolean',
-        'reported_income' => 'decimal:2',
-        'family_income' => 'decimal:2',
-        'birth_date' => 'date',
-    ];
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'income_tax_return' => 'boolean',
+            'out_of_obligation' => 'boolean',
+            'reported_income' => 'decimal:2',
+            'family_income' => 'decimal:2',
+            'birth_date' => 'date',
+        ];
+    }
 
     public function contact(): BelongsTo
     {
