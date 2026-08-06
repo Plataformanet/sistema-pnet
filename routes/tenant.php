@@ -9,6 +9,7 @@ use App\Http\Controllers\TenantBankAccountController;
 use App\Http\Controllers\TenantBillingFlowController;
 use App\Http\Controllers\TenantCashFlowController;
 use App\Http\Controllers\TenantClientController;
+use App\Http\Controllers\TenantCompanySettingController;
 use App\Http\Controllers\TenantController;
 use App\Http\Controllers\TenantDriveController;
 use App\Http\Controllers\TenantDriveFolderController;
@@ -20,6 +21,7 @@ use App\Http\Controllers\TenantFinancialCategoryController;
 use App\Http\Controllers\TenantFinancialSubcategoryController;
 use App\Http\Controllers\TenantProductCategoryController;
 use App\Http\Controllers\TenantProductController;
+use App\Http\Controllers\TenantProfileController;
 use App\Http\Controllers\TenantRoleController;
 use App\Http\Controllers\TenantServiceCategoryController;
 use App\Http\Controllers\TenantServiceController;
@@ -53,6 +55,7 @@ Route::middleware([
     Route::get('/logout', [AuthTenantController::class, 'logout'])->name('tenant.logout');
     Route::get('/forgot-password', [AuthTenantController::class, 'showForgotPasswordForm'])->name('tenant.forgot-password');
     Route::get('/reset-password', [AuthTenantController::class, 'showResetPasswordForm'])->name('tenant.reset-password');
+    Route::get('/settings/company/logo', [TenantCompanySettingController::class, 'showLogo'])->name('tenant.settings.company.logo');
 
     Route::middleware(Authenticate::class)->group(function () {
         Route::get('/dashboard', [TenantController::class, 'dashboard'])->name('tenant.dashboard');
@@ -86,6 +89,16 @@ Route::middleware([
         Route::delete('/registrations/employees/{id}', [TenantEmployeeController::class, 'destroy'])->name('tenant.registrations.employees.destroy')->middleware('permission:registrations.employees.delete');
         Route::patch('/registrations/employees/{id}/toggle-active', [TenantEmployeeController::class, 'toggleActive'])->name('tenant.registrations.employees.toggle-active')->middleware('permission:registrations.employees.edit');
         Route::get('/registrations/employees/get-contact-by-cpf-cnpj/{cpf_cnpj}', [TenantEmployeeController::class, 'getContactByCpfCnpj'])->name('tenant.registrations.employees.get-contact-by-cpf-cnpj')->middleware('permission:registrations.employees.view');
+
+        // Perfil do Usuário
+        Route::get('/profile', [TenantProfileController::class, 'edit'])->name('tenant.profile.edit');
+        Route::post('/profile', [TenantProfileController::class, 'updateProfile'])->name('tenant.profile.update');
+        Route::get('/profile/avatar', [TenantProfileController::class, 'showAvatar'])->name('tenant.profile.avatar');
+        Route::put('/profile/password', [TenantProfileController::class, 'updatePassword'])->name('tenant.profile.password.update');
+
+        // Configurações - Empresa
+        Route::get('/settings/company', [TenantCompanySettingController::class, 'edit'])->name('tenant.settings.company.edit')->middleware('permission:settings.company.view');
+        Route::post('/settings/company', [TenantCompanySettingController::class, 'update'])->name('tenant.settings.company.update')->middleware('permission:settings.company.edit');
 
         // Configurações - Usuários
         Route::get('/settings/users/list', [TenantUserController::class, 'index'])->name('tenant.settings.users.list')->middleware('permission:settings.users.view');

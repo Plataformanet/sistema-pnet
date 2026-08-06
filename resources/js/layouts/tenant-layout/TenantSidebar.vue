@@ -92,11 +92,18 @@ const visibleNavigationItems = computed(() => {
 
 <template>
     <Sidebar v-bind="props">
-        <SidebarHeader>
+        <SidebarHeader class="p-3 flex items-center justify-center">
             <img
+                v-if="tenant?.logoUrl"
+                :src="tenant.logoUrl"
+                :alt="tenant.name || 'Logo da Empresa'"
+                class="mx-auto block max-h-14 max-w-full object-contain"
+            />
+            <img
+                v-else
                 src="/images/logo-plataformanet-preto.png"
                 alt="Logo PlataformaNet"
-                class="mx-auto block h-16 max-w-full"
+                class="mx-auto block h-16 max-w-full object-contain"
             />
         </SidebarHeader>
         <SidebarContent class="gap-0">

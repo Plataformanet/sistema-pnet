@@ -3,9 +3,7 @@
 namespace Database\Seeders;
 
 use App\Enums\RolesEnum;
-use App\Models\Module;
 use App\Models\User;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
@@ -281,6 +279,16 @@ class TenantPermissionSeeder extends Seeder
             ],
 
             'settings' => [
+                'company' => [
+                    'name' => [
+                        'settings.company.view',
+                        'settings.company.edit',
+                    ],
+                    'display_name' => [
+                        'Empresa (Visualizar)',
+                        'Empresa (Editar)',
+                    ],
+                ],
                 'roles' => [
                     'name' => [
                         'settings.roles.view',
@@ -367,7 +375,7 @@ class TenantPermissionSeeder extends Seeder
                         'Logs (Excluir)',
                     ],
                 ],
-            ]
+            ],
         ];
 
         $modules = [
@@ -395,7 +403,6 @@ class TenantPermissionSeeder extends Seeder
         Role::insert($roles->toArray());
 
         $roleAdmin = Role::get()->first();
-
 
         foreach ($modules as $module) {
             foreach ($permissions['registrations'] as $permission) {

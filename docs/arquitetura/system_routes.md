@@ -183,9 +183,10 @@ Controla o gerenciamento de clientes, fornecedores e funcionários com restriç�
 
 ---
 
-### 2.5. Outras Configurações e Segurança
-*   **Controller:** `TenantRoleController`
+### 2.5. Outras Configurações, Perfil e Segurança
+*   **Controllers:** `TenantRoleController`, `TenantCompanySettingController`, `TenantProfileController`
 
+#### Cargos e Permissões (`TenantRoleController`)
 | Método | Rota | Nome da Rota | Middleware de Permissão | Descrição |
 | :--- | :--- | :--- | :--- | :--- |
 | **GET** | `/settings/roles/list` | `tenant.settings.roles.list` | `permission:settings.roles.view` | Listagem de cargos (Roles) |
@@ -194,6 +195,21 @@ Controla o gerenciamento de clientes, fornecedores e funcionários com restriç�
 | **GET** | `/settings/roles/{id}/edit`| `tenant.settings.roles.edit` | `permission:settings.roles.edit` | Edição de cargos |
 | **PUT** | `/settings/roles/{id}` | `tenant.settings.roles.update` | `permission:settings.roles.edit` | Atualização de cargos |
 | **DELETE**| `/settings/roles/{id}` | `tenant.settings.roles.destroy`| `permission:settings.roles.delete` | Exclusão de cargo |
+
+#### Configurações da Empresa (`TenantCompanySettingController`)
+| Método | Rota | Nome da Rota | Middleware de Permissão | Descrição |
+| :--- | :--- | :--- | :--- | :--- |
+| **GET** | `/settings/company` | `tenant.settings.company.edit` | `permission:settings.company.view` | Formulário de configurações da empresa |
+| **POST** | `/settings/company` | `tenant.settings.company.update` | `permission:settings.company.edit` | Salva dados e logotipo da empresa |
+| **GET** | `/settings/company/logo` | `tenant.settings.company.logo` | *Pública (Tenant)* | Transmite a imagem do logotipo do MinIO |
+
+#### Perfil do Usuário (`TenantProfileController`)
+| Método | Rota | Nome da Rota | Middleware de Permissão | Descrição |
+| :--- | :--- | :--- | :--- | :--- |
+| **GET** | `/profile` | `tenant.profile.edit` | *Autenticado* | Formulário de perfil do usuário |
+| **POST** | `/profile` | `tenant.profile.update` | *Autenticado* | Atualiza nome e foto de avatar no MinIO |
+| **GET** | `/profile/avatar` | `tenant.profile.avatar` | *Autenticado* | Transmite a foto de avatar do MinIO |
+| **PUT** | `/profile/password` | `tenant.profile.password.update` | *Autenticado* | Atualiza a senha do usuário |
 
 ---
 

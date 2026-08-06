@@ -4,6 +4,7 @@ import { computed } from "vue";
 export interface TenantProps {
     id: string;
     name: string;
+    logoUrl?: string | null;
     domain: string;
     plan?: string;
     hasModules: {

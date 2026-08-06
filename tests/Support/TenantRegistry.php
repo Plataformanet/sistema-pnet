@@ -44,6 +44,10 @@ class TenantRegistry
             'name' => 'Shared test tenant',
             'is_active' => true,
         ]);
+
+        static::$shared->domains()->create([
+            'domain' => 'test.localhost',
+        ]);
     }
 
     /**

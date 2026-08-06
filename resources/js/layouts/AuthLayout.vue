@@ -3,11 +3,14 @@ import { Head } from "@inertiajs/vue3";
 import { cn } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
 import { HTMLAttributes } from "vue";
+import { useTenant } from "@/composables/useTenant";
 
 const props = defineProps<{
     title: string;
     class?: HTMLAttributes["class"];
 }>();
+
+const { tenant } = useTenant();
 </script>
 <template>
     <Head :title="props.title" />
@@ -20,20 +23,26 @@ const props = defineProps<{
                     <CardContent class="grid p-0 md:grid-cols-2">
                         <slot />
                         <div
-                            class="relative flex items-center justify-center border-t border-gray-200 bg-white md:border-t-0 md:border-l"
+                            class="relative flex flex-col items-center justify-center border-t border-gray-200 bg-white p-6 md:border-t-0 md:border-l"
                         >
                             <img
+                                v-if="tenant?.logoUrl"
+                                :src="tenant.logoUrl"
+                                :alt="tenant?.name || 'Logo da Empresa'"
+                                class="max-h-48 max-w-full object-contain p-4"
+                            />
+                            <img
+                                v-else
                                 src="/images/logo-plataformanet-preto.png"
-                                alt="Image"
+                                alt="PlataformaNet"
                                 class="h-auto w-full dark:brightness-[0.2] dark:grayscale"
                             />
+                            <p v-if="tenant?.name && tenant?.logoUrl" class="mt-2 text-sm font-medium text-muted-foreground text-center">
+                                {{ tenant.name }}
+                            </p>
                         </div>
                     </CardContent>
                 </Card>
-                <!-- <FieldDescription class="px-6 text-center">
-      Ao continuar, você concorda com nossos <a href="#">Termos de serviço</a> e
-      <a href="#">Política de privacidade</a>.
-    </FieldDescription> -->
             </div>
         </div>
     </div>

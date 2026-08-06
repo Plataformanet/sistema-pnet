@@ -278,6 +278,16 @@ class PermissionSeeder extends Seeder
             ],
 
             'settings' => [
+                'company' => [
+                    'name' => [
+                        'settings.company.view',
+                        'settings.company.edit',
+                    ],
+                    'display_name' => [
+                        'Empresa (Visualizar)',
+                        'Empresa (Editar)',
+                    ],
+                ],
                 'roles' => [
                     'name' => [
                         'settings.roles.view',

@@ -2,7 +2,9 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\TenantSetting;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
@@ -74,9 +76,21 @@ class HandleInertiaRequests extends Middleware
 
         $tenant = tenant();
 
+        $logoPath = TenantSetting::where('key', 'company.logo_path')->value('value');
+        $logoUrl = null;
+
+        if ($logoPath && Storage::disk(config('bucket.disk'))->exists($logoPath)) {
+            $logoUrl = route('tenant.settings.company.logo').'?v='.time();
+        }
+
+        $companyName = TenantSetting::where('key', 'company.trade_name')->value('value')
+            ?: TenantSetting::where('key', 'company.name')->value('value')
+            ?: $tenant->name;
+
         return [
             'id' => $tenant->getTenantKey(),
-            'name' => $tenant->name,
+            'name' => $companyName,
+            'logoUrl' => $logoUrl,
             'domain' => $tenant->domains?->first()?->domain,
             'plan' => $tenant->plan ?? null,
             'hasModules' => $tenant->hasModule($tenant->modulesByTenants()),

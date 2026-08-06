@@ -22,8 +22,18 @@ class User extends Authenticatable
     protected $fillable = [
         'name',
         'email',
+        'photo',
         'password',
         'status',
+    ];
+
+    /**
+     * The accessors to append to the model's array form.
+     *
+     * @var list<string>
+     */
+    protected $appends = [
+        'photo_url',
     ];
 
     /**
@@ -49,5 +59,25 @@ class User extends Authenticatable
             'position' => RolesEnum::class,
             'status' => 'boolean',
         ];
+    }
+
+    /**
+     * Retorna a URL da foto de perfil se existente.
+     */
+    public function getPhotoUrlAttribute(): ?string
+    {
+        if (! $this->photo) {
+            return null;
+        }
+
+        try {
+            if (tenancy()->initialized) {
+                return route('tenant.profile.avatar').'?v='.($this->updated_at ? strtotime((string) $this->updated_at) : time());
+            }
+        } catch (\Throwable $e) {
+            return null;
+        }
+
+        return null;
     }
 }

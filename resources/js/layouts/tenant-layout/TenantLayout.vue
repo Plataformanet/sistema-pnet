@@ -237,8 +237,13 @@ const sidebarNavigation: TenantSidebarNavigation = {
         {
             title: "Configurações",
             module: "settings",
-            url: "/settings/roles/list",
+            url: "/settings/company",
             items: [
+                {
+                    title: "Empresa",
+                    permission: "settings.company.view",
+                    url: "/settings/company",
+                },
                 {
                     title: "Cargos",
                     permission: "settings.roles.view",
@@ -293,7 +298,19 @@ const breadcrumbs = computed(() => {
 });
 
 const { tenant } = useTenant();
-const user = computed(() => (page.props.auth as any)?.user);
+
+const pageProps = computed(() => usePage().props as any);
+const user = computed(() => pageProps.value?.auth?.user);
+
+function getInitials(name?: string) {
+    if (!name) return "U";
+    return name
+        .split(" ")
+        .map((part) => part[0])
+        .slice(0, 2)
+        .join("")
+        .toUpperCase();
+}
 
 const flash = computed(() => page.props.flash as any);
 
@@ -350,17 +367,25 @@ watch(
                         </template>
                     </BreadcrumbList>
                 </Breadcrumb>
-                <div class="ml-auto">
+                <div class="ml-auto flex items-center gap-3">
+                    <div v-if="tenant?.name || tenant?.logoUrl" class="hidden md:flex items-center gap-2 px-3 py-1 rounded-full bg-muted/50 border border-border text-xs font-medium text-foreground">
+                        <img v-if="tenant?.logoUrl" :src="tenant.logoUrl" :alt="tenant?.name || 'Logo'" class="h-5 w-auto object-contain max-w-[100px]" />
+                        <span v-if="tenant?.name">{{ tenant.name }}</span>
+                    </div>
+
                     <DropdownMenu>
                         <DropdownMenuTrigger as-child>
                             <Avatar
-                                class="flex cursor-pointer items-center justify-center bg-accent"
+                                class="flex cursor-pointer items-center justify-center bg-accent border border-border"
                             >
-                                <!-- <AvatarImage
-                                    src="https://github.com/alanvf1.png"
-                                /> -->
-                                <!-- <AvatarFallback>AV</AvatarFallback> -->
-                                <User class="w-4" />
+                                <AvatarImage
+                                    v-if="user?.photo_url"
+                                    :src="user.photo_url"
+                                    :alt="user?.name"
+                                />
+                                <AvatarFallback v-else class="text-xs font-semibold">
+                                    {{ getInitials(user?.name) }}
+                                </AvatarFallback>
                             </Avatar>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent class="mr-4">
@@ -368,10 +393,14 @@ watch(
                                 user?.name
                             }}</DropdownMenuLabel>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem><User />Perfil</DropdownMenuItem>
                             <DropdownMenuItem as-child>
-                                <Link :href="route('logout')">
-                                    <LogOut />Sair
+                                <Link :href="route('tenant.profile.edit')" class="flex items-center gap-2 cursor-pointer">
+                                    <User class="h-4 w-4" />Perfil
+                                </Link>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem as-child>
+                                <Link :href="route('tenant.logout')" class="flex items-center gap-2 cursor-pointer">
+                                    <LogOut class="h-4 w-4" />Sair
                                 </Link>
                             </DropdownMenuItem>
                         </DropdownMenuContent>

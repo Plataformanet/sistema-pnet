@@ -83,6 +83,8 @@ class Tenant extends BaseTenant implements TenantWithDatabase
      */
     public function hasModule(array $moduleSlugs): array
     {
+        $hasModule = [];
+
         foreach ($moduleSlugs as $slug) {
             $hasModule[$slug] = $this->activeModules()
                 ->where('slug', $slug)
@@ -92,9 +94,10 @@ class Tenant extends BaseTenant implements TenantWithDatabase
         return $hasModule;
     }
 
-    public function modulesByTenants()
+    public function modulesByTenants(): array
     {
         $slugs = $this->modules()->pluck('slug');
+        $getSlugs = [];
 
         foreach ($slugs as $slug) {
             $getSlugs[] = $slug;
