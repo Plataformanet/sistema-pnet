@@ -28,7 +28,9 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { LogOut, User } from "lucide-vue-next";
+import { LogOut, User, Sun, Moon } from "lucide-vue-next";
+import { Button } from "@/components/ui/button";
+import { useDark, useToggle } from "@vueuse/core";
 import { Toaster } from "@/components/ui/sonner";
 import { toast } from "vue-sonner";
 
@@ -299,6 +301,9 @@ const breadcrumbs = computed(() => {
 
 const { tenant } = useTenant();
 
+const isDark = useDark();
+const toggleDark = useToggle(isDark);
+
 const pageProps = computed(() => usePage().props as any);
 const user = computed(() => pageProps.value?.auth?.user);
 
@@ -369,9 +374,21 @@ watch(
                 </Breadcrumb>
                 <div class="ml-auto flex items-center gap-3">
                     <div v-if="tenant?.name || tenant?.logoUrl" class="hidden md:flex items-center gap-2 px-3 py-1 rounded-full bg-muted/50 border border-border text-xs font-medium text-foreground">
-                        <img v-if="tenant?.logoUrl" :src="tenant.logoUrl" :alt="tenant?.name || 'Logo'" class="h-5 w-auto object-contain max-w-[100px]" />
+                        <img v-if="tenant?.logoUrl" :src="tenant.logoUrl" :alt="tenant?.name || 'Logo'" class="h-6 w-auto object-contain max-w-[100px]" />
                         <span v-if="tenant?.name">{{ tenant.name }}</span>
                     </div>
+
+                    <!-- Botão Alternar Tema Escuro / Claro -->
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        class="cursor-pointer text-muted-foreground hover:text-foreground rounded-full"
+                        @click="toggleDark()"
+                        :title="isDark ? 'Mudar para tema claro' : 'Mudar para tema escuro'"
+                    >
+                        <Sun v-if="isDark" class="h-5 w-5 text-amber-400" />
+                        <Moon v-else class="h-5 w-5" />
+                    </Button>
 
                     <DropdownMenu>
                         <DropdownMenuTrigger as-child>

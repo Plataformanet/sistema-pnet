@@ -417,16 +417,17 @@ function getStatusBadge(status: string) {
                                 >Modo do Filtro</label
                             >
                             <div
-                                class="flex rounded-md border border-border bg-muted/30 p-1"
+                                class="flex rounded-lg border border-border bg-muted p-1"
                             >
                                 <Button
                                     variant="ghost"
                                     size="sm"
-                                    class="h-8 cursor-pointer rounded-sm text-xs font-medium"
-                                    :class="{
-                                        'border border-border/50 bg-white text-foreground shadow-sm':
-                                            filterMode === 'monthly',
-                                    }"
+                                    class="h-8 cursor-pointer rounded-md text-xs font-medium transition-all"
+                                    :class="
+                                        filterMode === 'monthly'
+                                            ? 'bg-slate-900 text-white hover:bg-slate-900 hover:text-white dark:bg-white dark:text-slate-900 dark:hover:bg-white dark:hover:text-slate-900 shadow-sm font-bold'
+                                            : 'text-muted-foreground hover:bg-background/60 hover:text-foreground'
+                                    "
                                     @click="
                                         filterMode = 'monthly';
                                         reload();
@@ -437,11 +438,12 @@ function getStatusBadge(status: string) {
                                 <Button
                                     variant="ghost"
                                     size="sm"
-                                    class="h-8 cursor-pointer rounded-sm text-xs font-medium"
-                                    :class="{
-                                        'border border-border/50 bg-white text-foreground shadow-sm':
-                                            filterMode === 'yearly',
-                                    }"
+                                    class="h-8 cursor-pointer rounded-md text-xs font-medium transition-all"
+                                    :class="
+                                        filterMode === 'yearly'
+                                            ? 'bg-slate-900 text-white hover:bg-slate-900 hover:text-white dark:bg-white dark:text-slate-900 dark:hover:bg-white dark:hover:text-slate-900 shadow-sm font-bold'
+                                            : 'text-muted-foreground hover:bg-background/60 hover:text-foreground'
+                                    "
                                     @click="
                                         filterMode = 'yearly';
                                         applyYearlyFilter();
@@ -452,11 +454,12 @@ function getStatusBadge(status: string) {
                                 <Button
                                     variant="ghost"
                                     size="sm"
-                                    class="h-8 cursor-pointer rounded-sm text-xs font-medium"
-                                    :class="{
-                                        'border border-border/50 bg-white text-foreground shadow-sm':
-                                            filterMode === 'custom',
-                                    }"
+                                    class="h-8 cursor-pointer rounded-md text-xs font-medium transition-all"
+                                    :class="
+                                        filterMode === 'custom'
+                                            ? 'bg-slate-900 text-white hover:bg-slate-900 hover:text-white dark:bg-white dark:text-slate-900 dark:hover:bg-white dark:hover:text-slate-900 shadow-sm font-bold'
+                                            : 'text-muted-foreground hover:bg-background/60 hover:text-foreground'
+                                    "
                                     @click="filterMode = 'custom'"
                                 >
                                     Personalizado

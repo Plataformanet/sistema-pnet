@@ -14,6 +14,19 @@ export function useDriveSelection() {
         return selectedDrives.value.includes(id);
     };
 
+    const toggleDriveSelection = (id: number, checked?: boolean) => {
+        const isCurrentlySelected = selectedDrives.value.includes(id);
+        const targetState = checked !== undefined ? checked : !isCurrentlySelected;
+
+        if (targetState) {
+            if (!isCurrentlySelected) {
+                selectedDrives.value = [...selectedDrives.value, id];
+            }
+        } else {
+            selectedDrives.value = selectedDrives.value.filter((itemId) => itemId !== id);
+        }
+    };
+
     const handleRowClick = (
         event: MouseEvent,
         item: Drive,
@@ -36,7 +49,7 @@ export function useDriveSelection() {
                     (id) => id !== item.id
                 );
             } else {
-                selectedDrives.value.push(item.id);
+                selectedDrives.value = [...selectedDrives.value, item.id];
             }
             lastSelectedIndex.value = index;
         } else if (isShiftKey && lastSelectedIndex.value !== null) {
@@ -77,6 +90,7 @@ export function useDriveSelection() {
         lastSelectedIndex,
         clearSelection,
         isSelected,
+        toggleDriveSelection,
         handleRowClick,
         toggleSelectAll,
     };

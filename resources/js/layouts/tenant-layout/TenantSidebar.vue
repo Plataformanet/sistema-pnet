@@ -97,13 +97,13 @@ const visibleNavigationItems = computed(() => {
                 v-if="tenant?.logoUrl"
                 :src="tenant.logoUrl"
                 :alt="tenant.name || 'Logo da Empresa'"
-                class="mx-auto block max-h-14 max-w-full object-contain"
+                class="mx-auto block max-h-18 max-w-full object-contain"
             />
             <img
                 v-else
                 src="/images/logo-plataformanet-preto.png"
                 alt="Logo PlataformaNet"
-                class="mx-auto block h-16 max-w-full object-contain"
+                class="mx-auto block h-16 max-w-full object-contain dark:invert"
             />
         </SidebarHeader>
         <SidebarContent class="gap-0">

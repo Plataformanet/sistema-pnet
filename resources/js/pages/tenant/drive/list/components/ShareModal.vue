@@ -211,22 +211,22 @@ async function savePermission() {
 <template>
     <div
         v-if="isOpen"
-        class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-xs"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs"
     >
         <div
-            class="w-full max-w-lg animate-in overflow-hidden rounded-xl border border-slate-100 bg-white shadow-xl duration-200 zoom-in-95 fade-in"
+            class="w-full max-w-lg animate-in overflow-hidden rounded-xl border border-border bg-card text-card-foreground shadow-xl duration-200 zoom-in-95 fade-in"
         >
             <!-- Header -->
             <div
-                class="flex items-center justify-between border-b border-slate-100 bg-slate-50 px-6 py-4"
+                class="flex items-center justify-between border-b border-border bg-muted/50 px-6 py-4"
             >
-                <h3 class="flex items-center gap-2 font-bold text-slate-800">
-                    <Share2 class="h-5 w-5 text-emerald-600" />
+                <h3 class="flex items-center gap-2 font-bold text-foreground">
+                    <Share2 class="h-5 w-5 text-emerald-500" />
                     Compartilhar Acesso
                 </h3>
                 <button
                     @click="emit('update:isOpen', false)"
-                    class="text-slate-400 hover:text-slate-600 cursor-pointer"
+                    class="text-muted-foreground hover:text-foreground cursor-pointer"
                     :disabled="isSavingPermission"
                 >
                     <X class="h-5 w-5" />
@@ -238,34 +238,34 @@ async function savePermission() {
                 <!-- Info do Item -->
                 <div
                     v-if="item"
-                    class="flex items-center gap-3 rounded-lg border border-slate-100 bg-slate-50 p-3"
+                    class="flex items-center gap-3 rounded-lg border border-border bg-muted/50 p-3"
                 >
                     <component
                         :is="getFileIcon(item.document_type)"
                         class="h-5.5 w-5.5 shrink-0"
                         :class="getIconColorClass(item.document_type)"
                     />
-                    <span class="truncate font-semibold text-slate-700">{{
+                    <span class="truncate font-semibold text-foreground">{{
                         item.name
                     }}</span>
                 </div>
 
                 <!-- Visibilidade / Acesso Geral -->
                 <div class="space-y-2">
-                    <Label class="text-xs font-bold tracking-wider text-slate-400 uppercase">
+                    <Label class="text-xs font-bold tracking-wider text-muted-foreground uppercase">
                         Acesso Geral
                     </Label>
                     
                     <div class="flex items-center gap-2">
-                        <div class="grid w-full grid-cols-2 gap-2 rounded-lg bg-slate-100 p-1">
+                        <div class="grid w-full grid-cols-2 gap-2 rounded-lg bg-muted p-1">
                             <button
                                 @click="setLocalRestricted(false)"
                                 :disabled="isSavingPermission || isLoadingUsers"
                                 :class="[
                                     'flex items-center justify-center gap-2 rounded-md py-2 text-xs font-semibold transition-all cursor-pointer',
                                     !localIsRestricted
-                                        ? 'bg-white text-slate-800 shadow-xs'
-                                        : 'text-slate-500 hover:text-slate-700'
+                                        ? 'bg-card text-foreground shadow-xs'
+                                        : 'text-muted-foreground hover:text-foreground'
                                 ]"
                             >
                                 <Globe class="h-4 w-4" />
@@ -277,8 +277,8 @@ async function savePermission() {
                                 :class="[
                                     'flex items-center justify-center gap-2 rounded-md py-2 text-xs font-semibold transition-all cursor-pointer',
                                     localIsRestricted
-                                        ? 'bg-white text-slate-800 shadow-xs'
-                                        : 'text-slate-500 hover:text-slate-700'
+                                        ? 'bg-card text-foreground shadow-xs'
+                                        : 'text-muted-foreground hover:text-foreground'
                                 ]"
                             >
                                 <Lock class="h-4 w-4" />
@@ -293,13 +293,13 @@ async function savePermission() {
                     v-if="isLoadingUsers"
                     class="flex items-center justify-center py-10"
                 >
-                    <Loader2 class="h-8 w-8 animate-spin text-indigo-500" />
+                    <Loader2 class="h-8 w-8 animate-spin text-primary" />
                 </div>
 
                 <!-- Seção Colaboradores (somente se Restrito) -->
                 <div v-else-if="localIsRestricted" class="space-y-4 animate-in fade-in duration-200">
                     <div class="relative">
-                        <Search class="absolute top-2.5 left-3 h-4.5 w-4.5 text-slate-400" />
+                        <Search class="absolute top-2.5 left-3 h-4.5 w-4.5 text-muted-foreground" />
                         <Input
                             v-model="searchQueryPermission"
                             type="text"
@@ -310,29 +310,29 @@ async function savePermission() {
                     </div>
 
                     <div class="space-y-2">
-                        <Label class="text-xs font-bold tracking-wider text-slate-400 uppercase">
+                        <Label class="text-xs font-bold tracking-wider text-muted-foreground uppercase">
                             Colaboradores com acesso
                         </Label>
 
                         <div
                             v-if="filteredColleagues.length === 0"
-                            class="py-4 text-center text-sm text-slate-400"
+                            class="py-4 text-center text-sm text-muted-foreground"
                         >
                             Nenhum colaborador encontrado.
                         </div>
 
                         <div
                             v-else
-                            class="max-h-56 divide-y divide-slate-100 overflow-y-auto pr-1 border border-slate-100 rounded-lg"
+                            class="max-h-56 divide-y divide-border overflow-y-auto pr-1 border border-border rounded-lg bg-background"
                         >
                             <div
                                 v-for="user in filteredColleagues"
                                 :key="user.id"
-                                class="flex items-center justify-between px-3 py-2.5 hover:bg-slate-50/50 transition-colors"
+                                class="flex items-center justify-between px-3 py-2.5 hover:bg-muted/50 transition-colors"
                             >
                                 <Label
                                     :for="`user-${user.id}`"
-                                    class="text-sm font-medium text-slate-700 cursor-pointer flex-1 select-none pr-4"
+                                    class="text-sm font-medium text-foreground cursor-pointer flex-1 select-none pr-4"
                                 >
                                     {{ user.name }}
                                 </Label>
@@ -355,13 +355,13 @@ async function savePermission() {
                 <!-- Painel Informativo quando Público -->
                 <div
                     v-else
-                    class="rounded-lg border border-emerald-100 bg-emerald-50/40 p-4 text-slate-700 animate-in fade-in duration-200"
+                    class="rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-4 text-foreground animate-in fade-in duration-200"
                 >
                     <div class="flex gap-3">
-                        <Globe class="h-5 w-5 shrink-0 text-emerald-600" />
+                        <Globe class="h-5 w-5 shrink-0 text-emerald-500" />
                         <div class="space-y-1">
-                            <p class="text-sm font-semibold text-emerald-950">Qualquer pessoa da organização</p>
-                            <p class="text-xs text-emerald-800/80 leading-relaxed">
+                            <p class="text-sm font-semibold text-foreground">Qualquer pessoa da organização</p>
+                            <p class="text-xs text-muted-foreground leading-relaxed">
                                 Este item está definido como público. Todos os colaboradores podem visualizá-lo e acessá-lo livremente a partir da listagem geral do drive.
                             </p>
                         </div>
@@ -371,19 +371,19 @@ async function savePermission() {
 
             <!-- Footer -->
             <div
-                class="flex items-center justify-end gap-2 border-t border-slate-100 bg-slate-50 px-6 py-4"
+                class="flex items-center justify-end gap-2 border-t border-border bg-muted/50 px-6 py-4"
             >
                 <Button
                     @click="emit('update:isOpen', false)"
                     variant="ghost"
-                    class="text-slate-600 cursor-pointer"
+                    class="cursor-pointer"
                     :disabled="isSavingPermission"
                 >
                     Cancelar
                 </Button>
                 <Button
                     @click="savePermission"
-                    class="cursor-pointer bg-emerald-600 hover:bg-emerald-700 text-white font-semibold"
+                    class="cursor-pointer font-semibold"
                     :disabled="isSavingPermission || isLoadingUsers"
                 >
                     <Loader2

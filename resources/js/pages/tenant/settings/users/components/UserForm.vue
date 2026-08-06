@@ -11,6 +11,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import PermissionsGrid from "@/pages/tenant/settings/components/PermissionsGrid.vue";
 import { Permission } from "@/types";
 import { useForm } from "@inertiajs/vue3";
@@ -108,15 +109,14 @@ function onSubmit() {
                 </Field>
 
                 <div class="flex items-center space-x-2 pt-8">
-                    <input
-                        type="checkbox"
+                    <Checkbox
                         id="status"
-                        v-model="form.status"
-                        class="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                        :checked="form.status"
+                        @update:checked="(val: boolean) => form.status = val"
                     />
                     <label
                         for="status"
-                        class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                        class="text-sm font-medium leading-none cursor-pointer peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                     >
                         Usuário Ativo
                     </label>

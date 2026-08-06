@@ -19,13 +19,13 @@ defineProps<{
 
     <div class="space-y-6">
         <!-- Header da Página -->
-        <div class="border-b border-slate-100 pb-5">
+        <div class="border-b border-border pb-5">
             <h1
-                class="flex items-center gap-2 text-3xl font-bold tracking-tight text-slate-800"
+                class="flex items-center gap-2 text-3xl font-bold tracking-tight text-foreground"
             >
                 Logs de Exclusão
             </h1>
-            <p class="mt-1 text-sm text-slate-500">
+            <p class="mt-1 text-sm text-muted-foreground">
                 Histórico de arquivos e pastas excluídos permanentemente do
                 sistema.
             </p>
@@ -33,13 +33,13 @@ defineProps<{
 
         <!-- Tabela Logs -->
         <div
-            class="overflow-hidden rounded-xl border border-slate-100 bg-white shadow-sm"
+            class="overflow-hidden rounded-xl border border-border bg-card text-card-foreground shadow-sm"
         >
             <div class="overflow-x-auto">
                 <table class="w-full border-collapse text-left">
                     <thead>
                         <tr
-                            class="border-b border-slate-100 bg-slate-50/70 text-xs font-bold tracking-wider text-slate-600 uppercase"
+                            class="border-b border-border bg-muted/60 text-xs font-bold tracking-wider text-muted-foreground uppercase"
                         >
                             <th class="px-6 py-4 font-semibold">
                                 Nome do Item
@@ -55,15 +55,15 @@ defineProps<{
                         </tr>
                     </thead>
                     <tbody
-                        class="divide-y divide-slate-100 text-sm text-slate-700"
+                        class="divide-y divide-border text-sm text-foreground"
                     >
                         <tr v-if="logs.length === 0">
                             <td
                                 colspan="5"
-                                class="py-12 text-center text-slate-400"
+                                class="py-12 text-center text-muted-foreground"
                             >
                                 <ClipboardList
-                                    class="mx-auto mb-3 h-12 w-12 stroke-[1.5] text-slate-300"
+                                    class="mx-auto mb-3 h-12 w-12 stroke-[1.5] text-muted-foreground/50"
                                 />
                                 Nenhum log de exclusão registrado.
                             </td>
@@ -72,7 +72,7 @@ defineProps<{
                         <tr
                             v-for="(log, index) in logs"
                             :key="index"
-                            class="transition-colors hover:bg-slate-50/50"
+                            class="transition-colors hover:bg-muted/50"
                         >
                             <!-- Nome (com Icone) -->
                             <td class="px-6 py-3.5">
@@ -84,7 +84,7 @@ defineProps<{
                                             getIconColorClass(log.document_type)
                                         "
                                     />
-                                    <span class="font-medium text-slate-800">
+                                    <span class="font-medium text-foreground">
                                         {{ log.name || "---" }}
                                     </span>
                                 </div>
@@ -92,7 +92,7 @@ defineProps<{
 
                             <!-- Caminho do Documento -->
                             <td
-                                class="max-w-xs truncate px-6 py-3.5 font-mono text-xs text-slate-500"
+                                class="max-w-xs truncate px-6 py-3.5 font-mono text-xs text-muted-foreground"
                                 :title="log.document_path || ''"
                             >
                                 {{ log.document_path || "---" }}
@@ -101,19 +101,19 @@ defineProps<{
                             <!-- Tipo -->
                             <td class="px-6 py-3.5">
                                 <span
-                                    class="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600 capitalize"
+                                    class="rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-foreground capitalize"
                                 >
                                     {{ log.document_type || "---" }}
                                 </span>
                             </td>
 
                             <!-- Excluído por -->
-                            <td class="px-6 py-3.5 font-medium text-slate-600">
+                            <td class="px-6 py-3.5 font-medium text-muted-foreground">
                                 {{ log.deleted_by || "Sistema" }}
                             </td>
 
                             <!-- Excluído em (Data/Hora) -->
-                            <td class="px-6 py-3.5 text-slate-500">
+                            <td class="px-6 py-3.5 text-muted-foreground">
                                 {{
                                     log.deleted_at
                                         ? new Date(

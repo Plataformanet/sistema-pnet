@@ -476,16 +476,17 @@ async function executePay() {
                                 >Modo do Filtro</label
                             >
                             <div
-                                class="flex rounded-md border border-border bg-muted/30 p-1"
+                                class="flex rounded-lg border border-border bg-muted p-1"
                             >
                                 <Button
                                     variant="ghost"
                                     size="sm"
-                                    class="h-8 cursor-pointer rounded-sm text-xs font-medium"
-                                    :class="{
-                                        'border border-border/50 bg-white text-foreground shadow-sm':
-                                            filterMode === 'monthly',
-                                    }"
+                                    class="h-8 cursor-pointer rounded-md text-xs font-medium transition-all"
+                                    :class="
+                                        filterMode === 'monthly'
+                                            ? 'bg-slate-900 text-white hover:bg-slate-900 hover:text-white dark:bg-white dark:text-slate-900 dark:hover:bg-white dark:hover:text-slate-900 shadow-sm font-bold'
+                                            : 'text-muted-foreground hover:bg-background/60 hover:text-foreground'
+                                    "
                                     @click="
                                         filterMode = 'monthly';
                                         reload();
@@ -496,11 +497,12 @@ async function executePay() {
                                 <Button
                                     variant="ghost"
                                     size="sm"
-                                    class="h-8 cursor-pointer rounded-sm text-xs font-medium"
-                                    :class="{
-                                        'border border-border/50 bg-white text-foreground shadow-sm':
-                                            filterMode === 'custom',
-                                    }"
+                                    class="h-8 cursor-pointer rounded-md text-xs font-medium transition-all"
+                                    :class="
+                                        filterMode === 'custom'
+                                            ? 'bg-slate-900 text-white hover:bg-slate-900 hover:text-white dark:bg-white dark:text-slate-900 dark:hover:bg-white dark:hover:text-slate-900 shadow-sm font-bold'
+                                            : 'text-muted-foreground hover:bg-background/60 hover:text-foreground'
+                                    "
                                     @click="filterMode = 'custom'"
                                 >
                                     Período Personalizado
@@ -810,7 +812,7 @@ async function executePay() {
                 class="cursor-pointer rounded-xl border p-5 shadow-xs transition select-none hover:shadow-sm"
                 :class="
                     props.status === 'vencidos'
-                        ? 'border-rose-500 bg-rose-50/30 ring-2 ring-rose-500/20'
+                        ? 'border-rose-500 bg-rose-500/10 ring-2 ring-rose-500/30'
                         : 'border-border bg-card'
                 "
             >
@@ -820,7 +822,7 @@ async function executePay() {
                     >
                         Vencidos (R$)
                     </p>
-                    <p class="text-3xl font-extrabold text-rose-600">
+                    <p class="text-3xl font-extrabold text-rose-500">
                         {{ formatMoney(props.totalOverdue) }}
                     </p>
                 </div>
@@ -839,7 +841,7 @@ async function executePay() {
                 class="cursor-pointer rounded-xl border p-5 shadow-xs transition select-none hover:shadow-sm"
                 :class="
                     props.status === 'vencem-hoje'
-                        ? 'border-rose-500 bg-rose-50/30 ring-2 ring-rose-500/20'
+                        ? 'border-rose-500 bg-rose-500/10 ring-2 ring-rose-500/30'
                         : 'border-border bg-card'
                 "
             >
@@ -849,7 +851,7 @@ async function executePay() {
                     >
                         Vencem hoje (R$)
                     </p>
-                    <p class="text-3xl font-extrabold text-rose-600">
+                    <p class="text-3xl font-extrabold text-rose-500">
                         {{ formatMoney(props.totalDueToday) }}
                     </p>
                 </div>
@@ -865,7 +867,7 @@ async function executePay() {
                 class="cursor-pointer rounded-xl border p-5 shadow-xs transition select-none hover:shadow-sm"
                 :class="
                     props.status === 'a-vencer'
-                        ? 'border-primary bg-primary/5 ring-2 ring-primary/20'
+                        ? 'border-primary bg-primary/10 ring-2 ring-primary/30'
                         : 'border-border bg-card'
                 "
             >
@@ -891,7 +893,7 @@ async function executePay() {
                 class="cursor-pointer rounded-xl border p-5 shadow-xs transition select-none hover:shadow-sm"
                 :class="
                     props.status === 'pago'
-                        ? 'border-emerald-500 bg-emerald-50/30 ring-2 ring-emerald-500/20'
+                        ? 'border-emerald-500 bg-emerald-500/10 ring-2 ring-emerald-500/30'
                         : 'border-border bg-card'
                 "
             >
@@ -901,7 +903,7 @@ async function executePay() {
                     >
                         Pagos (R$)
                     </p>
-                    <p class="text-3xl font-extrabold text-emerald-600">
+                    <p class="text-3xl font-extrabold text-emerald-500">
                         {{ formatMoney(props.totalPaid) }}
                     </p>
                 </div>
@@ -913,7 +915,7 @@ async function executePay() {
                 class="cursor-pointer rounded-xl border p-5 shadow-xs transition select-none hover:shadow-sm"
                 :class="
                     !props.status
-                        ? 'border-blue-500 bg-blue-50/30 ring-2 ring-blue-500/20'
+                        ? 'border-primary bg-primary/10 ring-2 ring-primary/30'
                         : 'border-border bg-card'
                 "
             >
