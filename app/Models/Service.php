@@ -21,13 +21,19 @@ class Service extends Model
         'status',
     ];
 
-    protected $casts = [
-        'cost_value' => 'integer',
-        'sell_value' => 'integer',
-        'fees' => 'integer',
-        'duration' => 'integer',
-        'status' => 'boolean',
-    ];
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'cost_value' => 'integer',
+            'sell_value' => 'integer',
+            'fees' => 'integer',
+            'duration' => 'integer',
+            'status' => 'boolean',
+        ];
+    }
 
     public function serviceCategory()
     {

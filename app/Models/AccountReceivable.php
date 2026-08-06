@@ -28,12 +28,18 @@ class AccountReceivable extends Model
         'receipt',
     ];
 
-    protected $casts = [
-        'total' => 'integer',
-        'payment_method' => FinancialPaymentMethodEnum::class,
-        'total_installments' => 'integer',
-        'bank_account_out' => 'integer',
-    ];
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'total' => 'integer',
+            'payment_method' => FinancialPaymentMethodEnum::class,
+            'total_installments' => 'integer',
+            'bank_account_out' => 'integer',
+        ];
+    }
 
     public function financialCategory(): BelongsTo
     {

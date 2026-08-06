@@ -22,12 +22,18 @@ class PaymentMethod extends Model
         'is_default',
     ];
 
-    protected $casts = [
-        'type' => 'integer',
-        'expiration_month' => 'integer',
-        'expiration_year' => 'integer',
-        'is_default' => 'boolean',
-    ];
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'type' => 'integer',
+            'expiration_month' => 'integer',
+            'expiration_year' => 'integer',
+            'is_default' => 'boolean',
+        ];
+    }
 
     public function tenant(): BelongsTo
     {

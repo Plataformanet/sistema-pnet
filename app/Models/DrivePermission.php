@@ -14,9 +14,15 @@ class DrivePermission extends Model
         'permission_type',
     ];
 
-    protected $casts = [
-        'permission_type' => PermissionTypeDriveEnum::class
-    ];
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'permission_type' => PermissionTypeDriveEnum::class,
+        ];
+    }
 
     public function drive(): BelongsTo
     {

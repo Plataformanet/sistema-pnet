@@ -22,11 +22,17 @@ class TenantModule extends Pivot
         'expires_at',
     ];
 
-    protected $casts = [
-        'is_active' => 'boolean',
-        'activated_at' => 'datetime',
-        'expires_at' => 'datetime',
-    ];
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'is_active' => 'boolean',
+            'activated_at' => 'datetime',
+            'expires_at' => 'datetime',
+        ];
+    }
 
     public function tenant(): BelongsTo
     {

@@ -25,11 +25,17 @@ class Drive extends Model
         'modified_at',
     ];
 
-    protected $casts = [
-        'modified_at' => 'datetime',
-        'document_type' => DocumentTypeDriveEnum::class,
-        'document_size' => 'integer',
-    ];
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'modified_at' => 'datetime',
+            'document_type' => DocumentTypeDriveEnum::class,
+            'document_size' => 'integer',
+        ];
+    }
 
     public function getUrlAttribute()
     {

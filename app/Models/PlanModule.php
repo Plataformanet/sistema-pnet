@@ -21,10 +21,16 @@ class PlanModule extends Pivot
         'additional_price',
     ];
 
-    protected $casts = [
-        'is_included' => 'boolean',
-        'additional_price' => 'integer',
-    ];
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'is_included' => 'boolean',
+            'additional_price' => 'integer',
+        ];
+    }
 
     public function plan(): BelongsTo
     {

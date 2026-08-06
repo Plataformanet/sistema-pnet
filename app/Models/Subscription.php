@@ -26,14 +26,20 @@ class Subscription extends Model
         'ends_at',
     ];
 
-    protected $casts = [
-        'status' => SubscriptionStatusEnum::class,
-        'current_period_start' => 'datetime',
-        'current_period_end' => 'datetime',
-        'trial_ends_at' => 'datetime',
-        'cancelled_at' => 'datetime',
-        'ends_at' => 'datetime',
-    ];
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'status' => SubscriptionStatusEnum::class,
+            'current_period_start' => 'datetime',
+            'current_period_end' => 'datetime',
+            'trial_ends_at' => 'datetime',
+            'cancelled_at' => 'datetime',
+            'ends_at' => 'datetime',
+        ];
+    }
 
     // === RELACIONAMENTOS ===
 

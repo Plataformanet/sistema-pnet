@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Enums\AccountsEnum;
 use App\Enums\FinancialPaymentMethodEnum;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -29,14 +28,20 @@ class AccountPayable extends Model
         'receipt',
     ];
 
-    protected $casts = [
-        'total'              => 'integer',
-        'total_installments' => 'integer',
-        'bank_account_out'   => 'integer',
-        'payment_method'     => FinancialPaymentMethodEnum::class,
-    ];
-
     protected $appends = ['type'];
+
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'total' => 'integer',
+            'total_installments' => 'integer',
+            'bank_account_out' => 'integer',
+            'payment_method' => FinancialPaymentMethodEnum::class,
+        ];
+    }
 
     public function getTypeAttribute()
     {

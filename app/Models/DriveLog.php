@@ -10,7 +10,13 @@ class DriveLog extends Model
         'log',
     ];
 
-    protected $casts = [
-        'log' => 'array',
-    ];
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'log' => 'array',
+        ];
+    }
 }

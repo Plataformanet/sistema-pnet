@@ -18,9 +18,15 @@ class FinancialSubcategory extends Model
         'active',
     ];
 
-    protected $casts = [
-        'active' => 'boolean',
-    ];
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'active' => 'boolean',
+        ];
+    }
 
     public function financialCategory(): BelongsTo
     {

@@ -19,8 +19,14 @@ class CentralUser extends Model
         'last_login_at',
     ];
 
-    protected $casts = [
-        'is_active' => 'boolean',
-        'last_login_at' => 'datetime',
-    ];
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'is_active' => 'boolean',
+            'last_login_at' => 'datetime',
+        ];
+    }
 }
