@@ -2,6 +2,10 @@ import "./bootstrap";
 import { createApp, h, type DefineComponent } from "vue";
 import { createInertiaApp } from "@inertiajs/vue3";
 import { resolvePageComponent } from "laravel-vite-plugin/inertia-helpers";
+import { useDark } from "@vueuse/core";
+
+// Inicializa a sincronizacao global do modo escuro com localStorage no app SPA Inertia
+useDark();
 
 const appName = import.meta.env.VITE_APP_NAME || "Laravel";
 
