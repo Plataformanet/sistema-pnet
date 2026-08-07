@@ -10,7 +10,7 @@ O projeto é estruturado utilizando ferramentas modernas do ecossistema PHP e Ja
 
 *   **Backend:** PHP 8.5 + Laravel 13.
 *   **Frontend:** Vue 3 (Composition API / Script Setup) + Inertia.js v2 (comunicação SPA sem necessidade de APIs REST tradicionais).
-*   **Estilização:** Tailwind CSS v4 (Design System utilitário).
+*   **Estilização & Tema:** Tailwind CSS v4 + Shadcn (Design System utilitário com suporte nativo a Modo Escuro / Dark Mode. Veja [dark_mode_guide.md](dark_mode_guide.md)).
 *   **Persistência:** Banco de Dados Relacional (MySQL/PostgreSQL).
 *   **Segurança & RBAC:** `spatie/laravel-permission` instalado no escopo de cada Tenant.
 *   **Multi-Tenancy:** `stancl/tenancy` v3 (Gerenciamento de múltiplos bancos de dados e domínios).

@@ -374,7 +374,7 @@ Alguns recursos também têm `show/Show.vue`. **Mantenha exatamente esses nomes*
 - Componentes de UI vêm de `@/components/ui/*` (shadcn-vue). **Antes de criar um componente, verifique se já existe.**
 - Máscaras e dinheiro: `@/lib/masks` (`maskCurrency`, `parseCurrencyToCents`, `maskCPF`, `maskCNPJ`, `maskCEP`, `maskPhone`). Valores vão ao backend **em centavos**.
 - Composables disponíveis: `usePermission`, `useTenant`, `useCepLookup`, `useContactLookup`.
-- Estilização só com utilitários Tailwind e tokens do tema (`text-foreground`, `border-border`, `bg-card`). Sem CSS solto.
+- Estilização só com utilitários Tailwind e tokens do tema (`text-foreground`, `border-border`, `bg-card`). Sem CSS solto. Consulte o guia de arquitetura do modo escuro em [docs/arquitetura/dark_mode_guide.md](arquitetura/dark_mode_guide.md).
 
 ### 10.3. Tipos TypeScript
 
