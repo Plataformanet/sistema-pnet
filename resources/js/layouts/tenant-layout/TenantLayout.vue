@@ -54,6 +54,21 @@ const sidebarNavigation: TenantSidebarNavigation = {
             url: "/dashboard",
         },
         {
+            title: "CRM",
+            module: "",
+            url: "/crm/kanban",
+            items: [
+                {
+                    title: "Funil de Vendas",
+                    url: "/crm/kanban",
+                },
+                {
+                    title: "Lista de Propostas",
+                    url: "/crm/list",
+                },
+            ],
+        },
+        {
             title: "Cadastros",
             module: "registrations",
             url: "/registrations/dashboard",
@@ -343,7 +358,7 @@ watch(
 <template>
     <SidebarProvider>
         <TenantSidebar :navigation="sidebarNavigation" />
-        <SidebarInset>
+        <SidebarInset class="min-w-0 overflow-x-hidden">
             <header
                 class="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-2 border-b bg-background px-4"
             >
@@ -424,7 +439,7 @@ watch(
                     </DropdownMenu>
                 </div>
             </header>
-            <main class="flex-1 overflow-auto p-4">
+            <main class="flex-1 min-w-0 overflow-x-hidden p-4">
                 <slot />
             </main>
         </SidebarInset>

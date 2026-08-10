@@ -143,6 +143,11 @@ Para cards com destaques de status ou totais (ex: *Vencidos*, *Pagos*, *Total do
 >
 ```
 
+### 4.4. Barras de Rolagem (Scrollbars)
+Para evitar que barras de rolagem nativas do sistema operacional exibam tons de cinza claro ou branco sobre fundos escuros:
+*   As barras de rolagem (verticais e horizontais) possuem estilizações globais configuradas no `@layer base` do arquivo `resources/css/app.css`.
+*   No **Modo Escuro**, os tirantes (*thumbs*) utilizam a cor semântica discreta `oklch(0.32 0.04 260)` com efeito arredondado sobre trilho transparente, combinando perfeitamente com os fundos `bg-card` e `bg-background`.
+
 ---
 
 ## 5. Exceções e Logotipos de Empresas

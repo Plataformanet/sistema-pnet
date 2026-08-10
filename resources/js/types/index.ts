@@ -35,3 +35,7 @@ export * from "./documents/ItbiCalculation";
 
 // Drive
 export * from "./drive";
+
+// CRM
+export * from "./crm/Deal";
+

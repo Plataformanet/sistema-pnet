@@ -11,6 +11,7 @@ use App\Http\Controllers\TenantCashFlowController;
 use App\Http\Controllers\TenantClientController;
 use App\Http\Controllers\TenantCompanySettingController;
 use App\Http\Controllers\TenantController;
+use App\Http\Controllers\TenantCrmController;
 use App\Http\Controllers\TenantDriveController;
 use App\Http\Controllers\TenantDriveFolderController;
 use App\Http\Controllers\TenantDriveLogController;
@@ -59,6 +60,10 @@ Route::middleware([
 
     Route::middleware(Authenticate::class)->group(function () {
         Route::get('/dashboard', [TenantController::class, 'dashboard'])->name('tenant.dashboard');
+
+        // CRM (Prototipo Visual)
+        Route::get('/crm/kanban', [TenantCrmController::class, 'kanban'])->name('tenant.crm.kanban');
+        Route::get('/crm/list', [TenantCrmController::class, 'list'])->name('tenant.crm.list');
 
         // Clients
         Route::get('/registrations/clients/list', [TenantClientController::class, 'index'])->name('tenant.registrations.clients.list')->middleware('permission:registrations.clients.view');
