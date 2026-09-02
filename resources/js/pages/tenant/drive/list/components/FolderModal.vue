@@ -3,41 +3,104 @@ import { ref, watch } from "vue";
 import { X, Folder, Edit2, Loader2 } from "lucide-vue-next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import type { Drive } from "@/types";
+import { router } from "@inertiajs/vue3";
+import { route } from "ziggy-js";
+import { toast } from "vue-sonner";
 
 const props = defineProps<{
     isOpen: boolean;
     mode: "create" | "rename";
-    initialName?: string;
-    isProcessing?: boolean;
+    item?: Drive | null;
+    currentFolderId?: string | number | null;
 }>();
 
 const emit = defineEmits<{
-    (e: "update:isOpen", value: boolean): void;
-    (e: "submit", name: string): void;
+    (e: "update:isOpen", val: boolean): void;
+    (e: "saved"): void;
 }>();
 
-const name = ref(props.initialName || "");
+const name = ref("");
+const isProcessing = ref(false);
 
-watch(
-    () => props.initialName,
-    (val) => {
-        name.value = val || "";
-    }
-);
-
+// Sincroniza o valor inicial do input
 watch(
     () => props.isOpen,
-    (isOpen) => {
-        if (isOpen) {
-            name.value = props.initialName || "";
+    (open) => {
+        if (open) {
+            if (props.mode === "rename" && props.item) {
+                name.value = props.item.name;
+            } else {
+                name.value = "";
+            }
         }
     }
 );
 
 function handleSubmit() {
-    if (name.value.trim()) {
-        emit("submit", name.value.trim());
+    if (!name.value.trim()) {
+        toast.error("O nome não pode ser vazio.");
+        return;
     }
+
+    isProcessing.value = true;
+
+    if (props.mode === "create") {
+        router.post(
+            route("tenant.drive.folders.store"),
+            {
+                name: name.value,
+                parent_id: props.currentFolderId,
+            },
+            {
+                onSuccess: () => {
+                    emit("update:isOpen", false);
+                    toast.success("Pasta criada com sucesso!");
+                    emit("saved");
+                },
+                onError: (errors) => {
+                    toast.error(errors.name || "Erro ao criar pasta.");
+                },
+                onFinish: () => {
+                    isProcessing.value = false;
+                },
+            }
+        );
+
+        return;
+    }
+
+    if (!props.item) {
+        isProcessing.value = false;
+
+        return;
+    }
+
+    router.put(
+        route("tenant.drive.update"),
+        {
+            id: props.item.id,
+            name: name.value,
+            type_drive: props.item.document_type === "folder" ? 1 : 2,
+            drive_type:
+                props.item.document_type === "folder"
+                    ? "folder"
+                    : props.item.document_type,
+        },
+        {
+            onSuccess: () => {
+                emit("update:isOpen", false);
+                toast.success("Item renomeado com sucesso!");
+                emit("saved");
+            },
+            onError: (errors) => {
+                toast.error(errors.name || "Erro ao renomear o item.");
+            },
+            onFinish: () => {
+                isProcessing.value = false;
+            },
+        }
+    );
 }
 </script>
 
