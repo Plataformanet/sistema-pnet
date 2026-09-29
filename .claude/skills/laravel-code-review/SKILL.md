@@ -11,6 +11,9 @@ description: >
   service, job, query, or migration is pasted and the user wants feedback. This project uses
   Laravel Boost, so ALWAYS use the Boost MCP tools to ground the review in the real application
   state before giving an opinion. Use this skill before producing any Laravel review or refactor.
+  This skill produces a review REPORT. When the user wants the code actually fixed, refactored or
+  optimized, use `laravel-refactoring-senior` instead — it invokes this skill on its own diff as a
+  mandatory final gate.
 ---
 
 # Laravel Senior Code Review

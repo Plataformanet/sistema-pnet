@@ -400,12 +400,30 @@ Vue components must have a single root element.
 
 </laravel-boost-guidelines>
 
+## Skill Routing (review vs. change vs. build)
+
+Three Laravel skills cover code work in this project. Pick by **what the user
+expects as output**:
+
+| Request | Skill | Output |
+|---|---|---|
+| Review, audit, analysis — no code change | `laravel-code-review` | A review report |
+| Fix a bug, refactor, optimize, clean up existing code | `laravel-refactoring-senior` | Changed code + tests |
+| Build a new feature / extend functionality | `laravel-development-senior` | New backend slice + tests |
+
+When in doubt: if the user wants to *know* what is wrong, review; if they want
+it *fixed*, refactor. `laravel-refactoring-senior` itself invokes
+`laravel-code-review` on its own diff before finishing (mandatory final gate).
+
 ## Code Review
 
-For any code review, review, audit, refactor, or performance/quality
-improvement request in this Laravel project, **use the `laravel-code-review`
-skill**. This applies even to short prompts like "revise este código",
-"quais melhorias podem ser feitas aqui?", "existe algum n+1 aqui?", ou "isto está limpo?".
+For any code review, review, audit, or performance/quality analysis request
+in this Laravel project where the user wants feedback rather than a code
+change, **use the `laravel-code-review` skill**. This applies even to short
+prompts like "revise este código", "quais melhorias podem ser feitas aqui?",
+"existe algum n+1 aqui?", ou "isto está limpo?". Requests to actually
+refactor, fix, or optimize code go to `laravel-refactoring-senior`, which
+runs this review as its final gate.
 
 Before forming opinions, **ground the review in the real state of the
 application using the Laravel Boost MCP tools** — never guess:
