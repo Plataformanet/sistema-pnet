@@ -1,11 +1,13 @@
 # PRD — Módulo Calculadora de Emolumentos (com ITBI, Serviços e Orçamento)
 
+> **Leia antes:** [`00-visao-geral.md`](00-visao-geral.md) — ordem de implementação e fronteiras entre os módulos.
+
 > **Documento escrito para o agente que vai implementar o módulo em outro sistema.**
 > Stack do destino: **Laravel 13 (PHP ≥ 8.3) + Inertia.js + Vue 3 (`<script setup>`, TypeScript) +
 > Tailwind + shadcn-vue**.
 > Sistema de origem: "Ágil Documentações" (Laravel 8.83 / PHP 8.1 / Blade + jQuery). A origem serve de
 > **especificação de comportamento**, não de código a ser copiado. Os defeitos da origem estão
-> catalogados em [`correcoes-modulo-calculadora-emolumentos.md`](correcoes-modulo-calculadora-emolumentos.md)
+> catalogados em [`03-calculadora-emolumentos-correcoes.md`](03-calculadora-emolumentos-correcoes.md)
 > e **não devem ser portados** — a seção 12 resume quais são.
 
 ---
@@ -92,7 +94,7 @@ Rótulos de enum exibidos ao usuário ficam num método `label()` em pt-BR (ex.:
 
 ### 2.2.1 Dinheiro em centavos (inteiro)
 
-Mesma convenção do [PRD de Propostas](PRD-proposals-module.md) (seção A2) — os dois módulos
+Mesma convenção do [PRD de Propostas](02-propostas.md) (seção A2) — os dois módulos
 compartilham `proposal_cost_items`, então **tem que ser igual**:
 
 - Toda coluna monetária é `unsignedBigInteger` com o valor em **centavos** (R$ 1.234,56 → `123456`),
@@ -696,7 +698,7 @@ Schema::create('proposal_cost_items', function (Blueprint $table) {
 
 Troque `proposals`/`banks` pelos nomes reais do destino (pré-voo 2.3). Se o destino já tiver uma
 tabela de custos/pagamentos da proposta, **avalie reaproveitá-la** em vez de criar `proposal_cost_items`
-e registre a decisão no PR. O [PRD de Propostas](PRD-proposals-module.md) (A0/A4) define essa tabela
+e registre a decisão no PR. O [PRD de Propostas](02-propostas.md) (A0/A4) define essa tabela
 como compartilhada e acrescenta colunas de lançamento manual (`cost_type_id`, `notary_id`, `date`,
 `notes`, `bill_path`, `proof_path`) e o caso `Manual` em `CostItemType` — se aquele módulo já existir,
 reaproveite a tabela dele.
@@ -961,7 +963,7 @@ da tela; o e-mail chega (Mailpit/Mailtrap); a proposta criada pela conversão mo
 
 ## 12. Armadilhas da origem que não devem ser portadas
 
-Detalhes, causa e correção em [`correcoes-modulo-calculadora-emolumentos.md`](correcoes-modulo-calculadora-emolumentos.md).
+Detalhes, causa e correção em [`03-calculadora-emolumentos-correcoes.md`](03-calculadora-emolumentos-correcoes.md).
 
 | Na origem | No destino |
 |---|---|

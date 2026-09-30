@@ -1,6 +1,8 @@
 # PRD — Módulo de Propostas (Proposals)
 
-> Documento para o agente que vai implementar o módulo no sistema novo (PHP 8.5, Laravel 13, Vue 3 + Inertia 2, Tailwind v4 + shadcn-vue). Origem: módulo `propostas` do sistema asdocumentacoes-lv. Referências "B-xx" apontam para [`CODE-REVIEW-proposals-module.md`](CODE-REVIEW-proposals-module.md).
+> **Leia antes:** [`00-visao-geral.md`](00-visao-geral.md) — ordem de implementação e fronteiras entre os módulos.
+
+> Documento para o agente que vai implementar o módulo no sistema novo (PHP 8.5, Laravel 13, Vue 3 + Inertia 2, Tailwind v4 + shadcn-vue). Origem: módulo `propostas` do sistema asdocumentacoes-lv. Referências "B-xx" apontam para [`02-propostas-code-review.md`](02-propostas-code-review.md).
 
 ## A0. Documentos relacionados e ordem de implementação
 
@@ -8,9 +10,9 @@ Este módulo tem um módulo irmão já especificado: **Calculadora de Emolumento
 
 | Documento | Conteúdo |
 |---|---|
-| [`prd-modulo-calculadora-emolumentos.md`](prd-modulo-calculadora-emolumentos.md) | PRD da calculadora (API de emolumentos, ITBI), serviços cobráveis, orçamento, vínculo com proposta e conversão de orçamento em proposta |
-| [`correcoes-modulo-calculadora-emolumentos.md`](correcoes-modulo-calculadora-emolumentos.md) | Code review/correções da calculadora e do orçamento no legado |
-| [`CODE-REVIEW-proposals-module.md`](CODE-REVIEW-proposals-module.md) | Code review deste módulo no legado |
+| [`03-calculadora-emolumentos.md`](03-calculadora-emolumentos.md) | PRD da calculadora (API de emolumentos, ITBI), serviços cobráveis, orçamento, vínculo com proposta e conversão de orçamento em proposta |
+| [`03-calculadora-emolumentos-correcoes.md`](03-calculadora-emolumentos-correcoes.md) | Code review/correções da calculadora e do orçamento no legado |
+| [`02-propostas-code-review.md`](02-propostas-code-review.md) | Code review deste módulo no legado |
 
 **Leia os dois PRDs antes de começar.** Regras de convivência:
 
@@ -28,7 +30,7 @@ Este módulo tem um módulo irmão já especificado: **Calculadora de Emolumento
    | Serviços cobráveis | `billable_services` / `BillableService` | pivot `proposal_billable_service`; `Proposal::billableServices()` |
    | Estado civil | enum `MaritalStatus` (int: `Single=1`, `Married=2`, `Widowed=3`, `JudiciallySeparated=4`, `Divorced=5`) | reutilizar em `applicants`, `sellers` e `quotes` |
    | Edição de valor da linha | `ProposalCostItemController@update` — `PATCH proposals/{proposal}/cost-items/{costItem}` | mesma rota nos dois PRDs |
-   | Dinheiro | `unsignedBigInteger` em **centavos** + `App\Support\Money` / `formatMoney()` (ver A2) | **sobrepõe** o `decimal(12,2)`/`decimal:2` do PRD da calculadora em todas as colunas monetárias: `proposal_cost_items.amount`, `billable_services.price`, `quote_billable_service.amount`, `fee_calculations.fees_total/itbi_amount`, `fee_estimates.fees_total/itbi_amount`. Alíquotas (`decimal:4`) continuam decimais. Valores vindos da API de emolumentos (reais com centavos) são convertidos para centavos ao gravar |
+   | Dinheiro | `unsignedBigInteger` em **centavos** + `App\Support\Money` / `formatMoney()` (ver A2) | o PRD da calculadora já está alinhado (§2.2.1) — vale para todas as colunas monetárias dos dois módulos, inclusive `proposal_cost_items.amount`, `billable_services.price`, `quote_billable_service.amount`, `fee_calculations.fees_total/itbi_amount`, `fee_estimates.fees_total/itbi_amount`. Alíquotas (`decimal:4`) continuam decimais. Valores vindos da API de emolumentos (reais com centavos) são convertidos para centavos ao gravar |
 
 4. **Camadas**: neste módulo a regra fica em **Services** (sem Repository). O PRD da calculadora usa **Actions** (`CreateQuote`, `ConvertQuoteToProposal`, `AttachFeeEstimateToProposal`) — mantenha como lá está. Mas **as Actions da calculadora não podem duplicar regra de proposta**: `ConvertQuoteToProposal` deve criar a proposta, o proponente e a timeline chamando os Services deste módulo (`ProposalService::createFromQuote`, `ApplicantService::findOrCreateByCpf`, `ProposalTimelineService::instantiate`), e o PDF do orçamento entra como documento via `ProposalDocumentService`.
 5. **Conflito entre os dois PRDs**: em nomes/tabelas compartilhados, vale a tabela acima; em regra de proposta, vale este PRD; em regra de cálculo/orçamento, vale o da calculadora. Se surgir conflito não coberto, **pare e pergunte**.
@@ -145,7 +147,7 @@ Dependências externas ao módulo (reutilizar se existirem no sistema novo): `us
 - **proposal_stages**: `proposal_id` FK cascade, `stage_id` FK, `position` (cópia de `order`), `proposal_document_id` nullable, `date` nullable, `notes` nullable, `is_current` bool, `started_at` nullable, `completed_at` nullable; índice `(proposal_id, is_current)`. Substitui as flags legadas `etapa_atual/etapa_iniciada/concluido` (status derivado: `completed_at` ⇒ concluída; `started_at` ⇒ em andamento; senão bloqueada).
 - **proposal_documents**: `proposal_id`, `uploaded_by` (FK users), `owner` enum `DocumentOwner`, `documentable_type/id` nullable (Applicant/Seller a quem o doc pertence — legado `pessoa`), `proposal_stage_id` nullable (legado `etapa`=1), `type` enum `DocumentType` nullable, `title`, `disk`, `path`, `original_name`, `mime_type`, `size`.
 - **proposal_cost_items**:
-  - Colunas-base (PRD da calculadora §6.2, **não renomear**): `proposal_id` FK cascade, `type` string(20) → `CostItemType`, `description`, `extra_fee_description`, `service_description`, `generates_receipt`, `amount` (**`unsignedBigInteger` centavos** — sobrepõe o `decimal(12,2)` do PRD da calculadora, ver A0), timestamps, índice `(proposal_id, type)`.
+  - Colunas-base (PRD da calculadora §6.2, **não renomear**): `proposal_id` FK cascade, `type` string(20) → `CostItemType`, `description`, `extra_fee_description`, `service_description`, `generates_receipt`, `amount` (**`unsignedBigInteger` centavos**, igual ao PRD da calculadora §2.2.1), timestamps, índice `(proposal_id, type)`.
   - Colunas acrescentadas por este módulo (todas `nullable`, usadas quando `type = Manual`): `cost_type_id` FK `cost_types`, `notary_id` FK `notaries`, `date`, `notes`, `bill_path` (boleto, legado `anexo_doc`), `proof_path` (comprovante, legado `anexo_comp`).
   - Quem implementar primeiro cria a tabela com **todas** as colunas; o outro módulo reaproveita (o PRD da calculadora já prevê isso na nota do §6.2).
 - **receipts**: `proposal_id`, `proposal_cost_item_id` nullable FK (legado `pagamentos_taxas_id` default 0 sem FK), `type` enum `ReceiptType` (`General`, `Advisory`=Assessoria, `Courier`=Motoboy), `name`, `document` (CPF/CNPJ), `registration_number` (matrícula), `notary_name`, `total_spent` e `amount_deposited` (`unsignedBigInteger` centavos), `date`.
@@ -261,7 +263,7 @@ Testes deste módulo cobrem esses métodos isoladamente; os testes de ponta a po
 4. Documentos (storage privado, checklist) + testes.
 5. Linhas de custo (`proposal_cost_items` com as colunas dos dois PRDs, lançamento manual) + recibos + PDFs + testes.
 6. Pontos de integração da seção “Integração com Calculadora/Orçamento” (`createFromQuote`, `findOrCreateByCpf`, `storeGenerated`, `scopeWithoutFeeEstimate`) + testes.
-7. **Depois**: implementar o [PRD da calculadora](prd-modulo-calculadora-emolumentos.md), reaproveitando `proposal_cost_items`, `CostItemType`, `MaritalStatus`, `MoneyInput` e os Services do passo 6.
+7. **Depois**: implementar o [PRD da calculadora](03-calculadora-emolumentos.md), reaproveitando `proposal_cost_items`, `CostItemType`, `MaritalStatus`, `MoneyInput` e os Services do passo 6.
 8. (Opcional) Script de migração de dados do legado usando `ProposalStatus::legacyId()` e demais mapeamentos da A4 (valores monetários `(int) round($valor * 100)`).
 
 ## A9. Critérios de aceite

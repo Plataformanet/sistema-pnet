@@ -13,9 +13,9 @@ São **27 correções numeradas + nits**, em ordem de severidade. Cada uma tem s
 localizar e o patch (antes → depois).
 
 > **Este documento só descreve.** Nada foi alterado no código. Para aplicar, use a skill
-> `laravel-refactoring-senior` ("aplique as correções do docs/correcoes-modulo-calculadora-emolumentos.md").
+> `laravel-refactoring-senior` ("aplique as correções do docs/prd/03-calculadora-emolumentos-correcoes.md").
 > A reimplementação do módulo em outro sistema está em
-> [`prd-modulo-calculadora-emolumentos.md`](prd-modulo-calculadora-emolumentos.md), que já nasce sem estes defeitos.
+> [`03-calculadora-emolumentos.md`](03-calculadora-emolumentos.md), que já nasce sem estes defeitos.
 
 > **Não use números de linha.** Localize pelos trechos citados (`grep`) e pelos nomes dos símbolos.
 
