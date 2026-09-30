@@ -41,6 +41,16 @@ export const columns: ColumnDef<BankAccount>[] = [
         header: "Tipo",
     },
     {
+        accessorKey: "initial_balance",
+        header: "Saldo Inicial",
+        cell: ({ row }) => {
+            const val = row.original.initial_balance;
+            return val !== undefined && val !== null
+                ? maskCurrency(String(val))
+                : "R$ 0,00";
+        },
+    },
+    {
         accessorKey: "current_balance",
         header: "Saldo Atual",
         cell: ({ row }) => {

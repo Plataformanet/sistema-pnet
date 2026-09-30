@@ -96,7 +96,7 @@ class CashFlowService
             [$start, $end] = $this->resolvePeriod($request, $period);
 
             $query = Installment::query()
-                ->whereBetween('due_date', [$start, $end])
+                ->whereBetween('payment_date', [$start, $end])
                 ->where('status', AccountsEnum::PAID)
                 ->whereHasMorph('installmentable', [AccountPayable::class], function (Builder $query) use ($request, $bankAccountId) {
                     $query->when($request->query('category_id'), function (Builder $query) use ($request) {
@@ -116,7 +116,7 @@ class CashFlowService
             [$start, $end] = $this->resolvePeriod($request, $period);
 
             $query = Installment::query()
-                ->whereBetween('due_date', [$start, $end])
+                ->whereBetween('payment_date', [$start, $end])
                 ->where('status', AccountsEnum::PAID)
                 ->whereHasMorph('installmentable', [AccountReceivable::class], function (Builder $query) use ($request, $bankAccountId) {
                     $query->when($request->query('category_id'), function (Builder $query) use ($request) {

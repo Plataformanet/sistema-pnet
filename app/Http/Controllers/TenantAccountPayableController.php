@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Exceptions\FinancialEntryException;
 use App\Exceptions\InactiveContactException;
 use App\Exceptions\UpdateInstallmentException;
 use App\Http\Requests\IndexAccountPayableRequest;
 use App\Http\Requests\StoreAccountPayableRequest;
 use App\Http\Requests\UpdateAccountPayableRequest;
-use App\Http\Requests\UpdateInstallmentValueRequest;
 use App\Models\BankAccount;
 use App\Models\Cost;
 use App\Models\FinancialCategory;
@@ -126,7 +126,7 @@ class TenantAccountPayableController extends Controller
 
             return redirect()->route('tenant.finance.accounts-payable.list', $request->query())->with('success', 'Conta a pagar criada com sucesso');
 
-        } catch (InactiveContactException $th) {
+        } catch (InactiveContactException|FinancialEntryException $th) {
             return redirect()->back()->with('warning', $th->getMessage());
         } catch (\Throwable $th) {
             Log::error('Erro ao criar contas a pagar: '.$th->getMessage());
@@ -191,13 +191,17 @@ class TenantAccountPayableController extends Controller
      */
     public function update(UpdateAccountPayableRequest $request, string $id)
     {
-        $accountPayable = $this->accountPayableService->update($id, $request->validated(), tenant());
+        try {
+            $this->accountPayableService->update($id, $request->validated(), tenant());
 
-        if ($accountPayable) {
             return redirect()->route('tenant.finance.accounts-payable.list', $request->query())->with('success', 'Conta a pagar atualizada com sucesso!');
-        }
+        } catch (InactiveContactException|FinancialEntryException $th) {
+            return redirect()->back()->with('warning', $th->getMessage());
+        } catch (\Throwable $th) {
+            Log::error('Erro ao atualizar conta a pagar: '.$th->getMessage());
 
-        return redirect()->route('tenant.finance.accounts-payable.edit', ['id' => $id] + $request->query())->with('error', 'Erro ao tentar atualizar a conta a pagar!');
+            return redirect()->route('tenant.finance.accounts-payable.edit', ['id' => $id] + $request->query())->with('error', 'Erro ao tentar atualizar a conta a pagar!');
+        }
     }
 
     /**
@@ -205,38 +209,36 @@ class TenantAccountPayableController extends Controller
      */
     public function destroy(string $id)
     {
-        $accountPayable = $this->accountPayableService->delete($id, tenant());
+        try {
+            $this->accountPayableService->delete($id, tenant());
 
-        if ($accountPayable) {
             return redirect()->route('tenant.finance.accounts-payable.list')->with('success', 'Conta a pagar excluída com sucesso!');
-        }
+        } catch (\Throwable $th) {
+            Log::error('Erro ao excluir conta a pagar: '.$th->getMessage());
 
-        return redirect()->route('tenant.finance.accounts-payable.list')->with('error', 'Erro ao tentar excluir a conta a pagar!');
+            return redirect()->route('tenant.finance.accounts-payable.list')->with('error', 'Erro ao tentar excluir a conta a pagar!');
+        }
     }
 
     public function updateInstallments(Request $request)
     {
         try {
-            $this->accountPayableService->updateInstallment($request->input('id'), tenant());
+            $this->accountPayableService->updateInstallment((string) $request->input('id'), tenant());
 
             return response()->json([
                 'success' => true,
                 'message' => 'Parcelas atualizadas com sucesso!',
             ], Response::HTTP_CREATED);
-        } catch (\Throwable) {
+        } catch (FinancialEntryException $th) {
+            return response()->json([
+                'success' => false,
+                'message' => $th->getMessage(),
+            ], Response::HTTP_UNPROCESSABLE_ENTITY);
+        } catch (\Throwable $th) {
+            Log::error('Erro ao dar baixa na parcela a pagar: '.$th->getMessage());
+
             throw new UpdateInstallmentException('Erro ao tentar atualizar as parcelas!');
         }
-    }
-
-    public function updateInstallmentValue(UpdateInstallmentValueRequest $request)
-    {
-        $updatedInstallments = $this->accountPayableService->updateInstallmentValue($request->validated(), tenant());
-
-        if ($updatedInstallments) {
-            return response()->json(['status' => 200, 'message' => 'Valor da parcela atualizada com sucesso!']);
-        }
-
-        return response()->json(['status' => 500, 'message' => 'Erro ao tentar atualizar o valor da parcela!']);
     }
 
     public function searchContact(Request $request)

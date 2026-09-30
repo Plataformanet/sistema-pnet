@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Field, FieldLabel } from "@/components/ui/field";
+import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import FieldError from "@/components/ui/field/FieldError.vue";
@@ -18,8 +18,11 @@ import { useForm } from "@inertiajs/vue3";
 const props = withDefaults(defineProps<{
     form: ReturnType<typeof useForm>;
     submitText?: string;
+    // Na edição o saldo inicial é somente leitura: o backend o descarta.
+    isEdit?: boolean;
 }>(), {
     submitText: "Salvar Conta Bancária",
+    isEdit: false,
 });
 
 const emit = defineEmits(["submit"]);
@@ -108,8 +111,12 @@ function onSubmit() {
                             }
                         "
                         placeholder="R$ 0,00"
-                        required
+                        :required="!isEdit"
+                        :disabled="isEdit"
                     />
+                    <FieldDescription v-if="isEdit">
+                        O saldo inicial não pode ser alterado após a criação da conta.
+                    </FieldDescription>
                     <FieldError v-if="form.errors.initial_balance">{{
                         form.errors.initial_balance
                     }}</FieldError>

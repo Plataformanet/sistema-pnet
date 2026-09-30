@@ -53,6 +53,6 @@ function submit() {
     </div>
 
     <div class="mx-auto mb-20 max-w-6xl py-4">
-        <BankAccountForm :form="form" @submit="submit" submitText="Atualizar Conta Bancária" />
+        <BankAccountForm :form="form" @submit="submit" submitText="Atualizar Conta Bancária" is-edit />
     </div>
 </template>

@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Exceptions\FinancialEntryException;
 use App\Exceptions\InactiveContactException;
 use App\Exceptions\UpdateInstallmentException;
 use App\Http\Requests\IndexAccountReceivableRequest;
 use App\Http\Requests\StoreAccountReceivableRequest;
 use App\Http\Requests\UpdateAccountReceivableRequest;
-use App\Http\Requests\UpdateInstallmentValueRequest;
 use App\Models\BankAccount;
 use App\Models\Cost;
 use App\Models\FinancialCategory;
@@ -126,7 +126,7 @@ class TenantAccountReceivableController extends Controller
 
             return redirect()->route('tenant.finance.accounts-receivable.list')->with('success', 'Conta a receber criada com sucesso!');
 
-        } catch (InactiveContactException $th) {
+        } catch (InactiveContactException|FinancialEntryException $th) {
             return redirect()->back()->with('warning', $th->getMessage());
         } catch (\Throwable $th) {
             Log::error('Erro ao criar contas a receber: '.$th->getMessage());
@@ -191,13 +191,17 @@ class TenantAccountReceivableController extends Controller
      */
     public function update(UpdateAccountReceivableRequest $request, string $id)
     {
-        $accountReceivable = $this->accountReceivableService->update($id, $request->validated(), tenant());
+        try {
+            $this->accountReceivableService->update($id, $request->validated(), tenant());
 
-        if ($accountReceivable) {
-            return redirect()->route('tenant.finance.accounts-receivable.edit', ['id' => $accountReceivable->id])->with('success', 'Conta a receber atualizada com sucesso!');
+            return redirect()->route('tenant.finance.accounts-receivable.edit', ['id' => $id])->with('success', 'Conta a receber atualizada com sucesso!');
+        } catch (InactiveContactException|FinancialEntryException $th) {
+            return redirect()->back()->with('warning', $th->getMessage());
+        } catch (\Throwable $th) {
+            Log::error('Erro ao atualizar conta a receber: '.$th->getMessage());
+
+            return redirect()->route('tenant.finance.accounts-receivable.edit', ['id' => $id])->with('error', 'Erro ao tentar atualizar a conta a receber!');
         }
-
-        return redirect()->route('tenant.finance.accounts-receivable.edit', ['id' => $accountReceivable->id])->with('error', 'Erro ao tentar atualizar a conta a receber!');
     }
 
     /**
@@ -205,38 +209,36 @@ class TenantAccountReceivableController extends Controller
      */
     public function destroy(string $id)
     {
-        $accountReceivable = $this->accountReceivableService->delete($id, tenant());
+        try {
+            $this->accountReceivableService->delete($id, tenant());
 
-        if ($accountReceivable) {
             return redirect()->route('tenant.finance.accounts-receivable.list')->with('success', 'Conta a receber deletado com sucesso!');
-        }
+        } catch (\Throwable $th) {
+            Log::error('Erro ao excluir conta a receber: '.$th->getMessage());
 
-        return redirect()->route('tenant.finance.accounts-receivable.list')->with('error', 'Erro ao tentar excluir a conta a receber!');
+            return redirect()->route('tenant.finance.accounts-receivable.list')->with('error', 'Erro ao tentar excluir a conta a receber!');
+        }
     }
 
     public function updateInstallments(Request $request)
     {
         try {
-            $this->accountReceivableService->updateInstallment($request->input('id'), tenant());
+            $this->accountReceivableService->updateInstallment((string) $request->input('id'), tenant());
 
             return response()->json([
                 'success' => true,
                 'message' => 'Parcelas atualizadas com sucesso!',
             ], Response::HTTP_CREATED);
-        } catch (\Throwable) {
+        } catch (FinancialEntryException $th) {
+            return response()->json([
+                'success' => false,
+                'message' => $th->getMessage(),
+            ], Response::HTTP_UNPROCESSABLE_ENTITY);
+        } catch (\Throwable $th) {
+            Log::error('Erro ao dar baixa na parcela a receber: '.$th->getMessage());
+
             throw new UpdateInstallmentException('Erro ao tentar atualizar as parcelas!');
         }
-    }
-
-    public function updateInstallmentValue(UpdateInstallmentValueRequest $request)
-    {
-        $updatedInstallments = $this->accountReceivableService->updateInstallmentValue($request->validated(), tenant());
-
-        if ($updatedInstallments) {
-            return response()->json(['status' => 200, 'message' => 'Valor da parcela atualizada com sucesso!']);
-        }
-
-        return response()->json(['status' => 500, 'message' => 'Erro ao atualizar parcela!']);
     }
 
     public function searchContact(Request $request)

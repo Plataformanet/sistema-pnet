@@ -179,7 +179,6 @@ Route::middleware([
         Route::put('/finance/accounts-payable/{id}', [TenantAccountPayableController::class, 'update'])->name('tenant.finance.accounts-payable.update')->middleware('permission:finance.accounts_payable.edit');
         Route::delete('/finance/accounts-payable/{id}', [TenantAccountPayableController::class, 'destroy'])->name('tenant.finance.accounts-payable.destroy')->middleware('permission:finance.accounts_payable.delete');
         Route::patch('/finance/accounts-payable/installments/update', [TenantAccountPayableController::class, 'updateInstallments'])->name('tenant.finance.accounts-payable.installments.update')->middleware('permission:finance.accounts_payable.edit');
-        Route::patch('/finance/accounts-payable/installments/value', [TenantAccountPayableController::class, 'updateInstallmentValue'])->name('tenant.finance.accounts-payable.installments.value')->middleware('permission:finance.accounts_payable.edit');
 
         // Contas a Receber
         Route::get('/finance/accounts-receivable/list', [TenantAccountReceivableController::class, 'index'])->name('tenant.finance.accounts-receivable.list')->middleware('permission:finance.accounts_receivable.view');
@@ -191,7 +190,6 @@ Route::middleware([
         Route::put('/finance/accounts-receivable/{id}', [TenantAccountReceivableController::class, 'update'])->name('tenant.finance.accounts-receivable.update')->middleware('permission:finance.accounts_receivable.edit');
         Route::delete('/finance/accounts-receivable/{id}', [TenantAccountReceivableController::class, 'destroy'])->name('tenant.finance.accounts-receivable.destroy')->middleware('permission:finance.accounts_receivable.delete');
         Route::patch('/finance/accounts-receivable/installments/update', [TenantAccountReceivableController::class, 'updateInstallments'])->name('tenant.finance.accounts-receivable.installments.update')->middleware('permission:finance.accounts_receivable.edit');
-        Route::patch('/finance/accounts-receivable/installments/value', [TenantAccountReceivableController::class, 'updateInstallmentValue'])->name('tenant.finance.accounts-receivable.installments.value')->middleware('permission:finance.accounts_receivable.edit');
 
         // Fluxo de Caixa
         Route::get('/finance/cash-flow', TenantCashFlowController::class)->name('tenant.finance.cash-flow.index')->middleware('permission:finance.cash_flow.view');

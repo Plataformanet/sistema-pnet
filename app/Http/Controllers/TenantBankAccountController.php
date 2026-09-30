@@ -34,11 +34,6 @@ class TenantBankAccountController extends Controller
         try {
             $data = $request->validated();
 
-            // Set current_balance equal to initial_balance on creation if not explicitly set
-            if (! isset($data['current_balance']) || $data['current_balance'] === null) {
-                $data['current_balance'] = $data['initial_balance'] ?? 0;
-            }
-
             // Convert string/numeric active & main_account to boolean if needed
             $data['active'] = filter_var($data['active'] ?? true, FILTER_VALIDATE_BOOLEAN);
             $data['main_account'] = filter_var($data['main_account'] ?? false, FILTER_VALIDATE_BOOLEAN);

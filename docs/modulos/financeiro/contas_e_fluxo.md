@@ -21,7 +21,10 @@ O sistema precisa conciliar os saldos financeiros e prover visibilidade gerencia
 1.  **Chave Única de Conta Bancária:** Para evitar cadastros duplicados de contas correntes, a combinação física de `[bank, agency, account_number]` deve ser única dentro do mesmo tenant.
 2.  **Conta Principal Padrão (`main_account`):** O inquilino deve indicar uma de suas contas como a conta principal padrão. Ao criar lançamentos financeiros (pagar/receber), o sistema seleciona automaticamente esta conta principal, permitindo alteração manual pelo operador.
 3.  **Tipagem do Plano de Contas:** Categorias financeiras exigem a definição de `type` (Receita ou Despesa). Subcategorias devem ser vinculadas obrigatoriamente a uma categoria e herdam seu tipo.
-4.  **Cálculo Real do Fluxo de Caixa por Parcelas:** O relatório de fluxo de caixa calcula entradas e saídas analisando a data de vencimento (`due_date`) e data de pagamento real (`payment_date`) das parcelas (`installments`), e **não** os valores globais dos cabeçalhos de contas a pagar/receber, garantindo precisão diária/mensal.
+4.  **Cálculo Real do Fluxo de Caixa por Parcelas:** O relatório de fluxo de caixa calcula entradas e saídas a partir das parcelas (`installments`), e **não** dos valores globais dos cabeçalhos de contas a pagar/receber. O **realizado** (receitas e despesas pagas) é filtrado pela data de pagamento real (`payment_date`); as **projeções** (parcelas em aberto) são filtradas pela data de vencimento (`due_date`). Assim, uma parcela vencida em maio e paga em junho entra no realizado de junho.
+5.  **Saldo Inicial Imutável:** O `initial_balance` é informado apenas na criação da conta. Na edição o campo é exibido desabilitado e o backend descarta qualquer valor enviado (`UpdateBankAccountRequest`), pois alterá-lo dessincronizaria o saldo atual das movimentações já lançadas. A listagem de contas exibe o Saldo Inicial ao lado do Saldo Atual, como registro de quanto havia na conta no cadastro.
+6.  **Saldo Atual Derivado:** O `current_balance` nasce igual ao `initial_balance` e, a partir daí, só é alterado pelo sistema — baixas e estornos de lançamentos (ver `lancamentos_e_parcelas.md`). Ele não é aceito em nenhum formulário e serve apenas para exibição (listagem de contas e resumos das telas financeiras).
+7.  **Exclusão de Conta Bancária:** Ao excluir uma conta bancária, os lançamentos (a pagar/receber) vinculados a ela e as respectivas parcelas também são excluídos (soft delete), sem deixar parcelas órfãs.
 
 ---
 
@@ -35,8 +38,8 @@ O sistema precisa conciliar os saldos financeiros e prover visibilidade gerencia
     *   `agency`: String (Número da agência)
     *   `account_number`: String (Número da conta)
     *   `account_type`: String (ex: Corrente, Poupança, Caixa Físico)
-    *   `initial_balance`: Integer (Saldo inicial no setup, em centavos)
-    *   `current_balance`: Integer (Saldo atualizado conciliado, em centavos)
+    *   `initial_balance`: BigInt (Saldo inicial no setup, em centavos — definido só na criação)
+    *   `current_balance`: BigInt (Saldo atualizado conciliado, em centavos — mantido pelo sistema, somente leitura)
     *   `active`: Boolean (default true)
     *   `main_account`: Boolean (default false)
 *   **Tabela:** `financial_categories`
@@ -100,3 +103,9 @@ O sistema precisa conciliar os saldos financeiros e prover visibilidade gerencia
 *   **Quando** o operador visualiza o relatório de Fluxo de Caixa consolidado
 *   **Então** o sistema deve computar apenas a parcela Paga no cálculo do saldo realizado de hoje (reduzindo R$ 100,00)
 *   **E** listar a parcela pendente apenas na aba de projeções de vencimento.
+
+### Cenário 3: Saldo inicial não pode ser alterado
+*   **Dado que** a conta "Banco Itaú" foi criada com saldo inicial de R$ 1.500,00
+*   **Quando** o operador edita a conta e envia um saldo inicial diferente
+*   **Então** o sistema deve salvar as demais alterações
+*   **E** manter o saldo inicial e o saldo atual inalterados.

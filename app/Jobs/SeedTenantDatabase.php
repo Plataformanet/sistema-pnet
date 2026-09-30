@@ -63,8 +63,12 @@ class SeedTenantDatabase implements ShouldQueue
                         ->all()
                 );
 
+                // Upsert, e não insert: migrations de dados do tenant (ex.:
+                // add_company_settings_permissions) já criam algumas permissões
+                // antes deste job, e um insert simples violaria o índice único
+                // name + guard_name, derrubando o provisionamento.
                 if ($permissions !== []) {
-                    Permission::insert(
+                    Permission::upsert(
                         collect($permissions)
                             ->map(fn (array $permission): array => [
                                 'name' => $permission['name'],
@@ -73,7 +77,9 @@ class SeedTenantDatabase implements ShouldQueue
                                 'created_at' => $now,
                                 'updated_at' => $now,
                             ])
-                            ->all()
+                            ->all(),
+                        ['name', 'guard_name'],
+                        ['display_name', 'updated_at'],
                     );
                 }
 

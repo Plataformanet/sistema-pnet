@@ -7,6 +7,7 @@ use App\Models\Module;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Services\TenantService;
+use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Tests\Support\TenantRegistry;
@@ -139,7 +140,9 @@ test('store rolls back the tenant when the domain is already taken', function ()
 
     $this->assertDatabaseMissing('tenants', ['name' => 'Segundo']);
     $this->assertDatabaseHas('domains', ['domain' => 'duplicate.localhost', 'tenant_id' => $first->id]);
-    $this->assertDatabaseCount('domains', 1);
+    // Desconsidera o domínio do tenant compartilhado, criado uma vez por suíte
+    // em TenantRegistry::migrate() e presente em todos os testes.
+    expect(DB::table('domains')->where('tenant_id', '!=', 'test')->count())->toBe(1);
 });
 
 test('canActivateModule throws when the module is not in the tenant plan', function () {

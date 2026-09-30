@@ -157,7 +157,8 @@ Controla o gerenciamento de clientes, fornecedores e funcionários com restriç�
 | **PUT** | `/finance/accounts-payable/{id}` | `tenant.finance.accounts-payable.update` | `permission:finance.accounts_payable.edit` |
 | **DELETE**| `/finance/accounts-payable/{id}` | `tenant.finance.accounts-payable.destroy` | `permission:finance.accounts_payable.delete` |
 | **PATCH** | `/finance/accounts-payable/installments/update`| `tenant.finance.accounts-payable.installments.update`| `permission:finance.accounts_payable.edit` |
-| **PATCH** | `/finance/accounts-payable/installments/value` | `tenant.finance.accounts-payable.installments.value`| `permission:finance.accounts_payable.edit` |
+
+> `installments/update` dá baixa na parcela (payload `{ id }`) e debita o saldo da conta bancária. Parcela já paga ou de outro tipo de lançamento é recusada (HTTP 422 com `message`). A antiga rota `installments/value` foi removida: o valor das parcelas só é alterado pela edição do lançamento.
 
 #### Contas a Receber (`TenantAccountReceivableController`)
 | Método | Rota | Nome da Rota | Middleware de Permissão |
@@ -171,7 +172,8 @@ Controla o gerenciamento de clientes, fornecedores e funcionários com restriç�
 | **PUT** | `/finance/accounts-receivable/{id}` | `tenant.finance.accounts-receivable.update` | `permission:finance.accounts_receivable.edit` |
 | **DELETE**| `/finance/accounts-receivable/{id}` | `tenant.finance.accounts-receivable.destroy` | `permission:finance.accounts_receivable.delete` |
 | **PATCH** | `/finance/accounts-receivable/installments/update`| `tenant.finance.accounts-receivable.installments.update`| `permission:finance.accounts_receivable.edit` |
-| **PATCH** | `/finance/accounts-receivable/installments/value` | `tenant.finance.accounts-receivable.installments.value`| `permission:finance.accounts_receivable.edit` |
+
+> `installments/update` dá baixa na parcela (payload `{ id }`) e credita o saldo da conta bancária, com as mesmas regras de Contas a Pagar.
 
 #### Fluxos e Relatórios Financeiros
 | Método | Rota | Nome da Rota | Middleware de Permissão | Descrição |

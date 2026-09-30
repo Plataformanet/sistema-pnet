@@ -4,7 +4,11 @@ namespace App\Services;
 
 use App\Enums\AccountsEnum;
 use App\Enums\ContactTypeEnum;
+use App\Exceptions\AccountTotalBelowPaidException;
 use App\Exceptions\InactiveContactException;
+use App\Exceptions\InstallmentAlreadyPaidException;
+use App\Exceptions\InstallmentsTotalMismatchException;
+use App\Exceptions\PaidInstallmentLockedException;
 use App\Models\BankAccount;
 use App\Models\Client;
 use App\Models\Contact;
@@ -15,7 +19,9 @@ use App\Models\Supplier;
 use App\Models\Tenant;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
 
 abstract class AccountService
@@ -30,24 +36,283 @@ abstract class AccountService
     abstract protected function getModel(): string;
 
     /**
-     * Gera as parcelas no servidor a partir de `total_installments`, deslocando o
-     * vencimento mês a mês. Usado quando o front não envia parcelas (à vista e 1 parcela).
+     * Papel do contato (fornecedor ou cliente) que recebe os lançamentos deste service.
+     */
+    abstract protected function contactType(): ContactTypeEnum;
+
+    /**
+     * Sentido do pagamento no saldo bancário: -1 para saída (contas a pagar)
+     * e +1 para entrada (contas a receber).
+     */
+    abstract protected function balanceDirection(): int;
+
+    /**
+     * Cria o lançamento e suas parcelas. Quando ele já nasce pago, o valor de todas
+     * as parcelas é movimentado no saldo da conta bancária na mesma transação.
      *
      * @param  array<string, mixed>  $data
      */
-    protected function generateInstallments(Model $account, array $data, int|float $installmentValue): void
+    protected function createAccount(array $data, Tenant $tenant): Model
     {
-        $dueDate = Carbon::parse($data['due_date']);
+        return $tenant->run(function () use ($data) {
+            return DB::transaction(function () use ($data) {
+                $data['financial_contact_id'] = $this->resolveFinancialContactId($data['financial_contact_id'], $this->contactType());
+                $data['total_installments'] = $this->installmentsCount($data['payment_condition']);
 
-        for ($count = 0; $count < $data['total_installments']; $count++) {
+                $account = $this->model::create($data);
+                $status = AccountsEnum::from($data['status']);
+
+                $installments = empty($data['installments'])
+                    ? $this->splitIntoInstallments((int) $data['total'], range(1, $data['total_installments']), Carbon::parse($data['due_date']))
+                    : collect($data['installments'])->values()->map(fn (array $installment, int $index) => [
+                        'installment_number' => $index + 1,
+                        'value' => (int) $installment['value'],
+                        'due_date' => Carbon::parse($installment['due_date']),
+                    ])->all();
+
+                foreach ($installments as $installment) {
+                    $account->installments()->create([
+                        ...$installment,
+                        'description' => $data['description'],
+                        'status' => $status,
+                        'payment_date' => $status === AccountsEnum::PAID ? $installment['due_date'] : null,
+                    ]);
+                }
+
+                if ($status === AccountsEnum::PAID) {
+                    $this->registerMovement((int) $account->bank_account_id, array_sum(array_column($installments, 'value')));
+                }
+
+                return $account;
+            });
+        });
+    }
+
+    /**
+     * Atualiza o lançamento preservando o que já foi pago.
+     *
+     * Se o total ou a quantidade de parcelas mudar, apenas as parcelas em aberto são
+     * recriadas com o valor restante. Caso contrário, as parcelas são editadas
+     * individualmente. Se a conta bancária mudar, o valor já pago é estornado da
+     * conta antiga e lançado na nova.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    protected function updateAccount(string $id, array $data, Tenant $tenant): Model
+    {
+        return $tenant->run(function () use ($id, $data) {
+            return DB::transaction(function () use ($id, $data) {
+                $account = $this->model::lockForUpdate()->findOrFail($id);
+
+                if (isset($data['financial_contact_id'])) {
+                    $data['financial_contact_id'] = $this->resolveFinancialContactId($data['financial_contact_id'], $this->contactType());
+                }
+
+                $paidInstallments = $this->lockInstallments($account)->where('status', AccountsEnum::PAID);
+                $paidTotal = (int) $paidInstallments->sum('value');
+
+                $data['total_installments'] = max($this->installmentsCount($data['payment_condition']), $paidInstallments->count());
+
+                if ($account->total !== (int) $data['total'] || $account->total_installments !== $data['total_installments']) {
+                    $this->rebuildOpenInstallments($account, $data, $paidInstallments);
+                } else {
+                    $this->updateInstallmentsIndividually($account, $data['installments'] ?? [], (int) $data['total']);
+                }
+
+                $this->moveSettledAmount((int) $account->bank_account_id, (int) $data['bank_account_id'], $paidTotal);
+
+                $account->update($data);
+
+                return $account;
+            });
+        });
+    }
+
+    /**
+     * Recria as parcelas em aberto distribuindo o valor que ainda falta pagar.
+     * As parcelas pagas são mantidas com seus números, e as novas ocupam os
+     * números livres.
+     *
+     * @param  array<string, mixed>  $data
+     * @param  Collection<int, Installment>  $paidInstallments
+     *
+     * @throws AccountTotalBelowPaidException
+     * @throws InstallmentsTotalMismatchException
+     */
+    private function rebuildOpenInstallments(Model $account, array $data, Collection $paidInstallments): void
+    {
+        $total = (int) $data['total'];
+        $paidTotal = (int) $paidInstallments->sum('value');
+
+        if ($total < $paidTotal) {
+            throw new AccountTotalBelowPaidException($paidTotal);
+        }
+
+        $account->installments()->where('status', '!=', AccountsEnum::PAID)->delete();
+
+        $remaining = $total - $paidTotal;
+
+        if ($remaining === 0) {
+            return;
+        }
+
+        $openNumbers = array_values(array_diff(
+            range(1, $data['total_installments']),
+            $paidInstallments->pluck('installment_number')->all(),
+        ));
+
+        if ($openNumbers === []) {
+            throw new InstallmentsTotalMismatchException($paidTotal, $total);
+        }
+
+        foreach ($this->splitIntoInstallments($remaining, $openNumbers, Carbon::parse($data['due_date'])) as $installment) {
             $account->installments()->create([
-                'installment_number' => $count + 1,
-                'value' => $installmentValue,
+                ...$installment,
                 'description' => $data['description'],
-                'due_date' => $dueDate->copy()->addMonthsNoOverflow($count),
-                'payment_date' => $dueDate->copy()->addMonthsNoOverflow($count),
-                'status' => $data['status'] ?? AccountsEnum::OPEN->value,
+                'status' => AccountsEnum::OPEN,
+                'payment_date' => null,
             ]);
+        }
+    }
+
+    /**
+     * Aplica o valor e o vencimento editados em cada parcela. Parcelas pagas não
+     * podem ter o valor alterado, e a soma final precisa continuar igual ao total.
+     *
+     * @param  array<int, array{installment_id?: int|null, value: int, due_date: string}>  $installments
+     *
+     * @throws PaidInstallmentLockedException
+     * @throws InstallmentsTotalMismatchException
+     */
+    private function updateInstallmentsIndividually(Model $account, array $installments, int $total): void
+    {
+        $editedInstallments = array_filter($installments, fn (array $installment) => ! empty($installment['installment_id']));
+
+        if ($editedInstallments === []) {
+            return;
+        }
+
+        $currentInstallments = $account->installments()->get()->keyBy('id');
+
+        foreach ($editedInstallments as $edited) {
+            $installment = $currentInstallments->get($edited['installment_id']);
+
+            if ($installment === null) {
+                continue;
+            }
+
+            if ($installment->status === AccountsEnum::PAID && $installment->value !== (int) $edited['value']) {
+                throw new PaidInstallmentLockedException;
+            }
+
+            $installment->update([
+                'value' => $edited['value'],
+                'due_date' => $edited['due_date'],
+            ]);
+        }
+
+        $installmentsTotal = (int) $account->installments()->sum('value');
+
+        if ($installmentsTotal !== $total) {
+            throw new InstallmentsTotalMismatchException($installmentsTotal, $total);
+        }
+    }
+
+    /**
+     * Divide um valor em centavos entre os números de parcela informados, sem
+     * perder centavos: a diferença do arredondamento fica na última parcela. O
+     * vencimento da parcela N é o primeiro vencimento deslocado N-1 meses.
+     *
+     * @param  list<int>  $numbers
+     * @return list<array{installment_number: int, value: int, due_date: Carbon}>
+     */
+    private function splitIntoInstallments(int $amount, array $numbers, Carbon $firstDueDate): array
+    {
+        $count = count($numbers);
+        $baseValue = intdiv($amount, $count);
+
+        return array_map(fn (int $number, int $position) => [
+            'installment_number' => $number,
+            'value' => $position === $count - 1 ? $amount - $baseValue * ($count - 1) : $baseValue,
+            'due_date' => $firstDueDate->copy()->addMonthsNoOverflow($number - 1),
+        ], $numbers, array_keys($numbers));
+    }
+
+    /**
+     * Carrega e trava todas as parcelas do lançamento até o fim da transação, para
+     * que uma baixa simultânea não altere o valor pago enquanto o lançamento é
+     * editado ou excluído.
+     *
+     * @return Collection<int, Installment>
+     */
+    private function lockInstallments(Model $account): Collection
+    {
+        return $account->installments()->lockForUpdate()->get();
+    }
+
+    private function installmentsCount(string $paymentCondition): int
+    {
+        return $paymentCondition === 'a-vista' ? 1 : max(1, (int) $paymentCondition);
+    }
+
+    /**
+     * Parcelas que pertencem ao tipo de lançamento deste service, para que a rota
+     * de contas a pagar nunca altere uma parcela de contas a receber (e vice-versa).
+     *
+     * @return Builder<Installment>
+     */
+    private function installmentsOfThisType(): Builder
+    {
+        return Installment::where('installmentable_type', (new $this->model)->getMorphClass());
+    }
+
+    /**
+     * Lança no saldo da conta bancária o pagamento de um valor, no sentido do
+     * service (saída em contas a pagar, entrada em contas a receber).
+     */
+    private function registerMovement(int $bankAccountId, int $amount): void
+    {
+        $this->applyToBalance($bankAccountId, $this->balanceDirection() * $amount);
+    }
+
+    /**
+     * Estorna do saldo da conta bancária um pagamento registrado anteriormente.
+     */
+    private function reverseMovement(int $bankAccountId, int $amount): void
+    {
+        $this->applyToBalance($bankAccountId, -$this->balanceDirection() * $amount);
+    }
+
+    /**
+     * Transfere o valor já pago de uma conta bancária para outra quando o
+     * lançamento troca de conta.
+     */
+    private function moveSettledAmount(int $fromBankAccountId, int $toBankAccountId, int $paidTotal): void
+    {
+        if ($fromBankAccountId === $toBankAccountId || $paidTotal === 0) {
+            return;
+        }
+
+        $this->reverseMovement($fromBankAccountId, $paidTotal);
+        $this->registerMovement($toBankAccountId, $paidTotal);
+    }
+
+    /**
+     * Soma o valor ao saldo em um único UPDATE executado pelo banco. Assim duas
+     * movimentações simultâneas na mesma conta não sobrescrevem uma à outra.
+     */
+    private function applyToBalance(int $bankAccountId, int $signedAmount): void
+    {
+        if ($signedAmount === 0) {
+            return;
+        }
+
+        $updatedRows = BankAccount::whereKey($bankAccountId)->update([
+            'current_balance' => DB::raw('COALESCE(current_balance, 0) + '.$signedAmount),
+        ]);
+
+        if ($updatedRows === 0) {
+            throw (new ModelNotFoundException)->setModel(BankAccount::class, [$bankAccountId]);
         }
     }
 
@@ -140,11 +405,11 @@ abstract class AccountService
                         }
                     });
                 })
+                ->when($request->filled('categoria_id'), function (Builder $query) use ($request) {
+                    $query->where('financial_category_id', $request->query('categoria_id'));
+                })
                 ->whereHas('installments', function (Builder $query) use ($inicio, $fim, $request, $hoje) {
                     $query->whereBetween('due_date', [$inicio, $fim])
-                        ->when($request->has('categoria_id'), function (Builder $query) use ($request) {
-                            $query->where('financial_category_id', $request->query('categoria_id'));
-                        })
                         ->when($request->query('status') === 'pago', function (Builder $query) {
                             $query->where('status', AccountsEnum::PAID->value);
                         })
@@ -188,37 +453,51 @@ abstract class AccountService
         });
     }
 
-    public function delete(string $id, Tenant $tenant)
+    /**
+     * Exclui o lançamento e suas parcelas, estornando do saldo bancário o valor
+     * das parcelas que já tinham sido pagas.
+     */
+    public function delete(string $id, Tenant $tenant): bool
     {
-        return $tenant->run(fn () => $this->model::findOrFail($id)->delete());
+        return $tenant->run(function () use ($id) {
+            return DB::transaction(function () use ($id) {
+                $account = $this->model::lockForUpdate()->findOrFail($id);
+
+                $paidTotal = (int) $this->lockInstallments($account)->where('status', AccountsEnum::PAID)->sum('value');
+
+                $this->reverseMovement((int) $account->bank_account_id, $paidTotal);
+
+                $account->installments()->delete();
+
+                return $account->delete();
+            });
+        });
     }
 
+    /**
+     * Dá baixa na parcela e movimenta o saldo da conta bancária do lançamento.
+     *
+     * A parcela é travada (`lockForUpdate`) antes da checagem de status, então
+     * duas requisições simultâneas não conseguem pagar a mesma parcela duas vezes.
+     *
+     * @throws InstallmentAlreadyPaidException
+     */
     public function updateInstallment(string $id, Tenant $tenant): bool
     {
         return $tenant->run(function () use ($id) {
             return DB::transaction(function () use ($id) {
+                $installment = $this->installmentsOfThisType()->lockForUpdate()->findOrFail($id);
 
-                $installment = Installment::findOrFail($id);
-
-                $model = $installment->installmentable_type;
-
-                $bankAccountId = $model::select('bank_account_id')->where('id', $installment->installmentable_id)->first()->bank_account_id;
-
-                $bankAccount = BankAccount::findOrFail($bankAccountId);
-
-                if (class_basename($model) === 'AccountPayable') {
-                    $bankAccount->current_balance -= $installment->value;
-                    $bankAccount->save();
+                if ($installment->status === AccountsEnum::PAID) {
+                    throw new InstallmentAlreadyPaidException;
                 }
 
-                if (class_basename($model) === 'AccountReceivable') {
-                    $bankAccount->current_balance += $installment->value;
-                    $bankAccount->save();
-                }
+                $account = $this->model::findOrFail($installment->installmentable_id);
+
+                $this->registerMovement((int) $account->bank_account_id, $installment->value);
 
                 $installment->payment_date = Carbon::now();
-
-                $installment->status = AccountsEnum::PAID->value;
+                $installment->status = AccountsEnum::PAID;
 
                 return $installment->save();
             });
@@ -418,22 +697,6 @@ abstract class AccountService
                 });
 
             return $query->sum('value');
-        });
-    }
-
-    public function updateInstallmentValue(array $data, Tenant $tenant)
-    {
-        return $tenant->run(function () use ($data) {
-            $installment = Installment::findOrFail($data['id']);
-
-            $installment->value = $data['value'];
-            $installment->save();
-
-            if ($installment) {
-                return true;
-            }
-
-            return false;
         });
     }
 
