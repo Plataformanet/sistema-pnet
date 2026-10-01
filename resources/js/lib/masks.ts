@@ -107,3 +107,22 @@ export const onRGKeypress = (event: KeyboardEvent) => {
         event.preventDefault();
     }
 };
+
+/**
+ * Formata um valor em centavos inteiros como moeda brasileira (R$ 1.234,56).
+ */
+export const formatMoney = (cents: number | null | undefined): string => {
+    return new Intl.NumberFormat("pt-BR", {
+        style: "currency",
+        currency: "BRL",
+    }).format((cents ?? 0) / 100);
+};
+
+/**
+ * Converte centavos inteiros para o texto mascarado usado nos inputs de valor.
+ */
+export const centsToMask = (cents: number | null | undefined): string => {
+    return cents !== undefined && cents !== null
+        ? maskCurrency(String(cents))
+        : "";
+};

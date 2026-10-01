@@ -35,4 +35,16 @@ return [
 
     'url_ttl' => (int) env('BUCKET_URL_TTL', 10), // minutos
 
+    /*
+    |--------------------------------------------------------------------------
+    | Limite de upload dos documentos da proposta
+    |--------------------------------------------------------------------------
+    |
+    | Tamanho máximo, em KB, de cada documento enviado nas propostas (RG,
+    | comprovantes, boletos). O legado anunciava 3 MB mas validava 300 MB.
+    |
+    */
+
+    'proposal_document_max_kb' => (int) env('PROPOSAL_DOCUMENT_MAX_KB', 20480),
+
 ];

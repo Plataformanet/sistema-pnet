@@ -30,6 +30,8 @@ export * from "./finance/AccountReceivable";
 export * from "./finance/Billing";
 
 // Documents
+export * from "./documents/Catalog";
+export * from "./documents/FeeCalculator";
 export * from "./documents/Proposal";
 export * from "./documents/ItbiCalculation";
 
@@ -39,3 +41,6 @@ export * from "./drive";
 // CRM
 export * from "./crm/Deal";
 
+
+// Pagination
+export * from "./Pagination";

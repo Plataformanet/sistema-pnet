@@ -39,7 +39,7 @@ class AccountReceivableService extends AccountService
                 'financialContact.contact:id,name_corporatereason',
                 'financialCategory:id,name',
                 'financialSubcategory:id,name',
-                'cost:id,type',
+                'cost:id,name',
                 'bankAccount:id,name',
                 'installments',
             ]

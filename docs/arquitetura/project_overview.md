@@ -67,7 +67,11 @@ Funcionalidades genéricas acopláveis sobre o Core:
 
 ### 3.3. Módulos Verticais (Segmentação de Mercado)
 Funcionalidades ultra-específicas para nichos de mercado (o grande diferencial competitivo do SaaS):
-*   **Documentação Imobiliária:** Fluxos de análise de contratos, due diligence e regularização de imóveis.
+*   **Documentação Imobiliária:** Fluxos de análise de contratos, due diligence e regularização de imóveis. Implementado até agora (grupo "Documentações" do menu, módulo `documents`):
+    *   **Cadastros auxiliares:** bancos, cartórios, tipos de contrato, de custo e de imóvel, empreendimentos, etapas da timeline e serviços cobráveis.
+    *   **Propostas de financiamento imobiliário:** proponentes, vendedores do imóvel e parceiros; acompanhamento por etapas com prazos e alertas; documentos; pagamentos, taxas e recibos; PDFs.
+    *   **Calculadora de Emolumentos:** integração com a API de emolumentos de registro, cálculo local do ITBI por município, orçamentos com PDF e e-mail, e conversão do orçamento em proposta.
+    *   Os cargos `Cliente` e `Vendedor do imóvel` dão aos clientes finais acesso restrito às próprias propostas, primeiro passo do Portal do Cliente (seção 4).
 *   **Emissão de Certidões & Pesquisas Completas:** Integração com órgãos emissores e automatização de buscas de certidões cartorárias e judiciais.
 
 ---

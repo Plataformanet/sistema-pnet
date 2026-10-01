@@ -62,31 +62,58 @@ A estrutura de pastas do Laravel 13 segue o padrão simplificado de controllers 
 ```text
 sistema-pnet/
 ├── app/
+│   ├── Actions/
+│   │   └── FeeCalculator/             # Fluxos da calculadora (calcular, orçar, vincular, converter)
+│   ├── Console/Commands/              # Comandos agendados (alertas de etapa, limpeza de cálculos)
+│   ├── Enums/                         # Enums de domínio (status, tipos, cargos)
+│   ├── Exceptions/                    # Exceções de domínio (com subpastas por integração)
 │   ├── Http/
 │   │   ├── Controllers/
 │   │   │   ├── Auth/                  # Autenticação central e de tenant
 │   │   │   ├── TenantController.php   # Dashboard do tenant
 │   │   │   ├── TenantClientController.php
 │   │   │   └── ...                    # Outros controllers do Tenant
-│   │   └── Middleware/
-│   └── Models/                        # Contém tanto models centrais quanto de tenant
+│   │   ├── Middleware/
+│   │   └── Requests/                  # Form Requests (um por operação)
+│   ├── Jobs/                          # Jobs de fila (provisionamento, anexar PDF do orçamento)
+│   ├── Mail/                          # E-mails em fila (propostas e orçamentos)
+│   ├── Models/                        # Contém tanto models centrais quanto de tenant
+│   ├── Policies/                      # Regras por registro (Drive, Propostas, Calculadora)
+│   ├── Rules/                         # Regras de validação customizadas
+│   ├── Services/                      # Regras de negócio e acesso ao banco do tenant
+│   │   ├── FeeCalculator/             # Montagem do resultado e das linhas de custo
+│   │   ├── Ibge/                      # Cliente da API de municípios do IBGE
+│   │   ├── Itbi/                      # Cálculo local do ITBI
+│   │   └── RegistryFee/               # Cliente da API de emolumentos
+│   └── Support/                       # Utilitários puros (ex.: Money, valores em centavos)
+├── config/
+│   └── proposals.php                  # Configurações do módulo de Propostas
 ├── database/
 │   ├── migrations/
 │   │   ├── central/                   # Estruturas criadas apenas no Banco Central
 │   │   └── tenant/                    # Estruturas criadas no Banco de cada Inquilino
+├── lang/
+│   └── pt_BR/                         # Textos da calculadora (tipos de cálculo, textos legais)
 ├── resources/
-│   └── js/
-│       ├── pages/                     # Páginas Vue 3 renderizadas via Inertia.js
-│       │   └── tenant/                # Telas internas da operação
-│       └── types/                     # Interfaces TypeScript do Frontend
+│   ├── js/
+│   │   ├── pages/                     # Páginas Vue 3 renderizadas via Inertia.js
+│   │   │   └── tenant/                # Telas internas da operação
+│   │   └── types/                     # Interfaces TypeScript do Frontend
+│   └── views/
+│       ├── mail/                      # Templates markdown dos e-mails
+│       └── pdf/                       # Templates dos PDFs (dompdf)
 ├── routes/
 │   ├── web.php                        # Rotas do Domínio Central (ex: cadastro do SaaS)
-│   └── tenant.php                     # Rotas de operação (ex: financeiro, drive, contatos)
+│   ├── tenant.php                     # Rotas de operação (ex: financeiro, drive, contatos)
+│   └── console.php                    # Agendamento dos comandos
 ```
 
 ### Convenções Importantes:
 *   **Comandos Artisan:** Como o projeto roda em ambiente Dockerizado (Laravel Sail), comandos do Artisan devem ser executados dentro do container utilizando o prefixo `vendor/bin/sail`.
 *   **Migrations de Tenant:** Para rodar novas migrations específicas dos tenants, utilize o comando `vendor/bin/sail artisan tenants:migrate`. Nunca rode `artisan migrate` puro se as tabelas pertencerem ao escopo do inquilino.
+*   **Migrations Centrais:** ficam em `database/migrations/central` e rodam com `vendor/bin/sail artisan migrate --path=database/migrations/central`.
+*   **Fila e Agendador:** e-mails, o provisionamento de tenants e a anexação de PDFs rodam na fila, que precisa de um worker (`queue:work`). A fila restaura o tenant de origem (`QueueTenancyBootstrapper`). Os comandos agendados em `routes/console.php` precisam do `schedule:run`.
+*   **Dinheiro:** valores monetários são gravados em centavos (inteiros). No backend, use `App\Support\Money`; no frontend, `formatMoney` (`@/lib/masks`) e o componente `MoneyInput`, que trabalha em centavos.
 
 ---
 
@@ -100,6 +127,9 @@ O PNET utiliza a estrutura do Spatie Permissions. O banco de dados do Tenant arm
         ->middleware('permission:registrations.clients.view');
     ```
 *   **Validação no Frontend (Vue/Inertia):** As diretivas do frontend recebem as permissões do usuário logado via propriedades globais compartilhadas do Inertia (Share Props). Elementos como botões de edição ou links de exclusão são ocultados dinamicamente baseados nesse payload de permissões.
+*   **Regras por registro (Policies):** quando a permissão da rota não basta, porque o acesso depende do registro, uma Policy complementa o middleware: `DrivePolicy`, `ProposalPolicy` (Parceiro, Vendedor do imóvel e Cliente só acessam as próprias propostas) e `FeeCalculationPolicy` (o cálculo só é visível para quem o fez ou para o administrador). As policies usam `checkPermissionTo()`, que retorna `false` em vez de lançar exceção quando a permissão não existe no tenant.
+*   **Cargos:** os nomes dos cargos gravados no banco são os rótulos do `RolesEnum` (ex.: `Administrador`, `Parceiro`). O módulo Documentações criou os cargos `Analista` (acesso total ao grupo Documentações), `Cliente` (proponente com acesso às próprias propostas) e `Vendedor do imóvel` (o cargo `Vendedor`, que já existia, é da área de vendas).
+*   **Onde as permissões são criadas:** toda permissão nova entra no `PermissionSeeder` (catálogo central, que define o que cada plano libera), no `TenantPermissionSeeder` e em uma migration de tenant, para os tenants já provisionados.
 
 ---
 
@@ -109,3 +139,12 @@ O armazenamento físico de arquivos e anexos enviados pelos usuários (como comp
 
 *   Os arquivos de cada Tenant são armazenados em um subdiretório exclusivo na pasta de storage baseado no ID ou UUID do Tenant.
 *   O caminho raiz de armazenamento é resolvido dinamicamente pela aplicação em tempo de execução, garantindo que o `tenant A` jamais consiga ler ou listar diretórios pertencentes ao `tenant B`.
+*   O disco é definido em `config('bucket.disk')`, e cada módulo usa uma subpasta própria, declarada como constante no service (ex.: `proposals/{id}` para os documentos das propostas).
+*   A remoção física do arquivo só acontece depois do commit da transação, para que um rollback nunca deixe registro apontando para arquivo apagado.
+
+---
+
+## 7. Integrações Externas
+
+*   **API de emolumentos (`RegistryFeeApiClient`):** URL e token em `config/services.php` (`registry_fee_calculator`, variáveis `REGISTRY_FEE_CALCULATOR_*`). A API é chamada com timeout e com retry apenas em falha de conexão. Respostas 401/403/404/429 e 5xx viram "indisponível"; uma mensagem de negócio no corpo vira erro de validação para o usuário.
+*   **IBGE (`IbgeLocalityClient`):** lista de municípios por UF, em cache.

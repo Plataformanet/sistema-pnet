@@ -35,4 +35,19 @@ return [
         ],
     ],
 
+    /*
+     * API de emolumentos do Registro de Imóveis (calculadora). O token nunca
+     * vai para o código: peça um token próprio deste sistema ao responsável.
+     */
+    'registry_fee_calculator' => [
+        'url' => env('REGISTRY_FEE_CALCULATOR_URL', 'https://calculadora.registrodeimoveis.org.br/api'),
+        'token' => env('REGISTRY_FEE_CALCULATOR_TOKEN'),
+        'timeout' => (int) env('REGISTRY_FEE_CALCULATOR_TIMEOUT', 15),
+    ],
+
+    'ibge' => [
+        'url' => env('IBGE_LOCALITIES_URL', 'https://servicodados.ibge.gov.br/api/v1/localidades'),
+        'timeout' => (int) env('IBGE_LOCALITIES_TIMEOUT', 10),
+    ],
+
 ];

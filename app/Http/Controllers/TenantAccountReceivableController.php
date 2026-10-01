@@ -9,7 +9,7 @@ use App\Http\Requests\IndexAccountReceivableRequest;
 use App\Http\Requests\StoreAccountReceivableRequest;
 use App\Http\Requests\UpdateAccountReceivableRequest;
 use App\Models\BankAccount;
-use App\Models\Cost;
+use App\Models\CostType;
 use App\Models\FinancialCategory;
 use App\Services\AccountReceivableService;
 use App\Services\BankAccountService;
@@ -89,7 +89,7 @@ class TenantAccountReceivableController extends Controller
     {
         $financialCategories = $this->financialCategoryService->findCategoryAccountsReceivable(tenant());
         $financialSubcategories = $this->financialSubcategoryService->findAll(tenant());
-        $costs = Cost::select('id', 'type')->get();
+        $costs = CostType::ordered()->get(['id', 'name']);
 
         $financialSubcategories = $financialSubcategories
             ->filter(fn ($item) => $item->active)
@@ -158,7 +158,7 @@ class TenantAccountReceivableController extends Controller
 
         $financialCategories = $this->financialCategoryService->findCategoryAccountsReceivable(tenant());
         $financialSubcategories = $this->financialSubcategoryService->findAll(tenant());
-        $costs = Cost::select('id', 'type')->get();
+        $costs = CostType::ordered()->get(['id', 'name']);
 
         $financialSubcategories = $financialSubcategories
             ->filter(fn ($item) => $item->active)

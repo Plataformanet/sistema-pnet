@@ -60,7 +60,7 @@ class AccountPayable extends Model
 
     public function cost(): BelongsTo
     {
-        return $this->belongsTo(Cost::class);
+        return $this->belongsTo(CostType::class, 'cost_id')->withTrashed();
     }
 
     public function bankAccount(): BelongsTo

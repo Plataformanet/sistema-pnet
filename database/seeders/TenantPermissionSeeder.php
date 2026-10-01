@@ -276,6 +276,188 @@ class TenantPermissionSeeder extends Seeder
                         'Contratos (Excluir)',
                     ],
                 ],
+                'banks' => [
+                    'name' => [
+                        'documents.banks.view',
+                        'documents.banks.edit',
+                        'documents.banks.create',
+                        'documents.banks.delete',
+                    ],
+                    'display_name' => [
+                        'Bancos (Visualizar)',
+                        'Bancos (Editar)',
+                        'Bancos (Criar)',
+                        'Bancos (Excluir)',
+                    ],
+                ],
+                'notaries' => [
+                    'name' => [
+                        'documents.notaries.view',
+                        'documents.notaries.edit',
+                        'documents.notaries.create',
+                        'documents.notaries.delete',
+                    ],
+                    'display_name' => [
+                        'Cartórios (Visualizar)',
+                        'Cartórios (Editar)',
+                        'Cartórios (Criar)',
+                        'Cartórios (Excluir)',
+                    ],
+                ],
+                'contract_types' => [
+                    'name' => [
+                        'documents.contract_types.view',
+                        'documents.contract_types.edit',
+                        'documents.contract_types.create',
+                        'documents.contract_types.delete',
+                    ],
+                    'display_name' => [
+                        'Tipos de Contrato (Visualizar)',
+                        'Tipos de Contrato (Editar)',
+                        'Tipos de Contrato (Criar)',
+                        'Tipos de Contrato (Excluir)',
+                    ],
+                ],
+                'cost_types' => [
+                    'name' => [
+                        'documents.cost_types.view',
+                        'documents.cost_types.edit',
+                        'documents.cost_types.create',
+                        'documents.cost_types.delete',
+                    ],
+                    'display_name' => [
+                        'Tipos de Custo (Visualizar)',
+                        'Tipos de Custo (Editar)',
+                        'Tipos de Custo (Criar)',
+                        'Tipos de Custo (Excluir)',
+                    ],
+                ],
+                'property_types' => [
+                    'name' => [
+                        'documents.property_types.view',
+                        'documents.property_types.edit',
+                        'documents.property_types.create',
+                        'documents.property_types.delete',
+                    ],
+                    'display_name' => [
+                        'Tipos de Imóvel (Visualizar)',
+                        'Tipos de Imóvel (Editar)',
+                        'Tipos de Imóvel (Criar)',
+                        'Tipos de Imóvel (Excluir)',
+                    ],
+                ],
+                'developments' => [
+                    'name' => [
+                        'documents.developments.view',
+                        'documents.developments.edit',
+                        'documents.developments.create',
+                        'documents.developments.delete',
+                    ],
+                    'display_name' => [
+                        'Empreendimentos (Visualizar)',
+                        'Empreendimentos (Editar)',
+                        'Empreendimentos (Criar)',
+                        'Empreendimentos (Excluir)',
+                    ],
+                ],
+                'stages' => [
+                    'name' => [
+                        'documents.stages.view',
+                        'documents.stages.edit',
+                        'documents.stages.create',
+                        'documents.stages.delete',
+                    ],
+                    'display_name' => [
+                        'Etapas da Timeline (Visualizar)',
+                        'Etapas da Timeline (Editar)',
+                        'Etapas da Timeline (Criar)',
+                        'Etapas da Timeline (Excluir)',
+                    ],
+                ],
+                'billable_services' => [
+                    'name' => [
+                        'documents.billable_services.view',
+                        'documents.billable_services.edit',
+                        'documents.billable_services.create',
+                        'documents.billable_services.delete',
+                    ],
+                    'display_name' => [
+                        'Serviços Cobráveis (Visualizar)',
+                        'Serviços Cobráveis (Editar)',
+                        'Serviços Cobráveis (Criar)',
+                        'Serviços Cobráveis (Excluir)',
+                    ],
+                ],
+                'proposal_documents' => [
+                    'name' => [
+                        'documents.proposal_documents.view',
+                        'documents.proposal_documents.edit',
+                        'documents.proposal_documents.create',
+                        'documents.proposal_documents.delete',
+                    ],
+                    'display_name' => [
+                        'Documentos da Proposta (Visualizar)',
+                        'Documentos da Proposta (Editar)',
+                        'Documentos da Proposta (Criar)',
+                        'Documentos da Proposta (Excluir)',
+                    ],
+                ],
+                'proposal_timeline' => [
+                    'name' => [
+                        'documents.proposal_timeline.view',
+                        'documents.proposal_timeline.edit',
+                        'documents.proposal_timeline.create',
+                        'documents.proposal_timeline.delete',
+                    ],
+                    'display_name' => [
+                        'Acompanhamento da Proposta (Visualizar)',
+                        'Acompanhamento da Proposta (Editar)',
+                        'Acompanhamento da Proposta (Criar)',
+                        'Acompanhamento da Proposta (Excluir)',
+                    ],
+                ],
+                'proposal_financial' => [
+                    'name' => [
+                        'documents.proposal_financial.view',
+                        'documents.proposal_financial.edit',
+                        'documents.proposal_financial.create',
+                        'documents.proposal_financial.delete',
+                    ],
+                    'display_name' => [
+                        'Pagamentos e Recibos da Proposta (Visualizar)',
+                        'Pagamentos e Recibos da Proposta (Editar)',
+                        'Pagamentos e Recibos da Proposta (Criar)',
+                        'Pagamentos e Recibos da Proposta (Excluir)',
+                    ],
+                ],
+                'quotes' => [
+                    'name' => [
+                        'documents.quotes.view',
+                        'documents.quotes.edit',
+                        'documents.quotes.create',
+                        'documents.quotes.delete',
+                    ],
+                    'display_name' => [
+                        'Orçamentos (Visualizar)',
+                        'Orçamentos (Editar)',
+                        'Orçamentos (Criar)',
+                        'Orçamentos (Excluir)',
+                    ],
+                ],
+                'itbi_municipalities' => [
+                    'name' => [
+                        'documents.itbi_municipalities.view',
+                        'documents.itbi_municipalities.edit',
+                        'documents.itbi_municipalities.create',
+                        'documents.itbi_municipalities.delete',
+                    ],
+                    'display_name' => [
+                        'ITBI - Municípios (Visualizar)',
+                        'ITBI - Municípios (Editar)',
+                        'ITBI - Municípios (Criar)',
+                        'ITBI - Municípios (Excluir)',
+                    ],
+                ],
             ],
 
             'settings' => [

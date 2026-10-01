@@ -1,14 +1,19 @@
 <?php
 
 use App\Enums\ContactTypeEnum;
+use App\Enums\RolesEnum;
 use App\Models\AccountPayable;
 use App\Models\AccountReceivable;
 use App\Models\BankAccount;
 use App\Models\FinancialCategory;
 use App\Models\FinancialContact;
+use App\Models\Proposal;
 use App\Models\Tenant;
+use App\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Str;
+use Spatie\Permission\Models\Role;
+use Spatie\Permission\PermissionRegistrar;
 use Tests\Support\TenantRegistry;
 use Tests\TestCase;
 
@@ -166,4 +171,35 @@ function formRequest(string $class, array $data = [], array $files = []): FormRe
     $request->validateResolved();
 
     return $request;
+}
+
+/**
+ * Cria no tenant um usuário com o cargo informado, garantindo que o cargo
+ * tenha as permissões listadas. Usado nos testes de visibilidade de propostas.
+ *
+ * @param  array<int, string>  $permissions
+ */
+function userWithRole(Tenant $tenant, RolesEnum $role, array $permissions = []): User
+{
+    return $tenant->run(function () use ($role, $permissions) {
+        $roleModel = Role::firstOrCreate(['name' => $role->label(), 'guard_name' => 'web']);
+        $roleModel->givePermissionTo($permissions);
+
+        $user = User::factory()->create();
+        $user->assignRole($roleModel);
+
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
+
+        return $user->fresh();
+    });
+}
+
+/**
+ * Cria uma proposta (com banco, contrato e criador próprios) no tenant.
+ *
+ * @param  array<string, mixed>  $attributes
+ */
+function createProposal(Tenant $tenant, array $attributes = []): Proposal
+{
+    return $tenant->run(fn () => Proposal::factory()->create($attributes));
 }

@@ -372,7 +372,14 @@ Alguns recursos também têm `show/Show.vue`. **Mantenha exatamente esses nomes*
 - Erros de validação: `form.errors.<campo>` dentro de `<FieldError>`.
 - Exibição condicional por permissão: `const { permissions } = usePermission()` + `v-if="permissions.includes('modulo.recurso.create')"`.
 - Componentes de UI vêm de `@/components/ui/*` (shadcn-vue). **Antes de criar um componente, verifique se já existe.**
-- Máscaras e dinheiro: `@/lib/masks` (`maskCurrency`, `parseCurrencyToCents`, `maskCPF`, `maskCNPJ`, `maskCEP`, `maskPhone`). Valores vão ao backend **em centavos**.
+- Máscaras e dinheiro: `@/lib/masks` (`maskCurrency`, `parseCurrencyToCents`, `formatMoney`, `centsToMask`, `maskCPF`, `maskCNPJ`, `maskCEP`, `maskPhone`). Valores vão ao backend **em centavos**.
+- Campo de valor em dinheiro: use o componente `MoneyInput` (`@/components/MoneyInput.vue`). O `v-model` é sempre em **centavos inteiros** (R$ 1.234,56 → `123456`), então o valor vai ao backend sem conversão. Use a prop `nullable` quando o campo for opcional. Para **exibir** um valor em centavos, use `formatMoney(cents)`.
+- Listagens: escolha a tabela pelo volume esperado.
+    - **`DataTable`:** paginação no cliente. Serve para listas pequenas, carregadas inteiras.
+    - **`ServerDataTable`:** paginação, busca e filtro de excluídos no servidor, com a mesma aparência. Use em listas que crescem sem limite (cadastros com soft delete, propostas, orçamentos). Ambos são exportados de `@/components/ui/data-table`.
+- Contrato do `ServerDataTable`:
+    - **Backend:** o service devolve um `LengthAwarePaginator` com `->paginate(...)->withQueryString()`. O controller valida os filtros com um Form Request (ex.: `IndexCatalogRequest`) e envia à página o paginator e `filters` (`$request->validated()`).
+    - **Frontend:** `<ServerDataTable :columns :paginator :filters :url="route('tenant.…list')" />`. `extraParams` leva filtros adicionais da página (ex.: status), `with-trashed-filter` liga ou desliga o filtro "Mostrar excluídos", e o slot `toolbar` recebe controles extras. Os tipos são `Paginated<T>` e `CatalogFilters`, de `@/types`. Exemplo: [banks/list/List.vue](../resources/js/pages/tenant/documents/banks/list/List.vue).
 - Composables disponíveis: `usePermission`, `useTenant`, `useCepLookup`, `useContactLookup`.
 - Estilização só com utilitários Tailwind e tokens do tema (`text-foreground`, `border-border`, `bg-card`). Sem CSS solto. Consulte o guia de arquitetura do modo escuro em [docs/arquitetura/dark_mode_guide.md](arquitetura/dark_mode_guide.md).
 

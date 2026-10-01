@@ -9,7 +9,7 @@ use App\Http\Requests\IndexAccountPayableRequest;
 use App\Http\Requests\StoreAccountPayableRequest;
 use App\Http\Requests\UpdateAccountPayableRequest;
 use App\Models\BankAccount;
-use App\Models\Cost;
+use App\Models\CostType;
 use App\Models\FinancialCategory;
 use App\Services\AccountPayableService;
 use App\Services\BankAccountService;
@@ -89,7 +89,7 @@ class TenantAccountPayableController extends Controller
     {
         $financialCategories = $this->financialCategoryService->findCategoryAccountsPayable(tenant());
         $financialSubcategories = $this->financialSubcategoryService->findAll(tenant());
-        $costs = Cost::select('id', 'type')->get();
+        $costs = CostType::ordered()->get(['id', 'name']);
 
         $financialSubcategories = $financialSubcategories
             ->filter(fn ($item) => $item->active)
@@ -158,7 +158,7 @@ class TenantAccountPayableController extends Controller
 
         $financialCategories = $this->financialCategoryService->findCategoryAccountsPayable(tenant());
         $financialSubcategories = $this->financialSubcategoryService->findAll(tenant());
-        $costs = Cost::select('id', 'type')->get();
+        $costs = CostType::ordered()->get(['id', 'name']);
 
         $financialSubcategories = $financialSubcategories
             ->filter(fn ($item) => $item->active)

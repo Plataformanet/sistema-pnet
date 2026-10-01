@@ -41,9 +41,14 @@ class Contact extends Model
         return $this->hasOne(Client::class);
     }
 
-    public function proponent()
+    public function applicant()
     {
-        return $this->hasOne(Proponents::class);
+        return $this->hasOne(Applicant::class);
+    }
+
+    public function seller()
+    {
+        return $this->hasOne(Seller::class);
     }
 
     public function financialContacts()
@@ -62,7 +67,8 @@ class Contact extends Model
                 ->whereHas('client')
                 ->orWhereHas('supplier')
                 ->orWhereHas('employee')
-                ->orWhereHas('proponent'))
+                ->orWhereHas('applicant')
+                ->orWhereHas('seller'))
             ->exists();
     }
 

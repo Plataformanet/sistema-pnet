@@ -62,6 +62,19 @@ class User extends Authenticatable
     }
 
     /**
+     * Indica se o usuário só tem cargos externos às propostas (Parceiro,
+     * Vendedor do imóvel e Cliente): ele vê apenas as propostas vinculadas a
+     * ele e não recebe os dados pessoais das demais partes. Quem tem qualquer
+     * outro cargo, ou nenhum cargo, não é restrito.
+     */
+    public function hasOnlyProposalRestrictedRoles(): bool
+    {
+        $roles = $this->getRoleNames();
+
+        return $roles->isNotEmpty() && $roles->diff(RolesEnum::proposalRestrictedLabels())->isEmpty();
+    }
+
+    /**
      * Retorna a URL da foto de perfil se existente.
      */
     public function getPhotoUrlAttribute(): ?string

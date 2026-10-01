@@ -169,17 +169,67 @@ const sidebarNavigation: TenantSidebarNavigation = {
                 {
                     title: "Propostas",
                     permission: "documents.proposals.view",
-                    url: "/documentation/proposals/list",
+                    url: "/documents/proposals/list",
                 },
                 {
                     title: "Nova proposta",
                     permission: "documents.proposals.create",
-                    url: "/documentation/proposals/new",
+                    url: "/documents/proposals/create",
                 },
                 {
-                    title: "Calculadora ITBI",
+                    title: "Calculadora de Emolumentos",
                     permission: "documents.itbi_calculator.view",
-                    url: "/documentation/itbi-calculator/new",
+                    url: "/documents/fee-calculator",
+                },
+                {
+                    title: "Orçamentos",
+                    permission: "documents.quotes.view",
+                    url: "/documents/quotes/list",
+                },
+                {
+                    title: "ITBI - Municípios",
+                    permission: "documents.itbi_municipalities.view",
+                    url: "/documents/itbi/municipalities/list",
+                },
+                {
+                    title: "Bancos",
+                    permission: "documents.banks.view",
+                    url: "/documents/banks/list",
+                },
+                {
+                    title: "Cartórios",
+                    permission: "documents.notaries.view",
+                    url: "/documents/notaries/list",
+                },
+                {
+                    title: "Tipos de Contrato",
+                    permission: "documents.contract_types.view",
+                    url: "/documents/contract-types/list",
+                },
+                {
+                    title: "Tipos de Custo",
+                    permission: "documents.cost_types.view",
+                    url: "/documents/cost-types/list",
+                },
+                {
+                    title: "Tipos de Imóvel",
+                    permission: "documents.property_types.view",
+                    url: "/documents/property-types/list",
+                },
+                {
+                    title: "Empreendimentos",
+                    permission: "documents.developments.view",
+                    url: "/documents/developments/list",
+                },
+                {
+                    title: "Etapas da Timeline",
+                    permission: "documents.stages.view",
+                    url: "/documents/stages/list",
+                },
+                {
+                    title: "Serviços Cobráveis",
+                    permission: "documents.billable_services.view",
+                    url: "/documents/billable-services/list",
                 },
             ],
         },

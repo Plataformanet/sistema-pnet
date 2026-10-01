@@ -455,7 +455,7 @@ function onSubmit() {
                                     :key="cost.id"
                                     :value="String(cost.id)"
                                 >
-                                    {{ cost.type }}
+                                    {{ cost.name }}
                                 </SelectItem>
                             </SelectGroup>
                         </SelectContent>

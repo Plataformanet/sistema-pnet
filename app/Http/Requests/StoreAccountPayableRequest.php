@@ -30,7 +30,7 @@ class StoreAccountPayableRequest extends FormRequest
         return [
             'financial_category_id' => ['required', 'integer', 'exists:financial_categories,id'],
             'financial_subcategory_id' => ['nullable', 'integer', 'exists:financial_subcategories,id'],
-            'cost_id' => ['nullable', 'integer', 'exists:costs,id'],
+            'cost_id' => ['nullable', 'integer', 'exists:cost_types,id'],
             'bank_account_id' => ['required', 'integer', Rule::exists('bank_accounts', 'id')->whereNull('deleted_at')],
             'financial_contact_id' => ['required', 'integer', 'exists:contacts,id'],
             'description' => ['required', 'string'],

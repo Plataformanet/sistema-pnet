@@ -249,7 +249,7 @@ async function executePay() {
                             class="mt-1 block text-sm font-medium text-foreground"
                         >
                             {{
-                                props.accountPayable.cost?.type ||
+                                props.accountPayable.cost?.name ||
                                 "Não Informado"
                             }}
                         </span>

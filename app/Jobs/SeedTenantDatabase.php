@@ -52,7 +52,9 @@ class SeedTenantDatabase implements ShouldQueue
             DB::transaction(function () use ($admin, $permissions): void {
                 $now = now();
 
-                Role::insert(
+                // Upsert pelo mesmo motivo das permissões: a migration
+                // add_proposal_roles já cria alguns cargos antes deste job.
+                Role::upsert(
                     collect(RolesEnum::all())
                         ->map(fn (string $name): array => [
                             'name' => $name,
@@ -60,7 +62,9 @@ class SeedTenantDatabase implements ShouldQueue
                             'created_at' => $now,
                             'updated_at' => $now,
                         ])
-                        ->all()
+                        ->all(),
+                    ['name', 'guard_name'],
+                    ['updated_at'],
                 );
 
                 // Upsert, e não insert: migrations de dados do tenant (ex.:

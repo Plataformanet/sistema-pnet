@@ -14,6 +14,30 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 class CompanySettingService
 {
     /**
+     * Dados da empresa e logotipo embutido (data URI) para PDFs, que não
+     * conseguem acessar a rota autenticada do logotipo.
+     *
+     * @return array{company: array<string, mixed>, logo: string|null}
+     */
+    public function pdfBranding(Tenant $tenant): array
+    {
+        $company = $this->getCompanySettings($tenant)['company'];
+
+        $logo = $tenant->run(function () {
+            $path = TenantSetting::where('key', 'company.logo_path')->value('value');
+            $disk = Storage::disk(config('bucket.disk'));
+
+            if (! $path || ! $disk->exists($path)) {
+                return null;
+            }
+
+            return 'data:'.$disk->mimeType($path).';base64,'.base64_encode((string) $disk->get($path));
+        });
+
+        return ['company' => $company, 'logo' => $logo];
+    }
+
+    /**
      * Retorna as configurações da empresa e a URL do logotipo no escopo do tenant.
      */
     public function getCompanySettings(Tenant $tenant): array
