@@ -47,6 +47,8 @@ class HandleInertiaRequests extends Middleware
         return array_merge(parent::share($request), [
             'auth' => [
                 'user' => $request->user(),
+                // Parceiro, Vendedor do imóvel e Cliente: o menu mostra só o que é da proposta.
+                'proposalRestricted' => fn () => (bool) $request->user()?->hasOnlyProposalRestrictedRoles(),
             ],
             // Compartilha dados do tenant com o Vue
             'tenant' => $this->getTenantData(),

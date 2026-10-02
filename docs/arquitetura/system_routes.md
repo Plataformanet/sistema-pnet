@@ -31,8 +31,19 @@ Estas rotas rodam no subdomínio de cada inquilino e requerem inicialização de
 | **POST** | `/login` | `tenant.login.submit` | *Nenhum* | Processa a autenticação |
 | **GET** | `/logout` | `tenant.logout` | *Nenhum* | Realiza a saída do sistema |
 | **GET** | `/forgot-password`| `tenant.forgot-password`| *Nenhum* | Solicitação de nova senha |
-| **GET** | `/reset-password` | `tenant.reset-password` | *Nenhum* | Redefinição de senha |
-| **GET** | `/dashboard` | `tenant.dashboard` | `Authenticate` | Página inicial após o login |
+| **GET** | `/reset-password` | `tenant.reset-password` | *Nenhum* | Tela de definição/redefinição de senha (recebe `token` e `email` na query) |
+| **POST** | `/password/email` | `tenant.password.email` | `throttle:password-reset` | Envia o link de redefinição de senha |
+| **POST** | `/password/reset` | `tenant.password.update` | `throttle:password-reset` | Grava a nova senha a partir do link |
+| **GET** | `/dashboard` | `tenant.dashboard` | `Authenticate`, `RedirectProposalRestrictedUsers` | Página inicial após o login (equipe interna) |
+
+> **Usuários externos às propostas** (Parceiro, Vendedor do imóvel e Cliente — `User::hasOnlyProposalRestrictedRoles()`): após o login vão direto para a lista de propostas (`tenant.documents.proposals.list`), respeitando a URL pretendida. O middleware `RedirectProposalRestrictedUsers` os redireciona para essa lista se tentarem abrir o Dashboard ou o CRM (`/crm/kanban`, `/crm/list`), e o menu lateral oculta esses itens.
+
+> **Senha do tenant (`TenantPasswordService`):** o fluxo roda sempre no banco do tenant.
+> *   **Dois tipos de link:** o de "esqueci a senha" vale 60 minutos (broker `users`). O do e-mail de boas-vindas de proponentes vale 72 horas (broker `welcome`, configurável por `AUTH_WELCOME_TOKEN_EXPIRE`). Os dois abrem a mesma tela `tenant.reset-password`.
+> *   **Invalidação:** ao definir a senha, os links pendentes dos dois tipos deixam de valer.
+> *   **Sem revelar cadastros:** e-mail sem cadastro recebe a mesma resposta, para não revelar quem tem conta.
+> *   **Limite:** `password-reset` permite 5 requisições por minuto, com chave domínio do tenant + IP.
+> *   **Rotas do Fortify:** `POST /forgot-password` e `POST /reset-password` (`password.email` / `password.update`) são registradas sem tenancy e operam no banco central. As telas do tenant não as usam.
 
 ---
 
@@ -255,6 +266,7 @@ Gerenciamento de arquivos e pastas dos inquilinos com controle de permissão por
 Agrupado no menu em "Documentações" (módulo `documents`). Todas as rotas ficam sob `/documents/...`, com nomes `tenant.documents.<recurso>.<ação>` e o middleware de permissão `documents.<recurso>.<view|create|edit|delete>`.
 
 *   **Regras por registro (`ProposalPolicy`):** além da permissão da rota, as ações em uma proposta passam pela policy. Parceiro, Vendedor do imóvel e Cliente só veem as propostas a que estão vinculados (`Proposal::scopeVisibleTo`). Os documentos visíveis também dependem do cargo (`DocumentOwner::visibleTo`): o Parceiro vê os das pessoas e do imóvel, o Cliente não vê os do vendedor e o Vendedor do imóvel não vê os do comprador. O cálculo da calculadora só é visível para quem o fez ou para o administrador (`FeeCalculationPolicy`).
+*   **Máscara no PDF de informações (`proposals.pdf.info`):** os dados de cada lado da negociação seguem a mesma regra dos documentos (`DocumentOwner::visibleTo`). Quem não pode ver os documentos de um lado recebe o CPF/CNPJ desse lado mascarado (`DocumentMask`: `***.982.247-**` ou `**.222.333/****-**`) e o e-mail e o telefone como "Oculto"; o nome continua visível. Na prática, o Cliente vê os dados do vendedor mascarados e o Vendedor do imóvel vê os do comprador mascarados. O Parceiro, que já pode ver os documentos dos dois lados, e a equipe veem tudo.
 *   **Cadastros:** a exclusão é lógica e o `PATCH .../restore` desfaz. Bancos, cartórios, tipos e etapas usam páginas de listagem, criação e edição, com paginação no servidor.
 *   **Endpoints JSON (consumidos pelo frontend):** `applicants.lookup` (busca do proponente pelo CPF; quem só tem cargos externos recebe apenas nome, CPF e se o proponente já existe), `fee-calculator.municipalities` (municípios do IBGE por UF) e `fee-calculator.proposals.search` (busca de propostas sem emolumento, no formato do `ComboboxRemote`).
 *   **Limites de requisição:** `documents-lookup` (30 por minuto) e `fee-calculator` (20 por minuto), definidos no `AppServiceProvider`. A chave combina o domínio do tenant e o usuário, porque o store do limitador é compartilhado entre os tenants e os ids de usuário se repetem.
@@ -336,6 +348,11 @@ Agrupado no menu em "Documentações" (módulo `documents`). Todas as rotas fica
 | **GET** | `/documents/stages/{id}/edit` | `tenant.documents.stages.edit` | `permission:documents.stages.edit` |
 | **PATCH** | `/documents/stages/{id}/move` | `tenant.documents.stages.move` | `permission:documents.stages.edit` |
 | **PATCH** | `/documents/stages/{id}/restore` | `tenant.documents.stages.restore` | `permission:documents.stages.delete` |
+
+> **Reordenação (`move`):** aceita um de dois parâmetros e volta para a mesma página/filtro da listagem.
+> *   **`direction`** (`up` / `down`): troca a etapa com a vizinha ativa. Usado pelas ações "Mover para cima/baixo" do menu.
+> *   **`target_id`**: leva a etapa para a posição da etapa alvo (ativa), deslocando as que ficam entre as duas. Usado ao arrastar a linha na listagem. As ordens são redistribuídas entre os mesmos valores que as etapas ativas já usam, sem colidir com etapas excluídas.
+> *   A nova ordem só vale para timelines instanciadas depois: `proposal_stages.position` é uma cópia feita na criação da timeline.
 
 #### Serviços Cobráveis (`TenantBillableServiceController`)
 | Método | Rota | Nome da Rota | Middleware de Permissão |

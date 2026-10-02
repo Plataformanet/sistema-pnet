@@ -131,6 +131,32 @@ test('concluir com arquivo grava o documento da etapa no disco privado', functio
     });
 });
 
+test('editar a etapa concluída só com o título renomeia o documento sem trocar o arquivo', function () {
+    $this->service->start((string) $this->proposal->id, $this->tenant);
+    $first = timelineStages()->first();
+    $complete = fn (array $data, ?UploadedFile $file) => $this->service->complete(
+        (string) $this->proposal->id,
+        (string) $first->id,
+        $data,
+        $file,
+        $this->actor,
+        $this->tenant,
+    );
+
+    $complete(['title' => 'Aprovação'], UploadedFile::fake()->create('aprovacao.pdf', 10, 'application/pdf'));
+    $original = $this->tenant->run(fn () => $first->fresh()->document);
+
+    $complete(['title' => 'Aprovação final'], null);
+
+    $this->tenant->run(function () use ($first, $original) {
+        $document = $first->fresh()->document;
+
+        expect($document->id)->toBe($original->id)
+            ->and($document->path)->toBe($original->path)
+            ->and($document->title)->toBe('Aprovação final');
+    });
+});
+
 test('concluir a última etapa finaliza a proposta', function () {
     $this->service->start((string) $this->proposal->id, $this->tenant);
 
@@ -149,7 +175,7 @@ test('concluir a última etapa finaliza a proposta', function () {
     Mail::assertQueued(ProposalStagesFinishedMail::class);
 });
 
-test('restaurar o acompanhamento recria a timeline, apaga documentos de etapa e inicia a primeira', function () {
+test('restaurar o acompanhamento recria a timeline, apaga documentos de etapa e volta ao estado não iniciado', function () {
     $this->service->start((string) $this->proposal->id, $this->tenant);
     $first = timelineStages()->first();
     $this->service->complete(
@@ -168,11 +194,36 @@ test('restaurar o acompanhamento recria a timeline, apaga documentos de etapa e 
         $stages = $this->proposal->stages()->get();
 
         expect($stages->whereNotNull('completed_at'))->toBeEmpty()
-            ->and($stages->first()->started_at)->not->toBeNull()
+            ->and($stages->whereNotNull('started_at'))->toBeEmpty()
+            ->and($stages->first()->is_current)->toBeTrue()
+            ->and($this->proposal->fresh()->status)->toBe(ProposalStatus::NEW)
             ->and($this->proposal->documents()->where('owner', DocumentOwner::STAGE->value)->count())->toBe(0);
     });
 
     Storage::disk('public')->assertMissing($path);
+});
+
+test('restaurar uma proposta finalizada limpa a data de finalização e permite iniciar de novo', function () {
+    $this->tenant->run(fn () => $this->proposal->update(['status' => ProposalStatus::FINISHED, 'finished_at' => now()]));
+
+    $this->service->restore((string) $this->proposal->id, $this->tenant);
+    $this->service->start((string) $this->proposal->id, $this->tenant);
+
+    $this->tenant->run(function () {
+        $proposal = $this->proposal->fresh();
+
+        expect($proposal->status)->toBe(ProposalStatus::IN_PROGRESS)
+            ->and($proposal->finished_at)->toBeNull()
+            ->and($proposal->currentStage()->first()->started_at)->not->toBeNull();
+    });
+});
+
+test('restaurar não altera o status de proposta cancelada', function () {
+    $this->tenant->run(fn () => $this->proposal->update(['status' => ProposalStatus::CANCELED]));
+
+    $this->service->restore((string) $this->proposal->id, $this->tenant);
+
+    expect($this->tenant->run(fn () => $this->proposal->fresh()->status))->toBe(ProposalStatus::CANCELED);
 });
 
 test('overdueStages lista etapas em andamento que atingiram o prazo de alerta', function () {

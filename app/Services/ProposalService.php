@@ -4,18 +4,20 @@ namespace App\Services;
 
 use App\Enums\PropertyCondition;
 use App\Enums\ProposalStatus;
+use App\Exceptions\LastApplicantException;
+use App\Exceptions\PersonAlreadyInProposalException;
 use App\Mail\ApplicantWelcomeMail;
 use App\Mail\ProposalCreatedMail;
 use App\Models\Applicant;
 use App\Models\ContractType;
 use App\Models\Proposal;
 use App\Models\Quote;
+use App\Models\Seller;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Password;
 
 class ProposalService
 {
@@ -62,12 +64,14 @@ class ProposalService
         protected ApplicantService $applicantService,
         protected SellerService $sellerService,
         protected ProposalTimelineService $proposalTimelineService,
+        protected TenantPasswordService $tenantPasswordService,
     ) {}
 
     /**
      * Cria a proposta com proponentes, vendedores, parceiros, imóvel e
      * timeline numa única transação. Os e-mails vão para a fila e só são
-     * despachados após o commit.
+     * despachados após o commit. Sem analista escolhido, a proposta fica sem
+     * analista até alguém da equipe assumi-la.
      *
      * @param  array<string, mixed>  $data
      */
@@ -79,14 +83,14 @@ class ProposalService
                     Arr::only($data, self::PROPOSAL_FIELDS),
                     [
                         'status' => ProposalStatus::NEW,
-                        'analyst_id' => $data['analyst_id'] ?? $data['creator_id'],
+                        'analyst_id' => $data['analyst_id'] ?? null,
                     ],
                 ));
 
                 foreach ($data['applicants'] as $applicantData) {
                     $applicant = $this->applicantService->findOrCreateByCpf($applicantData, $tenant);
                     $proposal->applicants()->syncWithoutDetaching([$applicant->id]);
-                    $this->notifyApplicant($applicant, $proposal);
+                    $this->notifyApplicant($applicant, $proposal, $tenant);
                 }
 
                 foreach ($data['sellers'] ?? [] as $sellerData) {
@@ -108,6 +112,89 @@ class ProposalService
     }
 
     /**
+     * Inclui um proponente na proposta já cadastrada, reaproveitando-o pelo
+     * CPF como na criação. Ele recebe o mesmo e-mail da criação (boas-vindas
+     * se o usuário for novo, aviso de nova proposta se já existia).
+     *
+     * @param  array<string, mixed>  $data
+     *
+     * @throws PersonAlreadyInProposalException quando o CPF já é proponente da proposta.
+     */
+    public function addApplicant(array $data, string $id, Tenant $tenant): Applicant
+    {
+        return $tenant->run(fn () => DB::transaction(function () use ($data, $id, $tenant) {
+            $proposal = Proposal::lockForUpdate()->findOrFail($id);
+            $applicant = $this->applicantService->findOrCreateByCpf($data, $tenant);
+
+            if ($proposal->applicants()->whereKey($applicant->id)->exists()) {
+                throw new PersonAlreadyInProposalException('proponente');
+            }
+
+            $proposal->applicants()->attach($applicant->id);
+            $this->notifyApplicant($applicant, $proposal, $tenant);
+
+            return $applicant;
+        }));
+    }
+
+    /**
+     * Inclui um vendedor na proposta já cadastrada, reaproveitando-o pelo
+     * CPF/CNPJ como na criação.
+     *
+     * @param  array<string, mixed>  $data
+     *
+     * @throws PersonAlreadyInProposalException quando o documento já é vendedor da proposta.
+     */
+    public function addSeller(array $data, string $id, User $actor, Tenant $tenant): Seller
+    {
+        return $tenant->run(fn () => DB::transaction(function () use ($data, $id, $actor, $tenant) {
+            $proposal = Proposal::lockForUpdate()->findOrFail($id);
+            $seller = $this->sellerService->findOrCreateByDocument($data, $actor, $tenant);
+
+            if ($proposal->sellers()->whereKey($seller->id)->exists()) {
+                throw new PersonAlreadyInProposalException('vendedor');
+            }
+
+            $proposal->sellers()->attach($seller->id);
+
+            return $seller;
+        }));
+    }
+
+    /**
+     * Desvincula o proponente da proposta. O proponente, o usuário de acesso
+     * e os documentos que ele já enviou na proposta são mantidos.
+     *
+     * @throws LastApplicantException quando é o único proponente da proposta.
+     */
+    public function removeApplicant(string $id, string $applicantId, Tenant $tenant): void
+    {
+        $tenant->run(fn () => DB::transaction(function () use ($id, $applicantId) {
+            $proposal = Proposal::lockForUpdate()->findOrFail($id);
+            $applicant = $proposal->applicants()->findOrFail($applicantId);
+
+            if ($proposal->applicants()->count() === 1) {
+                throw new LastApplicantException;
+            }
+
+            $proposal->applicants()->detach($applicant->id);
+        }));
+    }
+
+    /**
+     * Desvincula o vendedor da proposta. O vendedor e os documentos que ele
+     * já enviou na proposta são mantidos.
+     */
+    public function removeSeller(string $id, string $sellerId, Tenant $tenant): void
+    {
+        $tenant->run(fn () => DB::transaction(function () use ($id, $sellerId) {
+            $proposal = Proposal::lockForUpdate()->findOrFail($id);
+
+            $proposal->sellers()->detach($proposal->sellers()->findOrFail($sellerId)->id);
+        }));
+    }
+
+    /**
      * Atualiza os dados da proposta, o status manual, os parceiros e o imóvel.
      *
      * @param  array<string, mixed>  $data
@@ -119,7 +206,7 @@ class ProposalService
                 $proposal = Proposal::lockForUpdate()->findOrFail($id);
 
                 $proposal->fill(Arr::only($data, self::PROPOSAL_FIELDS));
-                $proposal->analyst_id = $data['analyst_id'] ?? $proposal->creator_id;
+                $proposal->analyst_id = $data['analyst_id'] ?? null;
                 $this->applyStatus($proposal, $data);
                 $proposal->save();
 
@@ -226,23 +313,19 @@ class ProposalService
     }
 
     /**
-     * Usuário criado agora recebe o link de definição de senha; proponente já
+     * Usuário criado agora recebe o link de definição de senha (broker
+     * `welcome`, com validade maior que a do "esqueci a senha"); proponente já
      * existente recebe o aviso de nova proposta. O link é montado aqui (na
      * requisição) porque a fila não conhece o domínio do tenant.
      */
-    public function notifyApplicant(Applicant $applicant, Proposal $proposal): void
+    public function notifyApplicant(Applicant $applicant, Proposal $proposal, Tenant $tenant): void
     {
         $user = $applicant->user;
         $email = $user?->email ?? $applicant->contact->email;
         $name = $applicant->contact->name_corporatereason;
 
         if ($user !== null && $user->wasRecentlyCreated) {
-            $url = route('tenant.reset-password', [
-                'token' => Password::broker()->createToken($user),
-                'email' => $user->email,
-            ]);
-
-            Mail::to($email)->queue(new ApplicantWelcomeMail($name, $proposal->number, $url));
+            Mail::to($email)->queue(new ApplicantWelcomeMail($name, $proposal->number, $this->tenantPasswordService->welcomeUrl($user, $tenant)));
 
             return;
         }

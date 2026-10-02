@@ -8,6 +8,7 @@ use App\Services\ProposalPdfService;
 use App\Services\ProposalQueryService;
 use App\Services\ProposalService;
 use App\Services\ReceiptService;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 
 class TenantProposalPdfController extends Controller
@@ -19,13 +20,13 @@ class TenantProposalPdfController extends Controller
         protected ReceiptService $receiptService,
     ) {}
 
-    public function info(string $id)
+    public function info(Request $request, string $id)
     {
         $proposal = $this->proposalService->findById($id, tenant());
 
         Gate::authorize('print', $proposal);
 
-        return $this->proposalPdfService->info($id, tenant())->stream("informativo-proposta-{$proposal->number}.pdf");
+        return $this->proposalPdfService->info($id, $request->user(), tenant())->stream("informativo-proposta-{$proposal->number}.pdf");
     }
 
     public function tracking(string $id)

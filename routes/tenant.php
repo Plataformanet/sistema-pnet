@@ -38,12 +38,14 @@ use App\Http\Controllers\TenantProductCategoryController;
 use App\Http\Controllers\TenantProductController;
 use App\Http\Controllers\TenantProfileController;
 use App\Http\Controllers\TenantPropertyTypeController;
+use App\Http\Controllers\TenantProposalApplicantController;
 use App\Http\Controllers\TenantProposalController;
 use App\Http\Controllers\TenantProposalCostItemController;
 use App\Http\Controllers\TenantProposalDocumentController;
 use App\Http\Controllers\TenantProposalFeeEstimateController;
 use App\Http\Controllers\TenantProposalPdfController;
 use App\Http\Controllers\TenantProposalSearchController;
+use App\Http\Controllers\TenantProposalSellerController;
 use App\Http\Controllers\TenantProposalTimelineController;
 use App\Http\Controllers\TenantQuoteController;
 use App\Http\Controllers\TenantQuotePdfController;
@@ -57,6 +59,7 @@ use App\Http\Controllers\TenantStageController;
 use App\Http\Controllers\TenantSupplierController;
 use App\Http\Controllers\TenantUserController;
 use App\Http\Middleware\Authenticate;
+use App\Http\Middleware\RedirectProposalRestrictedUsers;
 use Illuminate\Support\Facades\Route;
 use Stancl\Tenancy\Middleware\InitializeTenancyByDomain;
 use Stancl\Tenancy\Middleware\PreventAccessFromCentralDomains;
@@ -83,14 +86,18 @@ Route::middleware([
     Route::get('/logout', [AuthTenantController::class, 'logout'])->name('tenant.logout');
     Route::get('/forgot-password', [AuthTenantController::class, 'showForgotPasswordForm'])->name('tenant.forgot-password');
     Route::get('/reset-password', [AuthTenantController::class, 'showResetPasswordForm'])->name('tenant.reset-password');
+    Route::post('/password/email', [AuthTenantController::class, 'sendResetLink'])->name('tenant.password.email')->middleware('throttle:password-reset');
+    Route::post('/password/reset', [AuthTenantController::class, 'resetPassword'])->name('tenant.password.update')->middleware('throttle:password-reset');
     Route::get('/settings/company/logo', [TenantCompanySettingController::class, 'showLogo'])->name('tenant.settings.company.logo');
 
     Route::middleware(Authenticate::class)->group(function () {
-        Route::get('/dashboard', [TenantController::class, 'dashboard'])->name('tenant.dashboard');
+        Route::middleware(RedirectProposalRestrictedUsers::class)->group(function () {
+            Route::get('/dashboard', [TenantController::class, 'dashboard'])->name('tenant.dashboard');
 
-        // CRM (Prototipo Visual)
-        Route::get('/crm/kanban', [TenantCrmController::class, 'kanban'])->name('tenant.crm.kanban');
-        Route::get('/crm/list', [TenantCrmController::class, 'list'])->name('tenant.crm.list');
+            // CRM (Prototipo Visual)
+            Route::get('/crm/kanban', [TenantCrmController::class, 'kanban'])->name('tenant.crm.kanban');
+            Route::get('/crm/list', [TenantCrmController::class, 'list'])->name('tenant.crm.list');
+        });
 
         // Clients
         Route::get('/registrations/clients/list', [TenantClientController::class, 'index'])->name('tenant.registrations.clients.list')->middleware('permission:registrations.clients.view');
@@ -276,6 +283,12 @@ Route::middleware([
         Route::get('/documents/proposals/{id}/edit', [TenantProposalController::class, 'edit'])->name('tenant.documents.proposals.edit')->whereNumber('id')->middleware('permission:documents.proposals.view');
         Route::put('/documents/proposals/{id}', [TenantProposalController::class, 'update'])->name('tenant.documents.proposals.update')->whereNumber('id')->middleware('permission:documents.proposals.edit');
         Route::patch('/documents/proposals/{id}/particularities', [TenantProposalController::class, 'updateParticularities'])->name('tenant.documents.proposals.particularities.update')->whereNumber('id')->middleware('permission:documents.proposals.edit');
+        Route::post('/documents/proposals/{id}/applicants', [TenantProposalApplicantController::class, 'store'])->name('tenant.documents.proposals.applicants.store')->whereNumber('id')->middleware('permission:documents.proposals.edit');
+        Route::put('/documents/proposals/{id}/applicants/{applicantId}', [TenantProposalApplicantController::class, 'update'])->name('tenant.documents.proposals.applicants.update')->whereNumber(['id', 'applicantId'])->middleware('permission:documents.proposals.edit');
+        Route::delete('/documents/proposals/{id}/applicants/{applicantId}', [TenantProposalApplicantController::class, 'destroy'])->name('tenant.documents.proposals.applicants.destroy')->whereNumber(['id', 'applicantId'])->middleware('permission:documents.proposals.edit');
+        Route::post('/documents/proposals/{id}/sellers', [TenantProposalSellerController::class, 'store'])->name('tenant.documents.proposals.sellers.store')->whereNumber('id')->middleware('permission:documents.proposals.edit');
+        Route::put('/documents/proposals/{id}/sellers/{sellerId}', [TenantProposalSellerController::class, 'update'])->name('tenant.documents.proposals.sellers.update')->whereNumber(['id', 'sellerId'])->middleware('permission:documents.proposals.edit');
+        Route::delete('/documents/proposals/{id}/sellers/{sellerId}', [TenantProposalSellerController::class, 'destroy'])->name('tenant.documents.proposals.sellers.destroy')->whereNumber(['id', 'sellerId'])->middleware('permission:documents.proposals.edit');
         Route::delete('/documents/proposals/{id}', [TenantProposalController::class, 'destroy'])->name('tenant.documents.proposals.destroy')->whereNumber('id')->middleware('permission:documents.proposals.delete');
         Route::get('/documents/proposals/{id}/pdf/info', [TenantProposalPdfController::class, 'info'])->name('tenant.documents.proposals.pdf.info')->whereNumber('id')->middleware('permission:documents.proposals.view');
         Route::get('/documents/proposals/{id}/pdf/tracking', [TenantProposalPdfController::class, 'tracking'])->name('tenant.documents.proposals.pdf.tracking')->whereNumber('id')->middleware('permission:documents.proposals.view');

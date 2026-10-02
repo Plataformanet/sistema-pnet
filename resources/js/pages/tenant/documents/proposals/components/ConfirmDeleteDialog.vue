@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import {
     AlertDialog,
-    AlertDialogAction,
     AlertDialogCancel,
     AlertDialogContent,
     AlertDialogDescription,
@@ -9,6 +8,7 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
 
 defineProps<{
     open: boolean;
@@ -20,6 +20,16 @@ const emit = defineEmits<{
     (e: "update:open", value: boolean): void;
     (e: "confirm"): void;
 }>();
+
+/**
+ * Confirma antes de fechar. O `AlertDialogAction` fecha o diálogo antes de
+ * repassar o clique, e quem usa este componente limpa o item pendente ao
+ * fechar: a confirmação chegava sem item e nada era enviado.
+ */
+function confirm() {
+    emit("confirm");
+    emit("update:open", false);
+}
 </script>
 
 <template>
@@ -31,9 +41,7 @@ const emit = defineEmits<{
             </AlertDialogHeader>
             <AlertDialogFooter>
                 <AlertDialogCancel @click="emit('update:open', false)">Cancelar</AlertDialogCancel>
-                <AlertDialogAction class="bg-red-600 text-white hover:bg-red-700" @click="emit('confirm')">
-                    Continuar
-                </AlertDialogAction>
+                <Button type="button" class="bg-red-600 text-white hover:bg-red-700" @click="confirm">Continuar</Button>
             </AlertDialogFooter>
         </AlertDialogContent>
     </AlertDialog>

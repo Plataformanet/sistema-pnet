@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Stage;
 use App\Models\Tenant;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
 
 class StageService extends CatalogService
@@ -47,6 +48,38 @@ class StageService extends CatalogService
 
                 $stage->save();
                 $neighbor->save();
+            });
+        });
+    }
+
+    /**
+     * Leva a etapa para a posição da etapa alvo (arrastar e soltar), deslocando
+     * as que ficam entre as duas. As ordens são redistribuídas entre os mesmos
+     * valores que as etapas ativas já usam, então nenhuma ordem nova surge e
+     * não há colisão com etapas excluídas.
+     *
+     * Assim como `move`, só vale para timelines instanciadas depois.
+     */
+    public function moveTo(string $id, string $targetId, Tenant $tenant): void
+    {
+        $tenant->run(function () use ($id, $targetId) {
+            DB::transaction(function () use ($id, $targetId) {
+                $stages = Stage::query()->ordered()->lockForUpdate()->get();
+                $stage = $stages->firstWhere('id', (int) $id) ?? throw (new ModelNotFoundException)->setModel(Stage::class, [$id]);
+                $targetIndex = $stages->search(fn (Stage $item) => $item->id === (int) $targetId);
+
+                if ($targetIndex === false) {
+                    throw (new ModelNotFoundException)->setModel(Stage::class, [$targetId]);
+                }
+
+                $orders = $stages->pluck('order')->all();
+                $reordered = $stages->reject(fn (Stage $item) => $item->is($stage))->values();
+                $reordered->splice($targetIndex, 0, [$stage]);
+
+                $reordered->each(function (Stage $item, int $index) use ($orders) {
+                    $item->order = $orders[$index];
+                    $item->save();
+                });
             });
         });
     }

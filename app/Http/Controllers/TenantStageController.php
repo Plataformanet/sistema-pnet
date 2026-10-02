@@ -97,9 +97,14 @@ class TenantStageController extends Controller
     public function move(MoveStageRequest $request, string $id)
     {
         try {
-            $this->stageService->move($id, $request->validated('direction'), tenant());
+            if ($request->filled('target_id')) {
+                $this->stageService->moveTo($id, (string) $request->validated('target_id'), tenant());
+            } else {
+                $this->stageService->move($id, $request->validated('direction'), tenant());
+            }
 
-            return redirect()->route('tenant.documents.stages.list')->with('success', 'Ordem das etapas atualizada com sucesso!');
+            // Volta para a mesma página/filtro da listagem de onde a etapa foi movida.
+            return redirect()->back()->with('success', 'Ordem das etapas atualizada com sucesso!');
         } catch (\Throwable $th) {
             Log::error('Erro ao reordenar etapa: '.$th->getMessage());
 

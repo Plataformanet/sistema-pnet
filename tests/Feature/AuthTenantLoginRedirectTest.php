@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\RolesEnum;
 use App\Http\Controllers\Auth\AuthTenantController;
 use App\Http\Requests\StoreTenantLoginRequest;
 use App\Models\User;
@@ -52,3 +53,13 @@ it('redireciona para o dashboard quando não há url pretendida', function () {
 
     expect($response->getTargetUrl())->toBe(route('tenant.dashboard'));
 });
+
+it('redireciona cargo externo às propostas para a lista de propostas', function (RolesEnum $role) {
+    $user = userWithRole($this->tenant, $role, ['documents.proposals.view']);
+
+    $this->tenant->run(fn () => $user->forceFill(['password' => Hash::make('senha-secreta')])->save());
+
+    $response = loginRequest($user->email, 'senha-secreta');
+
+    expect($response->getTargetUrl())->toBe(route('tenant.documents.proposals.list'));
+})->with([RolesEnum::CLIENT, RolesEnum::PROPERTY_SELLER, RolesEnum::PARTNER]);

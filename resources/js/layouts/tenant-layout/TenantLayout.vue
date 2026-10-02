@@ -42,6 +42,8 @@ export interface SidebarNavItem {
     title: string;
     module?: string;
     permission?: string;
+    /** Oculto para cargos externos às propostas (Parceiro, Vendedor do imóvel e Cliente). */
+    internalOnly?: boolean;
     url: string;
     items?: SidebarNavItem[];
 }
@@ -51,11 +53,13 @@ const sidebarNavigation: TenantSidebarNavigation = {
         {
             title: "Dashboard",
             module: "",
+            internalOnly: true,
             url: "/dashboard",
         },
         {
             title: "CRM",
             module: "",
+            internalOnly: true,
             url: "/crm/kanban",
             items: [
                 {

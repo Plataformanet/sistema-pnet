@@ -1,15 +1,6 @@
 <script setup lang="ts">
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
-import {
-    Select,
-    SelectContent,
-    SelectGroup,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import { Loader2 } from "lucide-vue-next";
+import ComboboxSelect from "@/components/ui/combobox/ComboboxSelect.vue";
 import axios from "axios";
 import { computed, onMounted, ref } from "vue";
 import { route } from "ziggy-js";
@@ -25,8 +16,10 @@ const props = withDefaults(
         state?: string | null;
         ibgeCode?: number | null;
         disabled?: boolean;
+        /** Rótulos "Estado"/"Município" acima dos campos (a calculadora não usa). */
+        labels?: boolean;
     }>(),
-    { state: null, ibgeCode: null, disabled: false },
+    { state: null, ibgeCode: null, disabled: false, labels: true },
 );
 
 const emit = defineEmits<{
@@ -38,13 +31,15 @@ const selectedCode = ref<number | null>(props.ibgeCode);
 const municipalities = ref<MunicipalityOption[]>([]);
 const loading = ref(false);
 const error = ref("");
-const search = ref("");
 
-const filtered = computed(() => {
-    const term = search.value.trim().toLowerCase();
+const stateOptions = computed(() => props.states.map((state) => ({ value: state.value, label: state.label })));
 
-    return term ? municipalities.value.filter((item) => item.name.toLowerCase().includes(term)) : municipalities.value;
-});
+const municipalityOptions = computed(() =>
+    municipalities.value.map((item) => ({
+        value: item.ibge_code,
+        label: item.has_itbi ? item.name : `${item.name} (sem ITBI cadastrado)`,
+    })),
+);
 
 async function loadMunicipalities(state: string, preferredCode: number | null) {
     loading.value = true;
@@ -67,9 +62,12 @@ async function loadMunicipalities(state: string, preferredCode: number | null) {
     }
 }
 
-function onStateChange(value: unknown) {
+function onStateChange(value: string | number) {
+    if (String(value) === selectedState.value) {
+        return;
+    }
+
     selectedState.value = String(value);
-    search.value = "";
     loadMunicipalities(String(value), null);
 }
 
@@ -95,43 +93,33 @@ onMounted(() => {
 <template>
     <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
         <Field>
-            <FieldLabel for="picker_state">Estado *</FieldLabel>
-            <Select :model-value="selectedState ?? ''" @update:model-value="onStateChange" :disabled="disabled">
-                <SelectTrigger id="picker_state">
-                    <SelectValue placeholder="Selecione o estado..." />
-                </SelectTrigger>
-                <SelectContent>
-                    <SelectGroup>
-                        <SelectItem v-for="state in states" :key="state.value" :value="state.value">{{ state.label }}</SelectItem>
-                    </SelectGroup>
-                </SelectContent>
-            </Select>
+            <FieldLabel v-if="labels" for="picker_state">Estado *</FieldLabel>
+            <ComboboxSelect
+                id="picker_state"
+                aria-label="Estado"
+                :model-value="selectedState"
+                :options="stateOptions"
+                placeholder="Selecione o estado..."
+                search-placeholder="Buscar estado..."
+                :disabled="disabled"
+                @update:model-value="onStateChange"
+            />
         </Field>
 
         <Field>
-            <FieldLabel for="picker_municipality">Município *</FieldLabel>
-            <div class="flex items-center gap-2">
-                <Select
-                    :model-value="selectedCode ? String(selectedCode) : ''"
-                    @update:model-value="select(Number($event))"
-                    :disabled="disabled || !selectedState || loading"
-                >
-                    <SelectTrigger id="picker_municipality">
-                        <SelectValue placeholder="Selecione o município..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <div class="p-1">
-                            <Input v-model="search" placeholder="Filtrar município..." class="h-8" @keydown.stop />
-                        </div>
-                        <SelectGroup>
-                            <SelectItem v-for="municipality in filtered" :key="municipality.ibge_code" :value="String(municipality.ibge_code)">
-                                {{ municipality.name }}{{ municipality.has_itbi ? "" : " (sem ITBI cadastrado)" }}
-                            </SelectItem>
-                        </SelectGroup>
-                    </SelectContent>
-                </Select>
-                <Loader2 v-if="loading" class="h-4 w-4 animate-spin text-muted-foreground" />
-            </div>
+            <FieldLabel v-if="labels" for="picker_municipality">Município *</FieldLabel>
+            <ComboboxSelect
+                id="picker_municipality"
+                aria-label="Município"
+                :model-value="selectedCode"
+                :options="municipalityOptions"
+                placeholder="Selecione o município..."
+                search-placeholder="Buscar município..."
+                no-results-text="Nenhum município encontrado."
+                :disabled="disabled || !selectedState || loading"
+                :loading="loading"
+                @update:model-value="select(Number($event))"
+            />
             <FieldDescription v-if="error" class="text-red-600">{{ error }}</FieldDescription>
         </Field>
     </div>

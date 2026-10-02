@@ -44,9 +44,17 @@ function isActive(url?: string) {
     return currentPath === menuUrl;
 }
 
+const isProposalRestricted = computed(
+    () => (page.props.auth as any)?.proposalRestricted === true,
+);
+
 const visibleNavigationItems = computed(() => {
     return props.navigation.navMain
         .map((navGroup) => {
+            if (navGroup.internalOnly && isProposalRestricted.value) {
+                return null;
+            }
+
             // Check if module is enabled for tenant
             if (
                 navGroup.module &&

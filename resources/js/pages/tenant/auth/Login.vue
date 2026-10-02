@@ -52,6 +52,9 @@ function submit() {
                 <Field v-if="flash.error">
                     <FieldError>{{ flash.error }}</FieldError>
                 </Field>
+                <Field v-if="flash.success">
+                    <FieldDescription class="text-center text-foreground">{{ flash.success }}</FieldDescription>
+                </Field>
                 <Field>
                     <FieldLabel for="email"> Email </FieldLabel>
                     <Input

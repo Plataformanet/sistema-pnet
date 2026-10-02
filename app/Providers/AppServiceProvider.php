@@ -38,5 +38,6 @@ class AppServiceProvider extends ServiceProvider
 
         RateLimiter::for('documents-lookup', fn (Request $request): Limit => Limit::perMinute(30)->by($byTenantUser($request)));
         RateLimiter::for('fee-calculator', fn (Request $request): Limit => Limit::perMinute(20)->by($byTenantUser($request)));
+        RateLimiter::for('password-reset', fn (Request $request): Limit => Limit::perMinute(5)->by($byTenantUser($request)));
     }
 }

@@ -232,6 +232,14 @@ test('as colunas seguem a ordem da calculadora de origem, independente da ordem 
     expect(array_column($columns, 'key'))->toBe(['descricao', 'emolumento', 'estado(sp)', 'ipesp', 'registro_civil', 'tribunal_de_justica', 'ministerio_publico', 'subtotal']);
 });
 
+test('as opções de tipo de cálculo trazem o resumo exibido nos cards', function () {
+    $options = collect(CalculationType::options())->keyBy('value');
+
+    expect($options)->toHaveCount(count(CalculationType::cases()))
+        ->and($options[CalculationType::GENERAL_REGISTRATION->value]['summary'])->toBe('Registro de Compra e Venda e outros')
+        ->and($options->every(fn (array $option) => filled($option['summary']) && filled($option['description'])))->toBeTrue();
+});
+
 test('o formulário de cálculo traz o módulo de ITBI do município e as opções da tela', function () {
     $props = app(FeeCalculationService::class)->formProps(CalculationType::PURCHASE_WITH_FIDUCIARY_LIEN, SupportedState::SP, 3550308, 'São Paulo', $this->tenant);
 

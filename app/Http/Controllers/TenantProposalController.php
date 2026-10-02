@@ -8,8 +8,10 @@ use App\Http\Requests\StoreProposalRequest;
 use App\Http\Requests\UpdateProposalParticularitiesRequest;
 use App\Http\Requests\UpdateProposalRequest;
 use App\Models\Proposal;
+use App\Services\ApplicantService;
 use App\Services\ProposalQueryService;
 use App\Services\ProposalService;
+use App\Services\SellerService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
@@ -21,6 +23,8 @@ class TenantProposalController extends Controller
     public function __construct(
         protected ProposalService $proposalService,
         protected ProposalQueryService $proposalQueryService,
+        protected ApplicantService $applicantService,
+        protected SellerService $sellerService,
     ) {}
 
     public function index(IndexProposalRequest $request)
@@ -75,14 +79,18 @@ class TenantProposalController extends Controller
 
         Gate::authorize('view', $proposal);
 
+        $abilities = $this->abilities($proposal);
+
         return Inertia::render('tenant/documents/proposals/edit/Edit', array_merge(
             $this->proposalQueryService->formOptions(tenant(), $proposal),
             $this->proposalQueryService->managementOptions(tenant()),
             [
                 'proposal' => $proposal->setRelation('documents', $this->proposalQueryService->documentsFor($proposal, $request->user())),
+                'applicants' => $abilities['update'] ? $this->applicantService->findForProposal($id, tenant()) : [],
+                'sellers' => $abilities['update'] ? $this->sellerService->findForProposal($id, tenant()) : [],
                 'checklist' => $this->proposalQueryService->checklist($proposal, tenant()),
                 'feesTotal' => tenant()->run(fn () => $proposal->feesTotal()),
-                'can' => $this->abilities($proposal),
+                'can' => $abilities,
             ],
         ));
     }

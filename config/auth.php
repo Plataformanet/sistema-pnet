@@ -99,6 +99,18 @@ return [
             'expire' => 60,
             'throttle' => 60,
         ],
+
+        /*
+         * Link de definição de senha do e-mail de boas-vindas (ex.: proponente
+         * cadastrado numa proposta). Tabela própria para que a validade maior
+         * deste link nunca se estenda ao link de "esqueci a senha".
+         */
+        'welcome' => [
+            'provider' => 'users',
+            'table' => 'password_set_tokens',
+            'expire' => (int) env('AUTH_WELCOME_TOKEN_EXPIRE', 4320),
+            'throttle' => 0,
+        ],
     ],
 
     /*

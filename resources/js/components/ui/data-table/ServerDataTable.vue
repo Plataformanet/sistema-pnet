@@ -37,14 +37,81 @@ const props = withDefaults(
         withTrashedFilter?: boolean;
         searchPlaceholder?: string;
         extraParams?: Record<string, unknown>;
+        /** Habilita arrastar e soltar linhas; a linha só arrasta/recebe quando retorna true. */
+        rowDraggable?: (row: TData) => boolean;
     }>(),
     {
         filters: () => ({}),
         withTrashedFilter: true,
         searchPlaceholder: "Pesquisar...",
         extraParams: () => ({}),
+        rowDraggable: undefined,
     },
 );
+
+const emit = defineEmits<{
+    /** Linha `source` solta sobre a linha `target`. */
+    rowDrop: [source: TData, target: TData];
+}>();
+
+const draggingIndex = ref<number | null>(null);
+const overIndex = ref<number | null>(null);
+
+function canDrag(row: TData): boolean {
+    return props.rowDraggable?.(row) ?? false;
+}
+
+function onDragStart(event: DragEvent, index: number, row: TData) {
+    // Arrastar um link/imagem dentro de uma linha comum também dispara o evento no <tr>.
+    if (!canDrag(row)) {
+        return;
+    }
+
+    draggingIndex.value = index;
+    event.dataTransfer?.setData("text/plain", String(index));
+
+    if (event.dataTransfer) {
+        event.dataTransfer.effectAllowed = "move";
+    }
+}
+
+function onDragOver(event: DragEvent, index: number, row: TData) {
+    if (draggingIndex.value === null || !canDrag(row)) {
+        return;
+    }
+
+    event.preventDefault();
+    overIndex.value = index;
+}
+
+function onDrop(index: number) {
+    const from = draggingIndex.value;
+    const rows = props.paginator.data;
+
+    if (from !== null && from !== index) {
+        emit("rowDrop", rows[from], rows[index]);
+    }
+
+    onDragEnd();
+}
+
+function onDragEnd() {
+    draggingIndex.value = null;
+    overIndex.value = null;
+}
+
+/**
+ * Indicador de onde a linha vai cair: acima do alvo ao subir, abaixo ao descer.
+ */
+function dropIndicator(index: number): string {
+    if (draggingIndex.value === null || overIndex.value !== index || draggingIndex.value === index) {
+        return draggingIndex.value === index ? "opacity-50" : "";
+    }
+
+    return draggingIndex.value > index
+        ? "border-t-2 border-t-primary"
+        : "border-b-2 border-b-primary";
+}
 
 const search = ref<string>(props.filters.search ?? "");
 const trashed = ref<boolean>(
@@ -133,8 +200,14 @@ function onTrashed(value: boolean | "indeterminate") {
                 <TableBody>
                     <template v-if="table.getRowModel().rows?.length">
                         <TableRow
-                            v-for="row in table.getRowModel().rows"
+                            v-for="(row, index) in table.getRowModel().rows"
                             :key="row.id"
+                            :draggable="canDrag(row.original)"
+                            :class="dropIndicator(index)"
+                            @dragstart="onDragStart($event, index, row.original)"
+                            @dragover="onDragOver($event, index, row.original)"
+                            @drop.prevent="onDrop(index)"
+                            @dragend="onDragEnd"
                         >
                             <TableCell
                                 v-for="cell in row.getVisibleCells()"

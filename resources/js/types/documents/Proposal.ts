@@ -50,6 +50,41 @@ export interface Applicant {
     bank_account?: HolderBankAccount | null;
 }
 
+/** Proponente no formato do formulário de edição (CPF e telefone só com dígitos, rendas em centavos). */
+export interface ApplicantFormData {
+    id: number;
+    cpf: string;
+    name: string;
+    email: string;
+    phone: string;
+    birth_date: string | null;
+    marital_status: number | null;
+    profession: string | null;
+    family_income: number | null;
+    declared_income: number | null;
+    declares_income_tax: boolean;
+    income_tax_notes: string | null;
+    by_power_of_attorney: boolean;
+    bank_account: HolderBankAccount | null;
+}
+
+/** Vendedor no formato do formulário de edição (documento e telefone só com dígitos, renda em centavos). */
+export interface SellerFormData {
+    id: number;
+    person_type: string;
+    document: string;
+    name: string;
+    email: string;
+    phone: string | null;
+    marital_status: number | null;
+    profession: string | null;
+    declared_income: number | null;
+    declares_income_tax: boolean;
+    income_tax_notes: string | null;
+    by_power_of_attorney: boolean;
+    bank_account: HolderBankAccount | null;
+}
+
 export interface Seller {
     id: number;
     contact: ProposalContact;
@@ -136,7 +171,7 @@ export interface Proposal {
     id: number;
     number: string;
     creator_id: number;
-    analyst_id: number;
+    analyst_id: number | null;
     bank_id: number;
     contract_type_id: number;
     amortization_table?: string | null;
@@ -174,7 +209,7 @@ export interface Proposal {
     finished_at?: string | null;
     created_at: string;
     creator?: UserOption & { email?: string };
-    analyst?: UserOption;
+    analyst?: UserOption | null;
     bank?: Bank;
     contract_type?: ContractType;
     partners?: UserOption[];

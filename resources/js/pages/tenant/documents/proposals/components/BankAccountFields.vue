@@ -19,13 +19,14 @@ const props = defineProps<{
     errorPrefix: string;
     idPrefix: string;
     disabled?: boolean;
+    stacked?: boolean;
 }>();
 
 const error = (field: string) => props.errors[`${props.errorPrefix}.${field}`];
 </script>
 
 <template>
-    <div class="grid grid-cols-1 gap-4 md:grid-cols-4">
+    <div class="grid grid-cols-1 gap-4" :class="{ 'md:grid-cols-4': !stacked }">
         <Field>
             <FieldLabel :for="`${idPrefix}-bank_name`">Banco</FieldLabel>
             <Input :id="`${idPrefix}-bank_name`" v-model="account.bank_name" :disabled="disabled" />

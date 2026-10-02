@@ -141,6 +141,8 @@ class ProposalTimelineService
                     $storedPath = $document->path;
                     $proposalStage->proposal_document_id = $document->id;
                     $replaced?->delete();
+                } elseif (filled($data['title'] ?? null) && $proposalStage->document !== null) {
+                    $proposalStage->document->update(['title' => $data['title']]);
                 }
 
                 $proposalStage->fill([
@@ -171,8 +173,9 @@ class ProposalTimelineService
     }
 
     /**
-     * Apaga a timeline e os documentos de etapa (arquivos só após o commit),
-     * recria a timeline a partir do catálogo e já inicia a primeira etapa.
+     * Apaga a timeline e os documentos de etapa (arquivos só após o commit) e
+     * recria a timeline a partir do catálogo, sem iniciar nenhuma etapa: a
+     * proposta volta ao estado anterior ao "Iniciar acompanhamento".
      */
     public function restore(string $proposalId, Tenant $tenant): void
     {
@@ -185,10 +188,9 @@ class ProposalTimelineService
                 ProposalDocument::whereKey($documents->modelKeys())->delete();
 
                 $this->instantiate($proposal, $tenant);
-                $proposal->currentStage()->first()?->update(['started_at' => now()]);
 
-                if ($proposal->status === ProposalStatus::FINISHED || $proposal->status === ProposalStatus::NEW) {
-                    $proposal->update(['status' => ProposalStatus::IN_PROGRESS, 'finished_at' => null]);
+                if ($proposal->status === ProposalStatus::FINISHED || $proposal->status === ProposalStatus::IN_PROGRESS) {
+                    $proposal->update(['status' => ProposalStatus::NEW, 'finished_at' => null]);
                 }
 
                 return $documents;

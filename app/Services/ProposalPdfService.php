@@ -2,10 +2,12 @@
 
 namespace App\Services;
 
+use App\Enums\DocumentOwner;
 use App\Enums\ProposalStatus;
 use App\Models\Proposal;
 use App\Models\Receipt;
 use App\Models\Tenant;
+use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Barryvdh\DomPDF\PDF as DomPdf;
 use Illuminate\Support\Collection;
@@ -20,11 +22,28 @@ class ProposalPdfService
         protected ProposalQueryService $proposalQueryService,
     ) {}
 
-    public function info(string $proposalId, Tenant $tenant): DomPdf
+    public function info(string $proposalId, User $viewer, Tenant $tenant): DomPdf
     {
-        $proposal = $this->proposalQueryService->findForDisplay($proposalId, $tenant);
+        return $this->make('pdf.proposals.info', $this->infoViewData($proposalId, $viewer, $tenant), $tenant);
+    }
 
-        return $this->make('pdf.proposals.info', ['proposal' => $proposal], $tenant);
+    /**
+     * Dados do "Informativo da Proposta". Contato e documento completos de
+     * cada lado só aparecem para quem pode ver os documentos daquele lado
+     * (`DocumentOwner::visibleTo`): o cliente vê o vendedor mascarado e o
+     * vendedor do imóvel vê o comprador mascarado; a equipe vê tudo.
+     *
+     * @return array{proposal: Proposal, showApplicantContacts: bool, showSellerContacts: bool}
+     */
+    public function infoViewData(string $proposalId, User $viewer, Tenant $tenant): array
+    {
+        $visibleOwners = $tenant->run(fn () => DocumentOwner::visibleTo($viewer));
+
+        return [
+            'proposal' => $this->proposalQueryService->findForDisplay($proposalId, $tenant),
+            'showApplicantContacts' => in_array(DocumentOwner::BUYER, $visibleOwners, true),
+            'showSellerContacts' => in_array(DocumentOwner::SELLER, $visibleOwners, true),
+        ];
     }
 
     public function tracking(string $proposalId, Tenant $tenant): DomPdf

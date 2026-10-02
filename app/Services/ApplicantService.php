@@ -6,9 +6,11 @@ use App\Enums\PersonType;
 use App\Enums\RolesEnum;
 use App\Models\Applicant;
 use App\Models\Contact;
+use App\Models\Proposal;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Spatie\Permission\Models\Role;
 
@@ -128,6 +130,77 @@ class ApplicantService
                 'bank_account' => $applicant?->bankAccount?->only(['bank_name', 'account_type', 'branch', 'number', 'notes']),
             ];
         });
+    }
+
+    /**
+     * Proponentes da proposta com os dados editáveis na tela de edição
+     * (contato, renda e conta bancária), já no formato do formulário.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function findForProposal(string $proposalId, Tenant $tenant): array
+    {
+        return $tenant->run(fn () => Proposal::findOrFail($proposalId)->applicants()
+            ->with(['contact:id,name_corporatereason,cpf_cnpj,email,phone,cell_phone', 'bankAccount'])
+            ->orderBy('applicant_proposal.id')
+            ->get()
+            ->map(fn (Applicant $applicant) => [
+                'id' => $applicant->id,
+                'cpf' => preg_replace('/\D/', '', $applicant->contact->cpf_cnpj),
+                'name' => $applicant->contact->name_corporatereason,
+                'email' => $applicant->contact->email,
+                'phone' => $applicant->contact->cell_phone ?: $applicant->contact->phone,
+                'birth_date' => $applicant->birth_date?->format('Y-m-d'),
+                'marital_status' => $applicant->marital_status?->value,
+                'profession' => $applicant->profession,
+                'family_income' => $applicant->family_income,
+                'declared_income' => $applicant->declared_income,
+                'declares_income_tax' => $applicant->declares_income_tax,
+                'income_tax_notes' => $applicant->income_tax_notes,
+                'by_power_of_attorney' => $applicant->by_power_of_attorney,
+                'bank_account' => $applicant->bankAccount?->only(['bank_name', 'account_type', 'branch', 'number', 'notes']),
+            ])
+            ->all());
+    }
+
+    /**
+     * Atualiza um proponente da proposta. Nome, e-mail e telefone ficam no
+     * contato, compartilhado com os demais papéis da mesma pessoa. O CPF não
+     * muda: é a chave que reaproveita o proponente entre propostas. Conta
+     * bancária sem dados é removida.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    public function update(array $data, string $proposalId, string $applicantId, Tenant $tenant): Applicant
+    {
+        return $tenant->run(fn () => DB::transaction(function () use ($data, $proposalId, $applicantId) {
+            $applicant = Proposal::findOrFail($proposalId)->applicants()->with('contact')->findOrFail($applicantId);
+
+            $applicant->contact->update([
+                'name_corporatereason' => $data['name'],
+                'email' => $data['email'],
+                'cell_phone' => $data['phone'],
+            ]);
+
+            $applicant->update(Arr::only($data, [
+                'birth_date',
+                'marital_status',
+                'profession',
+                'family_income',
+                'declared_income',
+                'declares_income_tax',
+                'income_tax_notes',
+                'by_power_of_attorney',
+            ]));
+
+            if (empty($data['bank_account'])) {
+                $applicant->bankAccount()->delete();
+            } else {
+                $applicant->bankAccount()->updateOrCreate([], $data['bank_account']);
+            }
+
+            return $applicant;
+        }));
     }
 
     /**

@@ -15,7 +15,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import PermissionsGrid from "@/pages/tenant/settings/components/PermissionsGrid.vue";
 import { Permission } from "@/types";
 import { useForm } from "@inertiajs/vue3";
-import { computed } from "vue";
+import { computed, ref } from "vue";
+import { Eye, EyeOff } from "lucide-vue-next";
 
 const props = withDefaults(
     defineProps<{
@@ -33,6 +34,9 @@ const props = withDefaults(
 );
 
 const emit = defineEmits(["submit"]);
+
+const showPassword = ref(false);
+const showConfirmation = ref(false);
 
 // Garante que o array de permissões exista no form para evitar erros de reatividade
 if (!props.form.permissions) {
@@ -131,11 +135,24 @@ function onSubmit() {
             <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
                 <Field>
                     <FieldLabel for="password">Senha *</FieldLabel>
-                    <Input
-                        id="password"
-                        type="password"
-                        v-model="form.password"
-                    />
+                    <div class="relative">
+                        <Input
+                            id="password"
+                            :type="showPassword ? 'text' : 'password'"
+                            v-model="form.password"
+                            class="pr-10"
+                        />
+                        <button
+                            type="button"
+                            @click="showPassword = !showPassword"
+                            class="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-muted-foreground transition-colors hover:text-foreground focus:outline-none"
+                            :title="showPassword ? 'Ocultar senha' : 'Exibir senha'"
+                            :aria-label="showPassword ? 'Ocultar senha' : 'Exibir senha'"
+                        >
+                            <EyeOff v-if="showPassword" class="h-4 w-4" />
+                            <Eye v-else class="h-4 w-4" />
+                        </button>
+                    </div>
                     <FieldError v-if="form.errors.password">{{
                         form.errors.password
                     }}</FieldError>
@@ -145,11 +162,24 @@ function onSubmit() {
                     <FieldLabel for="password_confirmation"
                         >Confirmar Senha *</FieldLabel
                     >
-                    <Input
-                        id="password_confirmation"
-                        type="password"
-                        v-model="form.password_confirmation"
-                    />
+                    <div class="relative">
+                        <Input
+                            id="password_confirmation"
+                            :type="showConfirmation ? 'text' : 'password'"
+                            v-model="form.password_confirmation"
+                            class="pr-10"
+                        />
+                        <button
+                            type="button"
+                            @click="showConfirmation = !showConfirmation"
+                            class="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-muted-foreground transition-colors hover:text-foreground focus:outline-none"
+                            :title="showConfirmation ? 'Ocultar senha' : 'Exibir senha'"
+                            :aria-label="showConfirmation ? 'Ocultar senha' : 'Exibir senha'"
+                        >
+                            <EyeOff v-if="showConfirmation" class="h-4 w-4" />
+                            <Eye v-else class="h-4 w-4" />
+                        </button>
+                    </div>
                     <FieldError v-if="form.errors.password_confirmation">{{
                         form.errors.password_confirmation
                     }}</FieldError>

@@ -65,6 +65,7 @@ const conditionLabels: Record<string, string> = { new: "Novo", used: "Usado" };
                 <div><dt class="text-muted-foreground">Valor de compra</dt><dd>{{ formatMoney(proposal.purchase_value) }}</dd></div>
                 <div><dt class="text-muted-foreground">Entrada</dt><dd>{{ formatMoney(proposal.down_payment_value) }}</dd></div>
                 <div><dt class="text-muted-foreground">Criador</dt><dd>{{ proposal.creator?.name }}</dd></div>
+                <div><dt class="text-muted-foreground">Analista</dt><dd>{{ proposal.analyst?.name ?? "Não definido" }}</dd></div>
                 <div class="md:col-span-3">
                     <dt class="text-muted-foreground">Proponentes</dt>
                     <dd>{{ (proposal.applicants ?? []).map((applicant) => applicant.contact.name_corporatereason).join(", ") }}</dd>

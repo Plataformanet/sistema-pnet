@@ -1,6 +1,6 @@
 # Detalhamento Técnico dos Módulos Principais (Sistema PNET)
 
-Este documento detalha o funcionamento técnico, a modelagem de banco de dados e as regras de implementação dos módulos de **Cadastros**, **Catálogo**, **Financeiro**, **Drive (Documentos)** e **Documentações** (cadastros auxiliares, propostas e calculadora de emolumentos) da aplicação atual.
+Este documento detalha o funcionamento técnico, a modelagem de banco de dados e as regras de implementação dos módulos de **Cadastros**, **Catálogo**, **Financeiro**, **Drive (Documentos)** e **Documentações** (cadastros auxiliares, propostas e calculadora de emolumentos), além das tabelas de **senha dos usuários do tenant**, da aplicação atual.
 
 ---
 
@@ -258,7 +258,7 @@ erDiagram
     SELLERS ||--o| HOLDER_BANK_ACCOUNTS : "accountable (morph)"
 ```
 
-*   **`proposals`:** `creator_id`, `analyst_id` (padrão: o criador), `bank_id`, `contract_type_id`, `status` (`new`, `in_progress`, `awaiting_property`, `canceled`, `finished`, `restricted`), `amortization_table`, `property_condition`, valores em centavos (`purchase_value`, `down_payment_value`, `financing_value`, `expenses_value`, `subsidy_value`, `financed_value`, `intended_installment_value`, `fgts_value`, `documentation_fee_to_finance`, `declared_income`), flags (`uses_fgts`, `is_first_financing`, `finance_documentation_fee`, `declares_income_tax`, `has_other_property`), `payment_term`, previsão de entrega (`expected_delivery_month` / `expected_delivery_year`), motivos (`cancellation_reason`, `restriction_reason`), observações em texto, `particularities` e `finished_at`. Usa soft delete. O número exibido é o id com 5 dígitos.
+*   **`proposals`:** `creator_id`, `analyst_id` (opcional: fica vazio até alguém da equipe assumir a proposta e aparece como "Não definido"; na conversão de orçamento, é quem converteu), `bank_id`, `contract_type_id`, `status` (`new`, `in_progress`, `awaiting_property`, `canceled`, `finished`, `restricted`), `amortization_table`, `property_condition`, valores em centavos (`purchase_value`, `down_payment_value`, `financing_value`, `expenses_value`, `subsidy_value`, `financed_value`, `intended_installment_value`, `fgts_value`, `documentation_fee_to_finance`, `declared_income`), flags (`uses_fgts`, `is_first_financing`, `finance_documentation_fee`, `declares_income_tax`, `has_other_property`), `payment_term`, previsão de entrega (`expected_delivery_month` / `expected_delivery_year`), motivos (`cancellation_reason`, `restriction_reason`), observações em texto, `particularities` e `finished_at`. Usa soft delete. O número exibido é o id com 5 dígitos.
 *   **`applicants`:** proponente sobre `contacts` (`contact_id` único), com `user_id` (usuário com cargo **Cliente**, criado no primeiro cadastro), `birth_date`, `marital_status`, `profession`, `family_income`, `declared_income`, `declares_income_tax`, `income_tax_notes`, `by_power_of_attorney`. O proponente é reaproveitado pelo CPF.
 *   **`sellers`:** vendedor do imóvel sobre `contacts` (PF ou PJ), com `user_id`, `creator_id` e os mesmos dados de renda e estado civil.
 *   **`holder_bank_accounts`:** conta bancária do proponente ou vendedor (`morphs('accountable')`, uma por titular), com `bank_name`, `account_type` (0 = poupança, 1 = corrente), `branch`, `number`, `notes`. É separada de `bank_accounts`, que pertence ao financeiro.
@@ -284,3 +284,19 @@ erDiagram
 *   **Municípios:** lista do IBGE (`IbgeLocalityClient`), em cache por UF.
 *   **E-mails e PDFs:** todos os e-mails vão para a fila e só saem após o commit. Os PDFs são gerados com dompdf. O e-mail do orçamento leva o PDF anexado, gerado no momento do envio. Na conversão em proposta, o job `AttachQuotePdfToProposal` anexa o PDF aos documentos da proposta.
 *   **Agendamentos:** `proposals:alert-overdue-stages` (dias úteis, às 07:00) e `fee-calculations:prune` (diário).
+
+---
+
+## 6. Senhas dos Usuários do Tenant
+
+Os links de definição e redefinição de senha são gerados e conferidos no **banco do tenant** pelo `TenantPasswordService`. As rotas de senha do Fortify não são usadas, porque rodam sem tenancy e apontariam para o banco central. Há duas tabelas com a mesma estrutura, uma por tipo de link, para que a validade maior de um nunca se estenda ao outro:
+
+| Tabela | Broker (`config/auth.php`) | Uso | Validade |
+| :--- | :--- | :--- | :--- |
+| `password_reset_tokens` | `users` | Link de "esqueci a senha" | 60 minutos |
+| `password_set_tokens` | `welcome` | Link do e-mail de boas-vindas (proponente cadastrado numa proposta) | 72 horas (`AUTH_WELCOME_TOKEN_EXPIRE`, em minutos) |
+
+*   **Campos (nas duas tabelas):** `email` (chave primária), `token` (hash do token enviado no link) e `created_at` (base do cálculo da validade).
+*   **Uso único:** quando a senha é definida por qualquer um dos links, os tokens pendentes das duas tabelas para aquele e-mail são apagados.
+*   **Broker criado na hora:** o service monta um broker novo a cada uso, dentro de `$tenant->run()`, porque o broker guarda a conexão de banco de quando foi criado.
+

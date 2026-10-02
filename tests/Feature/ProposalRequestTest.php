@@ -2,9 +2,13 @@
 
 use App\Enums\ProposalStatus;
 use App\Enums\RolesEnum;
+use App\Http\Requests\StoreProposalApplicantRequest;
 use App\Http\Requests\StoreProposalCostItemRequest;
 use App\Http\Requests\StoreProposalRequest;
+use App\Http\Requests\StoreProposalSellerRequest;
+use App\Http\Requests\UpdateProposalApplicantRequest;
 use App\Http\Requests\UpdateProposalRequest;
+use App\Http\Requests\UpdateProposalSellerRequest;
 use App\Models\Bank;
 use App\Models\ContractType;
 use App\Models\CostType;
@@ -241,4 +245,56 @@ test('a edição aceita manter o criador e os parceiros atuais mesmo sem o cargo
     ]), $proposal->id);
 
     expect($errors)->toBe([]);
+});
+
+test('a edição do proponente exige os dados cadastrais e descarta conta bancária em branco', function () {
+    $errors = proposalRequestErrors(UpdateProposalApplicantRequest::class, [
+        'name' => 'Ma',
+        'email' => 'invalido',
+        'bank_account' => ['bank_name' => '', 'account_type' => null, 'branch' => '', 'number' => ''],
+    ]);
+
+    expect($errors)->toHaveKeys(['name', 'email', 'phone', 'declared_income', 'marital_status', 'profession'])
+        ->not->toHaveKey('bank_account.bank_name');
+});
+
+test('a edição do proponente exige a conta bancária completa quando preenchida', function () {
+    $errors = proposalRequestErrors(UpdateProposalApplicantRequest::class, [
+        'name' => 'Maria Proponente',
+        'email' => 'maria@example.com',
+        'phone' => '11999990000',
+        'declared_income' => 800_000,
+        'marital_status' => 2,
+        'profession' => 'Engenheira',
+        'bank_account' => ['bank_name' => 'Itaú'],
+    ]);
+
+    expect($errors)->toHaveKeys(['bank_account.account_type', 'bank_account.branch', 'bank_account.number']);
+});
+
+test('incluir proponente já cadastrado exige só o CPF', function () {
+    $errors = proposalRequestErrors(StoreProposalApplicantRequest::class, ['cpf' => '529.982.247-25', 'existing' => true]);
+
+    expect($errors)->toBe([]);
+});
+
+test('incluir proponente novo exige CPF válido e os dados cadastrais', function () {
+    $errors = proposalRequestErrors(StoreProposalApplicantRequest::class, ['cpf' => '111.111.111-11', 'existing' => false]);
+
+    expect($errors)->toHaveKeys(['cpf', 'name', 'email', 'phone', 'declared_income', 'marital_status', 'profession']);
+});
+
+test('incluir vendedor valida o documento como CPF ou CNPJ conforme o tipo de pessoa', function () {
+    $base = ['name' => 'Construtora LTDA', 'email' => 'contato@construtora.com'];
+
+    expect(proposalRequestErrors(StoreProposalSellerRequest::class, [...$base, 'person_type' => 'PJ', 'document' => '11.222.333/0001-81']))->toBe([])
+        ->and(proposalRequestErrors(StoreProposalSellerRequest::class, [...$base, 'person_type' => 'PF', 'document' => '11.222.333/0001-81']))->toHaveKey('document');
+});
+
+test('a edição do vendedor exige nome e e-mail e a conta bancária completa quando preenchida', function () {
+    $errors = proposalRequestErrors(UpdateProposalSellerRequest::class, [
+        'bank_account' => ['bank_name' => 'Itaú'],
+    ]);
+
+    expect($errors)->toHaveKeys(['name', 'email', 'bank_account.account_type', 'bank_account.branch', 'bank_account.number']);
 });

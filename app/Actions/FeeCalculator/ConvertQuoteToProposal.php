@@ -61,7 +61,7 @@ class ConvertQuoteToProposal
 
                 AttachQuotePdfToProposal::dispatch($quote->id, $proposal->id, $actor->id)->afterCommit();
 
-                $this->proposalService->notifyApplicant($proposal->applicants->first(), $proposal);
+                $this->proposalService->notifyApplicant($proposal->applicants->first(), $proposal, $tenant);
 
                 return $proposal;
             });

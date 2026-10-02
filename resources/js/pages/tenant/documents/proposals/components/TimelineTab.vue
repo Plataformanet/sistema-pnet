@@ -49,7 +49,7 @@ function open(stage: ProposalStage) {
     form.clearErrors();
     form.date = stage.date ?? "";
     form.notes = stage.notes ?? "";
-    form.title = "";
+    form.title = stage.document?.title ?? "";
     form.file = null;
 }
 
@@ -154,12 +154,12 @@ function remaining(stage: ProposalStage): number | null {
                     </Field>
                     <template v-if="stage.stage.has_upload">
                         <Field>
-                            <FieldLabel :for="`stage-${stage.id}-title`">Título do arquivo{{ stage.stage.title_required ? " *" : "" }}</FieldLabel>
+                            <FieldLabel :for="`stage-${stage.id}-title`">Título do arquivo{{ stage.stage.title_required && !stage.document ? " *" : "" }}</FieldLabel>
                             <Input :id="`stage-${stage.id}-title`" v-model="form.title" />
                             <FieldError v-if="form.errors.title">{{ form.errors.title }}</FieldError>
                         </Field>
                         <Field>
-                            <FieldLabel :for="`stage-${stage.id}-file`">Arquivo{{ stage.stage.upload_required ? " *" : "" }}</FieldLabel>
+                            <FieldLabel :for="`stage-${stage.id}-file`">Arquivo{{ stage.stage.upload_required && !stage.document ? " *" : "" }}</FieldLabel>
                             <Input
                                 :id="`stage-${stage.id}-file`"
                                 type="file"
@@ -187,7 +187,7 @@ function remaining(stage: ProposalStage): number | null {
                     <AlertDialogTitle>Restaurar o acompanhamento?</AlertDialogTitle>
                     <AlertDialogDescription>
                         Todas as etapas e os documentos enviados nelas serão apagados, e o acompanhamento
-                        recomeçará pela primeira etapa. Esta ação não pode ser desfeita.
+                        voltará a "não iniciado", com a proposta como "Nova Proposta". Esta ação não pode ser desfeita.
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>

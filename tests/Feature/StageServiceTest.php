@@ -1,8 +1,10 @@
 <?php
 
+use App\Http\Requests\MoveStageRequest;
 use App\Http\Requests\StoreStageRequest;
 use App\Models\Stage;
 use App\Services\StageService;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Routing\Redirector;
 use Illuminate\Validation\ValidationException;
 
@@ -90,6 +92,79 @@ test('move na primeira posição não altera nada', function () {
     app(StageService::class)->move((string) $first->id, StageService::DIRECTION_UP, $this->tenant);
 
     $this->tenant->run(fn () => expect($first->fresh()->order)->toBe(1));
+});
+
+/**
+ * Nomes das etapas ativas na ordem atual.
+ *
+ * @return array<int, string>
+ */
+function activeStageNames(): array
+{
+    return Stage::ordered()->pluck('name')->all();
+}
+
+test('moveTo leva a etapa para baixo, até a posição da alvo, e sobe as do meio', function () {
+    [$names, $second, $fifth] = $this->tenant->run(fn () => [
+        activeStageNames(),
+        Stage::where('order', 2)->firstOrFail(),
+        Stage::where('order', 5)->firstOrFail(),
+    ]);
+
+    app(StageService::class)->moveTo((string) $second->id, (string) $fifth->id, $this->tenant);
+
+    $this->tenant->run(function () use ($names, $second) {
+        expect(activeStageNames())->toBe([$names[0], $names[2], $names[3], $names[4], $names[1], $names[5], $names[6], $names[7]])
+            ->and($second->fresh()->order)->toBe(5)
+            ->and(Stage::ordered()->pluck('order')->all())->toBe([1, 2, 3, 4, 5, 6, 7, 8]);
+    });
+});
+
+test('moveTo leva a etapa para cima, até a posição da alvo, e desce as do meio', function () {
+    [$names, $first, $fourth] = $this->tenant->run(fn () => [
+        activeStageNames(),
+        Stage::where('order', 1)->firstOrFail(),
+        Stage::where('order', 4)->firstOrFail(),
+    ]);
+
+    app(StageService::class)->moveTo((string) $fourth->id, (string) $first->id, $this->tenant);
+
+    $this->tenant->run(fn () => expect(activeStageNames())
+        ->toBe([$names[3], $names[0], $names[1], $names[2], $names[4], $names[5], $names[6], $names[7]]));
+});
+
+test('moveTo reaproveita as ordens das etapas ativas e não colide com etapas excluídas', function () {
+    [$third, $sixth] = $this->tenant->run(function () {
+        Stage::where('order', 4)->firstOrFail()->delete();
+
+        return [Stage::where('order', 3)->firstOrFail(), Stage::where('order', 6)->firstOrFail()];
+    });
+
+    app(StageService::class)->moveTo((string) $third->id, (string) $sixth->id, $this->tenant);
+
+    $this->tenant->run(function () use ($third) {
+        expect(Stage::ordered()->pluck('order')->all())->toBe([1, 2, 3, 5, 6, 7, 8])
+            ->and($third->fresh()->order)->toBe(6)
+            ->and(Stage::onlyTrashed()->where('order', 4)->count())->toBe(1);
+    });
+});
+
+test('moveTo não aceita etapa excluída', function () {
+    [$deleted, $first] = $this->tenant->run(function () {
+        $deleted = Stage::where('order', 8)->firstOrFail();
+        $deleted->delete();
+
+        return [$deleted, Stage::where('order', 1)->firstOrFail()];
+    });
+
+    app(StageService::class)->moveTo((string) $deleted->id, (string) $first->id, $this->tenant);
+})->throws(ModelNotFoundException::class);
+
+test('mover exige a direção ou a etapa de destino', function () {
+    $request = MoveStageRequest::create('/', 'PATCH', []);
+    $request->setContainer(app())->setRedirector(app(Redirector::class));
+
+    expect(fn () => $request->validateResolved())->toThrow(ValidationException::class);
 });
 
 test('a ordem é única só entre etapas ativas', function () {

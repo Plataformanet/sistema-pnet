@@ -127,15 +127,15 @@ function onSubmit() {
                     <Field>
                         <FieldLabel for="analyst_id">Analista</FieldLabel>
                         <Select
-                            :model-value="form.analyst_id ? String(form.analyst_id) : 'creator'"
-                            @update:model-value="form.analyst_id = $event === 'creator' ? null : Number($event)"
+                            :model-value="form.analyst_id ? String(form.analyst_id) : 'none'"
+                            @update:model-value="form.analyst_id = $event === 'none' ? null : Number($event)"
                         >
                             <SelectTrigger id="analyst_id">
-                                <SelectValue placeholder="O mesmo do criador" />
+                                <SelectValue placeholder="Não definido" />
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectGroup>
-                                    <SelectItem value="creator">O mesmo do criador</SelectItem>
+                                    <SelectItem value="none">Não definido</SelectItem>
                                     <SelectItem v-for="user in options.staff" :key="user.id" :value="String(user.id)">{{
                                         user.name
                                     }}</SelectItem>

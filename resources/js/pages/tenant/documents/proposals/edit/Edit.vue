@@ -12,7 +12,11 @@ import DocumentsTab from "../components/DocumentsTab.vue";
 import TimelineTab from "../components/TimelineTab.vue";
 import CostItemsTab from "../components/CostItemsTab.vue";
 import ReceiptsTab from "../components/ReceiptsTab.vue";
+import ApplicantEditor from "../components/ApplicantEditor.vue";
+import SellerEditor from "../components/SellerEditor.vue";
 import type {
+    ApplicantFormData,
+    SellerFormData,
     ChecklistItem,
     CostType,
     Notary,
@@ -28,6 +32,8 @@ defineOptions({ layout: TenantLayout });
 const props = defineProps<
     ProposalFormOptions & {
         proposal: Proposal;
+        applicants: ApplicantFormData[];
+        sellers: SellerFormData[];
         checklist: ChecklistItem[];
         feesTotal: number;
         can: ProposalAbilities;
@@ -78,7 +84,7 @@ const form = useForm({
     expected_delivery_month: p.expected_delivery_month ?? null,
     expected_delivery_year: p.expected_delivery_year ?? null,
     creator_id: p.creator_id,
-    analyst_id: p.analyst_id === p.creator_id ? null : p.analyst_id,
+    analyst_id: p.analyst_id ?? null,
     partner_ids: (p.partners ?? []).map((partner) => partner.id),
     bank_id: p.bank_id,
     contract_type_id: p.contract_type_id,
@@ -167,17 +173,35 @@ function saveParticularities() {
     </div>
 
     <div class="mx-auto mb-20 max-w-6xl">
-        <ProposalForm
-            v-if="activeTab === 'info'"
-            :form="form"
-            :options="options"
-            :with-people="false"
-            :statuses="statuses"
-            :finished-at="proposal.finished_at"
-            :readonly="!can.update"
-            submit-text="Atualizar Proposta"
-            @submit="submit"
-        />
+        <div v-if="activeTab === 'info'" class="space-y-6">
+            <ProposalForm
+                :form="form"
+                :options="options"
+                :with-people="false"
+                :statuses="statuses"
+                :finished-at="proposal.finished_at"
+                :readonly="!can.update"
+                submit-text="Atualizar Proposta"
+                @submit="submit"
+            />
+
+            <template v-if="can.update">
+                <ApplicantEditor
+                    :proposal-id="proposal.id"
+                    :applicants="applicants"
+                    :marital-statuses="maritalStatuses"
+                    :bank-account-types="bankAccountTypes"
+                />
+
+                <SellerEditor
+                    :proposal-id="proposal.id"
+                    :sellers="sellers"
+                    :person-types="personTypes"
+                    :marital-statuses="maritalStatuses"
+                    :bank-account-types="bankAccountTypes"
+                />
+            </template>
+        </div>
 
         <div v-else-if="activeTab === 'documents'" class="rounded-lg border border-border bg-card p-6 shadow-sm sm:p-8">
             <DocumentsTab :proposal="proposal" :checklist="checklist" :document-types="documentTypes" :max-upload-kb="maxUploadKb" :can="can" />

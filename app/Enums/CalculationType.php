@@ -27,6 +27,18 @@ enum CalculationType: int
     }
 
     /**
+     * Resumo de uma linha exibido no card de escolha do tipo.
+     */
+    public function summary(): string
+    {
+        return match ($this) {
+            self::GENERAL_REGISTRATION => 'Registro de Compra e Venda e outros',
+            self::PURCHASE_WITH_FIDUCIARY_LIEN => 'Registro de Contrato de Compra com Alienação Fiduciária (com financiamento)',
+            self::ECONOMIC_VALUE_ANNOTATION => 'Averbações com valor econômico',
+        };
+    }
+
+    /**
      * A averbação não gera ITBI.
      */
     public function hasItbi(): bool
@@ -41,12 +53,12 @@ enum CalculationType: int
 
     /**
      * @param  array<int, self>|null  $cases
-     * @return array<int, array{value: int, label: string, description: string}>
+     * @return array<int, array{value: int, label: string, description: string, summary: string}>
      */
     public static function options(?array $cases = null): array
     {
         return array_map(
-            fn (self $type) => ['value' => $type->value, 'label' => $type->label(), 'description' => $type->description()],
+            fn (self $type) => ['value' => $type->value, 'label' => $type->label(), 'description' => $type->description(), 'summary' => $type->summary()],
             $cases ?? self::cases(),
         );
     }

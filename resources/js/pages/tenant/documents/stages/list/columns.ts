@@ -1,9 +1,25 @@
 import { h } from "vue";
 import { ColumnDef } from "@tanstack/vue-table";
+import { GripVertical } from "lucide-vue-next";
 import ActionDropdown from "./ActionDropdown.vue";
 import type { Stage } from "@/types";
 
-export const columns: ColumnDef<Stage>[] = [
+/**
+ * @param canReorder se o usuário pode arrastar as etapas (permissão de edição).
+ */
+export const columns = (canReorder: boolean): ColumnDef<Stage>[] => [
+    {
+        id: "drag",
+        enableHiding: false,
+        header: "",
+        cell: ({ row }) =>
+            canReorder && !row.original.deleted_at
+                ? h(GripVertical, {
+                      class: "h-4 w-4 cursor-grab text-muted-foreground active:cursor-grabbing",
+                      "aria-label": "Arraste para reordenar",
+                  })
+                : null,
+    },
     {
         accessorKey: "order",
         header: "Ordem",

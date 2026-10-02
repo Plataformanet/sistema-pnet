@@ -20,15 +20,19 @@ class MoveStageRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'direction' => ['required', Rule::in([StageService::DIRECTION_UP, StageService::DIRECTION_DOWN])],
+            'direction' => ['required_without:target_id', 'nullable', Rule::in([StageService::DIRECTION_UP, StageService::DIRECTION_DOWN])],
+            'target_id' => ['required_without:direction', 'nullable', 'integer', Rule::exists('stages', 'id')->whereNull('deleted_at')],
         ];
     }
 
     public function messages(): array
     {
         return [
-            'direction.required' => 'Informe a direção da movimentação.',
+            'direction.required_without' => 'Informe a direção da movimentação.',
             'direction.in' => 'A direção da movimentação é inválida.',
+            'target_id.required_without' => 'Informe a etapa de destino.',
+            'target_id.integer' => 'A etapa de destino é inválida.',
+            'target_id.exists' => 'A etapa de destino não existe ou foi excluída.',
         ];
     }
 }

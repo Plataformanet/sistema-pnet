@@ -1,4 +1,4 @@
-@php use App\Support\Money; @endphp
+@php use App\Support\DocumentMask; use App\Support\Money; @endphp
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -36,7 +36,7 @@
             <tr><td class="label">Subsídio</td><td>{{ Money::format($proposal->subsidy_value) }}</td></tr>
         @endif
         <tr><td class="label">Criador</td><td>{{ $proposal->creator?->name }}</td></tr>
-        <tr><td class="label">Analista</td><td>{{ $proposal->analyst?->name }}</td></tr>
+        <tr><td class="label">Analista</td><td>{{ $proposal->analyst?->name ?? 'Não definido' }}</td></tr>
     </table>
 
     <h3>Proponentes</h3>
@@ -45,9 +45,9 @@
         @foreach ($proposal->applicants as $applicant)
             <tr>
                 <td>{{ $applicant->contact->name_corporatereason }}</td>
-                <td>{{ $applicant->contact->cpf_cnpj }}</td>
-                <td>{{ $applicant->contact->email }}</td>
-                <td>{{ $applicant->contact->cell_phone ?: $applicant->contact->phone }}</td>
+                <td>{{ $showApplicantContacts ? $applicant->contact->cpf_cnpj : DocumentMask::mask($applicant->contact->cpf_cnpj) }}</td>
+                <td>{{ $showApplicantContacts ? $applicant->contact->email : 'Oculto' }}</td>
+                <td>{{ $showApplicantContacts ? ($applicant->contact->cell_phone ?: $applicant->contact->phone) : 'Oculto' }}</td>
             </tr>
         @endforeach
     </table>
@@ -59,8 +59,8 @@
             @foreach ($proposal->sellers as $seller)
                 <tr>
                     <td>{{ $seller->contact->name_corporatereason }}</td>
-                    <td>{{ $seller->contact->cpf_cnpj }}</td>
-                    <td>{{ $seller->contact->email }}</td>
+                    <td>{{ $showSellerContacts ? $seller->contact->cpf_cnpj : DocumentMask::mask($seller->contact->cpf_cnpj) }}</td>
+                    <td>{{ $showSellerContacts ? $seller->contact->email : 'Oculto' }}</td>
                 </tr>
             @endforeach
         </table>

@@ -53,6 +53,7 @@ export interface CalculationTypeOption {
     value: number;
     label: string;
     description: string;
+    summary: string;
 }
 
 export interface FeeDiscountOption {

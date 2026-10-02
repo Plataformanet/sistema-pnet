@@ -17,7 +17,10 @@ return [
     'common_notes' => 'Deve ser utilizado no cálculo o maior valor entre o valor declarado pelas partes e o da avaliação fiscal para fins do imposto de transmissão (ITBI ou ITCMD). Caso o negócio jurídico envolva mais de um imóvel, deve ser realizado um cálculo separado para cada um dos imóveis. A Calculadora de Emolumentos tem por objetivo fornecer uma estimativa dos valores previstos em lei para o registro pretendido. O valor definitivo será calculado pelo respectivo Registro de Imóveis após o protocolo.',
 
     'types' => [
-        1 => 'Utilize essa ferramenta para cálculo de registros de compra e venda, promessa de compra e venda, doação, usucapião, inventário, arrematação, dação em pagamento, integralização ao capital de sociedade, permuta, entre outros.',
+        1 => 'Utilize essa ferramenta para cálculo de registros de compra e venda, promessa de compra e venda, doação, usucapião, inventário, arrematação, dação em pagamento, integralização ao capital de sociedade, permuta, entre outros.
+        Em todos os casos, deve ser utilizado no cálculo o maior valor entre o valor declarado pelas partes e o da avaliação fiscal para fins do imposto de transmissão (ITBI ou ITCMD).
+        Caso o negócio jurídico envolva mais de um imóvel, deve ser realizado um cálculo separado para cada um dos imóveis.
+        Essa é uma ferramenta em construção. Tem por objetivo fornecer uma estimativa dos valores previstos em lei para o registro pretendido. O valor definitivo será calculado pelo respectivo Registro de Imóveis após o protocolo.',
         2 => 'Utilize essa ferramenta para cálculo de compra e venda financiada pelo sistema financeiro. Para a avaliação do imóvel, deve ser utilizado no cálculo o maior valor entre o valor total de venda declarado pelas partes e o da avaliação fiscal para fins do ITBI. No valor do financiamento deve ser informado o valor total da dívida.',
         3 => 'Utilize essa ferramenta para cálculo de averbações com valor econômico, conforme o Código de Normas da Corregedoria, Art. 1273.',
     ],

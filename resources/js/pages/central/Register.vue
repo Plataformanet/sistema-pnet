@@ -1,5 +1,9 @@
 <script setup>
 import { useForm } from "@inertiajs/vue3";
+import { ref } from "vue";
+import { Eye, EyeOff } from "lucide-vue-next";
+
+const showPassword = ref(false);
 
 const form = useForm({
     name: "",
@@ -95,12 +99,24 @@ function submit() {
 
         <div class="w-50">
             <label for="password">Senha:</label>
-            <input
-                v-model="form.password"
-                class="border-1 border-solid"
-                type="password"
-                id="password"
-            />
+            <span class="relative inline-block">
+                <input
+                    v-model="form.password"
+                    class="border-1 border-solid pr-7"
+                    :type="showPassword ? 'text' : 'password'"
+                    id="password"
+                />
+                <button
+                    type="button"
+                    @click="showPassword = !showPassword"
+                    class="absolute right-1 top-1/2 -translate-y-1/2 cursor-pointer text-gray-500 hover:text-gray-800"
+                    :title="showPassword ? 'Ocultar senha' : 'Exibir senha'"
+                    :aria-label="showPassword ? 'Ocultar senha' : 'Exibir senha'"
+                >
+                    <EyeOff v-if="showPassword" class="h-4 w-4" />
+                    <Eye v-else class="h-4 w-4" />
+                </button>
+            </span>
             <span v-if="form.errors.password" class="text-sm text-red-500">
                 {{ form.errors.password }}
             </span>

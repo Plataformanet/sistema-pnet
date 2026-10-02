@@ -1,10 +1,13 @@
 <?php
 
+use App\Enums\BankAccountType;
 use App\Enums\MaritalStatus;
 use App\Enums\PersonType;
 use App\Enums\PropertyCondition;
 use App\Enums\ProposalStatus;
 use App\Enums\RolesEnum;
+use App\Exceptions\LastApplicantException;
+use App\Exceptions\PersonAlreadyInProposalException;
 use App\Mail\ApplicantWelcomeMail;
 use App\Mail\ProposalCreatedMail;
 use App\Models\Applicant;
@@ -13,12 +16,15 @@ use App\Models\Contact;
 use App\Models\ContractType;
 use App\Models\PropertyType;
 use App\Models\Proposal;
+use App\Models\Seller;
 use App\Models\Stage;
 use App\Models\User;
 use App\Services\ApplicantService;
 use App\Services\BankService;
 use App\Services\ProposalQueryService;
 use App\Services\ProposalService;
+use App\Services\SellerService;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 
@@ -79,7 +85,7 @@ test('create grava a proposta como nova com proponente, vendedor e timeline', fu
         $proposal->refresh()->load('applicants.contact', 'applicants.bankAccount', 'sellers.contact', 'stages');
 
         expect($proposal->status)->toBe(ProposalStatus::NEW)
-            ->and($proposal->analyst_id)->toBe($this->creator->id)
+            ->and($proposal->analyst_id)->toBeNull()
             ->and($proposal->purchase_value)->toBe(50_000_000)
             ->and($proposal->applicants)->toHaveCount(1)
             ->and($proposal->applicants->first()->contact->cpf_cnpj)->toBe('52998224725')
@@ -258,6 +264,243 @@ test('a tela da proposta não carrega conta bancária nem renda das partes', fun
         ->and($display['sellers'][0]['contact']['name_corporatereason'])->toBe('João Vendedor');
 });
 
+test('findForProposal devolve os proponentes da proposta no formato do formulário de edição', function () {
+    $proposal = app(ProposalService::class)->create(proposalPayload(), $this->creator, $this->tenant);
+
+    $applicants = app(ApplicantService::class)->findForProposal((string) $proposal->id, $this->tenant);
+
+    expect($applicants)->toHaveCount(1)
+        ->and($applicants[0])->toMatchArray([
+            'cpf' => '52998224725',
+            'name' => 'Maria Proponente',
+            'email' => 'maria@example.com',
+            'phone' => '11999990000',
+            'marital_status' => MaritalStatus::MARRIED->value,
+            'profession' => 'Engenheira',
+            'declared_income' => 800_000,
+        ])
+        ->and($applicants[0]['bank_account']['bank_name'])->toBe('Itaú');
+});
+
+test('update do proponente altera contato, dados do proponente e conta bancária', function () {
+    $proposal = app(ProposalService::class)->create(proposalPayload(), $this->creator, $this->tenant);
+    $applicantId = $this->tenant->run(fn () => $proposal->applicants()->value('applicants.id'));
+
+    app(ApplicantService::class)->update([
+        'name' => 'Maria Atualizada',
+        'email' => 'maria.nova@example.com',
+        'phone' => '11977776666',
+        'declared_income' => 900_000,
+        'family_income' => 1_000_000,
+        'marital_status' => MaritalStatus::SINGLE->value,
+        'profession' => 'Fotógrafa',
+        'birth_date' => '1982-09-03',
+        'declares_income_tax' => true,
+        'by_power_of_attorney' => false,
+        'bank_account' => ['bank_name' => 'Caixa', 'account_type' => BankAccountType::SAVINGS->value, 'branch' => '1234', 'number' => '98765-4'],
+    ], (string) $proposal->id, (string) $applicantId, $this->tenant);
+
+    $this->tenant->run(function () use ($applicantId) {
+        $applicant = Applicant::with('contact', 'bankAccount')->find($applicantId);
+
+        expect($applicant->contact->name_corporatereason)->toBe('Maria Atualizada')
+            ->and($applicant->contact->email)->toBe('maria.nova@example.com')
+            ->and($applicant->contact->cell_phone)->toBe('11977776666')
+            ->and($applicant->contact->cpf_cnpj)->toBe('52998224725')
+            ->and($applicant->declared_income)->toBe(900_000)
+            ->and($applicant->marital_status)->toBe(MaritalStatus::SINGLE)
+            ->and($applicant->birth_date->format('Y-m-d'))->toBe('1982-09-03')
+            ->and($applicant->bankAccount->bank_name)->toBe('Caixa');
+    });
+});
+
+test('update do proponente remove a conta bancária enviada em branco', function () {
+    $proposal = app(ProposalService::class)->create(proposalPayload(), $this->creator, $this->tenant);
+    $applicantId = $this->tenant->run(fn () => $proposal->applicants()->value('applicants.id'));
+
+    app(ApplicantService::class)->update([
+        'name' => 'Maria Proponente',
+        'email' => 'maria@example.com',
+        'phone' => '11999990000',
+        'declared_income' => 800_000,
+        'marital_status' => MaritalStatus::MARRIED->value,
+        'profession' => 'Engenheira',
+        'bank_account' => null,
+    ], (string) $proposal->id, (string) $applicantId, $this->tenant);
+
+    $this->tenant->run(fn () => expect(Applicant::find($applicantId)->bankAccount()->exists())->toBeFalse());
+});
+
+test('update do proponente não aceita proponente de outra proposta', function () {
+    $service = app(ProposalService::class);
+    $proposal = $service->create(proposalPayload(), $this->creator, $this->tenant);
+    $other = $service->create(proposalPayload([
+        'applicants' => [array_merge(proposalPayload()['applicants'][0], ['cpf' => '11144477735', 'email' => 'outro@example.com'])],
+        'sellers' => [],
+    ]), $this->creator, $this->tenant);
+    $otherApplicantId = $this->tenant->run(fn () => $other->applicants()->value('applicants.id'));
+
+    app(ApplicantService::class)->update([
+        'name' => 'Invasor',
+        'email' => 'x@example.com',
+        'phone' => '11900000000',
+        'declared_income' => 0,
+        'marital_status' => MaritalStatus::SINGLE->value,
+        'profession' => 'X',
+    ], (string) $proposal->id, (string) $otherApplicantId, $this->tenant);
+})->throws(ModelNotFoundException::class);
+
+test('addApplicant inclui proponente novo na proposta e envia o e-mail de boas-vindas', function () {
+    $proposal = app(ProposalService::class)->create(proposalPayload(), $this->creator, $this->tenant);
+    Mail::fake();
+
+    $applicant = app(ProposalService::class)->addApplicant(array_merge(proposalPayload()['applicants'][0], [
+        'cpf' => '11144477735',
+        'name' => 'Flavio Proponente',
+        'email' => 'flavio@example.com',
+    ]), (string) $proposal->id, $this->tenant);
+
+    $this->tenant->run(fn () => expect($proposal->applicants()->pluck('applicants.id')->all())->toContain($applicant->id)
+        ->and($proposal->applicants()->count())->toBe(2));
+
+    Mail::assertQueued(ApplicantWelcomeMail::class);
+});
+
+test('addApplicant reaproveita o proponente existente pelo CPF e avisa da nova proposta', function () {
+    $service = app(ProposalService::class);
+    $first = $service->create(proposalPayload(), $this->creator, $this->tenant);
+    $second = $service->create(proposalPayload([
+        'applicants' => [array_merge(proposalPayload()['applicants'][0], ['cpf' => '11144477735', 'email' => 'outro@example.com'])],
+        'sellers' => [],
+    ]), $this->creator, $this->tenant);
+    Mail::fake();
+
+    $applicant = $service->addApplicant(['cpf' => '52998224725', 'existing' => true], (string) $second->id, $this->tenant);
+
+    $this->tenant->run(fn () => expect(Applicant::count())->toBe(2)
+        ->and($applicant->id)->toBe($first->applicants()->value('applicants.id')));
+
+    Mail::assertQueued(ProposalCreatedMail::class);
+    Mail::assertNotQueued(ApplicantWelcomeMail::class);
+});
+
+test('addApplicant bloqueia o proponente que já está na proposta', function () {
+    $proposal = app(ProposalService::class)->create(proposalPayload(), $this->creator, $this->tenant);
+
+    app(ProposalService::class)->addApplicant(['cpf' => '52998224725', 'existing' => true], (string) $proposal->id, $this->tenant);
+})->throws(PersonAlreadyInProposalException::class, 'Este proponente já está vinculado à proposta.');
+
+test('addSeller inclui o vendedor na proposta e bloqueia o mesmo documento duas vezes', function () {
+    $proposal = app(ProposalService::class)->create(proposalPayload(['sellers' => []]), $this->creator, $this->tenant);
+    $seller = [
+        'person_type' => PersonType::COMPANY->value,
+        'document' => '11222333000181',
+        'name' => 'Construtora LTDA',
+        'email' => 'contato@construtora.com',
+    ];
+
+    app(ProposalService::class)->addSeller($seller, (string) $proposal->id, $this->creator, $this->tenant);
+
+    $this->tenant->run(fn () => expect($proposal->sellers()->count())->toBe(1));
+
+    expect(fn () => app(ProposalService::class)->addSeller($seller, (string) $proposal->id, $this->creator, $this->tenant))
+        ->toThrow(PersonAlreadyInProposalException::class, 'Este vendedor já está vinculado à proposta.');
+});
+
+test('findForProposal dos vendedores devolve o formato do formulário de edição', function () {
+    $proposal = app(ProposalService::class)->create(proposalPayload(), $this->creator, $this->tenant);
+
+    $sellers = app(SellerService::class)->findForProposal((string) $proposal->id, $this->tenant);
+
+    expect($sellers)->toHaveCount(1)
+        ->and($sellers[0])->toMatchArray([
+            'person_type' => PersonType::INDIVIDUAL->value,
+            'document' => '11144477735',
+            'name' => 'João Vendedor',
+            'email' => 'joao@example.com',
+            'bank_account' => null,
+        ]);
+});
+
+test('update do vendedor altera contato, dados do vendedor e conta bancária', function () {
+    $proposal = app(ProposalService::class)->create(proposalPayload(), $this->creator, $this->tenant);
+    $sellerId = $this->tenant->run(fn () => $proposal->sellers()->value('sellers.id'));
+
+    app(SellerService::class)->update([
+        'name' => 'João Atualizado',
+        'email' => 'joao.novo@example.com',
+        'phone' => '11955554444',
+        'marital_status' => MaritalStatus::DIVORCED->value,
+        'profession' => 'Comerciante',
+        'declared_income' => 500_000,
+        'bank_account' => ['bank_name' => 'Bradesco', 'account_type' => BankAccountType::CHECKING->value, 'branch' => '0101', 'number' => '1111-1'],
+    ], (string) $proposal->id, (string) $sellerId, $this->tenant);
+
+    $this->tenant->run(function () use ($sellerId) {
+        $seller = Seller::with('contact', 'bankAccount')->find($sellerId);
+
+        expect($seller->contact->name_corporatereason)->toBe('João Atualizado')
+            ->and($seller->contact->email)->toBe('joao.novo@example.com')
+            ->and($seller->contact->cpf_cnpj)->toBe('11144477735')
+            ->and($seller->marital_status)->toBe(MaritalStatus::DIVORCED)
+            ->and($seller->declared_income)->toBe(500_000)
+            ->and($seller->bankAccount->bank_name)->toBe('Bradesco');
+    });
+});
+
+test('update do vendedor não aceita vendedor de outra proposta', function () {
+    $service = app(ProposalService::class);
+    $proposal = $service->create(proposalPayload(['sellers' => []]), $this->creator, $this->tenant);
+    $other = $service->create(proposalPayload(), $this->creator, $this->tenant);
+    $otherSellerId = $this->tenant->run(fn () => $other->sellers()->value('sellers.id'));
+
+    app(SellerService::class)->update([
+        'name' => 'Invasor',
+        'email' => 'x@example.com',
+    ], (string) $proposal->id, (string) $otherSellerId, $this->tenant);
+})->throws(ModelNotFoundException::class);
+
+test('removeApplicant desvincula o proponente e mantém o cadastro e o usuário dele', function () {
+    $service = app(ProposalService::class);
+    $proposal = $service->create(proposalPayload(), $this->creator, $this->tenant);
+    $added = $service->addApplicant(array_merge(proposalPayload()['applicants'][0], [
+        'cpf' => '11144477735',
+        'email' => 'flavio@example.com',
+    ]), (string) $proposal->id, $this->tenant);
+
+    $service->removeApplicant((string) $proposal->id, (string) $added->id, $this->tenant);
+
+    $this->tenant->run(fn () => expect($proposal->applicants()->pluck('applicants.id')->all())->not->toContain($added->id)
+        ->and(Applicant::find($added->id))->not->toBeNull()
+        ->and(User::find($added->user_id))->not->toBeNull());
+});
+
+test('removeApplicant bloqueia a remoção do único proponente da proposta', function () {
+    $proposal = app(ProposalService::class)->create(proposalPayload(), $this->creator, $this->tenant);
+    $applicantId = $this->tenant->run(fn () => $proposal->applicants()->value('applicants.id'));
+
+    app(ProposalService::class)->removeApplicant((string) $proposal->id, (string) $applicantId, $this->tenant);
+})->throws(LastApplicantException::class);
+
+test('removeSeller desvincula o vendedor e mantém o cadastro dele', function () {
+    $proposal = app(ProposalService::class)->create(proposalPayload(), $this->creator, $this->tenant);
+    $sellerId = $this->tenant->run(fn () => $proposal->sellers()->value('sellers.id'));
+
+    app(ProposalService::class)->removeSeller((string) $proposal->id, (string) $sellerId, $this->tenant);
+
+    $this->tenant->run(fn () => expect($proposal->sellers()->count())->toBe(0)
+        ->and(Seller::find($sellerId))->not->toBeNull());
+});
+
+test('removeSeller não aceita vendedor de outra proposta', function () {
+    $service = app(ProposalService::class);
+    $proposal = $service->create(proposalPayload(['sellers' => []]), $this->creator, $this->tenant);
+    $other = $service->create(proposalPayload(), $this->creator, $this->tenant);
+    $otherSellerId = $this->tenant->run(fn () => $other->sellers()->value('sellers.id'));
+
+    $service->removeSeller((string) $proposal->id, (string) $otherSellerId, $this->tenant);
+})->throws(ModelNotFoundException::class);
+
 test('a busca por CPF acha o proponente cujo contato veio formatado do módulo de Cadastros', function () {
     $this->tenant->run(fn () => Contact::factory()->create(['cpf_cnpj' => '529.982.247-25', 'name_corporatereason' => 'Maria Proponente']));
     $proposal = app(ProposalService::class)->create(proposalPayload(), $this->creator, $this->tenant);
@@ -280,4 +523,27 @@ test('o PDF de lista das propostas tem um limite de linhas', function () {
     });
 
     expect($sql)->toContain('limit '.ProposalQueryService::PRINT_LIMIT);
+});
+
+test('a proposta fica sem analista até a equipe assumir, e o analista pode ser definido e retirado na edição', function () {
+    $analyst = userWithRole($this->tenant, RolesEnum::ANALYST);
+    $service = app(ProposalService::class);
+    $proposal = $service->create(proposalPayload(), $this->creator, $this->tenant);
+    $base = array_merge(proposalPayload(), ['partner_ids' => [], 'status' => ProposalStatus::NEW->value]);
+
+    $this->tenant->run(fn () => expect($proposal->fresh()->analyst_id)->toBeNull());
+
+    $service->update(array_merge($base, ['analyst_id' => $analyst->id]), (string) $proposal->id, $this->tenant);
+    $this->tenant->run(fn () => expect($proposal->fresh()->analyst_id)->toBe($analyst->id));
+
+    $service->update(array_merge($base, ['analyst_id' => null]), (string) $proposal->id, $this->tenant);
+    $this->tenant->run(fn () => expect($proposal->fresh()->analyst_id)->toBeNull());
+});
+
+test('a proposta escolhida com analista na criação já nasce com ele', function () {
+    $analyst = userWithRole($this->tenant, RolesEnum::ANALYST);
+
+    $proposal = app(ProposalService::class)->create(proposalPayload(['analyst_id' => $analyst->id]), $this->creator, $this->tenant);
+
+    $this->tenant->run(fn () => expect($proposal->fresh()->analyst_id)->toBe($analyst->id));
 });
