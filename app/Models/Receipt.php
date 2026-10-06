@@ -39,6 +39,19 @@ class Receipt extends Model
         ];
     }
 
+    /**
+     * Devolução do recibo geral, em centavos: total gasto menos valor
+     * depositado. Nula quando algum dos dois valores não foi informado.
+     */
+    public function getRefundAttribute(): ?int
+    {
+        if ($this->total_spent === null || $this->amount_deposited === null) {
+            return null;
+        }
+
+        return $this->total_spent - $this->amount_deposited;
+    }
+
     public function proposal(): BelongsTo
     {
         return $this->belongsTo(Proposal::class);

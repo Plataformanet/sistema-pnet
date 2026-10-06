@@ -6,6 +6,7 @@ import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import FieldError from "@/components/ui/field/FieldError.vue";
 import MoneyInput from "@/components/MoneyInput.vue";
+import { trimRate } from "@/lib/masks";
 import { ChevronLeft } from "lucide-vue-next";
 import { route } from "ziggy-js";
 import type { ItbiMunicipality } from "@/types";
@@ -21,11 +22,11 @@ const props = defineProps<{
 const rate = props.municipality.rate ?? {};
 
 const form = useForm({
-    own_funds_rate: rate.own_funds_rate ?? "",
-    financed_rate: rate.financed_rate ?? "",
+    own_funds_rate: trimRate(rate.own_funds_rate),
+    financed_rate: trimRate(rate.financed_rate),
     financed_cap_amount: (rate.financed_cap_amount as number | null) ?? null,
-    first_property_financed_rate: rate.first_property_financed_rate ?? "",
-    other_property_financed_rate: rate.other_property_financed_rate ?? "",
+    first_property_financed_rate: trimRate(rate.first_property_financed_rate),
+    other_property_financed_rate: trimRate(rate.other_property_financed_rate),
 });
 
 const percentFields: Array<{ name: "financed_rate" | "first_property_financed_rate" | "other_property_financed_rate"; label: string }> = [

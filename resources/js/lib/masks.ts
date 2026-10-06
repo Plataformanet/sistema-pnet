@@ -119,6 +119,15 @@ export const formatMoney = (cents: number | null | undefined): string => {
 };
 
 /**
+ * Remove os zeros decimais à direita de uma alíquota vinda do banco ("3.0000" → "3", "0.5000" → "0.5").
+ */
+export const trimRate = (rate: string | number | null | undefined): string => {
+    return rate !== undefined && rate !== null && rate !== ""
+        ? String(Number(rate))
+        : "";
+};
+
+/**
  * Converte centavos inteiros para o texto mascarado usado nos inputs de valor.
  */
 export const centsToMask = (cents: number | null | undefined): string => {

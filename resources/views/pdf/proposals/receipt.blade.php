@@ -5,6 +5,9 @@
     $formattedDocument = strlen($document) === 11
         ? preg_replace('/(\d{3})(\d{3})(\d{3})(\d{2})/', '$1.$2.$3-$4', $document)
         : preg_replace('/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/', '$1.$2.$3/$4-$5', $document);
+    $signedAt = ($receipt->date ?? now())->locale('pt_BR');
+    $place = collect([$company['city'] ?? null, $company['state'] ?? null])->filter()->join(' - ');
+    $placeAndDate = ($place !== '' ? "{$place}, " : '').$signedAt->format('d').' de '.ucfirst($signedAt->translatedFormat('F')).' de '.$signedAt->format('Y');
 @endphp
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -12,6 +15,21 @@
     <meta charset="UTF-8">
     <title>Recibo — Proposta Nº {{ $proposal->number }}</title>
     @include('pdf._styles')
+    <style>
+        body { font-size: 12px; }
+        .company, .footer { font-size: 10px; }
+        h2 { font-size: 18px; }
+        h3 { font-size: 14px; }
+        th, td { padding: 6px; }
+        @page { margin: 1.2cm 1.2cm 2.6cm; }
+        .notes { border: 1px solid #444; height: 90px; margin-top: 20px; padding-top: 14px; text-align: center; font-weight: bold; }
+        .place-date { margin: 28px 0 18px; text-align: center; font-weight: bold; }
+        .signature-lines { width: 70%; margin-left: 30%; }
+        .signature-lines td { border: none; padding: 14px 0 0; }
+        .signature-label { width: 1%; white-space: nowrap; padding-right: 4px !important; text-align: right; }
+        .signature-line { border-bottom: 1px solid #333 !important; }
+        .company-footer { position: fixed; left: 0; right: 0; bottom: -1.9cm; padding: 12px; background: #263233; color: #fff; text-align: center; font-weight: bold; }
+    </style>
 </head>
 <body>
     @include('pdf._header')
@@ -44,6 +62,7 @@
             <tr class="total"><td colspan="2">Total de emolumentos</td><td class="money">{{ Money::format($feesTotal) }}</td></tr>
             <tr class="total"><td colspan="2">Total gasto</td><td class="money">{{ Money::format($receipt->total_spent) }}</td></tr>
             <tr class="total"><td colspan="2">Valor depositado</td><td class="money">{{ Money::format($receipt->amount_deposited) }}</td></tr>
+            <tr class="total"><td colspan="2">Devolução</td><td class="money">{{ Money::format($receipt->refund) }}</td></tr>
         </table>
 
         <h3>Proponentes</h3>
@@ -59,10 +78,18 @@
         </table>
     @endif
 
-    <div class="signature"><span>{{ $company['name'] ?? config('app.name') }}</span></div>
+    <div class="notes">OBSERVAÇÕES:</div>
 
-    <div class="footer">
-        {{ $company['city'] ?? '' }}{{ ! empty($company['city']) ? ', ' : '' }}{{ now()->locale('pt_BR')->translatedFormat('d \d\e F \d\e Y') }}
+    <p class="place-date">{{ $placeAndDate }}</p>
+
+    <table class="signature-lines">
+        <tr><td class="signature-label">ASSINATURA:</td><td class="signature-line"></td></tr>
+        <tr><td class="signature-label">NOME LEGÍVEL:</td><td class="signature-line"></td></tr>
+    </table>
+
+    <div class="company-footer">
+        {{ ($company['trade_name'] ?? null) ?: (($company['name'] ?? null) ?: config('app.name')) }}<br>
+        {{ collect([$company['email'] ?? null, $company['phone'] ?? null])->filter()->join(' - ') }}
     </div>
 </body>
 </html>

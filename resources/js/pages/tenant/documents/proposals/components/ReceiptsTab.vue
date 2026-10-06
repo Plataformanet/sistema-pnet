@@ -49,22 +49,36 @@ const receiptableItems = computed(() =>
     ),
 );
 
+/** Total geral das cobranças, mesmo valor exibido na aba de cobranças. */
+const grandTotal = computed(() => (props.proposal.cost_items ?? []).reduce((sum, item) => sum + item.amount, 0));
+
 const form = useForm({
     proposal_cost_item_id: null as number | null,
     name: "",
     document: "",
     registration_number: "",
-    total_spent: null as number | null,
+    total_spent: grandTotal.value as number | null,
     amount_deposited: null as number | null,
     date: new Date().toISOString().slice(0, 10),
 });
 
 const isGeneral = computed(() => form.proposal_cost_item_id === null);
 
+function selectCostItem(value: string) {
+    form.proposal_cost_item_id = value === "general" ? null : Number(value);
+
+    if (isGeneral.value) {
+        form.total_spent = grandTotal.value;
+    }
+}
+
 function submit() {
     form.post(route("tenant.documents.proposals.receipts.store", props.proposal.id), {
         preserveScroll: true,
-        onSuccess: () => form.reset(),
+        onSuccess: () => {
+            form.reset();
+            form.total_spent = grandTotal.value;
+        },
     });
 }
 
@@ -93,7 +107,7 @@ const maskDocument = (value: string) => (value.replace(/\D/g, "").length > 11 ? 
                     <FieldLabel for="receipt_cost_item">Recibo de</FieldLabel>
                     <Select
                         :model-value="form.proposal_cost_item_id ? String(form.proposal_cost_item_id) : 'general'"
-                        @update:model-value="form.proposal_cost_item_id = $event === 'general' ? null : Number($event)"
+                        @update:model-value="selectCostItem(String($event))"
                     >
                         <SelectTrigger id="receipt_cost_item">
                             <SelectValue />

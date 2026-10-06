@@ -6,6 +6,7 @@ import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import FieldError from "@/components/ui/field/FieldError.vue";
 import MoneyInput from "@/components/MoneyInput.vue";
+import { trimRate } from "@/lib/masks";
 import { ChevronLeft, Plus, Trash } from "lucide-vue-next";
 import { route } from "ziggy-js";
 import type { ItbiMunicipality } from "@/types";
@@ -24,11 +25,11 @@ interface BracketRow {
 }
 
 const form = useForm({
-    full_rate: props.municipality.full_rate ?? "",
+    full_rate: trimRate(props.municipality.full_rate),
     brackets: (props.municipality.brackets ?? []).map((bracket) => ({
         min_value: bracket.min_value,
         max_value: bracket.max_value,
-        rate: bracket.rate,
+        rate: trimRate(bracket.rate),
         discount_amount: bracket.discount_amount,
     })) as BracketRow[],
 });

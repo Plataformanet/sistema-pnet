@@ -172,5 +172,6 @@ test('recibo geral não precisa de cobrança', function () {
     ], $this->tenant);
 
     expect($receipt->type)->toBe(ReceiptType::GENERAL)
-        ->and($receipt->amount_deposited)->toBe(600000);
+        ->and($receipt->amount_deposited)->toBe(600000)
+        ->and($receipt->refund)->toBe(-100000);
 });

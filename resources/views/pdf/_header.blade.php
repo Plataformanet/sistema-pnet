@@ -5,14 +5,14 @@
                 @if ($logo)
                     <img src="{{ $logo }}" alt="Logo">
                 @else
-                    <strong>{{ $company['trade_name'] ?? $company['name'] ?? config('app.name') }}</strong>
+                    <strong>{{ ($company['trade_name'] ?? null) ?: (($company['name'] ?? null) ?: config('app.name')) }}</strong>
                 @endif
             </td>
             <td class="company">
-                <strong>{{ $company['name'] ?? config('app.name') }}</strong><br>
+                <strong>{{ ($company['trade_name'] ?? null) ?: (($company['name'] ?? null) ?: config('app.name')) }}</strong><br>
                 @if (! empty($company['cnpj'])) CNPJ: {{ $company['cnpj'] }}<br> @endif
                 @if (! empty($company['street']))
-                    {{ $company['street'] }}, {{ $company['number'] ?? 's/n' }} — {{ $company['city'] ?? '' }}/{{ $company['state'] ?? '' }}<br>
+                    {{ $company['street'] }}, {{ ($company['number'] ?? null) ?: 's/n' }} — {{ $company['city'] ?? '' }}/{{ $company['state'] ?? '' }}<br>
                 @endif
                 {{ $company['phone'] ?? '' }} {{ $company['email'] ?? '' }}
             </td>
