@@ -7,6 +7,7 @@ use App\Enums\TenantProvisioningStatus;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Providers\TenancyServiceProvider;
+use App\Services\TenantPermissionService;
 use App\Services\TenantService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -14,9 +15,6 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\DB;
-use Spatie\Permission\Models\Permission;
-use Spatie\Permission\Models\Role;
-use Spatie\Permission\PermissionRegistrar;
 use Throwable;
 
 /**
@@ -25,7 +23,12 @@ use Throwable;
  * e cria roles, permissões e o usuário administrador a partir do payload que o
  * TenantService guardou em `tenant->seed`.
  *
+ * As permissões vêm do payload, e não de TenantPermissionService::forTenant():
+ * com a fila síncrona o pipeline roda dentro do Tenant::create(), antes de o
+ * TenantService vincular os módulos ao tenant.
+ *
  * @see TenantService
+ * @see TenantPermissionService
  * @see TenancyServiceProvider::events()
  */
 class SeedTenantDatabase implements ShouldQueue
@@ -34,7 +37,7 @@ class SeedTenantDatabase implements ShouldQueue
 
     public function __construct(public Tenant $tenant) {}
 
-    public function handle(): void
+    public function handle(TenantPermissionService $tenantPermissionService): void
     {
         $seed = $this->tenant->seed ?? [];
         $admin = $seed['admin'] ?? null;
@@ -48,49 +51,10 @@ class SeedTenantDatabase implements ShouldQueue
         /** @var array<int, array{name: string, display_name: string}> $permissions */
         $permissions = $seed['permissions'] ?? [];
 
-        $this->tenant->run(function () use ($admin, $permissions): void {
-            DB::transaction(function () use ($admin, $permissions): void {
-                $now = now();
-
-                // Upsert pelo mesmo motivo das permissões: a migration
-                // add_proposal_roles já cria alguns cargos antes deste job.
-                Role::upsert(
-                    collect(RolesEnum::all())
-                        ->map(fn (string $name): array => [
-                            'name' => $name,
-                            'guard_name' => 'web',
-                            'created_at' => $now,
-                            'updated_at' => $now,
-                        ])
-                        ->all(),
-                    ['name', 'guard_name'],
-                    ['updated_at'],
-                );
-
-                // Upsert, e não insert: migrations de dados do tenant (ex.:
-                // add_company_settings_permissions) já criam algumas permissões
-                // antes deste job, e um insert simples violaria o índice único
-                // name + guard_name, derrubando o provisionamento.
-                if ($permissions !== []) {
-                    Permission::upsert(
-                        collect($permissions)
-                            ->map(fn (array $permission): array => [
-                                'name' => $permission['name'],
-                                'display_name' => $permission['display_name'],
-                                'guard_name' => 'web',
-                                'created_at' => $now,
-                                'updated_at' => $now,
-                            ])
-                            ->all(),
-                        ['name', 'guard_name'],
-                        ['display_name', 'updated_at'],
-                    );
-                }
-
-                app(PermissionRegistrar::class)->forgetCachedPermissions();
-
-                $adminRole = Role::where('name', RolesEnum::ADMIN->label())->firstOrFail();
-                $adminRole->givePermissionTo(Permission::all());
+        $this->tenant->run(function () use ($admin, $permissions, $tenantPermissionService): void {
+            DB::transaction(function () use ($admin, $permissions, $tenantPermissionService): void {
+                $tenantPermissionService->apply($permissions);
+                $tenantPermissionService->applyRoleDefaults();
 
                 $user = User::create([
                     'name' => $admin['name'],
@@ -100,7 +64,7 @@ class SeedTenantDatabase implements ShouldQueue
                     'password' => $admin['password'],
                 ]);
 
-                $user->assignRole($adminRole);
+                $user->assignRole(RolesEnum::ADMIN->label());
             });
         });
 

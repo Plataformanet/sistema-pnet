@@ -82,9 +82,8 @@
         ],
         "tenants-migrate-fresh-seed": [
             "@php artisan tenants:run migrate:fresh --option=\"path=database/migrations/tenant\"",
-            "@php artisan tenants:run db:seed --option=\"class=TenantUserSeeder\"",
-            "@php artisan tenants:run db:seed --option=\"class=TenantPermissionSeeder\"",
-            "@php artisan tenants:run db:seed --option=\"class=TenantSettingsSeeder\""
+            "@php artisan tenants:sync-permissions",
+            "@php artisan tenants:run db:seed --option=\"class=TenantUserSeeder\""
         ],
         "central-migrate-fresh-seed": [
             "@php artisan migrate:fresh",

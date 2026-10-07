@@ -27,7 +27,7 @@ class Plan extends Model
     protected function casts(): array
     {
         return [
-            'price' => 'decimal:2',
+            'price' => 'integer',
             'max_users' => 'integer',
             'max_storage_gb' => 'integer',
             'features' => 'array',

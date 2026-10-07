@@ -228,13 +228,13 @@ Todos usam `softDeletes`. Excluir um cadastro em uso não quebra os registros qu
 
 | Tabela | Campos principais | Observações |
 | :--- | :--- | :--- |
-| `banks` | `name` (único) | Usado por propostas e orçamentos. Semeado com a lista inicial (`BankSeeder`). |
+| `banks` | `name` (único) | Usado por propostas e orçamentos. Lista inicial criada pela migration `seed_documents_catalogs`. |
 | `notaries` | `name`, endereço (`zip_code`, `street`, `number`, `complement`, `neighborhood`, `city`, `state`), `reference_point`, `business_hours` | Usado nas linhas de custo da proposta. |
-| `contract_types` | `name` (único), `requires_financing` | Semeado com os ids do sistema de origem (`ContractTypeSeeder`). O id padrão do orçamento convertido vem de `config('proposals.default_contract_type_id')`. |
-| `cost_types` | `name`, `requires_notary`, `receipt_type` (`general` / `advisory` / `courier`) | Antiga `costs` do financeiro, renomeada. Compartilhada entre o Financeiro e as Propostas. |
+| `contract_types` | `name` (único), `requires_financing` | Criado com os ids do sistema de origem pela migration `seed_documents_catalogs`. O id padrão do orçamento convertido vem de `config('proposals.default_contract_type_id')`. |
+| `cost_types` | `name`, `requires_notary`, `receipt_type` (`general` / `advisory` / `courier`) | Antiga `costs` do financeiro, renomeada. Compartilhada entre o Financeiro e as Propostas. Tipos iniciais criados pela migration `seed_documents_catalogs`. |
 | `property_types` | `name` (único), `shows_number`, `shows_complement`, `requires_development`, `shows_unit`, `shows_block` | As flags controlam os campos do imóvel na proposta. |
 | `developments` | `name` (único) | Empreendimentos. |
-| `stages` | `order`, `name`, `has_date`, `date_required`, `has_upload`, `upload_required`, `title_required`, `notes_required`, `completion_deadline_hours`, `alert_deadline_hours`, `shows_property_data`, `shows_registry_protocol` | Etapas da timeline, reordenáveis. Semeadas com 8 etapas padrão (`StageSeeder`). |
+| `stages` | `order`, `name`, `has_date`, `date_required`, `has_upload`, `upload_required`, `title_required`, `notes_required`, `completion_deadline_hours`, `alert_deadline_hours`, `shows_property_data`, `shows_registry_protocol` | Etapas da timeline, reordenáveis. As 8 etapas padrão são criadas pela migration `seed_documents_catalogs`, só quando o catálogo está vazio. |
 | `billable_services` | `name`, `description`, `price`, `generates_receipt` | Serviços cobráveis, vinculados a propostas e orçamentos com valor negociado próprio. |
 
 ### 5.2. Propostas

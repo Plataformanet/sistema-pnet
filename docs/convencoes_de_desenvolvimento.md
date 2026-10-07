@@ -48,7 +48,8 @@ Uma funcionalidade CRUD de tenant toca **9 pontos**. Nenhum é opcional:
 4. Form Requests      app/Http/Requests/              (Store… e Update…)
 5. Controller         app/Http/Controllers/           (Tenant…Controller)
 6. Rotas              routes/tenant.php               (ou routes/web.php)
-7. Permissões         database/seeders/TenantPermissionSeeder.php
+7. Permissões         migration de dados em database/migrations/central/ (catálogo)
+                      + migration de tenant via TenantPermissionService (tenants existentes)
 8. Frontend           resources/js/pages/tenant/<modulo>/<recurso>/
                       + resources/js/types/<area>/<Recurso>.ts (+ barrel index.ts)
                       + item de menu em resources/js/layouts/tenant-layout/TenantLayout.vue
@@ -67,6 +68,12 @@ O restante deste documento detalha cada camada com o padrão **real** extraído 
 - IDs auto-incremento (`$table->id()`), FKs com `foreignId(...)->constrained(...)->onDelete('cascade')`.
 - `softDeletes()` + `timestamps()` na maioria das tabelas de cadastro.
 - **Valores monetários são armazenados como `integer` (centavos).**
+- **Dados de referência entram por migration, nunca por seeder:** módulos, permissões, planos, catálogos (bancos, tipos de contrato, tipos de custo, etapas) e configurações padrão. Assim chegam a qualquer ambiente (instalação nova, tenants existentes e tenants recém-provisionados) só com o `migrate`. Regras dessas migrations de dados:
+  - usam o query builder (`DB::table(...)`), não models, para não depender do estado futuro do model;
+  - são **idempotentes**: inserem só o que falta, contando também registros com soft delete, para não ressuscitar o que o tenant apagou e não sobrescrever o que ele ajustou;
+  - `down()` só remove o que é seguro remover. Planos e configurações, por exemplo, têm `down()` vazio.
+  - Modelos: [2026_10_01_100009_seed_documents_catalogs.php](../database/migrations/tenant/2026_10_01_100009_seed_documents_catalogs.php) (tenant) e [2026_10_06_185110_seed_plans.php](../database/migrations/central/2026_10_06_185110_seed_plans.php) (central).
+- Seeders (`database/seeders/`) ficam só para **dados fictícios de desenvolvimento** (`TenantUserSeeder`, `TenantContactSeeder`), que nunca devem chegar à produção.
 
 Referência: [database/migrations/tenant/2026_05_11_130945_create_products_table.php](../database/migrations/tenant/2026_05_11_130945_create_products_table.php)
 
@@ -337,7 +344,40 @@ Confira o resultado com `vendor/bin/sail artisan route:list --name=tenant.<modul
 
 - RBAC via `spatie/laravel-permission`, com permissões **dentro do banco de cada tenant**.
 - Nomenclatura: **`<modulo>.<recurso>.<acao>`** — ações `view`, `create`, `edit`, `delete`.
-- Toda permissão nova precisa ser registrada em [database/seeders/TenantPermissionSeeder.php](../database/seeders/TenantPermissionSeeder.php), no formato de arrays paralelos `name` / `display_name` (rótulo em pt-BR, ex.: `'Clientes (Visualizar)'`).
+- **Permissões e módulos são criados por migration, nunca por seeder.** Assim chegam a qualquer ambiente só com o `migrate`, na ordem certa.
+- **O plano limita as permissões.** Cada tenant recebe só as permissões dos seus módulos ativos (`tenant_modules`). Como as rotas são protegidas apenas pelo middleware `permission:`, é esse filtro que faz o plano valer no backend. Por isso **nenhuma migration de tenant cria permissão "para todos"**: toda gravação passa pelo [TenantPermissionService](../app/Services/TenantPermissionService.php):
+  - `forModules($modules)` / `forTenant($tenant)`: lista (deduplicada) das permissões do catálogo central liberadas pelos módulos. `forTenant()` usa a conexão central do `Tenant`, então funciona também dentro do contexto do tenant.
+  - `apply($permissions)`: dentro do contexto do tenant, faz upsert dos cargos (`RolesEnum`) e das permissões e concede todas ao Administrador. Só adiciona, nunca remove.
+  - `sync($tenant)`: `forTenant()` + `apply()` no banco do tenant, numa transação.
+- **Quem usa o service:**
+  - **Tenant novo:** o `TenantService` monta o payload com `forModules()` e o job `SeedTenantDatabase` o grava com `apply()`. O payload existe porque, com fila síncrona, o pipeline de provisionamento roda antes de os módulos serem vinculados ao tenant.
+  - **Tenants existentes:** `vendor/bin/sail artisan tenants:sync-permissions [--tenants=<id>]`, idempotente.
+- **Toda permissão nova precisa de duas migrations de dados**, com o rótulo em pt-BR (ex.: `'Clientes (Visualizar)'`):
+  1. **Central** (`database/migrations/central/`): insere a permissão no catálogo central (`permissions`, com `module_id` resolvido pelo `slug` do módulo) só se ela ainda não existir. Modelo: [2026_10_06_173656_seed_core_permissions.php](../database/migrations/central/2026_10_06_173656_seed_core_permissions.php).
+  2. **Tenant** (`database/migrations/tenant/`): leva a permissão aos tenants já provisionados, respeitando o plano de cada um:
+
+     ```php
+     public function up(): void
+     {
+         if (! tenancy()->initialized) {
+             return;
+         }
+
+         $tenantPermissionService = app(TenantPermissionService::class);
+         $tenantPermissionService->apply($tenantPermissionService->forTenant(tenant()));
+     }
+
+     public function down(): void
+     {
+         Permission::whereIn('name', ['<modulo>.<recurso>.view', /* ... */])->delete();
+         app(PermissionRegistrar::class)->forgetCachedPermissions();
+     }
+     ```
+
+     A migration central roda antes da de tenant no deploy (`migrate` → `tenants:migrate`), então o catálogo já tem a permissão nova quando o tenant sincroniza.
+- As migrations de dados precisam ser **idempotentes**: inserem só o que ainda não existe (módulo por `slug`, permissão por `name`), porque podem rodar em ambientes que já têm parte dos registros.
+- O catálogo base (módulos core e todas as permissões existentes) vem de [2026_10_06_173654_seed_core_modules.php](../database/migrations/central/2026_10_06_173654_seed_core_modules.php) e [2026_10_06_173656_seed_core_permissions.php](../database/migrations/central/2026_10_06_173656_seed_core_permissions.php). Não edite essas migrations depois de aplicadas: permissão nova entra em uma migration nova.
+- **Permissões padrão dos cargos** (Analista com todo o grupo `documents.*`; Cliente, Vendedor do imóvel e Parceiro com o acesso básico às propostas) ficam em `TenantPermissionService::applyRoleDefaults()`. Elas são aplicadas **só no provisionamento** (`SeedTenantDatabase`), nunca no `sync`, para não desfazer o que o administrador ajustar na tela de cargos. Cargo novo com permissões padrão entra nesse método.
 - Enums de apoio: `app/Enums/RolesEnum.php`, `PermissionsEnum.php`, `PermissionTypeDriveEnum.php`.
 - Autorização por **Policy** só existe quando a regra é dinâmica por registro (hoje: `DrivePolicy`). Cadastros simples são protegidos apenas pelo middleware de permissão.
 - Módulos habilitáveis por plano são controlados pelas tabelas centrais (`modules`, `plan_modules`, `tenant_modules`) e chegam ao front em `tenant.hasModules`.
@@ -452,9 +492,10 @@ vendor/bin/sail artisan make:class Services/XService --no-interaction
 vendor/bin/sail artisan make:test --pest XServiceTest --no-interaction
 
 # Banco
-vendor/bin/sail artisan migrate            # central
-vendor/bin/sail artisan tenants:migrate    # tenants
-vendor/bin/sail artisan db:seed --class=TenantPermissionSeeder
+vendor/bin/sail artisan migrate --path=database/migrations/central   # central (inclui módulos, permissões e planos)
+vendor/bin/sail artisan tenants:migrate                             # tenants
+vendor/bin/sail artisan tenants:sync-permissions                    # tenants: cargos e permissões conforme o plano
+composer tenants-migrate-fresh-seed                                 # dev: recria os tenants locais com dados fictícios
 
 # Qualidade
 vendor/bin/sail bin pint --dirty --format agent

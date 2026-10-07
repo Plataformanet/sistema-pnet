@@ -166,9 +166,9 @@ class Subscription extends Model
     }
 
     /**
-     * Adicionar add-on (módulo extra)
+     * Adicionar add-on (módulo extra). Preço em centavos.
      */
-    public function addAddon(Module $module, float $price): SubscriptionItem
+    public function addAddon(Module $module, int $price): SubscriptionItem
     {
         return $this->items()->create([
             'module_id' => $module->id,
@@ -180,9 +180,9 @@ class Subscription extends Model
     }
 
     /**
-     * Calcular valor total da assinatura
+     * Calcular valor total da assinatura, em centavos.
      */
-    public function calculateTotal(): float
+    public function calculateTotal(): int
     {
         $planPrice = $this->plan->price;
         $addonsTotal = $this->items->sum('total_price');

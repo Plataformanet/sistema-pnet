@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -12,21 +11,13 @@ class DatabaseSeeder extends Seeder
 
     /**
      * Seed the application's database.
+     *
+     * Dados de referência (módulos, permissões, planos, catálogos e
+     * configurações padrão) são criados pelas migrations. Seeders ficam só para
+     * dados fictícios de desenvolvimento.
      */
     public function run(): void
     {
-        // User::factory(10)->create();
-
-        // User::factory()->create([
-        //     'name' => 'Test User',
-        //     'email' => 'test@example.com',
-        // ]);
-
-        $this->call([
-            ModuleSeeder::class,
-            PlanSeeder::class,
-            PlanModuleSeeder::class,
-            PermissionSeeder::class,
-        ]);
+        //
     }
 }

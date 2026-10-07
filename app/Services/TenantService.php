@@ -11,6 +11,8 @@ use Illuminate\Support\Facades\Hash;
 
 class TenantService
 {
+    public function __construct(private TenantPermissionService $tenantPermissionService) {}
+
     /**
      * Cria o tenant (linha central, domínio e módulos) e dispara o
      * provisionamento assíncrono do banco do tenant.
@@ -47,7 +49,7 @@ class TenantService
                     'email' => $data['email'],
                     'password' => Hash::make($data['password']),
                 ],
-                'permissions' => $this->buildPermissionsPayload($modules),
+                'permissions' => $this->tenantPermissionService->forModules($modules),
             ],
         ]);
 
@@ -97,29 +99,6 @@ class TenantService
         }
 
         return $modules;
-    }
-
-    /**
-     * Achata as permissões dos módulos num payload enxuto para o job de seed.
-     *
-     * Deduplica por `name`: dois módulos incluídos podem declarar a mesma
-     * permissão, e o índice único do Spatie (`name` + `guard_name`) faria o
-     * `Permission::insert()` do seeder falhar.
-     *
-     * @param  Collection<int, Module>  $modules
-     * @return array<int, array{name: string, display_name: string}>
-     */
-    protected function buildPermissionsPayload(Collection $modules): array
-    {
-        return $modules
-            ->flatMap(fn (Module $module) => $module->permissions)
-            ->map(fn ($permission): array => [
-                'name' => $permission->name,
-                'display_name' => $permission->display_name,
-            ])
-            ->unique('name')
-            ->values()
-            ->all();
     }
 
     /**
