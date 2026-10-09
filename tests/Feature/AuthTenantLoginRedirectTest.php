@@ -5,6 +5,8 @@ use App\Http\Controllers\Auth\AuthTenantController;
 use App\Http\Requests\StoreTenantLoginRequest;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Hash;
 
 beforeEach(function () {
@@ -14,11 +16,12 @@ beforeEach(function () {
 /**
  * Executa o login do tenant simulando a sessão da requisição.
  */
-function loginRequest(string $email, string $password): RedirectResponse
+function loginRequest(string $email, string $password, bool $remember = false): RedirectResponse
 {
     $request = formRequest(StoreTenantLoginRequest::class, [
         'email' => $email,
         'password' => $password,
+        'remember' => $remember,
     ]);
 
     $request->setLaravelSession(session()->driver());
@@ -63,3 +66,19 @@ it('redireciona cargo externo às propostas para a lista de propostas', function
 
     expect($response->getTargetUrl())->toBe(route('tenant.documents.proposals.list'));
 })->with([RolesEnum::CLIENT, RolesEnum::PROPERTY_SELLER, RolesEnum::PARTNER]);
+
+it('mantém o usuário conectado quando a opção é marcada no login', function (bool $remember) {
+    $this->tenant->run(function () {
+        User::factory()->create([
+            'email' => 'usuario@teste.com',
+            'password' => Hash::make('senha-secreta'),
+        ]);
+    });
+
+    loginRequest('usuario@teste.com', 'senha-secreta', $remember);
+
+    expect(Cookie::hasQueued(Auth::guard()->getRecallerName()))->toBe($remember);
+})->with([
+    'marcado' => true,
+    'desmarcado' => false,
+]);

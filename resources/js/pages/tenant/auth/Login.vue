@@ -14,6 +14,7 @@ import {
     FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
 import AuthLayout from "@/layouts/AuthLayout.vue";
 import { route } from "ziggy-js";
 import FieldError from "@/components/ui/field/FieldError.vue";
@@ -102,6 +103,12 @@ function submit() {
                     <FieldError v-if="$page.props.errors.invalidLogin">{{
                         $page.props.errors.invalidLogin
                     }}</FieldError>
+                </Field>
+                <Field orientation="horizontal">
+                    <Switch id="remember" v-model="form.remember" />
+                    <FieldLabel for="remember" class="font-normal">
+                        Manter conectado
+                    </FieldLabel>
                 </Field>
                 <Field>
                     <Button type="submit" :loading="form.processing" :disabled="form.processing">Login</Button>
