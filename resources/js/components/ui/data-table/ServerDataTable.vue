@@ -35,7 +35,9 @@ const props = withDefaults(
         filters?: CatalogFilters;
         url: string;
         withTrashedFilter?: boolean;
+        withSearch?: boolean;
         searchPlaceholder?: string;
+        emptyText?: string;
         extraParams?: Record<string, unknown>;
         /** Habilita arrastar e soltar linhas; a linha só arrasta/recebe quando retorna true. */
         rowDraggable?: (row: TData) => boolean;
@@ -43,7 +45,9 @@ const props = withDefaults(
     {
         filters: () => ({}),
         withTrashedFilter: true,
+        withSearch: true,
         searchPlaceholder: "Pesquisar...",
+        emptyText: "Nenhum resultado encontrado.",
         extraParams: () => ({}),
         rowDraggable: undefined,
     },
@@ -159,6 +163,7 @@ function onTrashed(value: boolean | "indeterminate") {
     <div>
         <div class="flex flex-wrap items-center justify-between gap-4 py-4">
             <Input
+                v-if="withSearch"
                 class="max-w-sm"
                 :placeholder="searchPlaceholder"
                 :model-value="search"
@@ -226,7 +231,7 @@ function onTrashed(value: boolean | "indeterminate") {
                                 :colspan="columns.length"
                                 class="h-24 text-center"
                             >
-                                Nenhum resultado encontrado.
+                                {{ emptyText }}
                             </TableCell>
                         </TableRow>
                     </template>

@@ -233,6 +233,28 @@ class Proposal extends Model
         return $this->hasOne(ProposalStage::class)->where('is_current', true);
     }
 
+    /**
+     * Etapa de maior posição da timeline: a que, concluída, finaliza a proposta.
+     */
+    public function finalStage(): HasOne
+    {
+        return $this->hasOne(ProposalStage::class)->ofMany('position', 'max');
+    }
+
+    public function registryProtocols(): HasMany
+    {
+        return $this->hasMany(RegistryProtocol::class)->orderByDesc('entered_at')->orderByDesc('id');
+    }
+
+    /**
+     * Protocolo exibido na timeline: o de entrada mais recente, com o `id`
+     * desempatando protocolos do mesmo dia.
+     */
+    public function latestRegistryProtocol(): HasOne
+    {
+        return $this->hasOne(RegistryProtocol::class)->latestOfMany(['entered_at', 'id']);
+    }
+
     public function documents(): HasMany
     {
         return $this->hasMany(ProposalDocument::class);

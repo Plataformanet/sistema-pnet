@@ -30,7 +30,7 @@ class AuthTenantController extends Controller
 
             $request->session()->regenerate();
 
-            $home = $request->user()->hasOnlyProposalRestrictedRoles()
+            $home = Auth::user()->hasOnlyProposalRestrictedRoles()
                 ? route('tenant.documents.proposals.list')
                 : route('tenant.dashboard');
 

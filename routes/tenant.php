@@ -50,6 +50,11 @@ use App\Http\Controllers\TenantProposalTimelineController;
 use App\Http\Controllers\TenantQuoteController;
 use App\Http\Controllers\TenantQuotePdfController;
 use App\Http\Controllers\TenantReceiptController;
+use App\Http\Controllers\TenantRegistryProtocolController;
+use App\Http\Controllers\TenantRegistryProtocolProposalPartiesController;
+use App\Http\Controllers\TenantRegistryProtocolProposalSearchController;
+use App\Http\Controllers\TenantReportController;
+use App\Http\Controllers\TenantReportDownloadController;
 use App\Http\Controllers\TenantRoleController;
 use App\Http\Controllers\TenantSendQuoteEmailController;
 use App\Http\Controllers\TenantServiceCategoryController;
@@ -347,6 +352,21 @@ Route::middleware([
         Route::put('/documents/itbi/municipalities/{id}/rate', [TenantItbiRateController::class, 'update'])->name('tenant.documents.itbi-municipalities.rates.update')->whereNumber('id')->middleware('permission:documents.itbi_municipalities.edit');
         Route::get('/documents/itbi/municipalities/{id}/brackets', [TenantItbiBracketController::class, 'edit'])->name('tenant.documents.itbi-municipalities.brackets.edit')->whereNumber('id')->middleware('permission:documents.itbi_municipalities.edit');
         Route::put('/documents/itbi/municipalities/{id}/brackets', [TenantItbiBracketController::class, 'update'])->name('tenant.documents.itbi-municipalities.brackets.update')->whereNumber('id')->middleware('permission:documents.itbi_municipalities.edit');
+
+        // Documentações - Protocolos de registro
+        Route::get('/documents/registry-protocols/list', [TenantRegistryProtocolController::class, 'index'])->name('tenant.documents.registry-protocols.list')->middleware('permission:documents.registry_protocols.view');
+        Route::get('/documents/registry-protocols/create', [TenantRegistryProtocolController::class, 'create'])->name('tenant.documents.registry-protocols.create')->middleware('permission:documents.registry_protocols.create');
+        Route::post('/documents/registry-protocols/store', [TenantRegistryProtocolController::class, 'store'])->name('tenant.documents.registry-protocols.store')->middleware('permission:documents.registry_protocols.create');
+        Route::get('/documents/registry-protocols/proposals/search', TenantRegistryProtocolProposalSearchController::class)->name('tenant.documents.registry-protocols.proposals.search')->middleware('permission:documents.registry_protocols.create');
+        Route::get('/documents/registry-protocols/proposals/{proposalId}/parties', TenantRegistryProtocolProposalPartiesController::class)->name('tenant.documents.registry-protocols.proposals.parties')->whereNumber('proposalId')->middleware('permission:documents.registry_protocols.create');
+        Route::get('/documents/registry-protocols/{id}/edit', [TenantRegistryProtocolController::class, 'edit'])->name('tenant.documents.registry-protocols.edit')->whereNumber('id')->middleware('permission:documents.registry_protocols.edit');
+        Route::put('/documents/registry-protocols/{id}', [TenantRegistryProtocolController::class, 'update'])->name('tenant.documents.registry-protocols.update')->whereNumber('id')->middleware('permission:documents.registry_protocols.edit');
+        Route::delete('/documents/registry-protocols/{id}', [TenantRegistryProtocolController::class, 'destroy'])->name('tenant.documents.registry-protocols.destroy')->whereNumber('id')->middleware('permission:documents.registry_protocols.delete');
+
+        // Documentações - Relatórios
+        Route::get('/documents/reports/finished-proposals', [TenantReportController::class, 'finishedProposals'])->name('tenant.documents.reports.finished-proposals.list')->middleware('permission:documents.reports.view');
+        Route::post('/documents/reports/finished-proposals/download', [TenantReportController::class, 'downloadFinishedProposals'])->name('tenant.documents.reports.finished-proposals.download')->middleware('permission:documents.reports.view');
+        Route::get('/documents/reports/downloads/{file}', TenantReportDownloadController::class)->name('tenant.documents.reports.downloads.show')->where('file', '[A-Za-z0-9\-]+\.zip')->middleware(['signed', 'permission:documents.reports.view']);
 
         // Documentações - Cadastros
         Route::get('/documents/banks/list', [TenantBankController::class, 'index'])->name('tenant.documents.banks.list')->middleware('permission:documents.banks.view');

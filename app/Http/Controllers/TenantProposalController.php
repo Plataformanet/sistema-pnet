@@ -11,6 +11,7 @@ use App\Models\Proposal;
 use App\Services\ApplicantService;
 use App\Services\ProposalQueryService;
 use App\Services\ProposalService;
+use App\Services\RegistryProtocolService;
 use App\Services\SellerService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -25,6 +26,7 @@ class TenantProposalController extends Controller
         protected ProposalQueryService $proposalQueryService,
         protected ApplicantService $applicantService,
         protected SellerService $sellerService,
+        protected RegistryProtocolService $registryProtocolService,
     ) {}
 
     public function index(IndexProposalRequest $request)
@@ -69,6 +71,7 @@ class TenantProposalController extends Controller
             'proposal' => $proposal->setRelation('documents', $this->proposalQueryService->documentsFor($proposal, $request->user())),
             'checklist' => $this->proposalQueryService->checklist($proposal, tenant()),
             'feesTotal' => tenant()->run(fn () => $proposal->feesTotal()),
+            'registryProtocol' => $this->registryProtocolService->panelFor($proposal, tenant()),
             'can' => $this->abilities($proposal),
         ]);
     }
@@ -90,6 +93,7 @@ class TenantProposalController extends Controller
                 'sellers' => $abilities['update'] ? $this->sellerService->findForProposal($id, tenant()) : [],
                 'checklist' => $this->proposalQueryService->checklist($proposal, tenant()),
                 'feesTotal' => tenant()->run(fn () => $proposal->feesTotal()),
+                'registryProtocol' => $this->registryProtocolService->panelFor($proposal, tenant()),
                 'can' => $abilities,
             ],
         ));

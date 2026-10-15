@@ -10,3 +10,4 @@ Artisan::command('inspire', function () {
 
 Schedule::command('proposals:alert-overdue-stages')->weekdays()->at('07:00');
 Schedule::command('fee-calculations:prune')->daily();
+Schedule::command('reports:prune-zips')->hourly();

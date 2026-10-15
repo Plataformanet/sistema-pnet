@@ -80,3 +80,18 @@ test('parâmetros de rota tipados como enum usam enum de string, o único que o 
         }
     }
 });
+
+test('as rotas de protocolos e relatórios exigem as permissões próprias e o link do ZIP exige assinatura', function () {
+    $permissionOf = fn (string $name) => collect(Route::getRoutes()->getByName($name)->gatherMiddleware())
+        ->first(fn ($item) => is_string($item) && str_starts_with($item, 'permission:'));
+
+    expect($permissionOf('tenant.documents.registry-protocols.list'))->toBe('permission:documents.registry_protocols.view')
+        ->and($permissionOf('tenant.documents.registry-protocols.store'))->toBe('permission:documents.registry_protocols.create')
+        ->and($permissionOf('tenant.documents.registry-protocols.proposals.search'))->toBe('permission:documents.registry_protocols.create')
+        ->and($permissionOf('tenant.documents.registry-protocols.proposals.parties'))->toBe('permission:documents.registry_protocols.create')
+        ->and($permissionOf('tenant.documents.registry-protocols.update'))->toBe('permission:documents.registry_protocols.edit')
+        ->and($permissionOf('tenant.documents.registry-protocols.destroy'))->toBe('permission:documents.registry_protocols.delete')
+        ->and($permissionOf('tenant.documents.reports.finished-proposals.list'))->toBe('permission:documents.reports.view')
+        ->and($permissionOf('tenant.documents.reports.finished-proposals.download'))->toBe('permission:documents.reports.view')
+        ->and(Route::getRoutes()->getByName('tenant.documents.reports.downloads.show')->gatherMiddleware())->toContain('signed');
+});

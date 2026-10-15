@@ -34,6 +34,8 @@ export * from "./documents/Catalog";
 export * from "./documents/FeeCalculator";
 export * from "./documents/Proposal";
 export * from "./documents/ItbiCalculation";
+export * from "./documents/RegistryProtocol";
+export * from "./documents/Report";
 
 // Drive
 export * from "./drive";

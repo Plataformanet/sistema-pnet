@@ -191,6 +191,16 @@ const sidebarNavigation: TenantSidebarNavigation = {
                     url: "/documents/quotes/list",
                 },
                 {
+                    title: "Protocolos de Registro",
+                    permission: "documents.registry_protocols.view",
+                    url: "/documents/registry-protocols/list",
+                },
+                {
+                    title: "Relatórios",
+                    permission: "documents.reports.view",
+                    url: "/documents/reports/finished-proposals",
+                },
+                {
                     title: "ITBI - Municípios",
                     permission: "documents.itbi_municipalities.view",
                     url: "/documents/itbi/municipalities/list",

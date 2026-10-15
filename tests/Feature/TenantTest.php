@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\RolesEnum;
 use App\Enums\TenantProvisioningStatus;
 use App\Http\Controllers\TenantRegistrationController;
 use App\Jobs\SeedTenantDatabase;
@@ -66,7 +67,7 @@ test('store provisions a tenant with domain, modules and an admin user', functio
     expect($tenant->modules()->count())->toBe($includedModulesCount)->toBeGreaterThan(0);
 
     $tenant->run(function () {
-        expect(Role::count())->toBe(5)
+        expect(Role::count())->toBe(count(RolesEnum::all()))
             ->and(Permission::count())->toBeGreaterThan(0);
 
         $user = User::where('email', 'admin@acme.com')->first();

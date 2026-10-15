@@ -8,7 +8,7 @@ import { formatMoney } from "@/lib/masks";
 import DocumentsTab from "../components/DocumentsTab.vue";
 import TimelineTab from "../components/TimelineTab.vue";
 import CostItemsTab from "../components/CostItemsTab.vue";
-import type { ChecklistItem, Proposal, ProposalAbilities } from "@/types";
+import type { ChecklistItem, Proposal, ProposalAbilities, RegistryProtocolPanelData } from "@/types";
 
 defineOptions({ layout: TenantLayout });
 
@@ -16,6 +16,7 @@ const props = defineProps<{
     proposal: Proposal;
     checklist: ChecklistItem[];
     feesTotal: number;
+    registryProtocol: RegistryProtocolPanelData | null;
     can: ProposalAbilities;
 }>();
 
@@ -79,7 +80,7 @@ const conditionLabels: Record<string, string> = { new: "Novo", used: "Usado" };
 
         <section class="rounded-lg border border-border bg-card p-6 shadow-sm">
             <h3 class="mb-4 text-lg font-semibold text-card-foreground">Acompanhamento</h3>
-            <TimelineTab :proposal="proposal" :can="readOnly" />
+            <TimelineTab :proposal="proposal" :can="readOnly" :registry-protocol="registryProtocol" />
         </section>
 
         <section class="rounded-lg border border-border bg-card p-6 shadow-sm">

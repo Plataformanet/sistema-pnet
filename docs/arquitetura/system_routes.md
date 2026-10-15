@@ -262,7 +262,7 @@ Gerenciamento de arquivos e pastas dos inquilinos com controle de permissão por
 
 ---
 
-### 2.7. Módulo Documentações (Cadastros auxiliares, Propostas e Calculadora)
+### 2.7. Módulo Documentações (Cadastros auxiliares, Propostas, Calculadora, Protocolos e Relatórios)
 Agrupado no menu em "Documentações" (módulo `documents`). Todas as rotas ficam sob `/documents/...`, com nomes `tenant.documents.<recurso>.<ação>` e o middleware de permissão `documents.<recurso>.<view|create|edit|delete>`.
 
 *   **Regras por registro (`ProposalPolicy`):** além da permissão da rota, as ações em uma proposta passam pela policy. Parceiro, Vendedor do imóvel e Cliente só veem as propostas a que estão vinculados (`Proposal::scopeVisibleTo`). Os documentos visíveis também dependem do cargo (`DocumentOwner::visibleTo`): o Parceiro vê os das pessoas e do imóvel, o Cliente não vê os do vendedor e o Vendedor do imóvel não vê os do comprador. O cálculo da calculadora só é visível para quem o fez ou para o administrador (`FeeCalculationPolicy`).
@@ -449,3 +449,26 @@ Agrupado no menu em "Documentações" (módulo `documents`). Todas as rotas fica
 | **PUT** | `/documents/itbi/municipalities/{id}/rate` | `tenant.documents.itbi-municipalities.rates.update` | `permission:documents.itbi_municipalities.edit` |
 
 > `fee-calculator.store` calcula e grava o resultado em `fee_calculations`, redirecionando para `results.show` com o UUID. O navegador nunca carrega os valores calculados. `quotes.convert` cria a proposta a partir do orçamento e bloqueia uma segunda conversão. `quotes.email` envia o resumo com o PDF do orçamento anexado.
+
+#### Protocolos de Registro (`TenantRegistryProtocolController`, `TenantRegistryProtocolProposalSearchController` e `TenantRegistryProtocolProposalPartiesController`)
+| Método | Rota | Nome da Rota | Middleware de Permissão |
+| :--- | :--- | :--- | :--- |
+| **GET** | `/documents/registry-protocols/create` | `tenant.documents.registry-protocols.create` | `permission:documents.registry_protocols.create` |
+| **GET** | `/documents/registry-protocols/list` | `tenant.documents.registry-protocols.list` | `permission:documents.registry_protocols.view` |
+| **GET** | `/documents/registry-protocols/proposals/search` | `tenant.documents.registry-protocols.proposals.search` | `permission:documents.registry_protocols.create` |
+| **GET** | `/documents/registry-protocols/proposals/{proposalId}/parties` | `tenant.documents.registry-protocols.proposals.parties` | `permission:documents.registry_protocols.create` |
+| **POST** | `/documents/registry-protocols/store` | `tenant.documents.registry-protocols.store` | `permission:documents.registry_protocols.create` |
+| **PUT** | `/documents/registry-protocols/{id}` | `tenant.documents.registry-protocols.update` | `permission:documents.registry_protocols.edit` |
+| **DELETE** | `/documents/registry-protocols/{id}` | `tenant.documents.registry-protocols.destroy` | `permission:documents.registry_protocols.delete` |
+| **GET** | `/documents/registry-protocols/{id}/edit` | `tenant.documents.registry-protocols.edit` | `permission:documents.registry_protocols.edit` |
+
+> `registry-protocols.list` aceita `status` (`open`, o padrão, `closed` ou `all`), `position`, `search`, `proposal_id` e `page`, todos na query string. `create` aceita `?proposal_id=` para chegar com a proposta já selecionada (link "Cadastrar protocolo" da timeline). `proposals.search` devolve até 20 propostas visíveis ao usuário, no formato do `ComboboxRemote`. `proposals.parties` devolve `{ buyer_name, seller_name }` com todos os proponentes e vendedores da proposta, ou 404 se a proposta não existir, tiver sido excluída ou estiver fora do alcance do usuário.
+
+#### Relatórios (`TenantReportController` e `TenantReportDownloadController`)
+| Método | Rota | Nome da Rota | Middleware de Permissão |
+| :--- | :--- | :--- | :--- |
+| **GET** | `/documents/reports/downloads/{file}` | `tenant.documents.reports.downloads.show` | `signed` + `permission:documents.reports.view` |
+| **GET** | `/documents/reports/finished-proposals` | `tenant.documents.reports.finished-proposals.list` | `permission:documents.reports.view` |
+| **POST** | `/documents/reports/finished-proposals/download` | `tenant.documents.reports.finished-proposals.download` | `permission:documents.reports.view` |
+
+> `finished-proposals.list` filtra por `start_date`, `end_date` e `development_id` na query string, com 25 propostas por página. `finished-proposals.download` recebe `proposal_ids` ou `all_matching` com os mesmos filtros. Até o limite síncrono, responde com o ZIP. Acima dele, responde **202** e gera o ZIP na fila, enviando o link por e-mail. Sem nenhum documento disponível, ou acima do teto, responde **422**. `downloads.show` é o link assinado do e-mail: só encontra o arquivo na pasta do usuário logado, então não serve a outra pessoa.

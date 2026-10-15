@@ -18,12 +18,17 @@ import { CheckCircle2, Circle, Clock, Download, Play, RotateCcw } from "lucide-v
 import { router, useForm } from "@inertiajs/vue3";
 import { computed, ref } from "vue";
 import { route } from "ziggy-js";
-import type { Proposal, ProposalAbilities, ProposalStage } from "@/types";
+import RegistryProtocolPanel from "@/pages/tenant/documents/registry-protocols/components/RegistryProtocolPanel.vue";
+import type { Proposal, ProposalAbilities, ProposalStage, RegistryProtocolPanelData } from "@/types";
 
-const props = defineProps<{
-    proposal: Proposal;
-    can: ProposalAbilities;
-}>();
+const props = withDefaults(
+    defineProps<{
+        proposal: Proposal;
+        can: ProposalAbilities;
+        registryProtocol?: RegistryProtocolPanelData | null;
+    }>(),
+    { registryProtocol: null },
+);
 
 const stages = computed(() => props.proposal.stages ?? []);
 const current = computed(() => stages.value.find((stage) => stage.is_current));
@@ -145,6 +150,12 @@ function remaining(stage: ProposalStage): number | null {
                     {{ proposal.property.number }} {{ proposal.property.complement }}
                     <template v-if="proposal.property.development">({{ proposal.property.development.name }} {{ proposal.property.block }} {{ proposal.property.unit }})</template>
                 </div>
+
+                <RegistryProtocolPanel
+                    v-if="stage.stage.shows_registry_protocol"
+                    :proposal-id="proposal.id"
+                    :protocol="registryProtocol"
+                />
 
                 <form v-if="editing === stage.id" class="mt-4 grid grid-cols-1 gap-4 border-t border-border pt-4 md:grid-cols-2" @submit.prevent="submit(stage)">
                     <Field v-if="stage.stage.has_date">

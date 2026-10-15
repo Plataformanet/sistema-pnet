@@ -218,7 +218,7 @@ erDiagram
 
 ---
 
-## 5. Módulo Documentações (Cadastros auxiliares, Propostas e Calculadora)
+## 5. Módulo Documentações (Cadastros auxiliares, Propostas, Calculadora, Protocolos e Relatórios)
 
 Grupo "Documentações" do menu, implementado a partir dos PRDs em `docs/prd/`. Todas as tabelas vivem no **banco do tenant**. Valores em dinheiro são `unsignedBigInteger` em **centavos**; percentuais de ITBI são `decimal(7,4)`.
 
@@ -253,6 +253,7 @@ erDiagram
     PROPOSALS ||--o{ RECEIPTS : "recibos"
     PROPOSALS }o--o{ BILLABLE_SERVICES : "proposal_billable_service"
     PROPOSALS ||--o| FEE_ESTIMATES : "emolumento vinculado"
+    PROPOSALS |o--o{ REGISTRY_PROTOCOLS : "protocolos de registro"
     PROPOSAL_STAGES }o--|| STAGES : "stage_id"
     APPLICANTS ||--o| HOLDER_BANK_ACCOUNTS : "accountable (morph)"
     SELLERS ||--o| HOLDER_BANK_ACCOUNTS : "accountable (morph)"
@@ -278,12 +279,22 @@ erDiagram
 *   **`quote_billable_service`:** serviços do orçamento com o valor negociado (`amount`).
 *   **`fee_estimates`:** registro permanente do cálculo vinculado a um orçamento (`quote_id`, único) e/ou a uma proposta (`proposal_id`, único), com `type`, `state`, `municipality_name`, `valid_until` (nulo quando vinculado direto à proposta), `api_result`, `fees_total`, `itbi_amount`. Uma proposta só pode ter um emolumento vinculado.
 
-### 5.4. Regras técnicas
+### 5.4. Protocolos de Registro e Relatórios
+
+*   **`registry_protocols`:** protocolo de registro do imóvel no cartório, com `proposal_id` (opcional; FK com `nullOnDelete`, então apagar a proposta de vez deixa o protocolo sem vínculo, e excluir com soft delete mantém o vínculo), `protocol_number` (até 50 caracteres), `buyer_name`, `seller_name` (opcional), `entered_at`, `exited_at` (opcional, `null` quando vazio) e `position` (enum `RegistryProtocolPosition`: 1 = Em registro PG, 2 = Em análise, 3 = Exigência, 4 = Em pagamento do banco, os mesmos inteiros do sistema de origem). Usa soft delete, sem restauração pela tela. Índices em `protocol_number`, `position` e `entered_at`.
+    *   O número do protocolo é **único entre os protocolos ativos**, regra validada no Form Request. O índice do banco não é `unique` para que um protocolo excluído por engano possa ser cadastrado de novo com o mesmo número.
+    *   "Em pagamento do banco" é a posição **encerrada**: some da aba "Em aberto" e aparece em "Encerrados".
+    *   Comprador e vendedor são gravados como texto, preenchidos a partir dos proponentes e vendedores da proposta, e não acompanham mudanças posteriores dela.
+    *   A proposta tem `registryProtocols()` (mais recentes primeiro) e `latestRegistryProtocol()` (maior `entered_at`, com desempate pelo `id`). O mais recente aparece na timeline, nas etapas com `stages.shows_registry_protocol`.
+*   **Relatório de propostas finalizadas:** não tem tabela própria. Lê `proposals` com `status = finished`, ignorando as excluídas. A etapa final é `Proposal::finalStage()` (a `proposal_stages` de maior `position`) e o documento dela vem de `proposal_stages.proposal_document_id`. A data de finalização é `COALESCE(data da etapa final, DATE(finished_at))`, calculada no banco para filtrar e ordenar.
+
+### 5.5. Regras técnicas
 *   **Arquivos:** documentos, boletos e comprovantes ficam no disco `config('bucket.disk')`, sob `proposals/{id}`, com limite de upload em `config('bucket.proposal_document_max_kb')`. O arquivo só é removido do disco depois do commit.
 *   **API de emolumentos:** cliente `RegistryFeeApiClient` (configurado em `config/services.php`, chave `registry_fee_calculator`). Os valores são enviados em reais inteiros e a resposta é convertida para centavos. O ITBI é calculado localmente (`ItbiCalculator`) antes da chamada à API.
 *   **Municípios:** lista do IBGE (`IbgeLocalityClient`), em cache por UF.
 *   **E-mails e PDFs:** todos os e-mails vão para a fila e só saem após o commit. Os PDFs são gerados com dompdf. O e-mail do orçamento leva o PDF anexado, gerado no momento do envio. Na conversão em proposta, o job `AttachQuotePdfToProposal` anexa o PDF aos documentos da proposta.
-*   **Agendamentos:** `proposals:alert-overdue-stages` (dias úteis, às 07:00) e `fee-calculations:prune` (diário).
+*   **Agendamentos:** `proposals:alert-overdue-stages` (dias úteis, às 07:00), `fee-calculations:prune` (diário) e `reports:prune-zips` (de hora em hora).
+*   **ZIP do relatório:** gerado com `ZipArchive`, a partir do disco privado de cada documento, num arquivo temporário em `storage/app/tmp`. Até `config('reports.zip_sync_limit')` documentos (50) o ZIP volta na própria resposta. Acima disso, até `config('reports.zip_max_files')` (500), o job `BuildFinishedProposalsZipJob` grava o ZIP em `reports/{id do usuário}/` no disco `config('bucket.disk')` e envia por e-mail um link assinado válido por `config('reports.zip_link_ttl_hours')` horas (24). Arquivos ausentes no disco ficam listados num `LEIA-ME.txt` dentro do ZIP. O comando `reports:prune-zips` (de hora em hora) apaga os ZIPs da fila cujo link já expirou e os temporários abandonados em `storage/app/tmp`.
 
 ---
 

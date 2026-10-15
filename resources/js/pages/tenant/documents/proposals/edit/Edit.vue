@@ -24,6 +24,7 @@ import type {
     Proposal,
     ProposalAbilities,
     ProposalFormOptions,
+    RegistryProtocolPanelData,
     StatusOption,
 } from "@/types";
 
@@ -36,6 +37,7 @@ const props = defineProps<
         sellers: SellerFormData[];
         checklist: ChecklistItem[];
         feesTotal: number;
+        registryProtocol: RegistryProtocolPanelData | null;
         can: ProposalAbilities;
         costTypes: Pick<CostType, "id" | "name" | "requires_notary" | "receipt_type">[];
         notaries: Pick<Notary, "id" | "name">[];
@@ -221,7 +223,7 @@ function saveParticularities() {
         </form>
 
         <div v-else-if="activeTab === 'timeline'" class="rounded-lg border border-border bg-card p-6 shadow-sm sm:p-8">
-            <TimelineTab :proposal="proposal" :can="can" />
+            <TimelineTab :proposal="proposal" :can="can" :registry-protocol="registryProtocol" />
         </div>
 
         <div v-else-if="activeTab === 'financial'" class="rounded-lg border border-border bg-card p-6 shadow-sm sm:p-8">
