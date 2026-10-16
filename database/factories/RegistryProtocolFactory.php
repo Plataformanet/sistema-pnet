@@ -56,6 +56,17 @@ class RegistryProtocolFactory extends Factory
         ]);
     }
 
+    /**
+     * Protocolo encerrado: registro concluído.
+     */
+    public function completed(): static
+    {
+        return $this->state(fn (array $attributes): array => [
+            'position' => RegistryProtocolPosition::COMPLETED,
+            'exited_at' => $attributes['entered_at'],
+        ]);
+    }
+
     public function withProposal(?Proposal $proposal = null): static
     {
         return $this->state(fn (array $attributes): array => [

@@ -5,7 +5,7 @@ namespace App\Enums;
 /**
  * Posição do protocolo de registro no cartório. Os valores inteiros são os
  * mesmos do sistema legado (`protocolo_registros.posicao`), para a migração
- * de dados.
+ * de dados. "Concluído" não existe no legado.
  */
 enum RegistryProtocolPosition: int
 {
@@ -13,6 +13,7 @@ enum RegistryProtocolPosition: int
     case UNDER_ANALYSIS = 2;
     case REQUIREMENT = 3;
     case AWAITING_BANK_PAYMENT = 4;
+    case COMPLETED = 5;
 
     public function label(): string
     {
@@ -21,6 +22,7 @@ enum RegistryProtocolPosition: int
             self::UNDER_ANALYSIS => 'Em análise',
             self::REQUIREMENT => 'Exigência',
             self::AWAITING_BANK_PAYMENT => 'Em pagamento do banco',
+            self::COMPLETED => 'Concluído',
         };
     }
 
@@ -34,16 +36,18 @@ enum RegistryProtocolPosition: int
             self::UNDER_ANALYSIS => 'amber',
             self::REQUIREMENT => 'orange',
             self::AWAITING_BANK_PAYMENT => 'green',
+            self::COMPLETED => 'emerald',
         };
     }
 
     /**
-     * "Em pagamento do banco" encerra o acompanhamento no cartório: é a
-     * posição que a aba "Em aberto" esconde (o legado a escondia de vez).
+     * "Em pagamento do banco" e "Concluído" encerram o acompanhamento no
+     * cartório: são as posições que a aba "Em aberto" esconde (o legado
+     * escondia "Em pagamento do banco" de vez).
      */
     public function isClosed(): bool
     {
-        return $this === self::AWAITING_BANK_PAYMENT;
+        return in_array($this, [self::AWAITING_BANK_PAYMENT, self::COMPLETED], true);
     }
 
     /**

@@ -81,7 +81,7 @@ uma proposta** (vira linhas de custo) ou virar um **orçamento** (PDF, e-mail, e
 ### 3.4 Protocolos de Registro (Registry Protocols) — [`04-protocolos-registro.md`](04-protocolos-registro.md)
 
 Acompanha o **protocolo de registro do imóvel no cartório**: número, comprador, vendedor, datas de entrada
-e saída e **posição** (Em registro PG, Em análise, Exigência, Em pagamento do banco). Pode ser vinculado a
+e saída e **posição** (Em registro PG, Em análise, Exigência, Em pagamento do banco, Concluído). Pode ser vinculado a
 uma proposta, que preenche comprador e vendedor. O protocolo mais recente aparece na **timeline** da
 proposta, na etapa configurada.
 

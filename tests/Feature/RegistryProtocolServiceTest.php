@@ -34,19 +34,20 @@ test('store grava o protocolo com a data de saída nula quando não informada', 
     });
 });
 
-test('a aba padrão mostra só os protocolos em aberto e a de encerrados mostra os em pagamento do banco', function () {
-    [$open, $closed] = $this->tenant->run(fn () => [
+test('a aba padrão mostra só os protocolos em aberto e a de encerrados mostra os em pagamento do banco e concluídos', function () {
+    [$open, $closed, $completed] = $this->tenant->run(fn () => [
         RegistryProtocol::factory()->requirement()->create(),
         RegistryProtocol::factory()->awaitingBankPayment()->create(),
+        RegistryProtocol::factory()->completed()->create(),
     ]);
 
     $openIds = collect($this->service->paginate([], $this->tenant)->items())->pluck('id');
     $closedIds = collect($this->service->paginate(['status' => 'closed'], $this->tenant)->items())->pluck('id');
     $allIds = collect($this->service->paginate(['status' => 'all'], $this->tenant)->items())->pluck('id');
 
-    expect($openIds)->toContain($open->id)->not->toContain($closed->id)
-        ->and($closedIds)->toContain($closed->id)->not->toContain($open->id)
-        ->and($allIds)->toContain($open->id, $closed->id);
+    expect($openIds)->toContain($open->id)->not->toContain($closed->id, $completed->id)
+        ->and($closedIds)->toContain($closed->id, $completed->id)->not->toContain($open->id)
+        ->and($allIds)->toContain($open->id, $closed->id, $completed->id);
 });
 
 test('os contadores das abas vêm agrupados por posição', function () {
@@ -54,9 +55,10 @@ test('os contadores das abas vêm agrupados por posição', function () {
         RegistryProtocol::factory()->count(2)->create();
         RegistryProtocol::factory()->underAnalysis()->create();
         RegistryProtocol::factory()->awaitingBankPayment()->create();
+        RegistryProtocol::factory()->completed()->create();
     });
 
-    expect($this->service->tabCounts([], $this->tenant))->toBe(['open' => 3, 'closed' => 1, 'all' => 4]);
+    expect($this->service->tabCounts([], $this->tenant))->toBe(['open' => 3, 'closed' => 2, 'all' => 5]);
 });
 
 test('a listagem busca por número, comprador, vendedor e nº da proposta', function () {

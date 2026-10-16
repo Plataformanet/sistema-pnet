@@ -87,7 +87,7 @@ Escritos para a opção (a) da decisão **PR-D1** (vários protocolos por propos
 - Scopes em `RegistryProtocol`: `scopeOpen()` (posição não encerrada), `scopeClosed()`, `scopeSearch(?string $term)` (número do protocolo, comprador, vendedor, nº da proposta).
 
 ## A5. Enums (`app/Enums`)
-`RegistryProtocolPosition: int` — mantém os inteiros do legado para a migração de dados:
+`RegistryProtocolPosition: int` — mantém os inteiros do legado para a migração de dados (`Completed` é uma posição nova, sem equivalente no legado):
 
 | Caso | Valor | `label()` | Legado |
 |---|---|---|---|
@@ -95,14 +95,15 @@ Escritos para a opção (a) da decisão **PR-D1** (vários protocolos por propos
 | `UnderAnalysis` | 2 | “Em análise” | `EM_ANALISE` |
 | `Requirement` | 3 | “Exigência” | `EXIGENCIA` (label legado sem acento) |
 | `AwaitingBankPayment` | 4 | “Em pagamento do banco” | `EM_PAGAMENTO_DO_BANCO` |
+| `Completed` | 5 | “Concluído” | — (não existe no legado) |
 
-Métodos: `label(): string`, `color(): string` (variante do Badge), `isClosed(): bool` (true só para `AwaitingBankPayment` — é o caso que o legado esconde da listagem, ver A6.1), `static options(): array` (para o Select). Não portar `parse()` por texto (B-B1).
+Métodos: `label(): string`, `color(): string` (variante do Badge), `isClosed(): bool` (true para `AwaitingBankPayment` e `Completed` — `AwaitingBankPayment` é o caso que o legado esconde da listagem, ver A6.1), `static options(): array` (para o Select). Não portar `parse()` por texto (B-B1).
 
 ## A6. Regras de negócio
 
 ### A6.1 Listagem (`RegistryProtocolController@index`)
 - Uma rota `GET /registry-protocols?status=open|closed|all&position=&search=&page=`, **paginação server-side** (15 por página), ordenada por `entered_at desc`.
-- Abas **Em aberto** (default — equivale ao legado, que esconde “Em pagamento do banco”) / **Encerrados** / **Todos**, com contadores numa única query (`selectRaw … groupBy position`).
+- Abas **Em aberto** (default — esconde as posições encerradas, “Em pagamento do banco” e “Concluído”; o legado escondia “Em pagamento do banco”) / **Encerrados** / **Todos**, com contadores numa única query (`selectRaw … groupBy position`).
 - Filtro por posição (Select) e busca textual (`scopeSearch`). Filtros na query string (preservados na paginação).
 - Colunas: Proposta (Nº com 5 dígitos e link para a proposta, ou “—”), Protocolo, Comprador, Vendedor (ou “—”), Entrada, Saída (ou “—”), Posição (Badge), Ações (Editar, Excluir).
 - Eager loading de `proposal:id` só quando a coluna precisar de dados além do `proposal_id`. Sem N+1.
@@ -260,6 +261,7 @@ Regras (arrays, mensagens pt-BR em `messages()`):
 - **Recomendação:** (a).
 - **Afeta:** A6.2, A9.
 - **Decisão:** 2026-10-15 — padrão (recomendação): (a) opcional, com aviso "Informe a data de saída do cartório." no formulário.
+- **Atualização:** 2026-10-16 — o aviso vale para qualquer posição encerrada, incluindo a nova posição “Concluído”.
 
 ### PR-D7. Quem vê o painel do protocolo na timeline
 - **Pergunta:** “Na tela da proposta, quem pode ver o painel com o protocolo de registro: todos que podem ver a proposta (Parceiro, Cliente…) ou só a equipe interna?”
