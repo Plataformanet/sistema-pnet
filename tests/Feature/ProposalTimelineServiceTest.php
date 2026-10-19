@@ -8,6 +8,7 @@ use App\Mail\ProposalStageCompletedMail;
 use App\Mail\ProposalStagesFinishedMail;
 use App\Mail\ProposalTrackingStartedMail;
 use App\Models\Applicant;
+use App\Models\Bank;
 use App\Models\ProposalStage;
 use App\Models\Stage;
 use App\Models\User;
@@ -282,5 +283,70 @@ test('se a conclusão falhar depois do upload, o arquivo enviado não fica órf�
     $this->tenant->run(function () use ($first) {
         expect(Storage::disk('public')->allFiles())->toBeEmpty()
             ->and($first->fresh()->proposal_document_id)->toBeNull();
+    });
+});
+
+/**
+ * Banco com timeline personalizada nas ordens informadas (IDs das etapas na ordem).
+ *
+ * @param  array<int, int>  $orders
+ * @return array{0: Bank, 1: array<int, int>}
+ */
+function bankTimeline(array $orders): array
+{
+    return test()->tenant->run(function () use ($orders) {
+        $bank = Bank::factory()->create();
+
+        return [$bank, array_map(fn (int $order) => Stage::factory()->forBank($bank)->create(['order' => $order])->id, $orders)];
+    });
+}
+
+test('proposta de banco com timeline própria instancia só as etapas do banco, na ordem dele', function () {
+    [$bank, [$first, $second]] = bankTimeline([2, 1]);
+    $proposal = createProposal($this->tenant, ['bank_id' => $bank->id]);
+
+    $this->service->instantiate($proposal, $this->tenant);
+
+    $this->tenant->run(function () use ($proposal, $first, $second) {
+        $stages = $proposal->stages()->get();
+
+        expect($stages->pluck('stage_id')->all())->toBe([$second, $first])
+            ->and($stages->pluck('position')->all())->toBe([1, 2])
+            ->and($stages->first()->is_current)->toBeTrue();
+    });
+});
+
+test('proposta de banco sem etapas instancia a timeline padrão', function () {
+    $proposal = createProposal($this->tenant);
+
+    $this->service->instantiate($proposal, $this->tenant);
+
+    $this->tenant->run(fn () => expect($proposal->stages()->pluck('stage_id')->all())
+        ->toBe(Stage::forTimeline(null)->ordered()->pluck('id')->all()));
+});
+
+test('banco com todas as etapas excluídas volta a usar a timeline padrão', function () {
+    [$bank, $ids] = bankTimeline([1, 2]);
+    $this->tenant->run(fn () => Stage::whereKey($ids)->delete());
+    $proposal = createProposal($this->tenant, ['bank_id' => $bank->id]);
+
+    $this->service->instantiate($proposal, $this->tenant);
+
+    $this->tenant->run(fn () => expect($proposal->stages()->pluck('stage_id')->all())
+        ->toBe(Stage::forTimeline(null)->ordered()->pluck('id')->all()));
+});
+
+test('restaurar o acompanhamento recria a timeline com a do banco atual', function () {
+    [$bank, $ids] = bankTimeline([1, 2, 3]);
+    $this->service->start((string) $this->proposal->id, $this->tenant);
+    $this->tenant->run(fn () => $this->proposal->update(['bank_id' => $bank->id]));
+
+    $this->service->restore((string) $this->proposal->id, $this->tenant);
+
+    $this->tenant->run(function () use ($ids) {
+        $stages = $this->proposal->stages()->get();
+
+        expect($stages->pluck('stage_id')->all())->toBe($ids)
+            ->and($stages->whereNotNull('started_at'))->toBeEmpty();
     });
 });

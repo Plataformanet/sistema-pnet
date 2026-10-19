@@ -5,10 +5,17 @@ import { Button } from "@/components/ui/button";
 import { ChevronLeft } from "lucide-vue-next";
 import { route } from "ziggy-js";
 import StageForm from "../components/StageForm.vue";
+import TimelineField from "../components/TimelineField.vue";
 
 defineOptions({ layout: TenantLayout });
 
+const props = defineProps<{
+    bankId: number | null;
+    timelineName: string;
+}>();
+
 const form = useForm({
+    bank_id: props.bankId,
     name: "",
     order: 1,
     has_date: false,
@@ -38,13 +45,17 @@ function submit() {
             </h2>
         </div>
         <Button variant="outline" class="cursor-pointer" as-child>
-            <Link :href="route('tenant.documents.stages.list')">
+            <Link :href="route('tenant.documents.stages.list', { bank_id: props.bankId ?? undefined })">
                 <ChevronLeft class="mr-2 h-4 w-4" /> Voltar
             </Link>
         </Button>
     </div>
 
     <div class="mx-auto mb-20 max-w-6xl py-4">
-        <StageForm :form="form" @submit="submit" />
+        <StageForm :form="form" @submit="submit">
+            <template #before>
+                <TimelineField :name="props.timelineName" :error="form.errors.bank_id" />
+            </template>
+        </StageForm>
     </div>
 </template>

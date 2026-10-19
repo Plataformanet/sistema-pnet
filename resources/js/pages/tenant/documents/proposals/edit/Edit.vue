@@ -131,6 +131,17 @@ function submit() {
     form.put(route("tenant.documents.proposals.update", p.id), { preserveScroll: true });
 }
 
+// Com o acompanhamento iniciado, trocar o banco não recria a timeline.
+const trackingStarted = computed(() =>
+    (props.proposal.stages ?? []).some((stage) => stage.started_at || stage.completed_at),
+);
+
+const bankWarning = computed(() =>
+    trackingStarted.value && Number(form.bank_id) !== props.proposal.bank_id
+        ? "A timeline atual será mantida. Use Restaurar acompanhamento para aplicar a timeline do novo banco."
+        : null,
+);
+
 const particularitiesForm = useForm({ particularities: p.particularities ?? "" });
 
 function saveParticularities() {
@@ -183,6 +194,7 @@ function saveParticularities() {
                 :statuses="statuses"
                 :finished-at="proposal.finished_at"
                 :readonly="!can.update"
+                :bank-warning="bankWarning"
                 submit-text="Atualizar Proposta"
                 @submit="submit"
             />

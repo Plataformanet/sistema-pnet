@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Tenant;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 
@@ -42,7 +43,20 @@ abstract class CatalogService
     }
 
     /**
-     * @param  array{search?: string|null, trashed?: bool|string|null}  $filters
+     * Restrições extras da listagem, para filtros próprios de um cadastro.
+     *
+     * @param  array<string, mixed>  $filters
+     */
+    protected function scopeListing(Builder $query, array $filters): Builder
+    {
+        return $query;
+    }
+
+    /**
+     * As demais chaves de `$filters` são filtros próprios do cadastro,
+     * aplicados em `scopeListing()` (ex.: `bank_id` das etapas).
+     *
+     * @param  array{search?: string|null, trashed?: bool|string|null, ...}  $filters
      */
     public function findAll(array $filters, Tenant $tenant): LengthAwarePaginator
     {
@@ -50,7 +64,7 @@ abstract class CatalogService
             $relations = $this->usageRelations();
             $search = $filters['search'] ?? null;
 
-            return $this->getModel()::query()
+            return $this->scopeListing($this->getModel()::query(), $filters)
                 ->when(filter_var($filters['trashed'] ?? false, FILTER_VALIDATE_BOOLEAN), fn ($query) => $query->withTrashed())
                 ->when($search, fn ($query) => $query->where(function ($query) use ($search) {
                     foreach ($this->searchableColumns() as $column) {

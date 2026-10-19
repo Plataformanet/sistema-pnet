@@ -23,6 +23,7 @@ use App\Services\ApplicantService;
 use App\Services\BankService;
 use App\Services\ProposalQueryService;
 use App\Services\ProposalService;
+use App\Services\ProposalTimelineService;
 use App\Services\SellerService;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
@@ -546,4 +547,75 @@ test('a proposta escolhida com analista na criação já nasce com ele', functio
     $proposal = app(ProposalService::class)->create(proposalPayload(['analyst_id' => $analyst->id]), $this->creator, $this->tenant);
 
     $this->tenant->run(fn () => expect($proposal->fresh()->analyst_id)->toBe($analyst->id));
+});
+
+test('trocar o banco antes de iniciar o acompanhamento recria a timeline com a do novo banco', function () {
+    $service = app(ProposalService::class);
+    $proposal = $service->create(proposalPayload(), $this->creator, $this->tenant);
+
+    [$newBank, $ids] = $this->tenant->run(function () {
+        $bank = Bank::factory()->create();
+
+        return [$bank, [
+            Stage::factory()->forBank($bank)->create(['order' => 1])->id,
+            Stage::factory()->forBank($bank)->create(['order' => 2])->id,
+        ]];
+    });
+
+    $service->update(array_merge(proposalPayload(['bank_id' => $newBank->id]), ['partner_ids' => []]), (string) $proposal->id, $this->tenant);
+
+    $this->tenant->run(function () use ($proposal, $ids) {
+        $stages = $proposal->stages()->get();
+
+        expect($stages->pluck('stage_id')->all())->toBe($ids)
+            ->and($stages->first()->is_current)->toBeTrue();
+    });
+});
+
+test('trocar o banco depois de iniciar o acompanhamento mantém a timeline', function () {
+    $service = app(ProposalService::class);
+    $proposal = $service->create(proposalPayload(), $this->creator, $this->tenant);
+    app(ProposalTimelineService::class)->start((string) $proposal->id, $this->tenant);
+
+    [$newBank, $before] = $this->tenant->run(function () use ($proposal) {
+        $bank = Bank::factory()->create();
+        Stage::factory()->forBank($bank)->create(['order' => 1]);
+
+        return [$bank, $proposal->stages()->pluck('id')->all()];
+    });
+
+    $service->update(array_merge(proposalPayload(['bank_id' => $newBank->id]), ['partner_ids' => []]), (string) $proposal->id, $this->tenant);
+
+    $this->tenant->run(function () use ($proposal, $before, $newBank) {
+        expect($proposal->fresh()->bank_id)->toBe($newBank->id)
+            ->and($proposal->stages()->pluck('id')->all())->toBe($before)
+            ->and($proposal->currentStage()->first()->started_at)->not->toBeNull();
+    });
+});
+
+test('update sem trocar o banco mantém a timeline', function () {
+    $service = app(ProposalService::class);
+    $proposal = $service->create(proposalPayload(), $this->creator, $this->tenant);
+    $before = $this->tenant->run(fn () => $proposal->stages()->pluck('id')->all());
+
+    $service->update(array_merge(proposalPayload(), ['partner_ids' => []]), (string) $proposal->id, $this->tenant);
+
+    $this->tenant->run(fn () => expect($proposal->stages()->pluck('id')->all())->toBe($before));
+});
+
+test('etapa concluída sem data de início conta como acompanhamento iniciado na troca de banco', function () {
+    $service = app(ProposalService::class);
+    $proposal = $service->create(proposalPayload(), $this->creator, $this->tenant);
+
+    [$newBank, $before] = $this->tenant->run(function () use ($proposal) {
+        $proposal->stages()->first()->update(['completed_at' => now()]);
+        $bank = Bank::factory()->create();
+        Stage::factory()->forBank($bank)->create(['order' => 1]);
+
+        return [$bank, $proposal->stages()->pluck('id')->all()];
+    });
+
+    $service->update(array_merge(proposalPayload(['bank_id' => $newBank->id]), ['partner_ids' => []]), (string) $proposal->id, $this->tenant);
+
+    $this->tenant->run(fn () => expect($proposal->stages()->pluck('id')->all())->toBe($before));
 });

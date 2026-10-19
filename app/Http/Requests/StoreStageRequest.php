@@ -26,8 +26,20 @@ class StoreStageRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'bank_id' => ['nullable', 'integer', Rule::exists('banks', 'id')->whereNull('deleted_at')],
             'name' => ['required', 'string', 'max:191'],
-            'order' => ['required', 'integer', 'min:1', 'max:65535', Rule::unique('stages', 'order')->withoutTrashed()->ignore($this->ignoreId())],
+            'order' => [
+                'required',
+                'integer',
+                'min:1',
+                'max:65535',
+                Rule::unique('stages', 'order')
+                    ->withoutTrashed()
+                    ->ignore($this->ignoreId())
+                    ->where(fn ($query) => $this->timelineBankId() === null
+                        ? $query->whereNull('bank_id')
+                        : $query->where('bank_id', $this->timelineBankId())),
+            ],
             'has_date' => ['required', 'boolean'],
             'date_required' => ['required', 'boolean'],
             'has_upload' => ['required', 'boolean'],
@@ -80,13 +92,15 @@ class StoreStageRequest extends FormRequest
     public function messages(): array
     {
         return [
+            'bank_id.integer' => 'O banco da timeline é inválido.',
+            'bank_id.exists' => 'O banco da timeline não existe ou foi excluído.',
             'name.required' => 'O nome da etapa precisa ser preenchido.',
             'name.max' => 'O nome da etapa deve ter no máximo 191 caracteres.',
             'order.required' => 'A ordem da etapa precisa ser preenchida.',
             'order.integer' => 'A ordem da etapa deve ser um número inteiro.',
             'order.min' => 'A ordem da etapa deve ser maior que zero.',
             'order.max' => 'A ordem da etapa é muito alta.',
-            'order.unique' => 'Já existe uma etapa ativa com esta ordem.',
+            'order.unique' => 'Já existe uma etapa ativa com esta ordem nesta timeline.',
             'completion_deadline_hours.required' => 'O prazo de conclusão precisa ser preenchido.',
             'completion_deadline_hours.integer' => 'O prazo de conclusão deve ser em horas inteiras.',
             'completion_deadline_hours.min' => 'O prazo de conclusão não pode ser negativo.',
@@ -101,5 +115,13 @@ class StoreStageRequest extends FormRequest
     protected function ignoreId(): ?string
     {
         return null;
+    }
+
+    /**
+     * Timeline em que a ordem precisa ser única; `null` = padrão do sistema.
+     */
+    protected function timelineBankId(): ?int
+    {
+        return $this->filled('bank_id') ? $this->integer('bank_id') : null;
     }
 }

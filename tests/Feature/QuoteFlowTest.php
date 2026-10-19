@@ -23,6 +23,7 @@ use App\Models\FeeCalculation;
 use App\Models\FeeEstimate;
 use App\Models\Proposal;
 use App\Models\Quote;
+use App\Models\Stage;
 use App\Models\User;
 use App\Services\ApplicantService;
 use App\Services\QuoteService;
@@ -202,6 +203,18 @@ test('converter cria uma proposta com proponente, linhas de custo e estimativa v
 
     Queue::assertPushed(AttachQuotePdfToProposal::class, fn (AttachQuotePdfToProposal $job) => $job->afterCommit === true && $job->proposalId === $proposal->id);
     Mail::assertQueued(ApplicantWelcomeMail::class, fn (ApplicantWelcomeMail $mail) => $mail->afterCommit === true);
+});
+
+test('converter instancia a timeline do banco do orçamento', function () {
+    $ids = $this->tenant->run(fn () => [
+        Stage::factory()->forBank($this->bank)->create(['order' => 1])->id,
+        Stage::factory()->forBank($this->bank)->create(['order' => 2])->id,
+    ]);
+    $quote = createTestQuote();
+
+    $proposal = app(ConvertQuoteToProposal::class)->handle((string) $quote->id, $this->user, $this->tenant);
+
+    $this->tenant->run(fn () => expect($proposal->stages()->pluck('stage_id')->all())->toBe($ids));
 });
 
 test('a segunda conversão não cria outra proposta', function () {

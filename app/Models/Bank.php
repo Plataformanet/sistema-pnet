@@ -30,4 +30,13 @@ class Bank extends Model
     {
         return $this->hasMany(Quote::class);
     }
+
+    /**
+     * Etapas da timeline personalizada do banco. Sem etapas ativas, as
+     * propostas do banco usam a timeline padrão do sistema.
+     */
+    public function stages(): HasMany
+    {
+        return $this->hasMany(Stage::class);
+    }
 }

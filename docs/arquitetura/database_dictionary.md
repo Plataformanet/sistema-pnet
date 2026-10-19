@@ -234,7 +234,7 @@ Todos usam `softDeletes`. Excluir um cadastro em uso não quebra os registros qu
 | `cost_types` | `name`, `requires_notary`, `receipt_type` (`general` / `advisory` / `courier`) | Antiga `costs` do financeiro, renomeada. Compartilhada entre o Financeiro e as Propostas. Tipos iniciais criados pela migration `seed_documents_catalogs`. |
 | `property_types` | `name` (único), `shows_number`, `shows_complement`, `requires_development`, `shows_unit`, `shows_block` | As flags controlam os campos do imóvel na proposta. |
 | `developments` | `name` (único) | Empreendimentos. |
-| `stages` | `order`, `name`, `has_date`, `date_required`, `has_upload`, `upload_required`, `title_required`, `notes_required`, `completion_deadline_hours`, `alert_deadline_hours`, `shows_property_data`, `shows_registry_protocol` | Etapas da timeline, reordenáveis. As 8 etapas padrão são criadas pela migration `seed_documents_catalogs`, só quando o catálogo está vazio. |
+| `stages` | `bank_id`, `order`, `name`, `has_date`, `date_required`, `has_upload`, `upload_required`, `title_required`, `notes_required`, `completion_deadline_hours`, `alert_deadline_hours`, `shows_property_data`, `shows_registry_protocol` | Etapas da timeline, reordenáveis. As 8 etapas padrão são criadas pela migration `seed_documents_catalogs`, só quando o catálogo está vazio, e formam a timeline padrão. `bank_id` nullable (FK `banks`, `restrictOnDelete`) separa as timelines ([PRD 06](../prd/06-timelines-por-banco.md)) — `NULL` = timeline padrão do sistema, preenchido = timeline personalizada do banco (imutável após a criação). `order` é único entre as etapas ativas da mesma timeline (índice `(bank_id, order)`). |
 | `billable_services` | `name`, `description`, `price`, `generates_receipt` | Serviços cobráveis, vinculados a propostas e orçamentos com valor negociado próprio. |
 
 ### 5.2. Propostas
@@ -255,6 +255,7 @@ erDiagram
     PROPOSALS ||--o| FEE_ESTIMATES : "emolumento vinculado"
     PROPOSALS |o--o{ REGISTRY_PROTOCOLS : "protocolos de registro"
     PROPOSAL_STAGES }o--|| STAGES : "stage_id"
+    STAGES }o--o| BANKS : "bank_id"
     APPLICANTS ||--o| HOLDER_BANK_ACCOUNTS : "accountable (morph)"
     SELLERS ||--o| HOLDER_BANK_ACCOUNTS : "accountable (morph)"
 ```
@@ -264,7 +265,7 @@ erDiagram
 *   **`sellers`:** vendedor do imóvel sobre `contacts` (PF ou PJ), com `user_id`, `creator_id` e os mesmos dados de renda e estado civil.
 *   **`holder_bank_accounts`:** conta bancária do proponente ou vendedor (`morphs('accountable')`, uma por titular), com `bank_name`, `account_type` (0 = poupança, 1 = corrente), `branch`, `number`, `notes`. É separada de `bank_accounts`, que pertence ao financeiro.
 *   **`proposal_properties`:** imóvel da proposta (1:1), com `property_type_id`, `development_id`, `address`, `number`, `complement`, `block`, `unit`.
-*   **`proposal_stages`:** cópia das etapas para a proposta, com `position`, `is_current`, `started_at`, `completed_at`, `date`, `notes` e `proposal_document_id` (anexo da etapa).
+*   **`proposal_stages`:** cópia das etapas para a proposta, com `position`, `is_current`, `started_at`, `completed_at`, `date`, `notes` e `proposal_document_id` (anexo da etapa). A cópia vem da timeline do banco da proposta quando ele tem etapas ativas, senão da timeline padrão ([PRD 06](../prd/06-timelines-por-banco.md)); trocar o banco antes de iniciar o acompanhamento recria a cópia, e "Restaurar acompanhamento" usa a timeline do banco atual.
 *   **`proposal_documents`:** arquivos da proposta, com `owner` (`buyer`, `seller`, `property`, `stage`, `general`), `documentable` (morph opcional: proponente ou vendedor), `proposal_stage_id`, `type` (enum `DocumentType`), `title`, `disk`, `path`, `original_name`, `mime_type`, `size` e `uploaded_by`.
 *   **`proposal_cost_items`:** linhas de pagamentos e taxas, com `type` (`emolument`, `extra_fee`, `service`, `itbi`, `manual`), `amount`, `description`, `extra_fee_description`, `service_description`, `generates_receipt`, `cost_type_id`, `notary_id`, `date`, `notes`, `bill_path` (boleto) e `proof_path` (comprovante). Só as linhas `manual` podem ser removidas.
 *   **`receipts`:** recibos, com `type` (`general`, `advisory`, `courier`), `proposal_cost_item_id` (opcional), `name`, `document`, `registration_number`, `notary_name` (cópia do nome no momento da emissão), `total_spent`, `amount_deposited`, `date`.

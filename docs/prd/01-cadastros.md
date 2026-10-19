@@ -151,13 +151,13 @@ Implementação: um Gate `manage-catalogs` (`fn (User $user) => $user->role === 
 **`billable_services`** — exatamente como o PRD da calculadora §6.2: `name` string(191), `description` text, `price` `unsignedBigInteger` (**centavos**), `generates_receipt` boolean default `false`, softDeletes, timestamps. Legado: `nome`, `descricao_servico`, `valor` (`double(11,2)`), `gera_recibo`.
 
 ### Relacionamentos Eloquent
-- `Bank`: `proposals()` HasMany, `quotes()` HasMany. (A relação legada `Banco::etapas()` **não** é portada: as etapas são globais — B-A3.)
+- `Bank`: `proposals()` HasMany, `quotes()` HasMany, `stages()` HasMany — etapas da timeline personalizada do banco ([`06-timelines-por-banco.md`](06-timelines-por-banco.md); revoga a decisão de B-A3 de manter as etapas globais).
 - `Notary`: `costItems()` HasMany(`ProposalCostItem`).
 - `ContractType`: `proposals()` HasMany.
 - `CostType`: `costItems()` HasMany; cast `receipt_type` → `ReceiptType`; helper `generatesReceipt(): bool` (`receipt_type !== null`).
 - `PropertyType`: `proposalProperties()` HasMany.
 - `Development`: `proposalProperties()` HasMany.
-- `Stage`: `proposalStages()` HasMany; `scopeOrdered()`.
+- `Stage`: `proposalStages()` HasMany; `scopeOrdered()`; `bank()` BelongsTo (`withTrashed`) e `scopeForTimeline(?int $bankId)` ([`06-timelines-por-banco.md`](06-timelines-por-banco.md)).
 - `BillableService`: `quotes()` / `proposals()` BelongsToMany (definidos no PRD da calculadora).
 - Lado consumidor (PRDs de Propostas/Calculadora): toda `BelongsTo` para estes catálogos usa `->withTrashed()`.
 
@@ -223,9 +223,9 @@ Fora do escopo: `conta_bancarias.banco` e `conta_bancos.banco` guardam o **nome*
 - Seed: o legado lê `storage/app/dados-jsons/empreendimento.json`; no sistema novo, vir pela migração de dados (7 registros).
 
 ### A6.7 Etapas da timeline (`stages`)
-Catálogo **global** (o vínculo por banco existiu e foi comentado no legado — B-A3; não portar).
+> **Revisado por [`06-timelines-por-banco.md`](06-timelines-por-banco.md):** o catálogo deixou de ser global. Cada etapa pertence a uma timeline — a padrão do sistema (`bank_id = NULL`) ou a de um banco (`bank_id` preenchido, imutável após a criação). A ordem é única **por timeline**, e mover, reordenar e restaurar só afetam a timeline da própria etapa. Onde esta seção divergir do PRD 06, vale o PRD 06.
 
-- Campos: `name` obrigatório; `order` obrigatório `integer|min:1`, **único entre etapas ativas** (`Rule::unique('stages')->withoutTrashed()->ignore(...)`); Switches `has_date`, `date_required`, `has_upload`, `upload_required`, `title_required`, `notes_required`, `shows_property_data`, `shows_registry_protocol`; `completion_deadline_hours` e `alert_deadline_hours` `integer|min:0`.
+- Campos: `name` obrigatório; `order` obrigatório `integer|min:1`, **único entre etapas ativas da mesma timeline** (`Rule::unique('stages')->withoutTrashed()->ignore(...)` + filtro por `bank_id` — PRD 06); Switches `has_date`, `date_required`, `has_upload`, `upload_required`, `title_required`, `notes_required`, `shows_property_data`, `shows_registry_protocol`; `completion_deadline_hours` e `alert_deadline_hours` `integer|min:0`.
 - **Regras cruzadas** (em `after()` do Form Request, mensagem pt-BR por campo) — o legado não valida e tem dado inconsistente (B-M1):
   - `date_required` ⇒ `has_date`.
   - `upload_required` ⇒ `has_upload`; `title_required` ⇒ `has_upload` (título é do arquivo).
@@ -327,7 +327,7 @@ $bank->update($request->validated());
 - `showTableSteps` monta a tabela HTML inteira em string no Service, concatenando `$etapa->nome` e `$nome_banco->nome` sem `e()` → XSS armazenado.
 - `EtapaController.php:139`: no ramo “etapa não existe” acessa `$etapa->banco_id` com `$etapa === null` → erro.
 - `EtapaRepository::stepsStartedNotCompleted` (`:116-120`) usa `proponentes.proposta_id` e `propostas.nome`, que não existem.
-- Novo: etapas globais, sem `banco_id`; nada de HTML em Service; remover o código morto.
+- Novo: nada de HTML em Service; remover o código morto. ~~Etapas globais, sem `banco_id`~~ — **revogado**: as etapas por banco voltaram com outro desenho (coluna `stages.bank_id` nullable, timeline padrão como reserva), ver [`06-timelines-por-banco.md`](06-timelines-por-banco.md).
 
 ## 🟡 Médio
 **B-M1. Flags de etapa sem validação cruzada** — `app/Models/Etapa.php` (`rules()` só exige `nome` e `ordem`)

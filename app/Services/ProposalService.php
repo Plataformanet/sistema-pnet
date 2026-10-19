@@ -197,18 +197,28 @@ class ProposalService
     /**
      * Atualiza os dados da proposta, o status manual, os parceiros e o imóvel.
      *
+     * Trocar o banco recria a timeline com a do novo banco enquanto o
+     * acompanhamento não foi iniciado; depois disso a timeline atual é mantida
+     * (o "Restaurar acompanhamento" aplica a do banco atual).
+     *
      * @param  array<string, mixed>  $data
      */
     public function update(array $data, string $id, Tenant $tenant): Proposal
     {
-        return $tenant->run(function () use ($data, $id) {
-            return DB::transaction(function () use ($data, $id) {
+        return $tenant->run(function () use ($data, $id, $tenant) {
+            return DB::transaction(function () use ($data, $id, $tenant) {
                 $proposal = Proposal::lockForUpdate()->findOrFail($id);
 
                 $proposal->fill(Arr::only($data, self::PROPOSAL_FIELDS));
                 $proposal->analyst_id = $data['analyst_id'] ?? null;
                 $this->applyStatus($proposal, $data);
+                $bankChanged = $proposal->isDirty('bank_id');
                 $proposal->save();
+
+                if ($bankChanged && ! $this->trackingStarted($proposal)) {
+                    $proposal->stages()->delete();
+                    $this->proposalTimelineService->instantiate($proposal, $tenant);
+                }
 
                 $proposal->partners()->sync($data['partner_ids'] ?? []);
 
@@ -288,6 +298,17 @@ class ProposalService
         $configured = ContractType::whereKey(config('proposals.default_contract_type_id'))->value('id');
 
         return $configured ?? ContractType::ordered()->value('id');
+    }
+
+    /**
+     * O acompanhamento começa no "Iniciar acompanhamento": antes disso nenhuma
+     * etapa foi iniciada nem concluída (e não há documentos de etapa).
+     */
+    private function trackingStarted(Proposal $proposal): bool
+    {
+        return $proposal->stages()
+            ->where(fn ($query) => $query->whereNotNull('started_at')->orWhereNotNull('completed_at'))
+            ->exists();
     }
 
     /**

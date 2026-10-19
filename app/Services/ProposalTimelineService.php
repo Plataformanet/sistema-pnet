@@ -24,9 +24,10 @@ use Illuminate\Support\Facades\Storage;
 use Throwable;
 
 /**
- * Acompanhamento da proposta por etapas. As etapas são copiadas do catálogo
- * na criação da timeline (`position` = `order` daquele momento); reordenar o
- * catálogo não mexe em timelines existentes.
+ * Acompanhamento da proposta por etapas. Na criação da timeline são copiadas
+ * as etapas da timeline do banco da proposta, ou da timeline padrão quando o
+ * banco não tem etapas ativas (`position` = `order` daquele momento); mexer
+ * no catálogo não altera timelines existentes.
  */
 class ProposalTimelineService
 {
@@ -35,20 +36,35 @@ class ProposalTimelineService
     ) {}
 
     /**
-     * Uma etapa por etapa ativa do catálogo, na ordem do catálogo; a primeira
-     * fica como atual e nenhuma começa iniciada.
+     * Uma etapa por etapa ativa da timeline do banco da proposta (ou da padrão),
+     * na ordem dessa timeline; a primeira fica como atual e nenhuma começa
+     * iniciada.
      */
     public function instantiate(Proposal $proposal, Tenant $tenant): void
     {
         $tenant->run(function () use ($proposal) {
-            $stages = Stage::ordered()->get(['id', 'order']);
-
-            $stages->values()->each(fn (Stage $stage, int $index) => $proposal->stages()->create([
+            $this->stagesFor($proposal)->values()->each(fn (Stage $stage, int $index) => $proposal->stages()->create([
                 'stage_id' => $stage->id,
                 'position' => $stage->order,
                 'is_current' => $index === 0,
             ]));
         });
+    }
+
+    /**
+     * Etapas ativas da timeline do banco da proposta; sem nenhuma, as da
+     * timeline padrão do sistema. Assim um banco cujas etapas foram todas
+     * excluídas volta a usar a padrão.
+     *
+     * @return Collection<int, Stage>
+     */
+    private function stagesFor(Proposal $proposal): Collection
+    {
+        $bankStages = Stage::forTimeline($proposal->bank_id)->ordered()->get(['id', 'order']);
+
+        return $bankStages->isNotEmpty()
+            ? $bankStages
+            : Stage::forTimeline(null)->ordered()->get(['id', 'order']);
     }
 
     /**
@@ -174,8 +190,8 @@ class ProposalTimelineService
 
     /**
      * Apaga a timeline e os documentos de etapa (arquivos só após o commit) e
-     * recria a timeline a partir do catálogo, sem iniciar nenhuma etapa: a
-     * proposta volta ao estado anterior ao "Iniciar acompanhamento".
+     * recria a timeline com a do banco atual da proposta, sem iniciar nenhuma
+     * etapa: a proposta volta ao estado anterior ao "Iniciar acompanhamento".
      */
     public function restore(string $proposalId, Tenant $tenant): void
     {

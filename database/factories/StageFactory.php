@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\Bank;
 use App\Models\Stage;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -31,5 +32,13 @@ class StageFactory extends Factory
             'shows_property_data' => false,
             'shows_registry_protocol' => false,
         ];
+    }
+
+    /**
+     * Etapa da timeline personalizada do banco.
+     */
+    public function forBank(Bank $bank): static
+    {
+        return $this->state(fn () => ['bank_id' => $bank->id]);
     }
 }

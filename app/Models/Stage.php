@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -13,6 +14,7 @@ class Stage extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
+        'bank_id',
         'order',
         'name',
         'has_date',
@@ -33,6 +35,7 @@ class Stage extends Model
     protected function casts(): array
     {
         return [
+            'bank_id' => 'integer',
             'order' => 'integer',
             'has_date' => 'boolean',
             'date_required' => 'boolean',
@@ -53,6 +56,24 @@ class Stage extends Model
     public function scopeOrdered(Builder $query): Builder
     {
         return $query->orderBy('order')->orderBy('id');
+    }
+
+    /**
+     * Etapas de uma timeline: a padrão do sistema (`null`) ou a do banco.
+     */
+    public function scopeForTimeline(Builder $query, ?int $bankId): Builder
+    {
+        return $bankId === null
+            ? $query->whereNull('bank_id')
+            : $query->where('bank_id', $bankId);
+    }
+
+    /**
+     * Banco dono da timeline; `null` na timeline padrão do sistema.
+     */
+    public function bank(): BelongsTo
+    {
+        return $this->belongsTo(Bank::class)->withTrashed();
     }
 
     public function proposalStages(): HasMany

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Field, FieldLabel } from "@/components/ui/field";
+import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
@@ -32,6 +32,8 @@ const props = withDefaults(
         statuses?: StatusOption[];
         finishedAt?: string | null;
         readonly?: boolean;
+        /** Aviso exibido sob o campo de banco (ex.: troca com acompanhamento iniciado). */
+        bankWarning?: string | null;
     }>(),
     {
         submitText: "Salvar Proposta",
@@ -39,6 +41,7 @@ const props = withDefaults(
         statuses: () => [],
         finishedAt: null,
         readonly: false,
+        bankWarning: null,
     },
 );
 
@@ -161,6 +164,9 @@ function onSubmit() {
                                 </SelectGroup>
                             </SelectContent>
                         </Select>
+                        <FieldDescription v-if="bankWarning" class="text-amber-700 dark:text-amber-400">{{
+                            bankWarning
+                        }}</FieldDescription>
                         <FieldError v-if="form.errors.bank_id">{{ form.errors.bank_id }}</FieldError>
                     </Field>
 

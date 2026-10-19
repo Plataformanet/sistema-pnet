@@ -47,6 +47,9 @@ export interface PropertyType extends CatalogRecord {
 }
 
 export interface Stage extends CatalogRecord {
+    /** Banco dono da timeline; `null` = timeline padrão do sistema. */
+    bank_id: number | null;
+    bank?: Pick<Bank, "id" | "name"> | null;
     order: number;
     has_date: boolean;
     date_required: boolean;
@@ -58,6 +61,14 @@ export interface Stage extends CatalogRecord {
     alert_deadline_hours: number;
     shows_property_data: boolean;
     shows_registry_protocol: boolean;
+}
+
+/** Opção do seletor de timeline: a padrão do sistema ou a de um banco. */
+export interface TimelineOption {
+    bank_id: number | null;
+    name: string;
+    /** Etapas ativas; 0 num banco = usa a timeline padrão. */
+    stages_count: number;
 }
 
 export interface BillableService extends CatalogRecord {

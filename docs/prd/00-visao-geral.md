@@ -22,16 +22,17 @@
 | 3 | [`03-calculadora-emolumentos.md`](03-calculadora-emolumentos.md) | Reaproveita tudo o que os anteriores criaram: `proposal_cost_items`, `CostItemType`, `MaritalStatus`, `MoneyInput`, `billable_services` e os Services de Propostas. |
 | 4 | [`04-protocolos-registro.md`](04-protocolos-registro.md) | Grava `registry_protocols` (FK opcional para `proposals`) e pendura um painel na timeline da proposta, na etapa com `stages.shows_registry_protocol`. Reaproveita o padrão de Combobox assíncrono de propostas da Calculadora. |
 | 5 | [`05-relatorios.md`](05-relatorios.md) | Somente leitura: lista propostas finalizadas a partir da timeline, dos documentos privados e dos empreendimentos — precisa de tudo isso pronto. Não cria tabela. |
+| 6 | [`06-timelines-por-banco.md`](06-timelines-por-banco.md) | **Alteração sobre o sistema já implementado**: troca a timeline única por uma timeline padrão + uma timeline personalizada por banco. Mexe no catálogo `stages` (Cadastros) e na instanciação da timeline (Propostas), por isso exige os PRDs 01 e 02 prontos. |
 
 Regras:
 
 1. **Não comece um módulo antes de o anterior estar com os critérios de aceite atendidos** e os testes
    de feature verdes (Cadastros → A9; Propostas → A9; Calculadora → seção 11; Protocolos → A9;
-   Relatórios → A9).
+   Relatórios → A9; Timelines por banco → A9).
 2. **Leia os cinco PRDs antes de codar o primeiro**, para não criar algo com nome ou schema diferente do
    que o módulo seguinte espera.
 3. Dentro de cada módulo, siga as fases do próprio PRD: Cadastros **A8**, Propostas **A8**,
-   Calculadora **seção 14**, Protocolos **A8**, Relatórios **A8**.
+   Calculadora **seção 14**, Protocolos **A8**, Relatórios **A8**, Timelines por banco **A7**.
 4. O CRUD de `billable_services` aparece em dois PRDs (Cadastros A6.8 e Calculadora §5.11). Ele é
    feito na etapa 1; na etapa 3 (Calculadora §14, passo 4) **só confira** que está completo.
 5. **Decisões pendentes**: os PRDs 04 e 05 têm uma seção **A10** com perguntas que só o usuário pode
@@ -102,6 +103,19 @@ servidor a partir do disco privado.
   `proposal_properties`, `developments`, `applicants`, download de documentos do PRD de Propostas.
 - **Defeitos do legado**: Parte B do próprio documento.
 
+### 3.6 Timelines por banco — [`06-timelines-por-banco.md`](06-timelines-por-banco.md)
+
+**Alteração de regra de negócio** sobre Cadastros e Propostas: cada banco pode ter sua timeline de
+etapas (ex.: Itaú), criada vazia na tela de etapas. A proposta nasce com a timeline do seu banco; banco
+sem etapas ativas usa a **timeline padrão do sistema** (as 8 etapas de hoje, `bank_id = NULL`).
+
+- **Dono de**: coluna `stages.bank_id`, `Stage::scopeForTimeline()`, `Bank::stages()`,
+  `StageService::timelineOptions()`, `IndexStageRequest`, a resolução da timeline em
+  `ProposalTimelineService::instantiate()` e a recriação da timeline na troca de banco
+  (`ProposalService::update()`).
+- **Consome**: `banks`, `stages`, `proposal_stages`, `ProposalTimelineService`, `ProposalService`.
+- **Revoga**: a decisão B-A3 de [`01-cadastros.md`](01-cadastros.md) ("etapas globais").
+
 ## 4. Nomes compartilhados (resumo)
 
 Use **exatamente** estes nomes. As tabelas completas estão na seção **A0** de
@@ -116,6 +130,7 @@ Use **exatamente** estes nomes. As tabelas completas estão na seção **A0** de
 | Tipo de imóvel | `property_types` / `PropertyType` | Cadastros | `proposal_properties.property_type_id` |
 | Empreendimento | `developments` / `Development` | Cadastros | `proposal_properties.development_id` |
 | Etapa (catálogo) | `stages` / `Stage` | Cadastros | `proposal_stages.stage_id` |
+| Timeline da etapa | `stages.bank_id` (`NULL` = padrão) / `Stage::scopeForTimeline()` | Timelines por banco | `ProposalTimelineService::instantiate()`, tela de etapas |
 | Serviço cobrável | `billable_services` / `BillableService` | Schema: Calculadora · CRUD: Cadastros | `quote_billable_service`, `proposal_billable_service` |
 | Linhas de custo da proposta | `proposal_cost_items` / `ProposalCostItem` | Propostas | Calculadora (linhas `Emolument`, `ExtraFee`, `Service`, `Itbi`) |
 | Tipo da linha de custo | enum `CostItemType` | Calculadora + caso `Manual` de Propostas | ambos |
@@ -157,6 +172,7 @@ e seção **2** de [`03-calculadora-emolumentos.md`](03-calculadora-emolumentos.
 | Regra de protocolo de registro | [`04-protocolos-registro.md`](04-protocolos-registro.md) |
 | Critério de proposta finalizada, timeline e documentos usados pelo relatório | [`02-propostas.md`](02-propostas.md) |
 | Regra do relatório (filtros, colunas, ZIP) | [`05-relatorios.md`](05-relatorios.md) |
+| Etapas por banco, timeline padrão e qual timeline a proposta recebe | [`06-timelines-por-banco.md`](06-timelines-por-banco.md) (prevalece sobre 01 e 02) |
 | Qualquer caso não coberto | **Pare e pergunte** ao usuário |
 
 ## 7. Mapa de arquivos
@@ -171,6 +187,7 @@ e seção **2** de [`03-calculadora-emolumentos.md`](03-calculadora-emolumentos.
 | [`03-calculadora-emolumentos-correcoes.md`](03-calculadora-emolumentos-correcoes.md) | Code review | Defeitos do legado da Calculadora e do Orçamento |
 | [`04-protocolos-registro.md`](04-protocolos-registro.md) | PRD | Protocolos de Registro (Parte A: especificação · Parte B: defeitos do legado) |
 | [`05-relatorios.md`](05-relatorios.md) | PRD | Relatório de propostas finalizadas (Parte A: especificação · Parte B: defeitos do legado) |
+| [`06-timelines-por-banco.md`](06-timelines-por-banco.md) | PRD | Timelines por banco (alteração sobre Cadastros e Propostas já implementados) |
 
 ## 8. Decisões pendentes (índice)
 

@@ -5,12 +5,14 @@ import { Button } from "@/components/ui/button";
 import { ChevronLeft } from "lucide-vue-next";
 import { route } from "ziggy-js";
 import StageForm from "../components/StageForm.vue";
+import TimelineField from "../components/TimelineField.vue";
 import type { Stage } from "@/types";
 
 defineOptions({ layout: TenantLayout });
 
 const props = defineProps<{
     stage: Stage;
+    timelineName: string;
     hasOpenProposalStages?: boolean;
 }>();
 
@@ -44,7 +46,7 @@ function submit() {
             </h2>
         </div>
         <Button variant="outline" class="cursor-pointer" as-child>
-            <Link :href="route('tenant.documents.stages.list')">
+            <Link :href="route('tenant.documents.stages.list', { bank_id: props.stage.bank_id ?? undefined })">
                 <ChevronLeft class="mr-2 h-4 w-4" /> Voltar
             </Link>
         </Button>
@@ -53,6 +55,7 @@ function submit() {
     <div class="mx-auto mb-20 max-w-6xl py-4">
         <StageForm :form="form" @submit="submit" submitText="Atualizar Etapa">
             <template #before>
+                <TimelineField :name="props.timelineName" />
                 <div
                     v-if="props.hasOpenProposalStages"
                     class="rounded-md border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-700 dark:bg-amber-950 dark:text-amber-100"

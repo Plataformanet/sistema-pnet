@@ -349,9 +349,14 @@ Agrupado no menu em "Documentações" (módulo `documents`). Todas as rotas fica
 | **PATCH** | `/documents/stages/{id}/move` | `tenant.documents.stages.move` | `permission:documents.stages.edit` |
 | **PATCH** | `/documents/stages/{id}/restore` | `tenant.documents.stages.restore` | `permission:documents.stages.delete` |
 
-> **Reordenação (`move`):** aceita um de dois parâmetros e volta para a mesma página/filtro da listagem.
-> *   **`direction`** (`up` / `down`): troca a etapa com a vizinha ativa. Usado pelas ações "Mover para cima/baixo" do menu.
-> *   **`target_id`**: leva a etapa para a posição da etapa alvo (ativa), deslocando as que ficam entre as duas. Usado ao arrastar a linha na listagem. As ordens são redistribuídas entre os mesmos valores que as etapas ativas já usam, sem colidir com etapas excluídas.
+> **Timelines por banco ([PRD 06](../prd/06-timelines-por-banco.md)):** a listagem mostra uma timeline por vez.
+> *   **`list`** aceita `bank_id` na query string (opcional; ausente = timeline padrão do sistema; aceita banco excluído para consultar a timeline dele) e envia à página `bankId` e `timelines` (opções do seletor com `stages_count`).
+> *   **`create`** aceita `bank_id` na query string (só banco ativo) e o envia como `bankId` + `timelineName`; o `store` recebe `bank_id` no payload.
+> *   O `update` ignora `bank_id`: a etapa nunca muda de timeline. `store`, `update`, `destroy` e `restore` voltam para a listagem da timeline da etapa.
+
+> **Reordenação (`move`):** aceita um de dois parâmetros, sempre restrito à timeline da etapa movida, e volta para a mesma página/filtro da listagem.
+> *   **`direction`** (`up` / `down`): troca a etapa com a vizinha ativa da mesma timeline. Usado pelas ações "Mover para cima/baixo" do menu.
+> *   **`target_id`**: leva a etapa para a posição da etapa alvo (ativa e da mesma timeline), deslocando as que ficam entre as duas. Usado ao arrastar a linha na listagem. As ordens são redistribuídas entre os mesmos valores que as etapas ativas já usam, sem colidir com etapas excluídas.
 > *   A nova ordem só vale para timelines instanciadas depois: `proposal_stages.position` é uma cópia feita na criação da timeline.
 
 #### Serviços Cobráveis (`TenantBillableServiceController`)
