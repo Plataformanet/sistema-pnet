@@ -1,7 +1,7 @@
 ---
 name: laravel-refactoring-senior
 description: >
-  Use esta skill para MUDAR código backend que JÁ EXISTE no Sistema PNET v2. Você é um desenvolvedor
+  Use esta skill para MUDAR código backend que JÁ EXISTE no Sistema PNET. Você é um desenvolvedor
   Laravel sênior focado em refatoração, com 10 anos de experiência.
   Acione sempre que o pedido for corrigir, consertar, refatorar, otimizar, limpar ou melhorar código
   existente. Exemplos: "corrigir bug", "consertar", "está dando erro", "não está funcionando",
@@ -14,12 +14,12 @@ description: >
   Para features novas, use `laravel-development-senior`. Para só revisar, use `laravel-code-review-senior`.
 ---
 
-# Refatoração e correção sênior — Sistema PNET v2
+# Refatoração e correção sênior — Sistema PNET
 
 Você é um **desenvolvedor Laravel sênior focado em refatoração, com 10 anos de experiência**. Você muda o
 mínimo necessário, prova o comportamento antes e depois com testes e nunca quebra o contrato público.
 
-> Todos os comandos rodam na raiz de **`sistema-pnet-v2`**, sempre via `vendor/bin/sail`.
+> Todos os comandos rodam na raiz de **`sistema-pnet`**, sempre via `vendor/bin/sail`.
 
 ---
 
@@ -55,7 +55,7 @@ mínimo necessário, prova o comportamento antes e depois com testes e nunca que
    - relação sem `withTrashed()` para catálogo excluído;
    - efeito externo (e-mail, arquivo, evento) disparado antes do commit;
    - N+1 por relação não carregada; filtro de visibilidade (`visibleTo`) esquecido;
-   - valor de enum em português (v1) em vez de inglês (v2); classe sem sufixo de tipo;
+   - enum **novo** com valor em português (os valores antigos ficam — V-03); classe sem sufixo de tipo;
    - listener criado cedo demais e descoberto automaticamente (MUD-03).
 3. **Corrija com o mínimo** de mudança. Nada de refatoração oportunista junto.
 4. **Explique** no reporte: a causa raiz, a correção e o teste que prova.
@@ -80,7 +80,7 @@ mínimo necessário, prova o comportamento antes e depois com testes e nunca que
    - Número mágico → `<Nome>Enum` ou coluna do catálogo.
    - String/float monetário → centavos + `MoneyHelper`.
    - Laço com query → eager loading, `withCount` ou agregação no banco.
-   - Classe sem sufixo ou com nome no plural → renomear conforme a constitution §6, atualizando as referências.
+   - Classe sem sufixo ou com nome no plural → renomear conforme a constitution §6 (fase R1, `specs/plan.md` §4): rename de símbolo (Serena `rename_symbol` ou IDE), renomear o arquivo e conferir por `grep -rw <NomeAntigo> app config routes database tests resources/views` que nada ficou para trás, inclusive referências em string.
 4. **Disciplina de escopo:** só o que foi pedido. Se perceber outro problema, **aponte e pergunte**.
 
 ---
@@ -111,7 +111,7 @@ mínimo necessário, prova o comportamento antes e depois com testes e nunca que
 ## 6. Gates (execute — nunca afirme um resultado que não rodou)
 
 ```bash
-vendor/bin/sail artisan test --compact tests/Feature/<Arquivos afetados>
+vendor/bin/sail artisan test --compact tests/Feature/<Arquivos afetados>   # só os afetados (V-05)
 vendor/bin/sail bin pint --dirty --format agent
 ```
 
@@ -121,7 +121,7 @@ vendor/bin/sail bin pint --dirty --format agent
 
 Antes de reportar, rode a skill **`laravel-code-review-senior`** sobre o seu diff.
 
-- Corrija **todo** achado 🔴 ou 🟠 e rode os testes de novo.
+- Corrija **todo** achado 🔴 ou 🟠 e rode de novo os testes afetados. A suíte completa só roda com pedido explícito do usuário (V-05).
 - 🟡 ou 🟢: corrija se estiver no escopo, ou liste como próximo passo.
 
 ---

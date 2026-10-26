@@ -1,25 +1,25 @@
-# Constitution — Sistema PNET v2
+# Constitution — Sistema PNET
 
-> **O que é:** os princípios que não se negociam na v2 do Sistema PNET. Todo artefato do SDD
+> **O que é:** os princípios que não se negociam no Sistema PNET. Todo artefato do SDD
 > ([spec.md](spec.md), [plan.md](plan.md), [tasks.md](tasks.md), [implementation.md](implementation.md))
 > e todo agente ou desenvolvedor obedece a este documento.
 > Em caso de conflito, esta constitution vence.
 > Para mudar uma regra daqui, é preciso uma decisão registrada na seção 16.
 >
 > **Onde os comandos rodam:** todos os comandos citados no SDD rodam na raiz do projeto
-> **`sistema-pnet-v2`**, sempre via Sail (`vendor/bin/sail …`).
+> **`sistema-pnet`**, sempre via Sail (`vendor/bin/sail …`).
 
 ---
 
 ## 1. Propósito e escopo
 
-A v2 reescreve do zero o Sistema PNET, um SaaS modular, multi-tenant e com um banco por tenant.
+O Sistema PNET é um SaaS modular, multi-tenant e com um banco por tenant. Ele **evolui de forma incremental** até o padrão desta constitution: não há reescrita (decisão V-01). Cada mudança é feita sobre o código atual, protegida pelos testes existentes.
 
-- **Base:** o comportamento da v1, documentado no [spec.md](spec.md).
-- **Mudanças de regra:** as 4 alterações do PRD v2.
-- **Defeitos:** os da v1 que já estão mapeados são corrigidos.
+- **Base:** o comportamento atual, documentado no [spec.md](spec.md). O que ainda falta está marcado **[alvo]** no spec.
+- **Mudanças de regra:** as 4 alterações do PRD de evolução (`docs/prd-sistema-pnet-v2.md`).
+- **Defeitos:** os já mapeados são corrigidos (spec §8).
 
-**O que fica fora do backend da v2:** o módulo **CRM**. Ele é entregue **só no frontend**, como na v1, até ser especificado. Ver P-14.
+**O que fica fora do backend:** o módulo **CRM**. Ele continua **só no frontend** até ser especificado. Ver P-14.
 
 ---
 
@@ -50,19 +50,19 @@ Nenhuma dependência nova (composer ou npm) entra sem aprovação registrada na 
 | --- | --- | --- |
 | P-01 | **Isolamento de tenant.** Todo acesso a dado de tenant passa por `$tenant->run(...)`. Quando há mais de uma escrita, a ordem é sempre `$tenant->run(` → `DB::transaction(`. | LGPD e segurança: nenhum dado vaza entre empresas. |
 | P-02 | **Copiar o padrão, não inventar.** Toda feature segue o recurso-espelho descrito no [plan.md](plan.md). Nada de método, rota, coluna, permissão, componente ou prop inventados. | Consistência e previsibilidade. |
-| P-03 | **Sufixo de tipo em toda classe** (seção 6). | Regra do PRD v2. |
+| P-03 | **Sufixo de tipo em toda classe** (seção 6). | Regra do PRD de evolução. |
 | P-04 | **Dinheiro em centavos inteiros**, percentuais em `decimal(7,4)` (seção 7). | Sem erro de ponto flutuante. |
 | P-05 | **Regra de negócio no Service ou na Action.** O controller só orquestra. Validação fica no FormRequest. Sem camada Repository. | Testabilidade e controllers finos. |
 | P-06 | **Autorização em duas camadas:** middleware `permission:` em toda rota e Policy quando a regra depende do registro. | O plano contratado vale no backend. |
 | P-07 | **Efeitos externos depois do commit e em fila:** e-mail, PDF, arquivo, evento de integração. | Um rollback nunca deixa efeito órfão. |
 | P-08 | **Arquivos em disco privado**, baixados só por rota autenticada e autorizada. | Os documentos são dados pessoais (LGPD). |
 | P-09 | **Dados de referência e permissões entram por migration idempotente**, nunca por seeder. | Chegam a qualquer ambiente só com o `migrate`. |
-| P-10 | **Estilo das telas congelado.** A v2 reproduz a v1 pixel a pixel: mesmos componentes, tokens, layout e dark mode (seção 9). | Regra do PRD v2: "NÃO mude nada". |
+| P-10 | **Estilo das telas congelado.** Nenhuma mudança visual nas telas existentes; telas e elementos novos usam os mesmos componentes, tokens, layout e dark mode (seção 9). | Regra do PRD de evolução: "NÃO mude nada". |
 | P-11 | **Toda mudança tem teste Pest**, e o teste é executado antes de a tarefa ser dada como pronta. | Qualidade. |
 | P-12 | **pt-BR** em textos de UI, mensagens, PDFs, e-mails, comentários e documentação. **Inglês** em identificadores de código, tabelas, colunas e rotas. | Padrão do repositório. |
 | P-13 | **Nenhum GET com efeito colateral.** Escritas usam POST, PUT, PATCH ou DELETE. Ações críticas são idempotentes, com trava e checagem de estado. | Segurança e consistência. |
-| P-14 | **CRM só no frontend.** Nenhuma migration, model, service ou rota de escrita do CRM até o módulo ser especificado. As integrações com o CRM ficam como contrato pendente no [spec.md](spec.md). | Regra do PRD v2. |
-| P-15 | **Na dúvida, pare e pergunte.** Nenhum agente decide sozinho algo que muda o resultado. | Critério de parada do PRD v2. |
+| P-14 | **CRM só no frontend.** Nenhuma migration, model, service ou rota de escrita do CRM até o módulo ser especificado. As integrações com o CRM ficam como contrato pendente no [spec.md](spec.md). | Regra do PRD de evolução. |
+| P-15 | **Na dúvida, pare e pergunte.** Nenhum agente decide sozinho algo que muda o resultado. | Critério de parada do PRD de evolução. |
 
 ---
 
@@ -84,14 +84,14 @@ Efeitos pós-commit → <X>Job / <X>Mail (ShouldQueue) / <X>Event → <X>Listene
   - Declaradas uma a uma em `routes/tenant.php` (tenant) ou `routes/web.php` (central). Sem `Route::resource`.
   - Nome no formato `tenant.<modulo>.<recurso>.<acao>`.
   - Ações: `list`, `create`, `store`, `edit`, `update`, `destroy`, `show`, `restore`, `toggle-active`.
-- **Sem lógica no controller:** nenhuma consulta Eloquent direto no controller. A v1 faz isso em `Contact::where`, `BankAccount::...` e não deve ser copiada.
+- **Sem lógica no controller:** nenhuma consulta Eloquent direto no controller. Hoje isso acontece em `Contact::where` e `BankAccount::...`; não copie, e corrija quando a tarefa tocar o arquivo.
 
 ---
 
 ## 5. Multi-tenancy
 
 1. **Bancos:**
-   - O banco central guarda apenas o SaaS: tenants, domínios, planos, módulos e catálogo de permissões. A cobrança fica fora da v2 (D-11).
+   - O banco central guarda apenas o SaaS: tenants, domínios, planos, módulos e catálogo de permissões. A cobrança fica fora do escopo (D-11).
    - Todo dado operacional fica no banco do tenant.
 2. **Migrations:**
    - `database/migrations/central/` roda com `vendor/bin/sail artisan migrate --path=database/migrations/central`.
@@ -139,7 +139,7 @@ Efeitos pós-commit → <X>Job / <X>Mail (ShouldQueue) / <X>Event → <X>Listene
 | Factory / Seeder | `<Model>Factory` / `<Nome>Seeder` | `ProposalFactory`, `TenantContactSeeder` | `database/` |
 | Model | `<Entidade>` (singular, **sem sufixo**) | `Client`, `Proposal` | `app/Models/` (sem subpastas) |
 
-**Renomeações obrigatórias em relação à v1** (exemplos; a lista completa fica no [plan.md](plan.md)):
+**Renomeações da fase R1** (exemplos; a lista completa fica no [plan.md](plan.md)):
 
 - `SuppliersService` → `SupplierService`.
 - `EmployeesService` → `EmployeeService`.
@@ -154,7 +154,7 @@ Efeitos pós-commit → <X>Job / <X>Mail (ShouldQueue) / <X>Event → <X>Listene
 **Outros nomes:**
 
 - **Tabelas e colunas:** inglês e `snake_case`. Tabelas no plural; pivots no singular, em ordem alfabética (`applicant_proposal`).
-- **Rotas, permissões, query strings e valores de enum:** sempre em **inglês**. A v1 usa `periodo`, `conta_id`, `cliente`, `despesa`, `somente_proprietario`; na v2 esses valores passam para o inglês e os rótulos em pt-BR vêm do `label()`.
+- **Rotas, permissões, query strings e valores de enum:** em **inglês** no código **novo**, com os rótulos em pt-BR no `label()`. Os valores já gravados e as query strings existentes (`periodo`, `conta_id`, `cliente`, `despesa`, `somente_proprietario`) **ficam como estão** (V-03).
 - **Vue:** a pasta é `pages/tenant/<modulo>/<recurso>/{list/List.vue, create/Create.vue, edit/Edit.vue, show/Show.vue, components/<Recurso>Form.vue}`. Tipos ficam em `resources/js/types/<area>/<Entidade>.ts`, reexportados em `types/index.ts`.
 
 ---
@@ -163,7 +163,7 @@ Efeitos pós-commit → <X>Job / <X>Mail (ShouldQueue) / <X>Event → <X>Listene
 
 | Regra | Detalhe |
 | --- | --- |
-| Dinheiro | `unsignedBigInteger` em **centavos** em **todas** as colunas monetárias. A v1 mistura `int`/`bigint`/`ubigint`; a v2 unifica (D-06). O nome da coluna não leva sufixo. Exibição: `MoneyHelper::format()` no PHP e `formatMoney()` no front. |
+| Dinheiro | `unsignedBigInteger` em **centavos** em **todas** as colunas monetárias. Hoje há `int`/`bigint`/`ubigint`; a fase R2 unifica (D-06). O nome da coluna não leva sufixo. Exibição: `MoneyHelper::format()` no PHP e `formatMoney()` no front. |
 | Percentual | `decimal(7,4)`, cast `decimal:4`. O valor é arredondado só no final: `(int) round($cents * $rate / 100)`. |
 | Datas | ISO no transporte, formato pt-BR na tela. Data vazia é `null`, nunca `0000-00-00`. |
 | Chaves | `$table->id()`. A exceção é `fee_calculations`, que usa UUID. FK com `constrained()` e `onDelete` explícito: `restrictOnDelete` para catálogos, `cascadeOnDelete` para filhos do agregado, `nullOnDelete` para vínculos opcionais. |
@@ -171,6 +171,7 @@ Efeitos pós-commit → <X>Job / <X>Mail (ShouldQueue) / <X>Event → <X>Listene
 | Unicidade | Toda regra de unicidade de negócio tem índice `unique` no banco ou validação com `withoutTrashed()`. A decisão de cada caso fica registrada no spec. |
 | Models | `$fillable` explícito, sem `id`. Casts pelo método `casts()`, com o PHPDoc `@return array<string, string>`. Relações com tipo de retorno e nome em camelCase. |
 | Migrations | Classe anônima, com `up()` e `down()` reversíveis. Ao alterar uma coluna, todos os atributos dela são repetidos. |
+| Compatibilidade (V-02) | Toda mudança de schema entra por **migration nova** (nunca editando uma já aplicada). Se ela altera dado existente (ex.: normalizar documento, mover serviços cobráveis), a migration converte os dados de forma idempotente. Os dados atuais são de homologação: se a conversão não for viável, o usuário pode autorizar a recriação dos tenants. |
 | Dados de referência | Migration idempotente usando `DB::table`: insere só o que falta e conta também os registros com soft delete. O `down()` só remove o que é seguro remover. |
 | Seeders | Só dados fictícios de desenvolvimento. Nunca chegam à produção. |
 
@@ -198,10 +199,10 @@ Efeitos pós-commit → <X>Job / <X>Mail (ShouldQueue) / <X>Event → <X>Listene
 
 ## 9. Frontend — estilo congelado
 
-A v2 **não muda** o visual da v1. Os itens abaixo são reproduzidos 1:1:
+O visual atual **não muda**. Os itens abaixo são a base obrigatória de toda tela, nova ou existente:
 
 - **Tema:** `resources/css/app.css`, com os tokens OKLCH light/dark, `--radius: 0.625rem`, scrollbars e o `@custom-variant dark`.
-- **Componentes:** a pasta `components/ui/*` do shadcn-vue, com as customizações da v1: `Button` com `loading`, `DataTable`, `ServerDataTable`, `ComboboxRemote`, `ComboboxSelect` e `Sonner`.
+- **Componentes:** a pasta `components/ui/*` do shadcn-vue, com as customizações atuais: `Button` com `loading`, `DataTable`, `ServerDataTable`, `ComboboxRemote`, `ComboboxSelect` e `Sonner`.
 - **Layouts:** `TenantLayout`, `TenantSidebar` e `AuthLayout`.
 - **Componentes de domínio:** `MoneyInput`, `@/lib/masks`, `@/lib/validators` e `@/lib/constants`.
 - **Composables:** `usePermission`, `useTenant`, `useCepLookup` e `useContactLookup`.
@@ -219,12 +220,12 @@ A v2 **não muda** o visual da v1. Os itens abaixo são reproduzidos 1:1:
 
 - Página sempre com `<script setup lang="ts">`, `defineOptions({ layout: TenantLayout })` e `<Head title>` em pt-BR.
 - Formulários com `useForm`. O `<Recurso>Form.vue` recebe `form` por prop e emite `submit`.
-- URLs sempre por `route('tenant.…')` (Ziggy, D-08). Nenhuma URL literal; a v1 tem algumas na sidebar e nas buscas.
+- URLs sempre por `route('tenant.…')` (Ziggy, D-08). Nenhuma URL literal; as que existem hoje na sidebar e nas buscas são trocadas quando a tarefa tocar o arquivo.
 - Estilo só com utilitários Tailwind e tokens do tema. Antes de criar um componente, verificar se ele já existe.
 - **Correções permitidas** (não mudam o visual):
   - carregar a fonte Instrument Sans, já declarada no tema;
   - remover arquivos mortos;
-  - ligar o botão "Exportar lista" ou removê-lo — decidir no spec.
+  - ligar o botão "Exportar lista" à exportação em PDF, mantendo o rótulo, o ícone e a posição (Q-S-17, RF-CORE-12).
 
 ---
 
@@ -251,7 +252,7 @@ A v2 **não muda** o visual da v1. Os itens abaixo são reproduzidos 1:1:
 | Tenant | O helper `sharedTenant()` é o padrão. Toda asserção sobre dado de tenant fica dentro de `$this->tenant->run(fn () => …)`. |
 | Helpers globais | `sharedTenant()`, `createTenant()`, `makeTenant()`, `createFinancialEntry()`, `formRequest()`, `userWithRole()` e `createProposal()`, em `tests/Pest.php`. |
 | Cobertura mínima | Cada regra de negócio (RN) do spec tem um teste. Cada permissão e Policy tem teste de acesso negado. Cada fluxo com dinheiro tem asserção em centavos. |
-| Execução | Só os arquivos afetados: `vendor/bin/sail artisan test --compact tests/Feature/<Arquivo>.php`. |
+| Execução (V-05) | Cada tarefa roda **só os arquivos de teste que tocou**: `vendor/bin/sail artisan test --compact tests/Feature/<Arquivo>.php`. A suíte completa (lenta, cerca de 9 min) só roda com pedido explícito do usuário ou no aceite de fase. O reporte sempre diz o que foi e o que não foi executado. |
 | Estilo | `vendor/bin/sail bin pint --dirty --format agent` depois de mexer em PHP. `vendor/bin/sail npm run type-check` depois de mexer em TS ou Vue. |
 | Review | Toda tarefa passa pelo agente de code review antes de ser fechada ([implementation.md](implementation.md)). |
 
@@ -259,7 +260,8 @@ A v2 **não muda** o visual da v1. Os itens abaixo são reproduzidos 1:1:
 
 ## 12. Idioma e documentação
 
-- Os artefatos do SDD e a documentação de `docs/` são escritos em **pt-BR**.
+- Os artefatos do SDD (`specs/`) e a documentação de `docs/` são escritos em **pt-BR**.
+- **`specs/` manda** no que fazer e como fazer. **`docs/`** descreve o **estado atual** do sistema (arquitetura, módulos, dicionário de dados, rotas) e é atualizado ao fim de cada fase. `docs/prd/` fica como histórico (V-06).
 - Documentos só são criados ou alterados mediante pedido explícito.
 - Se a documentação e o código divergirem, **o código é o estado real**: aponte a divergência e pergunte se o documento deve ser atualizado.
 - Comentários: PHPDoc em pt-BR explicando o **porquê** da regra não óbvia. Sem comentário inline trivial e sem código comentado.
@@ -287,13 +289,13 @@ Uma tarefa só está **pronta** quando todos os itens abaixo estão cumpridos:
 - [ ] Pint aplicado; `type-check` sem erro quando houve mudança no front.
 - [ ] Code review sem achados 🔴 ou 🟠 pendentes.
 - [ ] O critério de aceite (BDD) da tarefa no [spec.md](spec.md) foi atendido.
-- [ ] Nenhuma tela teve o visual alterado em relação à v1.
+- [ ] Nenhuma tela teve o visual alterado.
 
 ---
 
 ## 15. Hierarquia dos documentos
 
-`constitution.md` > `spec.md` (o quê) > `plan.md` (como) > `tasks.md` (ordem) > `implementation.md` (execução).
+`constitution.md` > `spec.md` (o quê) > `plan.md` (como) > `tasks.md` (ordem) > `implementation.md` (execução) > `docs/` (estado atual).
 
 Um documento de nível inferior nunca contradiz um superior. Se surgir uma contradição, pare e pergunte (P-15).
 
@@ -309,8 +311,22 @@ Um documento de nível inferior nunca contradiz um superior. Se surgir uma contr
 | D-04 | 2026-10-26 | (Q-C1) DTOs usam o sufixo `Dto` (`RegistryFeeRequestDto`, `ItbiInputDto`). Utilitários puros usam `Helper` (`MoneyHelper`, `DocumentMaskHelper`). O `ServicesService` vira `ServiceCatalogService`. |
 | D-05 | 2026-10-26 | (Q-C2) Models ficam **sem sufixo** (`Client`, `Proposal`), no padrão do Laravel. |
 | D-06 | 2026-10-26 | (Q-C3) **Todo** dinheiro é `unsignedBigInteger` em centavos, incluindo catálogo, salário, financeiro e planos. |
-| D-07 | 2026-10-26 | (Q-C8) Valores de enum, query strings e parâmetros ficam em **inglês**: `client`, `expense`, `owner_only`, `period`, `bank_account_id`, `start`, `end`. Os rótulos em pt-BR vêm de `label()`. |
+| D-07 | 2026-10-26 | (Q-C8) Valores de enum, query strings e parâmetros em **inglês**, com rótulos em pt-BR no `label()`. **Revisada por V-03:** vale só para código novo; os valores atuais ficam. |
 | D-08 | 2026-10-26 | (Q-C4) Mantém o **Ziggy** (`route()`). Não haverá Wayfinder. |
 | D-09 | 2026-10-26 | (Q-C5) Os testes ficam no nível de **Service, Form Request e classes puras**. Testes HTTP só para middleware e roteamento. Não haverá teste HTTP por rota. |
 | D-10 | 2026-10-26 | (Q-C6) Todo PHP novo leva `declare(strict_types=1);`. Classes `final` em Actions, DTOs, Calculators, Builders, Clients e Services sem herança. |
-| D-11 | 2026-10-26 | (Q-C7) A cobrança do SaaS (Mercado Pago, assinaturas, pagamentos, cupons) fica **fora da v2**: nem as tabelas são criadas. Planos e módulos continuam funcionando como na v1. |
+| D-11 | 2026-10-26 | (Q-C7) A cobrança do SaaS (Mercado Pago, assinaturas, pagamentos, cupons) fica **fora do escopo**. Revisada por V-08: as tabelas existentes ficam sem uso. Planos e módulos continuam funcionando como hoje. |
+
+### Decisões da evolução da v1 (2026-10-26)
+
+| ID | Decisão |
+| --- | --- |
+| V-01 | **Não haverá v2.** O sistema atual (`sistema-pnet`) evolui de forma incremental até o padrão deste SDD (fases R0 a R7 do [plan.md](plan.md)). |
+| V-02 | Os dados atuais são só de homologação e teste. As migrations convertem os dados quando for simples; se não for, os tenants podem ser recriados com autorização do usuário. |
+| V-03 | Os valores de enum e as query strings já existentes em português **ficam como estão**. O inglês vale para o código novo (revisa D-07). |
+| V-04 | O sufixo de tipo é aplicado em todas as classes existentes **de uma vez**, na fase R1, sem mudança de comportamento. |
+| V-05 | Testes: cada tarefa roda só os arquivos afetados; a suíte completa só com pedido explícito ou no aceite de fase. |
+| V-06 | `specs/` manda; `docs/` é a documentação do estado atual e é atualizada ao fim das fases; `docs/prd/` fica como histórico. |
+| V-07 | A skill de code review passa a se chamar `laravel-code-review-senior`. |
+| V-08 | As tabelas de cobrança do SaaS ficam sem uso, fora do escopo (revisa D-11). |
+| V-09 | MUD-04: a migration cria a categoria de serviço "Documentação" e converte cada serviço cobrável em `service`, remapeando os vínculos. |

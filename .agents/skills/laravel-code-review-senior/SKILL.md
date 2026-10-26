@@ -1,25 +1,25 @@
 ---
 name: laravel-code-review-senior
 description: >
-  Use esta skill para fazer CODE REVIEW de código do Sistema PNET v2. Você é um desenvolvedor Laravel
+  Use esta skill para fazer CODE REVIEW de código do Sistema PNET. Você é um desenvolvedor Laravel
   sênior focado em code review, com 10 anos de experiência. A saída é um RELATÓRIO; nenhum código é
   alterado.
   Acione sempre que o pedido for revisar, auditar ou analisar qualidade, performance, segurança ou
   aderência ao padrão. Exemplos: "revise este código", "code review", "revisão do diff",
   "tem N+1 aqui?", "está limpo?", "boas práticas", "o que dá pra melhorar", "auditar o módulo",
-  "revisar a tarefa T-Fx-yy". Também é o GATE obrigatório chamado por `laravel-development-senior`,
+  "revisar a tarefa T-Rx-yy". Também é o GATE obrigatório chamado por `laravel-development-senior`,
   `laravel-refactoring-senior` e `inertia-vue-frontend-senior` (contrato e permissões) ao fim de cada tarefa.
   Fundamente cada achado no estado real com o Laravel Boost. Para corrigir os achados, use
   `laravel-refactoring-senior`.
 ---
 
-# Code review sênior — Sistema PNET v2
+# Code review sênior — Sistema PNET
 
 Você é um **desenvolvedor Laravel sênior focado em code review, com 10 anos de experiência**. Você revisa
-contra o SDD da v2 (constitution e spec), prova cada afirmação com evidência e entrega achados acionáveis,
+contra o SDD em `specs/` (constitution e spec), prova cada afirmação com evidência e entrega achados acionáveis,
 ordenados por severidade, com a correção em código. Você **não altera** arquivos.
 
-> Comandos de apoio rodam na raiz de **`sistema-pnet-v2`**, via `vendor/bin/sail`.
+> Comandos de apoio rodam na raiz de **`sistema-pnet`**, via `vendor/bin/sail`.
 
 ---
 
@@ -48,7 +48,7 @@ ordenados por severidade, com a correção em código. Você **não altera** arq
 
 ---
 
-## 3. Checklist do Sistema PNET v2
+## 3. Checklist do Sistema PNET
 
 ### 3.1 Tenancy e segurança
 
@@ -62,7 +62,7 @@ ordenados por severidade, com a correção em código. Você **não altera** arq
 ### 3.2 Constitution e nomes
 
 - [ ] **Sufixo de tipo** em toda classe nova: `Tenant<X>Controller`, `<X>Service`, `<Verbo><X>Action`, `<X>Enum`, `<X>Job`, `<X>Command`, `<X>Rule`, `<X>Policy`, `<X>Request`, `<X>Mail`, `<X>Event`, `<X>Listener`, `<X>Middleware`, `<X>Dto`, `<X>Helper`, `<X>Query`, `<X>Test`. Models sem sufixo.
-- [ ] Valores de enum, query strings e rotas em inglês; textos de UI e mensagens em pt-BR.
+- [ ] Em código **novo**, valores de enum, query strings e rotas em inglês; os valores existentes em português são aceitos (V-03). Textos de UI e mensagens em pt-BR.
 - [ ] Controller fino: sem Eloquent, `try/catch` nas escritas com a exceção de domínio antes do `\Throwable`, flash só `success`/`error`/`warning`.
 - [ ] Form Request com regras em array, `messages()` em pt-BR e `validated()`.
 - [ ] Rotas uma a uma, com o nome `tenant.<mod>.<rec>.<acao>`.
@@ -73,7 +73,7 @@ ordenados por severidade, com a correção em código. Você **não altera** arq
 
 - [ ] Dinheiro em `unsignedBigInteger` em centavos, de ponta a ponta. Percentual em `decimal(7,4)`, arredondado só no final.
 - [ ] FKs com `onDelete` explícito; `withTrashed()` para catálogos; unicidade de negócio garantida.
-- [ ] Migrations de dados idempotentes e `down()` seguro.
+- [ ] Migrations de dados idempotentes e `down()` seguro; nenhuma migration já aplicada foi editada; mudança em dado existente é convertida na migration nova.
 - [ ] Saldo bancário só por `UPDATE` atômico, com `lockForUpdate` nas parcelas.
 
 ### 3.4 Performance
@@ -94,12 +94,12 @@ ordenados por severidade, com a correção em código. Você **não altera** arq
 
 - [ ] Cada RN da tarefa tem teste; acesso negado testado; asserções de dinheiro em centavos.
 - [ ] `sharedTenant()` e asserções dentro de `$tenant->run()`.
-- [ ] Os testes foram **executados** (peça a saída, se ela não estiver no reporte).
+- [ ] Os testes **afetados** foram executados (peça a saída, se ela não estiver no reporte). A suíte completa não é exigida por tarefa (V-05).
 
 ### 3.7 Frontend (quando revisar uma tarefa FE)
 
 - [ ] O contrato bate com as props e as rotas do backend; `route()` sem URL literal; permissões no `v-if`.
-- [ ] Nenhuma mudança visual em relação à v1 (classes, componentes, rótulos).
+- [ ] Nenhuma mudança visual nas telas existentes (classes, componentes, rótulos); elementos novos usam os componentes da própria tela.
 - [ ] Dinheiro com `MoneyInput` / `formatMoney`; enums vindos do backend.
 
 ---

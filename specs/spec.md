@@ -1,9 +1,12 @@
-# Spec — Sistema PNET v2
+# Spec — Sistema PNET
 
-> **O que é:** a especificação funcional da v2, ou seja, **o que** o sistema faz. O **como** fica no [plan.md](plan.md).
+> **O que é:** a especificação funcional do Sistema PNET, ou seja, **o que** o sistema faz, tanto o que já existe quanto o alvo da evolução. O **como** fica no [plan.md](plan.md).
 > Obedece à [constitution.md](constitution.md).
-> Consolida o comportamento da v1, os PRDs `docs/prd/00…06` (com as decisões já registradas neles)
-> e as **4 mudanças de regra do PRD v2** (seção 3).
+> Consolida o comportamento atual do sistema, os PRDs `docs/prd/00…06` (com as decisões já registradas neles)
+> e as **4 mudanças de regra do PRD de evolução** (`docs/prd-sistema-pnet-v2.md`, seção 3).
+>
+> **Estado atual × alvo:** tudo o que não está marcado já existe no código. O que está marcado **[alvo]**
+> é mudança a implementar nas fases R1 a R7 do [plan.md](plan.md). Ao concluir a fase, a marca é removida.
 >
 > **Identificadores:**
 >
@@ -12,7 +15,7 @@
 > | `RF-<MÓD>-nn` | Requisito funcional |
 > | `RN-<MÓD>-nn` | Regra de negócio |
 > | `CA-<MÓD>-nn` | Critério de aceite (BDD) |
-> | `MUD-nn` | Mudança de regra do PRD v2 |
+> | `MUD-nn` | Mudança de regra do PRD de evolução |
 > | `Q-S-nn` | Pergunta em aberto |
 >
 > Valores monetários estão sempre em **centavos inteiros**. Os nomes de classe já seguem o sufixo de tipo (constitution, seção 6).
@@ -21,21 +24,24 @@
 
 ## 0. Sumário de módulos
 
-| Código | Módulo | Backend v2 | Frontend v2 |
+| Código | Módulo | Backend | Frontend |
 | --- | --- | --- | --- |
-| CORE | SaaS (cadastro e provisionamento), autenticação, usuários, cargos, empresa, perfil, dashboard | ✔ | ✔ (1:1 com a v1) |
+| CORE | SaaS (cadastro e provisionamento), autenticação, usuários, cargos, empresa, perfil, dashboard, exportação de listas em PDF | ✔ | ✔ (visual congelado) |
 | CAD | Cadastros: contatos unificados (clientes, fornecedores, funcionários) | ✔ | ✔ |
 | CAT | Catálogo: produtos e serviços | ✔ | ✔ |
 | FIN | Financeiro | ✔ | ✔ |
 | DRV | Drive | ✔ | ✔ |
-| CRM | Funil de vendas | **✘ (pendente)** | ✔ (como a v1, dados mock) |
+| CRM | Funil de vendas | **✘ (pendente)** | ✔ (dados mock) |
+| VEN | Vendas: vendas e orçamentos de vendas (`sales.*`) | **✘ (futuro)** | Só o grupo de menu |
 | DOC | Documentações: cadastros auxiliares, etapas, propostas, calculadora/ITBI, orçamentos, protocolos e relatórios | ✔ | ✔ |
 
-**Fora da v2:**
+**Fora do escopo:**
 
-- Cobrança do SaaS: Mercado Pago, assinaturas e cupons (D-11).
-- Grupo de menu "Vendas" (`sales.*`), que na v1 não tem telas.
-- "Serviços cobráveis" (MUD-04).
+- Cobrança do SaaS: Mercado Pago, assinaturas e cupons. As tabelas existem e ficam sem uso (D-11).
+- Módulo **Vendas** (`sales.*`): **mantido**, para ser implementado no futuro. Hoje ele tem só o grupo de menu "Vendas" e as permissões `sales.sales.*` e `sales.quotations.*`, sem telas nem backend.
+  - O menu e as permissões continuam como estão.
+  - Não implemente telas nem backend de Vendas até o módulo ser especificado neste spec.
+- "Serviços cobráveis" (MUD-04). **[alvo]** remover.
 
 ---
 
@@ -115,7 +121,7 @@ Os cargos (`RoleEnum`) são gravados no spatie pelo **rótulo em pt-BR**.
 - **RF-CORE-07:** a lista de usuários mostra Nome, E-mail, Cargo e Status.
   - O formulário pede Nome, E-mail (login), Cargo, Status, Senha e Confirmação. No editar, a senha só é alterada se o usuário marcar a opção.
   - Tem a grade de permissões extras, com as herdadas do cargo bloqueadas.
-- **RN-CORE-11:** usuário tem 1 cargo e pode ter permissões diretas extras (`syncPermissions`). Excluir usuário é exclusão física *(Q-S-01)*.
+- **RN-CORE-11 [alvo: inativar + soft delete]:** usuário tem 1 cargo e pode ter permissões diretas extras (`syncPermissions`). Excluir usuário é exclusão física *(Q-S-01)*.
 - **RF-CORE-08:** cargos têm lista (Nome, Nº de usuários) e formulário (Nome + `PermissionsGrid` agrupada por módulo, com "Selecionar todos" e "Desmarcar todos" por módulo).
 
 #### 2.1.5 Empresa e perfil
@@ -134,14 +140,68 @@ Os cargos (`RoleEnum`) são gravados no spatie pelo **rótulo em pt-BR**.
 
 #### 2.1.6 Dashboard
 
-- **RF-CORE-11:** o Dashboard repete o layout da v1:
+- **RF-CORE-11:** o Dashboard mantém o layout atual:
   - 4 KPIs: Receita do mês, Despesas do mês, Saldo atual e Inadimplência.
   - Próximos vencimentos e Faturamento anual (gráfico).
   - Últimas aprovações e Pendências críticas.
   - Chamados, Ranking da equipe e Volume por tipo.
-- **RN-CORE-14 (Q-S-02):**
+- **RN-CORE-14 (Q-S-02) [alvo]:**
   - Os 4 KPIs e "Próximos vencimentos" usam dados reais do financeiro (parcelas do mês, saldo das contas ativas, inadimplência = parcelas `open` vencidas). São visíveis só com as permissões do financeiro correspondentes.
-  - Os demais widgets ficam como placeholder, com o mesmo visual da v1.
+  - Os demais widgets ficam como placeholder, com o mesmo visual de hoje.
+
+#### 2.1.7 Exportação de listas em PDF (Q-S-17) [alvo]
+
+- **RF-CORE-12 [alvo]:** o botão "Exportar lista" das telas de listagem com `DataTable` gera um **PDF** da lista. Hoje o botão existe, mas não faz nada. As telas são:
+
+  | Tela | Rota da lista | Permissão |
+  | --- | --- | --- |
+  | Clientes | `tenant.registrations.clients.list` | `registrations.clients.view` |
+  | Fornecedores | `tenant.registrations.suppliers.list` | `registrations.suppliers.view` |
+  | Funcionários | `tenant.registrations.employees.list` | `registrations.employees.view` |
+  | Produtos | `tenant.products.products.list` | `products.products.view` |
+  | Categorias de produtos | `tenant.products.categories.list` | `products.categories.view` |
+  | Serviços | `tenant.services.services.list` | `services.services.view` |
+  | Categorias de serviços | `tenant.services.categories.list` | `services.categories.view` |
+  | Categorias financeiras | `tenant.finance.categories.list` | `finance.categories.view` |
+  | Subcategorias financeiras | `tenant.finance.subcategories.list` | `finance.subcategories.view` |
+  | Contas bancárias | `tenant.finance.bank-accounts.list` | `finance.accounts.view` |
+  | Usuários | `tenant.settings.users.list` | `settings.users.view` |
+  | Cargos | `tenant.settings.roles.list` | `settings.roles.view` |
+
+  As listas com `ServerDataTable` (módulo Documentações) **não** ganham o botão. A lista de Propostas continua com "Imprimir lista" e "Imprimir selecionadas" (RF-DOC-PRO-01).
+
+- **RN-CORE-15 [alvo]:** regras do PDF da lista:
+  - **Conteúdo:**
+    - cabeçalho com a marca da empresa, igual ao dos PDFs atuais;
+    - título da lista, data e hora da emissão e nome de quem emitiu;
+    - as mesmas colunas da tela, menos seleção e ações, com os mesmos formatos (dinheiro em R$, datas dd/mm/aaaa, documento com máscara, status por extenso);
+    - total de registros no rodapé.
+  - **Filtros:**
+    - o PDF respeita a busca digitada no "Pesquisar..." e os filtros da tela, como os chips Todos/Ativos/Inativos de Clientes, Fornecedores e Funcionários;
+    - a busca é aplicada no servidor sobre os mesmos campos exibidos nas colunas;
+    - sem filtro, o PDF traz todos os registros que a tela lista.
+  - **Ordem:** a ordem padrão da lista.
+  - **Limite:** 500 linhas, o mesmo da lista de Propostas. Acima disso, o PDF traz as 500 primeiras e o aviso "Exibindo 500 de N registros. Refine a busca para exportar o restante."
+  - **Acesso:**
+    - exige a mesma permissão `.view` da lista; sem ela, a resposta é 403;
+    - só traz dados do tenant atual.
+  - **Entrega:**
+    - o PDF abre em uma nova aba;
+    - o arquivo se chama `lista-de-<recurso>.pdf` (ex.: `lista-de-clientes.pdf`);
+    - todo o texto fica em pt-BR.
+  - **Visual (P-10):** o botão mantém o rótulo, o ícone (`Download`), a variante `outline` e a posição de hoje. Ele só ganha a ação.
+- **CA-CORE-03:**
+  - **Dado** a lista de Clientes com 3 clientes ativos e 1 inativo, o chip "Ativos" marcado e a busca "maria" (que deixa 1 cliente visível),
+  - **quando** o usuário clica em "Exportar lista",
+  - **então** abre numa nova aba o `lista-de-clientes.pdf`, com o cabeçalho da empresa, uma única linha com as colunas da tela e "1 registro" no rodapé.
+- **CA-CORE-04:**
+  - **Dado** um usuário sem `registrations.clients.view`,
+  - **quando** ele acessa a URL do PDF da lista de Clientes,
+  - **então** recebe 403.
+- **CA-CORE-05:**
+  - **Dado** 600 serviços cadastrados,
+  - **quando** a lista de Serviços é exportada sem filtro,
+  - **então** o PDF traz 500 linhas e o aviso "Exibindo 500 de 600 registros".
 
 ---
 
@@ -160,11 +220,11 @@ Os cargos (`RoleEnum`) são gravados no spatie pelo **rótulo em pt-BR**.
   - **Fornecedor:** os mesmos campos, mais Nome do contato, Descrição e Categoria de insumos.
   - **Funcionário:** só PF, mais RG, Nascimento, Cargo, Salário bruto (`MoneyInput`) e Admissão.
 - **RF-CAD-03:** ao digitar um CPF/CNPJ completo, a tela busca o contato existente (`GET /registrations/{entity}/get-contact-by-cpf-cnpj/{doc}`) e preenche os dados. Se o documento mudar, os dados são limpos.
-- **RN-CAD-01:** o contato é **único por documento**:
+- **RN-CAD-01 [alvo]:** o contato é **único por documento**:
   - O `contacts.cpf_cnpj` é gravado **só com dígitos**, com índice `unique` considerando soft delete.
-  - A v1 grava com máscara e não tem `unique`; isso foi corrigido.
+  - Hoje o documento é gravado com máscara em Cadastros e não há `unique`. A migration da fase R2 normaliza os registros existentes.
 - **RN-CAD-02:** os papéis são tabelas 1:1 com `unique(contact_id)`. Cadastrar de novo um papel excluído restaura o registro.
-- **RN-CAD-03:** o CPF é validado com `CpfRule` e o CNPJ com `CnpjRule`, conforme `PersonTypeEnum` (`individual` / `company`).
+- **RN-CAD-03:** o CPF é validado com `CpfRule` e o CNPJ com `CnpjRule`, conforme o tipo de pessoa do contato (PF/PJ).
 - **RN-CAD-04:** "Ativar/Inativar" (`PATCH …/{id}/toggle-active`) altera o `active` do papel. Papel inativo **bloqueia novos lançamentos financeiros** (`InactiveContactException`).
 - **RN-CAD-05:** excluir um papel:
   1. É bloqueado se existirem lançamentos financeiros do contato naquele papel (`ContactHasFinancialEntriesException`, aviso).
@@ -189,15 +249,15 @@ Permissões: `registrations.{clients,suppliers,employees}.{view,create,edit,dele
 - **RF-CAT-01:** categorias de produto e de serviço têm Nome e Status.
 - **RF-CAT-02:** produtos têm Categoria, Nome, SKU, Código de barras, Descrição, Custo, Venda, Controla estoque, Estoque atual, Estoque mínimo, Unidade e Status.
 - **RF-CAT-03:** serviços têm Categoria, Nome, SKU, Custo, Venda, Taxas ("Emolumentos" na tela), Duração (min), Descrição e Status.
-- **RN-CAT-01:**
+- **RN-CAT-01 [alvo: `min:0` com mensagem e `services.sku` único]:**
   - Os valores (`cost_value`, `sell_value`, `fees`) ficam em centavos, com `min:0` e a mensagem "O valor de venda não pode ser inferior a zero.".
   - O par `(sku, barcode)` é único em produtos; `sku` é único em serviços *(Q-S-03)*.
-- **RN-CAT-02 (MUD-04):** o catálogo de **serviços passa a alimentar o Orçamento e a Proposta**.
+- **RN-CAT-02 (MUD-04) [alvo]:** o catálogo de **serviços passa a alimentar o Orçamento e a Proposta**.
   - Só aparecem os serviços com `status = true`, sem soft delete.
   - O preço de tabela é o `sell_value`.
   - Ver seção 3.4.
 - **RN-CAT-03:** um serviço em uso num orçamento ou numa proposta pode ser excluído (soft delete). Os vínculos continuam exibindo o serviço (`withTrashed`).
-- **Q-S-04:** o alerta de estoque mínimo e a baixa de estoque, que o épico da v1 promete, entram na v2?
+- **Fora do escopo (Q-S-04):** o alerta de estoque mínimo e a baixa de estoque, que o épico do catálogo promete.
 
 Permissões: `products.{products,categories}.*` e `services.{services,categories}.*`.
 
@@ -213,15 +273,15 @@ Permissões: `products.{products,categories}.*` e `services.{services,categories
   - Só existe **uma** `main_account`; marcar outra desmarca a anterior, e sempre precisa existir uma.
   - O `initial_balance` só é aceito na criação.
   - O `current_balance` nasce igual ao inicial e é alterado **só pelo sistema**.
-- **RN-FIN-02:** excluir uma conta bancária com lançamentos:
-  - A v1 faz soft delete em cascata **sem estorno**.
-  - Na v2, a exclusão é **bloqueada** quando houver lançamentos ativos *(Q-S-05)*.
-- **RF-FIN-02:** categorias financeiras têm Nome, Tipo (`income`/`expense`), Observações e Ativo. Subcategorias têm Categoria, Nome, Observações e Ativo.
+- **RN-FIN-02 [alvo]:** excluir uma conta bancária com lançamentos:
+  - Hoje o sistema faz soft delete em cascata **sem estorno**.
+  - O alvo é **bloquear** a exclusão quando houver lançamentos ativos (Q-S-05).
+- **RF-FIN-02:** categorias financeiras têm Nome, Tipo (`receita`/`despesa`, valores atuais mantidos — V-03), Observações e Ativo. Subcategorias têm Categoria, Nome, Observações e Ativo.
 - **RN-FIN-03:**
   - O nome é único por tipo (categoria) ou por categoria (subcategoria). Um duplicado excluído é restaurado.
   - A exclusão é bloqueada se houver lançamentos.
   - Excluir uma categoria exclui as subcategorias dela.
-- **RN-FIN-04:** `cost_types` (tipos de custo) é **compartilhado** com Documentações. A FK nos lançamentos se chama `cost_type_id` (na v1, `cost_id`).
+- **RN-FIN-04:** `cost_types` (tipos de custo) é **compartilhado** com Documentações. A FK nos lançamentos se chama `cost_id` (nome mantido).
 
 #### 2.4.2 Contas a pagar e a receber
 
@@ -233,7 +293,7 @@ Permissões: `products.{products,categories}.*` e `services.{services,categories
   - ações Editar, Liquidar, Visualizar e Excluir.
 - **RF-FIN-04:** o formulário tem Descrição, Fornecedor/Cliente (`ComboboxRemote`), Conta, Categoria, Subcategoria, Tipo de custo, Condição (à vista ou 1x a 12x), Forma de pagamento, Total, Vencimento, Situação inicial (Em aberto/Pago), Observações e Comprovante. No editar, há um cartão por parcela.
 - **RF-FIN-05:** o detalhe mostra o cabeçalho e as parcelas, com a ação de pagar.
-- **RN-FIN-05:** o contato financeiro é resolvido por `(contact_id, type)`, com `supplier` em pagar e `client` em receber. Papel inativo é bloqueado.
+- **RN-FIN-05:** o contato financeiro é resolvido por `(contact_id, type)`, com `fornecedor` em pagar e `cliente` em receber (`ContactTypeEnum`). Papel inativo é bloqueado.
 - **RN-FIN-06:** parcelas:
   - A divisão usa `intdiv`, e **o resto vai para a última parcela**.
   - A parcela N vence na data inicial + (N−1) meses (`addMonthsNoOverflow`).
@@ -248,7 +308,7 @@ Permissões: `products.{products,categories}.*` e `services.{services,categories
 - **RN-FIN-10:** a exclusão estorna o pago, faz soft delete das parcelas e do lançamento.
 - **RN-FIN-11:** o saldo só muda por `UPDATE` atômico, dentro de transação com `lockForUpdate`.
 - **RN-FIN-12:** status de parcela (`InstallmentStatusEnum`): `open` e `paid`. "Vencidos", "Vencem hoje" e "A vencer" são filtros de data sobre `open`.
-- **RN-FIN-13 (MUD-02):** os lançamentos podem nascer de uma **proposta de documentações**. Esses lançamentos guardam `proposal_id` e `proposal_cost_item_id` (seção 3.2).
+- **RN-FIN-13 (MUD-02) [alvo]:** os lançamentos podem nascer de uma **proposta de documentações**. Esses lançamentos guardam `proposal_id` e `proposal_cost_item_id` (seção 3.2).
 
 #### 2.4.3 Relatórios financeiros
 
@@ -266,7 +326,7 @@ Permissões: `products.{products,categories}.*` e `services.{services,categories
   - Valor líquido = receber pago − pagar pago, por conta, ano e mês (`payment_date`).
   - Padrão: últimos 5 anos.
   - Variação anual, melhor e pior ano.
-  - SQL portável: sem `YEAR()`/`MONTH()` específico do MySQL dentro de PHP *(nota técnica para o plan)*.
+  - Hoje usa `YEAR()`/`MONTH()` do MySQL. Fica como está (MySQL é o banco do projeto).
 - **CA-FIN-01:**
   - **Dado** R$ 1.000,00 em 3x,
   - **então** as parcelas são 333,33 + 333,33 + 333,34.
@@ -298,15 +358,15 @@ Permissões:
   - Nomes repetidos viram `nome (n).ext`.
 - **RN-DRV-02:** acesso (`DriveService::userCanAccess`):
   - O dono sempre acessa.
-  - `owner_only` num item ou em **qualquer pasta acima** bloqueia quem não tem `full_access` explícito.
-  - Os tipos (`DrivePermissionTypeEnum`) são `owner_only`, `read_only` e `full_access`.
+  - `somente_proprietario` num item ou em **qualquer pasta acima** bloqueia quem não tem `acesso_total` explícito.
+  - Os tipos (`PermissionTypeDriveEnum`) são `somente_proprietario`, `somente_leitura` e `acesso_total` (valores atuais mantidos — V-03).
 - **RN-DRV-03:** mover:
   - Não pode ir para a raiz (arquivos) nem para dentro de si mesmo ou de uma descendente (pastas).
   - O banco é atualizado numa transação, e o disco depois do commit.
   - No S3, mover é copiar e apagar, exigindo `PutObjectAcl` e `retain_visibility=false`.
 - **RN-DRV-04:** a lixeira usa soft delete. Restaurar traz as pastas acima e a subárvore. Excluir definitivamente grava o log e apaga do disco depois do commit.
-- **RN-DRV-05:** todo upload, download, movimentação, exclusão e restauração gera um log com usuário e IP *(Q-S-06)*.
-- **RN-DRV-06:** tudo vai para o disco `config('bucket.disk')`; na v1, as pastas iam para `public`.
+- **RN-DRV-05 [alvo: log estruturado]:** todo upload, download, movimentação, exclusão e restauração gera um log com usuário e IP *(Q-S-06)*.
+- **RN-DRV-06 [alvo]:** tudo vai para o disco `config('bucket.disk')`. Hoje as pastas são criadas no disco `public`.
 
 Permissões: `drive.{drives,folders,trash,logs}.*`.
 
@@ -329,7 +389,7 @@ Permissões: `drive.{drives,folders,trash,logs}.*`.
 - **RN-CRM-01:** sem backend.
   - O `TenantCrmController` devolve dados mock, no mesmo formato dos tipos `types/crm/Deal.ts`.
   - Nada é gravado; arrastar, ganhar ou perder muda só o estado local.
-- **RN-CRM-02:** a v2 cria as permissões `crm.deals.view` e `crm.pipelines.view` para controlar o menu *(Q-S-07)*.
+- **RN-CRM-02 [alvo]:** criar as permissões `crm.deals.view` e `crm.pipelines.view` para controlar o menu *(Q-S-07)*.
 - **Contratos pendentes** (o backend é especificado quando o CRM for definido):
   - **MUD-01:** oportunidade/proposta do CRM → proposta de documentações (seção 3.1).
   - **MUD-03:** orçamento da calculadora → oportunidade no funil (seção 3.3).
@@ -481,8 +541,8 @@ Permissões: `documents.stages.*`.
   - Recria a timeline com o banco atual, sem iniciar nenhuma etapa.
   - Se o status era `in_progress` ou `finished`, volta para `new` com `finished_at = null`.
 - **RN-DOC-PRO-14:** o prazo exibido é `completion_deadline_hours − horas desde o início`: "Faltam Nh", "Vence hoje" ou "Atrasada Nh".
-- **RN-DOC-PRO-15:** o alerta de atraso (`AlertOverdueProposalStagesCommand`) roda em dias úteis às 07:00, para etapas em andamento com `alert_deadline_hours > 0` vencido.
-  - A v2 **registra o envio** (`proposal_stages.overdue_alerted_at`) para não reenviar todo dia *(Q-S-08)*.
+- **RN-DOC-PRO-15 [alvo: envio único]:** o alerta de atraso (`AlertOverdueProposalStagesCommand`) roda em dias úteis às 07:00, para etapas em andamento com `alert_deadline_hours > 0` vencido.
+  - O alvo é **registrar o envio** (`proposal_stages.overdue_alerted_at`) para não reenviar todo dia *(Q-S-08)*.
 - **RN-DOC-PRO-16:** as etapas com `shows_property_data` exibem o imóvel; as com `shows_registry_protocol` exibem o painel do protocolo mais recente (2.12).
 
 #### 2.9.3 Documentos
@@ -515,7 +575,7 @@ Permissões: `documents.stages.*`.
   - Total geral = soma de todas as linhas.
 - **RN-DOC-PRO-23:** recibos (`ReceiptTypeEnum`: `general`, `advisory`, `courier`):
   - **Geral:** exige total gasto e valor depositado.
-  - **Vinculado a uma linha:** só para linha `manual` cujo tipo de custo tem `receipt_type`. Na v2, **linhas `service` não geram recibo** (MUD-04 / D-03).
+  - **Vinculado a uma linha:** só para linha `manual` cujo tipo de custo tem `receipt_type`. **[alvo]** Linhas `service` deixam de gerar recibo (MUD-04 / D-03); os recibos já emitidos continuam válidos.
   - O `notary_name` é copiado como texto.
   - O documento é validado como CPF ou CNPJ.
   - Há PDF por recibo.
@@ -590,7 +650,7 @@ A `ProposalPolicy` tem: `viewAny`, `view`, `create`, `update`, `delete`, `manage
   - As faixas têm `min < max` e não se sobrepõem (`NonOverlappingBracketsRule`).
   - O `ibge_code` é único.
 - **RN-DOC-CALC-08:** os municípios do IBGE vêm do backend (`IbgeLocalityClient`), com cache **global** de 30 dias por UF.
-- **CA-DOC-CALC-01:** os casos de teste da v1 (`ItbiCalculatorTest`) continuam valendo. Exemplo: `FinancedCap` com SFH, V=500.000, F=300.000, 3%/0,5% e teto 400.000 → 7.500,00.
+- **CA-DOC-CALC-01:** os casos de teste atuais (`ItbiCalculatorTest`) continuam valendo. Exemplo: `FinancedCap` com SFH, V=500.000, F=300.000, 3%/0,5% e teto 400.000 → 7.500,00.
 
 Permissões: `documents.itbi_calculator.{view,create}` e `documents.itbi_municipalities.*`.
 
@@ -677,7 +737,7 @@ Permissões: `documents.reports.view`.
 
 ---
 
-## 3. Mudanças de regra do PRD v2
+## 3. Mudanças de regra do PRD de evolução **[alvo]**
 
 ### 3.1 MUD-01 — Proposta do CRM vira proposta de documentações *(contrato; backend pendente)*
 
@@ -734,7 +794,7 @@ O desenho abaixo foi **confirmado** (Q-S-11 a Q-S-14):
 
   | Campo | Valor |
   | --- | --- |
-  | Contato financeiro | **Receber:** o 1º proponente (contato), papel `client`. **Pagar:** o fornecedor padrão configurado por tipo de linha (cartório para emolumento, taxa e manual com cartório; prefeitura para ITBI; fornecedor do tipo de custo para manual). Esses fornecedores são contatos com papel `supplier` (Q-S-13) |
+  | Contato financeiro | **Receber:** o 1º proponente (contato), papel `cliente` (`ContactTypeEnum`). **Pagar:** o fornecedor padrão configurado por tipo de linha (cartório para emolumento, taxa e manual com cartório; prefeitura para ITBI; fornecedor do tipo de custo para manual). Esses fornecedores são contatos com papel `fornecedor` (Q-S-13) |
   | Categoria / subcategoria | Configuração do tenant (`tenant_settings`), por tipo de linha e direção: `documents.finance.<tipo>.receivable_category_id`, `…receivable_subcategory_id`, `…payable_category_id`, `…payable_subcategory_id`, `…payable_supplier_contact_id` (Q-S-13) |
   | Conta bancária | A conta principal (`main_account`) |
   | Tipo de custo | O `cost_type_id` da linha (manual) ou o tipo de custo correspondente (Registro, ITBI…) |
@@ -774,7 +834,7 @@ O desenho abaixo foi **confirmado** (Q-S-11 a Q-S-14):
 
 **Regra (PRD):** quando um orçamento é gerado pela calculadora, ele **precisa** ir para o funil de vendas do CRM.
 
-- **RN-MUD03-01:** `CreateQuoteAction` dispara `QuoteCreatedEvent(quoteId)` **depois do commit**. Isso já é implementado na v2.
+- **RN-MUD03-01:** `CreateQuoteAction` dispara `QuoteCreatedEvent(quoteId)` **depois do commit**. É implementado na fase R5.
 - **RN-MUD03-02:** o listener `CreateCrmDealFromQuoteListener` fica **pendente**. Ele só é registrado quando o backend do CRM existir.
 - **Contrato:**
   - Cria (idempotente por `quote_id`) uma oportunidade:
@@ -796,7 +856,7 @@ O desenho abaixo foi **confirmado** (Q-S-11 a Q-S-14):
 
 ### 3.4 MUD-04 — Remover "Billable Service" e ligar o orçamento ao catálogo de Serviços
 
-- **RN-MUD04-01:** **não existem** na v2:
+- **RN-MUD04-01:** deixam de existir (fase R3):
   - a tabela `billable_services`, o model, o service, o controller, os requests, a factory, as telas e o item de menu "Serviços Cobráveis";
   - as permissões `documents.billable_services.*`.
 - **RN-MUD04-02:** os pivots passam a ser:
@@ -808,15 +868,15 @@ O desenho abaixo foi **confirmado** (Q-S-11 a Q-S-14):
   - `description = service.name`;
   - `service_description = service.description` (pode ser nula);
   - `generates_receipt = false`. As linhas de serviço **não geram recibo**.
-- **RN-MUD04-05:** editar o valor de uma linha `service` também atualiza o `proposal_service.amount` correspondente (na v1 os dois divergiam).
-- **RN-MUD04-06:** o `ServicesService` da v1 vira `ServiceCatalogService`. O método `resolveSelection()` (ids válidos, sem duplicados, valor efetivo) passa para ele.
+- **RN-MUD04-05:** editar o valor de uma linha `service` também atualiza o `proposal_service.amount` correspondente (hoje os dois divergem).
+- **RN-MUD04-06:** o `ServicesService` atual vira `ServiceCatalogService`. O método `resolveSelection()` (ids válidos, sem duplicados, valor efetivo) passa para ele.
 - **CA-MUD04-01:** o menu de Documentações não tem "Serviços Cobráveis", e a permissão `documents.billable_services.view` não existe no catálogo.
 
 ---
 
-## 4. Catálogo de permissões da v2
+## 4. Catálogo de permissões (alvo)
 
-Formato: `<modulo>.<recurso>.<acao>`. A v2 cria só o que tem tela ou rota.
+Formato: `<modulo>.<recurso>.<acao>`. O catálogo mantém só o que tem tela ou rota. A exceção é `sales.*`, que fica reservado para o módulo Vendas futuro.
 
 | Módulo | Recursos (ações) |
 | --- | --- |
@@ -825,40 +885,38 @@ Formato: `<modulo>.<recurso>.<acao>`. A v2 cria só o que tem tela ou rota.
 | services | services, categories (CRUD) |
 | finance | categories, subcategories, accounts, accounts_payable, accounts_receivable (CRUD); cash_flow, spending_flow, billing (view) |
 | documents | proposals, proposal_documents, proposal_financial, quotes, banks, notaries, contract_types, cost_types, property_types, developments, stages, itbi_municipalities, registry_protocols (CRUD); proposal_timeline (edit, delete); itbi_calculator (view, create); reports (view) |
-| drive | drives, folders, trash, logs (CRUD conforme a v1) |
+| drive | drives, folders, trash, logs (CRUD atual) |
 | settings | company (view, edit); roles, users (CRUD) |
 | crm | deals (view), pipelines (view) — só para o menu *(Q-S-07)* |
+| sales | sales, quotations (CRUD) — mantidas como estão para o módulo Vendas futuro |
 
-**Removidas em relação à v1:**
+**A remover do catálogo atual [alvo]:**
 
-- `sales.*` (sem telas).
 - `documents.contracts.*` (sem uso).
 - `documents.billable_services.*` (MUD-04).
 
 ---
 
-## 5. Modelo de dados da v2 (diferenças em relação à v1)
+## 5. Mudanças de dados [alvo]
 
-O schema-base é o da v1 (`docs/arquitetura/database_dictionary.md`). Alterações:
+O schema atual está em `docs/arquitetura/database_dictionary.md`. As mudanças abaixo entram por migrations novas de tenant ou central (dados de homologação — V-02; os tenants podem ser recriados se preciso). Alterações:
 
 | Tabela | Mudança |
 | --- | --- |
 | `contacts` | `cpf_cnpj` só com dígitos e **unique** |
 | `products`, `services`, `employees`, `plans` | Dinheiro passa a `unsignedBigInteger` (D-06) |
 | `services` | Passa a ser referenciada por `quote_service` e `proposal_service` |
-| `account_payables`, `account_receivables` | `cost_id` → `cost_type_id`; `bank_account_out` (int sem FK) é removido *(Q-S-16)*; **novas** `proposal_id` e `proposal_cost_item_id` (nulas, `nullOnDelete`, unique por item) |
-| `financial_categories.type` | Valores `income` / `expense` |
-| `financial_contacts.type`, `ContactTypeEnum` | `client` / `supplier` / `employee` |
-| `drive_permissions.permission_type` | `owner_only` / `read_only` / `full_access` |
+| `account_payables`, `account_receivables` | `cost_id` mantido; `bank_account_out` (int sem FK) é removido (Q-S-16); **novas** `proposal_id` e `proposal_cost_item_id` (nulas, `nullOnDelete`, unique por item) |
 | `drive_logs` | Colunas estruturadas: `user_id`, `drive_id`, `action`, `ip_address`, `meta` (json) *(Q-S-06)* |
-| `tenant_settings` | `key` **unique**; o model passa a usar `SoftDeletes` (ou a coluna é removida) |
+| `tenant_settings` | `key` **unique**; o model passa a usar `SoftDeletes` |
 | `permissions` (central) | `name` **unique** |
 | `proposal_stages` | **Nova** `overdue_alerted_at` (RN-DOC-PRO-15) |
 | `users` (tenant) | **Novo** `softDeletes()`. Excluir = `status = false` + soft delete (Q-S-01) |
 | `services` | `sku` **unique**, considerando soft delete (Q-S-03) |
 | `tenant_settings` | Novas chaves `documents.finance.*` da integração Proposta → Financeiro (RN-MUD02-09), criadas por migration idempotente sem valor |
-| `billable_services`, `quote_billable_service`, `proposal_billable_service` | **Removidas** → `quote_service`, `proposal_service` |
-| `subscriptions`, `subscription_items`, `payments`, `payment_methods`, `mp_webhooks`, `coupons`, `coupon_redemptions` | **Não criadas** (D-11) |
+| `billable_services`, `quote_billable_service`, `proposal_billable_service` | **Removidas** depois da migração de dados: cada serviço cobrável vira um `service` na categoria "Documentação" (`price` → `sell_value`), e os vínculos passam para `quote_service` / `proposal_service` (V-09) |
+| `proposal_cost_items` | **Nova** `service_id` (nullable), preenchida para as linhas `service` |
+| `subscriptions`, `subscription_items`, `payments`, `payment_methods`, `mp_webhooks`, `coupons`, `coupon_redemptions` | **Mantidas sem uso**, fora do escopo (D-11 / V-08) |
 | `stages` | `unique(bank_id, order)` continua sem índice (há etapas excluídas repetidas); a regra é validada no service |
 | CRM | Nenhuma tabela (P-14) |
 
@@ -866,7 +924,7 @@ O schema-base é o da v1 (`docs/arquitetura/database_dictionary.md`). Alteraçõ
 
 ## 6. Integrações e agendamentos
 
-| Item | Regra na v2 |
+| Item | Regra |
 | --- | --- |
 | API de emolumentos | Como em RN-DOC-CALC-03. Chaves `REGISTRY_FEE_CALCULATOR_URL`, `…_TOKEN` e `…_TIMEOUT` (token novo, nunca no código) |
 | IBGE | Backend, cache global de 30 dias por UF |
@@ -886,16 +944,16 @@ O schema-base é o da v1 (`docs/arquitetura/database_dictionary.md`). Alteraçõ
 | --- | --- |
 | RNF-01 | Isolamento total entre tenants: dados, disco, cache, sessão e fila (constitution, P-01) |
 | RNF-02 | Listagens que crescem sem limite usam paginação no servidor e não têm N+1 (`Model::preventLazyLoading()` em dev) |
-| RNF-03 | Responsividade igual à v1 (mobile: drive por toque, tabelas com rolagem horizontal) |
+| RNF-03 | Responsividade como a atual (mobile: drive por toque, tabelas com rolagem horizontal) |
 | RNF-04 | Dark mode em todas as telas, sem flash no carregamento (script inline no `app.blade.php`) |
 | RNF-05 | Rate limits: `password-reset` 5/min, `documents-lookup` 30/min, `fee-calculator` 20/min, status do cadastro 60/min |
 | RNF-06 | Arquivos de pessoas só em disco privado, com download autorizado (LGPD) |
 | RNF-07 | Ações críticas idempotentes: baixa de parcela, conversão de orçamento, vínculo de cálculo e conversão de CRM |
-| RNF-08 | Toda regra (RN) com teste Pest; os testes da v1 (487 casos) servem de base de regressão |
+| RNF-08 | Toda regra (RN) com teste Pest; os 487 testes atuais são a base de regressão de toda mudança |
 
 ---
 
-## 8. Defeitos da v1 corrigidos na v2
+## 8. Defeitos atuais a corrigir [alvo]
 
 1. `contacts.cpf_cnpj` sem unique e com máscara inconsistente → RN-CAD-01.
 2. Excluir conta bancária sem estorno → RN-FIN-02.
@@ -903,24 +961,25 @@ O schema-base é o da v1 (`docs/arquitetura/database_dictionary.md`). Alteraçõ
 4. Alerta de etapa reenviado todo dia → RN-DOC-PRO-15.
 5. `proposal_billable_service.amount` divergente da linha → RN-MUD04-05.
 6. Controllers que consultam Eloquent, ou renderizam páginas inexistentes → constitution, seção 4.
-7. Nomes sem sufixo, enums e query strings em português → D-01 e D-07.
+7. Nomes de classe sem sufixo de tipo → D-01 (fase R1). Os valores de enum e as query strings em português **ficam** (V-03).
 8. Tipos monetários mistos → D-06.
 9. `tenant_settings.key` e `permissions.name` sem unique → seção 5.
-10. Menu "Vendas" sem telas e CRM sem permissão → seções 2.6 e 4.
-11. Fonte Instrument Sans não carregada; botão "Exportar lista" sem ação *(Q-S-17)*.
+10. CRM sem permissão → seções 2.6 e 4. O menu "Vendas" **não** é defeito: ele fica para o módulo futuro (seção 0).
+11. Fonte Instrument Sans não carregada; botão "Exportar lista" sem ação → RF-CORE-12 (Q-S-17).
+12. Arquivos mortos no front (`login-04`, `SearchForm.vue`, `PermissionGroupCard.vue`, `central/Dashboard.vue`, páginas `drive_folder/*` e `show` de cadastros referenciadas sem existir) e o `TenantSettingController` sem rota.
 
 ---
 
 ## 9. Decisões registradas (perguntas do spec)
 
-Todas as perguntas abaixo foram respondidas em **2026-10-26**, e **em todas foi adotada a recomendação**. Onde o texto acima diz *(Q-S-nn)*, vale a recomendação desta tabela.
+Todas as perguntas abaixo foram respondidas em **2026-10-26**. **Em todas foi adotada a recomendação, exceto na Q-S-17**, que o usuário revisou no mesmo dia. Onde o texto acima diz *(Q-S-nn)*, vale a decisão desta tabela.
 
 | ID | Pergunta | Decisão (= recomendação) |
 | --- | --- | --- |
 | Q-S-01 | Excluir usuário: manter a exclusão física ou passar a inativar/soft delete? | Inativar (`status = false`) + soft delete |
 | Q-S-02 | Dashboard: alimentar os KPIs financeiros e "Próximos vencimentos" com dados reais? | Sim; o resto fica como placeholder |
 | Q-S-03 | `services.sku` único? | Sim (validado e com índice) |
-| Q-S-04 | Alerta de estoque mínimo e baixa de estoque entram na v2? | Não; ficam para o CRM |
+| Q-S-04 | Alerta de estoque mínimo e baixa de estoque entram no escopo? | Não; ficam para o CRM |
 | Q-S-05 | Conta bancária com lançamentos: bloquear a exclusão? | Bloquear |
 | Q-S-06 | `drive_logs` estruturado (usuário, ação, IP)? | Sim |
 | Q-S-07 | Criar as permissões `crm.*` só para o menu? | Sim (`crm.deals.view`) |
@@ -933,4 +992,4 @@ Todas as perguntas abaixo foram respondidas em **2026-10-26**, e **em todas foi 
 | Q-S-14 | MUD-02: um lançamento por linha ou um por proposta? O que fazer com os lançamentos ao excluir a proposta? | Um por linha; excluir os abertos e manter os pagos |
 | Q-S-15 | MUD-03: estágio inicial do negócio; efeitos de expirar ou excluir o orçamento no negócio | 1º estágio do funil padrão; expirado = nada; excluído = Perdido |
 | Q-S-16 | Remover `bank_account_out` (sem uso)? | Sim |
-| Q-S-17 | Botão "Exportar lista" do `DataTable`: implementar (CSV) ou remover? | Remover (o visual da tabela não muda) |
+| Q-S-17 | Botão "Exportar lista" do `DataTable`: implementar (CSV) ou remover? | **Revista:** implementar a exportação em **PDF** nas 12 listas com `DataTable`, sem mudar o visual (RF-CORE-12, RN-CORE-15). A recomendação original era remover o botão |

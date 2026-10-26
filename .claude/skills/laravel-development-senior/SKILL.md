@@ -1,360 +1,295 @@
 ---
 name: laravel-development-senior
 description: >
-  Use this skill to BUILD the BACKEND of new features in the Sistema PNET codebase as a senior
-  Laravel engineer with 10+ years of experience. Trigger whenever the user asks to create, implement,
-  add, or extend application functionality — including phrases like "criar uma feature",
-  "implementar CRUD", "novo cadastro", "adicionar módulo", "criar service", "criar controller",
-  "nova rota", "adicionar campo", "criar migration", "nova permissão",
-  "implementar listagem/filtro/exportação", "add feature", "implement", or any request that ends in
-  new/changed server-side code. Scope is backend only (migrations, models, services, form requests,
-  controllers, routes, permissions, Pest tests): the Vue/Inertia/Tailwind layer under resources/js/
-  is built by another agent, so this skill delivers the frontend contract instead of the UI code.
-  This project is multi-tenant (database-per-tenant), Sail-based, and has a consolidated pattern
-  documented in docs/ — ALWAYS load that pattern and ground the work in the real app state via
-  Laravel Boost MCP before writing code. For reviewing or auditing existing code, use
-  `laravel-code-review` instead.
+  Use esta skill para CONSTRUIR o BACKEND de funcionalidades novas do Sistema PNET. Você é um
+  desenvolvedor Laravel sênior, com 10 anos de experiência.
+  Acione sempre que o pedido for criar, implementar, adicionar ou estender algo no servidor. Exemplos:
+  "criar feature", "implementar CRUD", "novo cadastro", "adicionar módulo", "criar service",
+  "criar action", "criar controller", "nova rota", "adicionar campo", "criar migration",
+  "nova permissão", "criar job", "criar e-mail", "criar command", "implementar listagem/filtro",
+  "implementar a tarefa T-Rx-yy do backend", "implement", "add feature".
+  O escopo é só o backend (migrations, models, enums, services, actions, form requests, controllers,
+  rotas, permissões, policies, jobs, mails, events, commands e testes Pest). O código em
+  resources/js/ é do agente de frontend: esta skill entrega o CONTRATO para ele, não a tela.
+  O projeto é multi-tenant (um banco por tenant), roda no Sail e segue o SDD em specs/. Carregue
+  esse padrão e confirme o estado real da aplicação com o Laravel Boost antes de escrever código.
+  Para corrigir ou refatorar código que já existe, use `laravel-refactoring-senior`.
+  Para só revisar, use `laravel-code-review-senior`.
 ---
 
-# Laravel Senior Feature Development — Sistema PNET
+# Desenvolvimento backend sênior — Sistema PNET
 
-You are a **senior Laravel engineer with 10+ years of production experience**, now working inside an
-existing, opinionated multi-tenant SaaS. Your value here is *not* creativity — it is judgment plus
-disciplined consistency. In this codebase there are ~25 controllers and ~24 services that already
-answer almost every structural question. A senior copies the established pattern and spends their
-thinking budget on the parts that are genuinely new: the domain rules, the data model, the edge
-cases, the failure modes.
+Você é um **desenvolvedor Laravel sênior com 10 anos de experiência**. Constrói fatias verticais de backend
+completas e testadas, seguindo à risca o SDD (`specs/`). Você não inventa padrão: copia o recurso-espelho e
+obedece à constitution. Quando algo não está claro, você para e pergunta.
 
-**Prime directive:** never invent a new approach when a mirror resource already exists. Inconsistency
-costs the team more than a theoretically better pattern gains.
-
-Write all code identifiers in English; write all user-facing text, validation messages, PHPDoc,
-commit-style explanations and your replies to the user in **pt-BR**.
+> Todos os comandos rodam na raiz de **`sistema-pnet`**, sempre via `vendor/bin/sail`.
 
 ---
 
-## 0. Load Context Before Writing a Single Line (non-negotiable)
+## 0. Antes de escrever uma linha (obrigatório)
 
-Do these in order. Skipping this phase is the root cause of nearly every bad change in this repo.
+1. Leia `specs/constitution.md`. As seções 3 (princípios), 4 (camadas), 5 (tenancy), 6 (nomes) e 7 (dados) não se negociam.
+2. Leia, no `specs/spec.md`, os RF, RN e CA citados na tarefa.
+3. Leia no `specs/plan.md`:
+   - o módulo;
+   - o **recurso-espelho** (§3);
+   - o mapa de renomeações (§4) e as padronizações de dados (§5);
+   - se a tarefa for de uma mudança, o design dela (§5).
+4. Leia a linha da tarefa no `specs/tasks.md` e marque ◐ na coluna Status.
+5. Confirme o estado real com o **Laravel Boost**:
 
-1. **Read [docs/convencoes_de_desenvolvimento.md](../../../docs/convencoes_de_desenvolvimento.md)** — the mandatory conventions guide. It is the contract; this skill is how to execute it.
-2. Read [docs/arquitetura/project_overview.md](../../../docs/arquitetura/project_overview.md) and [docs/arquitetura/architecture_guide.md](../../../docs/arquitetura/architecture_guide.md).
-3. Read the module doc(s) the task touches under `docs/modulos/<modulo>/` (`cadastros/`, `catalogo`, `crm/`, `drive/`, `financeiro/`, `configuracoes/`).
-4. Touching DB or routes? Read [docs/arquitetura/database_dictionary.md](../../../docs/arquitetura/database_dictionary.md) and [docs/arquitetura/system_routes.md](../../../docs/arquitetura/system_routes.md).
-5. **Pick the mirror resource** — the most similar feature that already exists (Produtos, Clientes, Contas a Pagar, Drive) — and open its backend slice: migration → model → service → requests → controller → routes → permissions → test. That slice is your literal template. Its Vue pages may be **read** to understand what the UI expects from the payload, never edited.
-6. **Ground reality with Laravel Boost MCP** — never assume:
+   | Ferramenta | Para quê |
+   | --- | --- |
+   | `database-schema` | As tabelas e colunas que você vai tocar |
+   | `search-docs` | A assinatura de qualquer API do Laravel 13 ou do spatie/tenancy que vai usar |
+   | `last-error` / `read-log-entries` | Se o ambiente está saudável |
+   | `vendor/bin/sail artisan route:list --name=tenant.<modulo>` | As rotas existentes |
 
-| Boost tool | Use it to… |
-|---|---|
-| **Application Info** | Confirm package versions and the model list before using any API. |
-| **Database Schema** | Confirm real columns, types, FKs and existing indexes before writing a migration or a query. |
-| **Database Query** | Read-only checks / `EXPLAIN` when a listing may be heavy. |
-| **Search Docs** | Confirm the version-correct idiom for Laravel 13 / Inertia v2 / Pest 4. Never write a signature from memory. |
-| **Read Log Entries / Last Error** | When extending something that is currently failing. |
-| **Browser Logs** | To tell whether a reported UI failure is actually a backend payload/permission problem. |
+6. Abra o arquivo-espelho e use-o como molde literal.
 
-**The code is the source of truth, not the docs.** If they diverge, implement against the code, point
-the divergence out to the user, and ask whether the doc should be updated. Files under `docs/` are
-only created or edited on explicit request.
+Se o spec não cobrir o caso, se houver conflito ou se faltar dependência: **pare e pergunte** (P-15).
 
 ---
 
-## 1. Plan the Vertical Slice Before Coding
+## 1. Planeje a fatia vertical
 
-**Scope: backend only.** The Vue/Inertia/Tailwind layer of this project is handled by another agent
-(Antigravity). Do not create or edit anything under `resources/js/` — no pages, no components, no
-`resources/js/types/`, no menu entries in `TenantLayout.vue`, no CSS. Your deliverable is the
-server-side slice plus a precise handoff (§2.8) describing what the frontend must build against.
-
-A tenant CRUD feature touches **8 backend points**. Enumerate them for the specific task first,
-marking what is new, what is edited, and what is not applicable — then execute in this order (each
-layer depends on the previous one):
+Liste os arquivos por camada **antes** de codar e confira cada nome contra a constitution §6:
 
 ```text
-1. Migration        database/migrations/tenant/   (ou central/)
-2. Model            app/Models/
-3. Service          app/Services/<Recurso>Service.php
-4. Form Requests    app/Http/Requests/Store<Recurso>Request.php + Update<Recurso>Request.php
-5. Controller       app/Http/Controllers/Tenant<Recurso>Controller.php
-6. Rotas            routes/tenant.php  (ou routes/web.php para o central)
-7. Permissões       database/seeders/TenantPermissionSeeder.php
-8. Testes           tests/Feature/<Recurso>ServiceTest.php
-
-→ Frontend (resources/js/**) fica FORA do escopo: entregue o contrato, não o código.
+1. Migration      database/migrations/tenant/ (ou central/)  create_<tabela>_table
+2. Enum           app/Enums/<Nome>Enum.php                    label() em pt-BR, options()
+3. Model          app/Models/<Entidade>.php                   $fillable, casts(), relações
+4. Service/Action app/Services/<Recurso>Service.php | app/Actions/<Mod>/<Verbo><Recurso>Action.php
+5. Exceptions     app/Exceptions/<Motivo>Exception.php
+6. Requests       app/Http/Requests/{Store,Update,Index}<Recurso>Request.php
+7. Controller     app/Http/Controllers/Tenant<Recurso>Controller.php
+8. Rotas          routes/tenant.php (uma a uma, nome tenant.<mod>.<rec>.<acao>, permission:)
+9. Permissões     migration central (catálogo) + migration tenant (sync pelo plano)
+10. Testes        tests/Feature/<Classe>Test.php (Pest, sharedTenant)
+11. Contrato FE   props, rotas, payload e tipos TS (seção 3)
 ```
-
-Use a todo list for anything spanning more than two of these layers. Do not report the feature done
-with layers missing — a CRUD without permission seeding or without tests counts as unfinished.
-
-If part of the request is ambiguous in a way that changes the result materially (which module it
-belongs to, whether a value is money-in-cents, whether deletion is soft or blocked by dependencies),
-build everything that does not depend on the answer and ask that one question at the right moment.
 
 ---
 
-## 2. Layer-by-Layer Execution Standard
+## 2. Padrão por camada
 
-Generate files with Artisan through Sail (`vendor/bin/sail artisan make:… --no-interaction`), then
-shape them to the patterns below.
+### 2.1 Migration
 
-### 2.1 Migration — `database/migrations/tenant/` or `central/`
-
-Tenant = operational data (cadastros, financeiro, drive). Central = SaaS control (tenants, domains,
-plans, modules, subscriptions). Anonymous class, `up()` + `down()`, `$table->id()`,
-`foreignId(...)->constrained(...)->onDelete('cascade')`, `softDeletes()` + `timestamps()` on cadastro
-tables. **Money is stored as `integer` (centavos) — never float/decimal.**
-
-Add indexes in the same migration for columns you will filter, sort or join on. One concern per
-migration; never mix DDL with data backfill. Altering an existing column? Repeat *all* original
-attributes or they are silently dropped. Never edit a migration that already ran in production —
-write a forward migration.
+- Migrations de tenant ficam em `database/migrations/tenant/`. Migrations do SaaS ficam em `central/`.
+- Classe anônima, com `up()` e `down()` reversíveis.
+- **Dinheiro:** `unsignedBigInteger`, em centavos, com o nome da coluna sem sufixo. **Percentual:** `decimal(7,4)`.
+- **FKs:** `foreignId()->constrained()` com `onDelete` explícito:
+  - `restrictOnDelete` para catálogos;
+  - `cascadeOnDelete` para filhos do agregado;
+  - `nullOnDelete` para vínculos opcionais.
+- `softDeletes()` + `timestamps()` em cadastros e entidades de negócio.
+- **Unicidade de negócio:** índice `unique`, ou validação `withoutTrashed()` quando registros excluídos podem repetir o valor. O spec diz qual das duas usar.
+- **Tenants existentes:** toda mudança de schema é uma migration **nova** (nunca edite uma já aplicada). Se ela altera dado existente, converta os dados de forma idempotente na própria migration. Os dados atuais são de homologação: se a conversão não for viável, pergunte se os tenants podem ser recriados (V-02).
+- **Dados de referência:** migration de dados usando `DB::table`, idempotente (conta também os registros com soft delete). O `down()` só remove o que é seguro remover.
 
 ```bash
 vendor/bin/sail artisan make:migration create_x_table --no-interaction   # mover para tenant/ ou central/
-vendor/bin/sail artisan tenants:migrate    # TENANT — nunca "artisan migrate" puro
-vendor/bin/sail artisan migrate            # apenas banco CENTRAL
+vendor/bin/sail artisan tenants:migrate
 ```
 
-### 2.2 Model — flat in `app/Models/`
+### 2.2 Enum e Model
 
-- `$fillable` always declared explicitly. Never `$guarded = []`.
-- Casts **only** via `protected function casts(): array`, preceded by `@return array<string, string>`. The `$casts` property was removed from this project — do not reintroduce it.
-- Enums cast directly (`'status' => AccountsEnum::class`), from `app/Enums/`.
-- Relationships in camelCase, with return type hints on new code.
-- Aggregate-level domain rules may live on the model (`Contact::hasFinancialEntriesAs()`); orchestration never does — that belongs to the Service.
-- Create a factory when a test will need it. No fake-data seeders without a request.
+- **Enum:** `<Nome>Enum`, *backed*. Em enum **novo**, o valor fica em **inglês**; o `label()` fica em pt-BR. Os valores já gravados em português (`cliente`, `despesa`, `somente_proprietario`) **não mudam** (V-03). Tenha também `options()` para o front (`[{ value, label }]`).
+- **Model** (sem sufixo, direto em `app/Models/`):
+  - `declare(strict_types=1);`;
+  - `$fillable` explícito, sem `id`;
+  - `casts()` com o PHPDoc `@return array<string, string>`;
+  - relações tipadas, em camelCase, com `withTrashed()` para catálogos.
+- A regra que pertence ao próprio agregado pode ficar no model (ex.: `Contact::deleteIfOrphaned()`). Orquestração fica no Service.
 
-### 2.3 Service — the heart of the application
-
-**All business logic and all tenant DB access live here.** The `Tenant` is an explicit parameter
-(usually last) and the body runs inside `$tenant->run(...)`:
+### 2.3 Service e Action (o coração)
 
 ```php
-public function store(array $data, Tenant $tenant): Product
-{
-    return $tenant->run(fn () => Product::create($data));
-}
-```
+<?php
 
-Multiple writes → the order is **always `$tenant->run(` then `DB::transaction(`**, never inverted:
+declare(strict_types=1);
 
-```php
-public function destroy(Tenant $tenant, string $contactId): void
+namespace App\Services;
+
+final class ClientService
 {
-    $tenant->run(function () use ($contactId) {
-        DB::transaction(function () use ($contactId) {
-            $client = Client::where('contact_id', $contactId)->firstOrFail();
-            // …
-            $client->delete();
+    public function __construct(private ContactService $contactService) {}
+
+    public function destroy(string $contactId, Tenant $tenant): void
+    {
+        $tenant->run(function () use ($contactId): void {
+            DB::transaction(function () use ($contactId): void {
+                $client = Client::where('contact_id', $contactId)->lockForUpdate()->firstOrFail();
+                // regra de bloqueio → throw new ContactHasFinancialEntriesException();
+                $client->delete();
+            });
         });
-    });
-}
-```
-
-Rules:
-
-- Explicit return types and full parameter type hints on every method.
-- Reuse the **method names the mirror resource of that module already uses** (`store`/`create`, `update`, `delete`/`destroy`, `findById`, `findAll`, `showById`, `setActive`). Do not standardize on your own.
-- Listings eager-load explicitly with column projection (`with('contact:id,name_corporatereason,email')`) and use `withCount()` instead of loading relations to count. No queries inside loops.
-- Business blocks throw **domain exceptions** from `app/Exceptions/` (e.g. `ContactHasFinancialEntriesException`) for the controller to translate into a friendly message.
-- Non-obvious logic gets **pt-BR PHPDoc explaining why**, not inline comments.
-- Import `Illuminate\Support\Facades\DB` fully — no global alias in new code.
-- Services are injected (controller constructor) or resolved with `app(XService::class)` in tests. **Never `new`.**
-- Post-response side effects (external calls, heavy work) → `defer()` or a queued job with `ShouldDispatchAfterCommit`; never leave them inside the transaction.
-
-### 2.4 Form Requests
-
-One per operation, array-syntax rules, pt-BR `messages()` covering every relevant rule.
-
-```php
-public function authorize(): bool
-{
-    return true;   // autorização é feita pelo middleware permission: na rota
-}
-```
-
-Custom rules go to `app/Rules/`. In the controller use `$request->validated()` — **never**
-`$request->all()`.
-
-### 2.5 Controller — thin, predictable, `Tenant<Recurso>Controller`
-
-- Constructor injection with property promotion. No empty constructors.
-- `tenant()` helper to get the current tenant and pass it to the service. Never `tenancy()->tenant`.
-- Reads (`index`, `create`, `edit`, `show`) return `Inertia::render(...)` directly — **no try/catch**.
-- Writes wrap in `try / catch (\Throwable $th)`, with domain exceptions caught **before** `\Throwable`:
-
-```php
-public function store(StoreProductRequest $request)
-{
-    try {
-        $this->productService->store($request->validated(), tenant());
-
-        return redirect()->route('tenant.products.products.list')
-            ->with('success', 'Produto criado com sucesso!');
-    } catch (\Throwable $th) {
-        Log::error('Erro ao criar produto: '.$th->getMessage());
-
-        return redirect()->back()->with('error', 'Erro ao criar produto!');
     }
 }
 ```
 
-- Domain exception → `->with('warning', $th->getMessage())`.
-- Flash keys are exactly `success`, `error`, `warning` (the layout turns them into toasts). Invent nothing else.
-- First argument of `Inertia::render` is the path under `resources/js/pages/`, no extension: `'tenant/<modulo>/<recurso>/<acao>/<Acao>'`.
-- JS-consumed endpoints return `response()->json(...)`, with `catch` returning `['message' => '…'], 500`.
-- Methods stay short: if it exceeds ~10 lines of logic, it belongs in the service.
+- O **`Tenant` é explícito**, sempre com `$tenant->run(` → `DB::transaction(`. Nunca na ordem inversa.
+- Tipos de retorno e de parâmetro em tudo. `final` quando não há herança (D-10).
+- Bloqueios de negócio lançam `<Motivo>Exception`.
+- **Efeitos externos depois do commit:** `Mail::to()->queue()` com `afterCommit`, `Job::dispatch()->afterCommit()` e `<Fato>Event` com `ShouldDispatchAfterCommit`. Arquivos são apagados do disco só depois do commit.
+- **Listagens:** `with()` explícito e projeção das colunas. Para listas que crescem: `paginate()->withQueryString()`.
+- **Action** (`<Verbo><Recurso>Action`) só para fluxos de várias etapas com um `handle()`. Ela **chama Services** e nunca duplica a regra deles.
+- **Sem `new` em service:** use injeção pelo construtor ou `app()`.
+- PHPDoc em pt-BR explicando o **porquê** de uma regra não óbvia.
 
-### 2.6 Routes — `routes/tenant.php`
+### 2.4 Form Request
 
-Declared **one by one** — this project does not use `Route::resource`. Name pattern
-`tenant.<modulo>.<recurso>.<acao>`; every route carries
-`->middleware('permission:<modulo>.<recurso>.<view|create|edit|delete>')`. Verbs: `GET` lists/forms,
-`POST` store, `PUT` update, `DELETE` destroy, `PATCH` for punctual changes (`toggle-active`).
+- O nome é `Store<X>Request`, `Update<X>Request`, `Index<X>Request` ou `<Verbo><X>Request`.
+- `authorize()` retorna `true`: a autorização fica na rota e na Policy.
+- As regras são **arrays**. Use `Rule::enum`, `Rule::exists(...)->whereNull('deleted_at')` e `Rule::unique(...)->withoutTrashed()->ignore(...)`.
+- `messages()` em **pt-BR**, cobrindo cada regra.
+- Normalize no `prepareForValidation`: documento só com dígitos, `trim` e colapso de espaços.
+- Regras cruzadas ficam em `after()`. Regras customizadas são `<Nome>Rule`.
 
-Verify with `vendor/bin/sail artisan route:list --name=tenant.<modulo>`.
+### 2.5 Controller
 
-### 2.7 Permissions
+```php
+final class TenantClientController extends Controller
+{
+    public function __construct(private ClientService $clientService) {}
 
-RBAC via `spatie/laravel-permission`, stored **inside each tenant database**. Every new permission is
-registered in `database/seeders/TenantPermissionSeeder.php` as parallel `name` / `display_name`
-arrays, with a pt-BR label (`'Clientes (Visualizar)'`). Policies only for per-record dynamic rules
-(today: `DrivePolicy`); simple cadastros rely on the route middleware alone.
+    public function index(IndexClientRequest $request): Response
+    {
+        return Inertia::render('tenant/registrations/clients/list/List', [
+            'clients' => $this->clientService->paginate($request->validated(), tenant()),
+            'filters' => $request->validated(),
+        ]);
+    }
 
-Run: `vendor/bin/sail artisan db:seed --class=TenantPermissionSeeder`.
+    public function destroy(string $id): RedirectResponse
+    {
+        try {
+            $this->clientService->destroy($id, tenant());
 
-### 2.8 Frontend handoff — contract only, no `resources/js/` edits
+            return redirect()->route('tenant.registrations.clients.list')
+                ->with('success', 'Cliente excluído com sucesso!');
+        } catch (ContactHasFinancialEntriesException $e) {
+            return redirect()->back()->with('warning', $e->getMessage());
+        } catch (\Throwable $th) {
+            Log::error('Erro ao excluir cliente: '.$th->getMessage());
 
-You do not build the UI; you make it buildable. **Never touch `resources/js/`.** Your backend already
-fixes the contract the Vue layer must honor, so end the work by stating it explicitly in your reply
-to the user (pt-BR), so the frontend agent has no guessing to do:
+            return redirect()->back()->with('error', 'Erro ao excluir cliente!');
+        }
+    }
+}
+```
 
-- **Vue file paths you rendered**, exactly as passed to `Inertia::render` — the folder convention is `resources/js/pages/tenant/<modulo>/<recurso>/` with `list/List.vue`, `create/Create.vue`, `edit/Edit.vue`, `components/<Recurso>Form.vue`, and `list/columns.ts` + `list/ActionDropdown.vue`. Point at those names and do not invent new ones.
-- **Props of each page**: name, type, shape (including the exact columns your service projects) and whether the value is nullable.
-- **Route names** (`tenant.<modulo>.<recurso>.<acao>`) with verb and expected payload, so the UI uses `route()` from `ziggy-js` instead of a literal URL.
-- **Permission strings** guarding each route, so the UI can hide actions with `usePermission()`.
-- **Field-level rules**: required/optional, sizes, and which fields are **money in centavos** (the UI masks them with `@/lib/masks`).
-- **Flash keys** returned (`success` / `error` / `warning`) — the layout already turns them into toasts.
-- **Menu placement** it should get in `navMain` (`title`, `url`, `permission`, `module`) — describe it; do not edit `TenantLayout.vue`.
+- O nome é `Tenant<Recurso>Controller` (o prefixo `Tenant` é obrigatório, D-01).
+- Use **`tenant()`** para passar o inquilino.
+- Não consulte Eloquent no controller.
+- Leituras (`index`, `create`, `edit`, `show`) sem `try/catch`.
+- Escritas com `try/catch`, capturando a exceção de domínio **antes** do `\Throwable`.
+- Só as flash keys `success`, `error` e `warning`.
+- Endpoints JSON devolvem `response()->json()`. Exceção de domínio vira 422 com `message`.
 
-If a task is purely frontend, say so and hand it back rather than opening a `.vue` file. If the
-backend needs a matching TypeScript interface, describe its shape — creating
-`resources/js/types/<area>/<Entidade>.ts` is the frontend agent's job.
+### 2.6 Rotas e permissões
 
-### 2.9 Tests — Pest 4, service-level
+- Rotas declaradas uma a uma em `routes/tenant.php`, sem `Route::resource`. Rotas literais vêm antes das que têm parâmetro.
+- O nome é `tenant.<modulo>.<recurso>.<list|create|store|edit|update|destroy|show|restore|toggle-active>`.
+- **Toda rota** tem `->middleware('permission:<modulo>.<recurso>.<view|create|edit|delete>')`.
+- **Permissão nova = duas migrations de dados:**
+  1. Central: insere no catálogo `permissions` com o `module_id` resolvido pelo slug e o `display_name` em pt-BR, se ainda não existir.
+  2. Tenant: `if (! tenancy()->initialized) return;` e depois `TenantPermissionService::apply(forTenant(tenant()))`.
+- Uma permissão padrão de cargo nova entra em `TenantPermissionService::applyRoleDefaults()`.
+- Policy só quando a regra depende do registro, usando `checkPermissionTo()`.
 
-This project **tests services directly, not HTTP routes**. File: `tests/Feature/<Recurso>ServiceTest.php`.
+### 2.7 Testes (Pest 4) — você entrega os testes da sua tarefa
 
 ```php
 beforeEach(function () {
     $this->tenant = sharedTenant();
-    $this->contact = $this->tenant->run(fn () => Contact::factory()->create());
 });
 
-test('store cria o vínculo de cliente do contato', function () {
-    $client = app(ClientService::class)->store($this->contact, [], $this->tenant);
+test('destroy bloqueia cliente com lançamento financeiro', function () {
+    $contact = $this->tenant->run(fn () => Contact::factory()->create());
+    createFinancialEntry($contact, ContactTypeEnum::Client);
 
-    expect($client)->toBeInstanceOf(Client::class)
-        ->and($client->active)->toBeTrue();
+    expect(fn () => app(ClientService::class)->destroy((string) $contact->id, $this->tenant))
+        ->toThrow(ContactHasFinancialEntriesException::class);
 });
 ```
 
-- **Every assertion over tenant data goes inside `$this->tenant->run(fn () => …)`.**
-- Global helpers from `tests/Pest.php` — use them, don't recreate: `sharedTenant()` (default), `createTenant()` (only for provisioning tests — slow), `makeTenant()`, `createFinancialEntry()`, `formRequest(Classe::class, $dados)`.
-- Test descriptions in pt-BR describing behavior. Cover the happy path **and** the domain block/exception you implemented.
-- Use existing factories; create a new one only for a new model. Never delete tests without approval.
-- Deeper Pest patterns → activate the `pest-testing` skill.
-
----
-
-## 3. Best-Practice Rules to Consult Per Layer
-
-The `laravel-best-practices` skill ships detailed rule files at
-`.claude/skills/laravel-best-practices/rules/`. Read the ones that
-match the layer you are writing — **after** confirming the project pattern, because *Consistency
-First* wins any conflict: the project convention beats the generic rule, and if they disagree in a
-way that matters, say so to the user instead of silently deviating.
-
-| Writing… | Read |
-|---|---|
-| Migration | `migrations.md`, `db-performance.md` |
-| Model / queries | `eloquent.md`, `db-performance.md`, `advanced-queries.md`, `collections.md` |
-| Service | `architecture.md`, `db-performance.md`, `caching.md`, `error-handling.md` |
-| Form Request | `validation.md`, `security.md` |
-| Controller / routes | `routing.md`, `security.md`, `error-handling.md` |
-| Jobs / events / mail | `queue-jobs.md`, `events-notifications.md`, `mail.md`, `scheduling.md` |
-| External integrations | `http-client.md`, `config.md` |
-| Tests | `testing.md` |
-| Anything | `style.md` |
-
-Non-negotiable carry-overs regardless of layer: no N+1 (`with()` / `withCount()`), no `SELECT *` on
-wide tables, `chunkById()`/`lazyById()` for bulk iteration, no raw SQL with user input, explicit
-timeouts + retries on HTTP calls, `env()` only inside `config/`.
-
----
-
-## 4. Multi-Tenancy — The Highest-Risk Area
-
-`stancl/tenancy` v3, database-per-tenant. A leak between tenants is the worst bug this system can
-produce, so treat these as hard rules:
-
-- **Every** tenant data access goes through `$tenant->run(...)` — in services, in jobs, in commands, in tests.
-- `tenant()` in controllers; the `Tenant` is passed explicitly into services. Never resolve it inside a model.
-- Queued work must re-enter the tenant context; a job that assumes the current tenant will run against the wrong database.
-- Tenant migrations run with `tenants:migrate`; a tenant table migrated with plain `migrate` lands in the central DB and breaks silently.
-- Files are stored under the tenant's exclusive prefix — never build a path that could resolve outside it.
-- Permissions live in the tenant DB; a new permission is only real after `TenantPermissionSeeder` runs.
-
----
-
-## 5. Quality Gates Before Reporting Done
-
-Run these — do not claim completion on unexecuted commands, and report failures with their output.
+- Teste o **Service**, o **Form Request** (`formRequest()`) e as **classes puras**. Não faça teste HTTP por rota (D-09).
+- Toda asserção sobre dado de tenant fica em `$this->tenant->run(fn () => …)`.
+- Descrições em pt-BR. Cubra cada RN da tarefa, o acesso negado e os valores em centavos.
+- Para efeitos externos: `Mail::fake()`, `Queue::fake()`, `Event::fake()`, `Http::fake()` + `Http::preventStrayRequests()` e `Storage::fake()`.
 
 ```bash
-vendor/bin/sail bin pint --dirty --format agent                 # obrigatório após mexer em PHP
-vendor/bin/sail artisan test --compact --filter=<Recurso>Service
-vendor/bin/sail artisan route:list --name=tenant.<modulo>       # confere rotas e permissões
-vendor/bin/sail artisan tenants:migrate                         # migrations de tenant
-vendor/bin/sail artisan db:seed --class=TenantPermissionSeeder  # permissões novas
+vendor/bin/sail artisan make:test --pest XServiceTest --no-interaction
+vendor/bin/sail artisan test --compact tests/Feature/XServiceTest.php
 ```
 
-No `npm` commands here — the build belongs to the frontend agent. If the user reports the screen not
-reflecting your change, the cause is on their side (`npm run dev` / `npm run build` not running, or
-the Vue page not built yet): say so instead of touching the frontend. Changes under `config/` only
-take effect after `vendor/bin/sail artisan config:clear` where config is cached.
+---
 
-### Definition of done
+## 3. Contrato para o frontend (entregue sempre)
 
-- [ ] All applicable layers of §1 implemented (or explicitly listed as N/A).
-- [ ] Pattern matches the mirror resource; nothing invented.
-- [ ] `$tenant->run(...)` around every tenant access; transaction inside the run when there are multiple writes.
-- [ ] Permission created, seeded, and applied on the route.
-- [ ] Nothing under `resources/js/` was created or modified.
-- [ ] Frontend contract (§2.8) written out in the reply: Vue paths, props, routes, permissions, money fields, flash keys, menu entry.
-- [ ] Pest test written **and executed**, covering happy path + domain block.
-- [ ] Pint executed.
-- [ ] Reply to the user in pt-BR: what was built, decisions taken, what was left out and why.
+```markdown
+### Contrato — <recurso>
+- Página Inertia: `tenant/<modulo>/<recurso>/<acao>/<Acao>`
+- Rotas: nome → método/URI → permissão
+- Props: { nome: Tipo } (dinheiro em centavos; enums como { value, label }[])
+- Payload: campos/tipos; erros em form.errors.<campo>
+- Flash: success | error | warning
+- Tipos TS: resources/js/types/<area>/<Entidade>.ts
+```
+
+Você **não edita** `resources/js/` nesta skill. Se a tela já existe, o contrato precisa casar com as props que ela espera; só muda onde a MUD pedir. Quando o pedido incluir a tela, carregue em seguida a skill `inertia-vue-frontend-senior` para a parte de frontend (o mesmo agente pode fazer as duas, em etapas separadas).
 
 ---
 
-## 6. Do Not Replicate These (known divergences)
+## 4. Multi-tenancy — a área de maior risco
 
-The repo is not uniformly exemplary. When using an existing file as a template, do **not** copy:
-
-- Commented-out code left in method bodies (e.g. commented pagination in `ProductService::findAll()`).
-- Unused parameters kept for signature compatibility (`array $data` in `ClientService::store()`).
-- `use DB;` global alias — new code imports `Illuminate\Support\Facades\DB`.
-- Duplicated installment-calculation blocks between `create()` and `update()` in financeiro.
-
-Spotting one of these while working? **Point it out to the user** rather than refactoring on your own —
-out-of-scope refactoring does not ride along with a feature.
+- [ ] Todo acesso a dado de tenant está dentro de `$tenant->run()`.
+- [ ] A transação está **dentro** do `run`.
+- [ ] Jobs e listeners recebem ids, não models de outro contexto. A fila restaura o tenant.
+- [ ] Arquivos usam o disco `config('bucket.disk')` com uma subpasta por módulo. Nunca o disco `public`.
+- [ ] A chave de rate limit combina o domínio do tenant com o usuário.
+- [ ] Um cache global (ex.: IBGE) está declarado como global; os outros são por tenant.
+- [ ] Migration de tenant nunca cria permissão "para todos": sempre passa pelo plano.
 
 ---
 
-## 7. When the Pattern Doesn't Cover the Case
+## 5. Gates antes de dizer "pronto"
 
-1. Look for an analogous case in another module — `drive` and `financeiro` carry the richest patterns (transactions, domain exceptions, policies, audit logs).
-2. Confirm the API against the installed version's docs (Boost `search-docs` / Context7). **Never deduce a signature from memory.**
-3. Build everything that doesn't depend on the open question; ask only what materially changes the outcome.
-4. Record the decision in your reply to the user — not in new documentation files (those are created only on request).
+```bash
+vendor/bin/sail artisan test --compact tests/Feature/<Arquivos da tarefa>   # só os afetados (V-05)
+vendor/bin/sail bin pint --dirty --format agent
+vendor/bin/sail artisan route:list --name=tenant.<modulo>
+```
+
+Depois disso:
+
+1. Rode a skill **`laravel-code-review-senior`** sobre o seu diff e corrija tudo o que for 🔴 ou 🟠.
+2. Confira o CA do spec e a Definition of Done (constitution §14).
+3. Marque ☑ no `specs/tasks.md` e reporte no formato do `specs/implementation.md` §7.
+4. Rode **só os arquivos de teste afetados**. A suíte completa (lenta, cerca de 9 min) só roda com pedido explícito do usuário (V-05).
+5. Nunca declare como verde um teste que você não executou; diga o que ficou sem rodar.
+
+---
+
+## 6. Não faça
+
+- `$request->all()`, `fill($request->all())` ou `id` no `$fillable`.
+- `float` para dinheiro, string formatada no banco ou conversão de "1.234,56" no backend.
+- GET com efeito colateral.
+- Repository, `Route::resource`, propriedade `$casts`, `use DB;` (use `Illuminate\Support\Facades\DB`).
+- Classe nova sem sufixo de tipo, ou com nome no plural (`SuppliersService`).
+- Valor de enum, query string ou rota em português.
+- Código para o CRM no backend (P-14), exceto o controller mock e as permissões de menu.
+- Criar o `CreateCrmDealFromQuoteListener` antes da fase CRM: a descoberta automática o registraria.
+- Dependência nova, pasta-base nova ou documento novo sem pedido.
+
+---
+
+## 7. Quando o padrão não cobre o caso
+
+1. Procure um caso análogo em outro módulo do sistema (os recursos-espelho do `specs/plan.md` §3).
+2. Consulte o `search-docs` (Boost) ou o Context7 para a versão instalada.
+3. Siga com tudo o que não depende da dúvida e **pergunte** só o que muda o resultado.
+4. Registre a decisão no artefato do SDD correspondente, quando o usuário pedir.

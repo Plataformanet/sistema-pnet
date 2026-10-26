@@ -1,13 +1,13 @@
-# Implementation — Sistema PNET v2
+# Implementation — Sistema PNET
 
-> **O que é:** o guia de execução para os agentes e desenvolvedores que vão construir a v2. Define:
+> **O que é:** o guia de execução para os agentes e desenvolvedores que vão evoluir o Sistema PNET. Define:
 >
 > - o fluxo de cada tarefa do [tasks.md](tasks.md);
 > - **qual skill usar em cada caso**;
 > - os gates de qualidade;
 > - os comandos.
 >
-> Obedece à [constitution.md](constitution.md). **Todos os comandos rodam na raiz de `sistema-pnet-v2`.**
+> Obedece à [constitution.md](constitution.md). **Todos os comandos rodam na raiz de `sistema-pnet`.**
 
 ---
 
@@ -23,19 +23,19 @@
 
 ## 2. Mapa de skills
 
-As skills ficam em `.claude/skills/<nome>/SKILL.md`. O mesmo mapa está no `CLAUDE.md` da v2.
+As skills ficam em `.claude/skills/<nome>/SKILL.md`. O mesmo mapa está no `CLAUDE.md` e no `AGENTS.md`. O `.agents/skills/` é cópia idêntica do `.claude/skills/`.
 
 | Situação / tipo de tarefa | Skill principal | Skills de apoio | Revisão | Testes |
 | --- | --- | --- | --- | --- |
 | Construir backend novo: migration, model, service, action, request, controller, rota, permissão, job, mail, command | `laravel-development-senior` | `laravel-best-practices`, `laravel-permission-development`, `pest-testing`, `fortify-development` (auth) | `laravel-code-review-senior` | O próprio BE escreve; o `qa-senior` faz o aceite |
 | Construir ou ajustar frontend: páginas, componentes, tipos TS, sidebar, CRM | `inertia-vue-frontend-senior` | `inertia-vue-development`, `tailwindcss-development` | `laravel-code-review-senior` (contrato e permissões) + checagem visual | `qa-senior` (type-check e checagem visual) |
-| Corrigir bug, refatorar, otimizar ou limpar código já feito na v2 | `laravel-refactoring-senior` | `laravel-best-practices`, `pest-testing` | `laravel-code-review-senior` (**gate obrigatório** dentro da skill) | Teste que reproduz o bug, escrito pela própria skill |
+| Corrigir bug, refatorar, otimizar, renomear, padronizar ou limpar código que já existe | `laravel-refactoring-senior` | `laravel-best-practices`, `pest-testing` | `laravel-code-review-senior` (**gate obrigatório** dentro da skill) | Teste que reproduz o bug, escrito pela própria skill |
 | Revisar, auditar ou analisar código, sem mudar nada | `laravel-code-review-senior` | `laravel-best-practices` | — | — |
-| Plano de testes, regressão da v1, isolamento entre tenants, aceite de fase, relatório de QA | `qa-senior` | `pest-testing` | `laravel-code-review-senior` (qualidade dos testes) | — |
+| Plano de testes, regressão, isolamento entre tenants, aceite de fase, relatório de QA | `qa-senior` | `pest-testing` | `laravel-code-review-senior` (qualidade dos testes) | — |
 
 **Regras do mapa:**
 
-- Na dúvida entre construir e corrigir: se o código **ainda não existe** na v2, use `laravel-development-senior`. Se **já existe** e precisa mudar, use `laravel-refactoring-senior`.
+- Na dúvida entre construir e corrigir: se o código **ainda não existe**, use `laravel-development-senior`. Se **já existe** e precisa mudar, use `laravel-refactoring-senior`.
 - Quem quer **saber** o que está errado usa a revisão. Quem quer o problema **corrigido** usa a refatoração.
 - O backend **não edita** `resources/js/`. Ele entrega o **contrato** (seção 4) e o frontend implementa.
 - O frontend **não edita** PHP. Se faltar uma prop ou rota, ele devolve a tarefa ao backend.
@@ -43,15 +43,15 @@ As skills ficam em `.claude/skills/<nome>/SKILL.md`. O mesmo mapa está no `CLAU
 
 **Mapa por fase (resumo do [tasks.md](tasks.md)):**
 
-| Fase | BE | FE | QA |
-| --- | --- | --- | --- |
-| F0 Bootstrap | projeto, pacotes, tenancy, config, Boost | cópia e limpeza do front | infraestrutura de testes, aceite |
-| F1 CORE | central, provisionamento, auth, usuários, cargos, empresa, perfil | auth, layout, sidebar, telas de configurações | regressão do CORE, isolamento |
-| F2–F5 | cadastros, catálogo, financeiro (+ dashboard), drive | telas copiadas | regressão por módulo |
-| F6–F9 | catálogos DOC, etapas, propostas, calculadora, orçamentos (MUD-04, MUD-03), protocolos, relatórios | telas copiadas + `ServicePicker` + prefill | regressão + testes novos das MUD |
-| F10 MUD-02 | distribuição financeira + configuração | card de integração, colunas e botão | aceite CA-MUD02 |
-| F11 CRM | controller mock + permissão | telas do CRM + botão MUD-01 | registro das pendências |
-| F12 | — | checagem visual | review geral (CR), correções (RF), relatório final |
+| Fase | Skill principal | Apoio |
+| --- | --- | --- |
+| R1 Renomeações | `laravel-refactoring-senior` | CR, QA (aceite com a suíte completa) |
+| R2 Padronizações de dados | `laravel-refactoring-senior` | BE (permissões), FE (sidebar), QA |
+| R3 MUD-04 | `laravel-development-senior` (migração) + `laravel-refactoring-senior` (código atual) | FE (`ServicePicker`), QA |
+| R4 MUD-02 | `laravel-development-senior` | RF (ligar nos services atuais), FE (card, colunas), QA |
+| R5 MUD-03 / MUD-01 | `laravel-development-senior` | FE (botão do CRM, prefill), QA |
+| R6 Correções | `laravel-refactoring-senior` | BE (dashboard, exportação de listas em PDF), FE (limpeza, widgets, botão "Exportar lista"), QA |
+| R7 Fechamento | `laravel-code-review-senior` + `qa-senior` | RF (correções), BE (atualizar `docs/`) |
 
 ---
 
@@ -62,7 +62,7 @@ As skills ficam em `.claude/skills/<nome>/SKILL.md`. O mesmo mapa está no `CLAU
 2. Conferir o estado real com o Boost: database-schema, route:list, last-error
 3. Planejar a fatia (arquivos por camada, seguindo o recurso-espelho)
 4. Implementar (BE: migration → model → service/action → request → controller → rota → permissão)
-5. Testes Pest da tarefa → rodar só os arquivos afetados
+5. Testes Pest da tarefa → rodar só os arquivos afetados (nunca a suíte completa sem pedido)
 6. vendor/bin/sail bin pint --dirty --format agent   (PHP)
    vendor/bin/sail npm run type-check               (TS/Vue)
 7. Code review (laravel-code-review-senior) → corrigir 🔴/🟠
@@ -77,7 +77,7 @@ As skills ficam em `.claude/skills/<nome>/SKILL.md`. O mesmo mapa está no `CLAU
 - quando duas regras conflitam;
 - quando a tarefa exigiria uma dependência nova;
 - quando seria preciso mudar o visual de uma tela;
-- quando o código da v1 e o spec divergem.
+- quando o código atual e o spec divergem.
 
 Nesses casos, pare e pergunte ao usuário. Não decida sozinho.
 
@@ -103,7 +103,7 @@ Nesses casos, pare e pergunte ao usuário. Não decida sozinho.
 
 | Gate | Comando ou verificação | Quando |
 | --- | --- | --- |
-| Testes da tarefa | `vendor/bin/sail artisan test --compact tests/Feature/<Arquivo>Test.php` | Toda tarefa BE e RF |
+| Testes da tarefa (V-05) | `vendor/bin/sail artisan test --compact tests/Feature/<Arquivo>Test.php`, **só os arquivos afetados** | Toda tarefa BE e RF |
 | Estilo PHP | `vendor/bin/sail bin pint --dirty --format agent` | Toda mudança em PHP |
 | Tipos do front | `vendor/bin/sail npm run type-check` | Toda mudança em TS ou Vue |
 | Build | `vendor/bin/sail npm run build` | Fim de toda tarefa FE |
@@ -111,9 +111,10 @@ Nesses casos, pare e pergunte ao usuário. Não decida sozinho.
 | Nomes | Nenhuma classe nova sem sufixo de tipo (constitution §6) | Review |
 | Tenancy | Todo acesso a dado de tenant dentro de `$tenant->run()`; transação dentro do `run` | Review |
 | Dinheiro | Inteiros em centavos de ponta a ponta | Review e QA |
-| Visual | Tela idêntica à v1 em light/dark e desktop/mobile | Tarefa FE e F12 |
+| Visual | Telas tocadas sem mudança visual, em light/dark e desktop/mobile | Tarefa FE e R7 |
 | Code review | Sem achados 🔴/🟠 pendentes | Toda tarefa |
-| Regressão da fase | Todos os testes do módulo verdes | Aceite QA da fase |
+| Regressão da fase | Suíte completa verde (cerca de 9 min), **só com o pedido do usuário** | Aceite QA da fase |
+| Migrations | `migrate --path=database/migrations/central` + `tenants:migrate` aplicados sem erro em todos os tenants | Tarefa com migration |
 
 ---
 
@@ -191,7 +192,7 @@ Nunca relatar um resultado de teste que não foi executado. Se algo foi pulado, 
 
 ## 8. Divergências e decisões
 
-- Se o código da v2 divergir do spec, o código é o estado real: aponte a divergência e pergunte se o spec deve ser atualizado.
+- Se o código divergir do spec, o código é o estado real: aponte a divergência e pergunte se o spec deve ser atualizado.
 - Toda decisão nova do usuário é registrada no artefato correspondente:
   - na seção "Decisões registradas" desse artefato;
   - ou na seção 16 da constitution, quando for um princípio.
@@ -205,10 +206,10 @@ Respondidas em **2026-10-26**; em todas foi adotada a recomendação. Na prátic
 
 - O code review vale para **toda** tarefa.
 - O status é marcado no `tasks.md`: ☐, depois ◐, depois ☑.
-- As skills de apoio do Boost são instaladas com `boost:install` (T-F0-08).
+- As skills de apoio do Boost já estão instaladas no projeto e continuam como apoio.
 
 | ID | Pergunta | Decisão (= recomendação) |
 | --- | --- | --- |
 | Q-I-01 | O code review é obrigatório em **toda** tarefa, ou só no fim de cada fase? | Em toda tarefa (é rápido e evita retrabalho) |
 | Q-I-02 | Ao concluir uma tarefa, o agente marca `[x]` no `tasks.md` ou o status fica só no reporte? | Marcar no `tasks.md` (coluna de status) |
-| Q-I-03 | As skills de apoio do Laravel Boost (`pest-testing`, `inertia-vue-development`, `tailwindcss-development`, `laravel-best-practices`, `laravel-permission-development`, `fortify-development`) são instaladas na v2 junto com as 5 skills novas? | Sim (via `boost:install`) |
+| Q-I-03 | As skills de apoio do Laravel Boost (`pest-testing`, `inertia-vue-development`, `tailwindcss-development`, `laravel-best-practices`, `laravel-permission-development`, `fortify-development`) continuam junto com as 5 skills? | Sim (já instaladas) |

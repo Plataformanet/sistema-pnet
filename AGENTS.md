@@ -1,26 +1,42 @@
-# Project Documentation (`docs/`) — ALWAYS READ FIRST
+# AGENTS.md
 
-**At the start of every new session, before planning or changing any code, consult the [docs/](docs/) folder.** It is the source of truth for architecture, modules, and planning. Never infer how the system works from isolated code without first checking the matching documentation.
+Este arquivo orienta agentes (Codex, Antigravity e outros) neste repositório. Responda sempre em português do Brasil.
 
-Minimum routine per session:
+## SDD (`specs/`) e documentação (`docs/`) — LEIA SEMPRE PRIMEIRO
 
-1. List `docs/` to see what currently exists (the folder evolves).
-2. **Before writing or changing ANY code, read [docs/convencoes_de_desenvolvimento.md](docs/convencoes_de_desenvolvimento.md)** — the mandatory conventions guide (migrations, models, services, form requests, controllers, routes, permissions, frontend, tests). Never invent a new approach: copy the existing pattern described there.
-3. Read [docs/arquitetura/project_overview.md](docs/arquitetura/project_overview.md) and [docs/arquitetura/architecture_guide.md](docs/arquitetura/architecture_guide.md) for general context.
-4. Read the module document(s) the task touches, under `docs/modulos/<module>/`.
-5. Before touching the database or routes, check [docs/arquitetura/database_dictionary.md](docs/arquitetura/database_dictionary.md) and [docs/arquitetura/system_routes.md](docs/arquitetura/system_routes.md).
-6. For scope/sprint work, see [docs/planejamento/](docs/planejamento/).
+**No início de toda sessão, antes de planejar ou mudar qualquer código, leia o SDD em [specs/](specs/).** O sistema evolui de forma incremental até o padrão definido ali (não há v2 — decisão V-01). Ordem de leitura:
 
-Current structure:
+1. [specs/constitution.md](specs/constitution.md) — princípios inegociáveis, **sufixo de tipo em toda classe**, tenancy, dados, testes e Definition of Done.
+2. [specs/spec.md](specs/spec.md) — o que o sistema faz. Os itens **[alvo]** ainda não estão implementados.
+3. [specs/plan.md](specs/plan.md) — como evoluir: recursos-espelho, mapa de renomeações, padronizações e design das 4 mudanças (MUD-01 a MUD-04).
+4. [specs/tasks.md](specs/tasks.md) — backlog por fase (R0 a R7), com skill responsável e status (☐/◐/☑).
+5. [specs/implementation.md](specs/implementation.md) — fluxo de cada tarefa, mapa de skills, gates e comandos.
 
-- `docs/convencoes_de_desenvolvimento.md` — **mandatory** code conventions for every new feature
-- `docs/arquitetura/` — `project_overview.md`, `architecture_guide.md`, `database_dictionary.md`, `system_routes.md`
-- `docs/modulos/` — functional documentation per module (`cadastros/`, `drive/`, `financeiro/`, …)
-- `docs/planejamento/` — `sprints_planning.md`, `epic_template.md`
+**Hierarquia:** `constitution` > `spec` > `plan` > `tasks` > `implementation` > `docs/`.
 
-If the documentation diverges from the code, the code is the real state: point the divergence out to the user and ask whether the document should be updated (remembering that documentation files are only created or changed on explicit request).
+- **`specs/` manda** no que fazer e como fazer.
+- **[docs/](docs/)** descreve o **estado atual** do sistema e é atualizado ao fim de cada fase:
+  - [docs/convencoes_de_desenvolvimento.md](docs/convencoes_de_desenvolvimento.md) — convenções atuais;
+  - [docs/arquitetura/](docs/arquitetura/) — visão geral, arquitetura, dicionário de dados, rotas, dark mode;
+  - [docs/modulos/](docs/modulos/) — documentação funcional por módulo.
+- [docs/prd/](docs/prd/) e [docs/prd-sistema-pnet-v2.md](docs/prd-sistema-pnet-v2.md) são histórico de requisitos; as decisões deles já estão consolidadas no `specs/spec.md`.
 
-**Whenever a file under `docs/` is created or updated, its content MUST be written in Brazilian Portuguese (pt-BR)** — headings, prose, tables, and comments alike. Keep the existing pt-BR terminology and folder naming of the docs; only code identifiers, commands, and file paths stay as they are.
+Se o código divergir do SDD ou de `docs/`, o código é o estado real: aponte a divergência e pergunte se o documento deve ser atualizado. Arquivos de `specs/` e `docs/` só são criados ou alterados mediante pedido explícito.
+
+**Todo arquivo em `specs/` ou `docs/` é escrito em português do Brasil (pt-BR)**: títulos, texto, tabelas e comentários. Só identificadores de código, comandos e caminhos ficam como estão.
+
+### Regras do PRD de evolução (resumo)
+
+- **CRM:** só frontend (dados mock). **Não** implemente backend de CRM até ele ser especificado no spec.
+- **Sufixo de tipo em toda classe:** `ClientService`, `UserTypeEnum`, `StoreClientRequest`, `ClientPolicy`, `SendEmailDispatchJob`, `AutoBlockClientsCommand`, `CpfRule`, `ClientServiceTest`. Os controllers mantêm o prefixo `Tenant` (`TenantClientController`). Models ficam sem sufixo.
+- **Estilo das telas:** não muda.
+- **Mudanças de regra:**
+  - **MUD-01:** CRM → proposta de documentações.
+  - **MUD-02:** a proposta distribui os valores no financeiro.
+  - **MUD-03:** o orçamento entra no funil do CRM.
+  - **MUD-04:** "Billable Service" removido; o orçamento usa o catálogo `services`.
+- **Testes:** cada tarefa roda **só os arquivos de teste afetados**. A suíte completa (lenta, cerca de 9 min) só roda com pedido explícito.
+- **Na dúvida, pare e pergunte.**
 
 <laravel-boost-guidelines>
 === .ai/rtk rules ===
@@ -472,28 +488,41 @@ Vue components must have a single root element.
 </laravel-boost-guidelines>
 
 
+## Mapa de skills
+
+As skills ficam em `.claude/skills/<nome>/SKILL.md`. O `.agents/skills/` é uma cópia idêntica, para outros agentes. Este mapa é **idêntico** ao do `specs/implementation.md` §2. Carregue a skill **antes** de escrever código ou de revisar.
+
+| Situação / tipo de tarefa | Skill principal | Skills de apoio | Revisão | Testes |
+| --- | --- | --- | --- | --- |
+| Construir backend novo: migration, model, service, action, request, controller, rota, permissão, job, mail, command | `laravel-development-senior` | `laravel-best-practices`, `laravel-permission-development`, `pest-testing`, `fortify-development` (auth) | `laravel-code-review-senior` | O próprio BE escreve; o `qa-senior` faz o aceite |
+| Construir ou ajustar frontend: páginas, componentes, tipos TS, sidebar, CRM | `inertia-vue-frontend-senior` | `inertia-vue-development`, `tailwindcss-development` | `laravel-code-review-senior` (contrato e permissões) + checagem visual | `qa-senior` (type-check e checagem visual) |
+| Corrigir bug, refatorar, otimizar, renomear, padronizar ou limpar código que já existe | `laravel-refactoring-senior` | `laravel-best-practices`, `pest-testing` | `laravel-code-review-senior` (**gate obrigatório** dentro da skill) | Teste que reproduz o bug, escrito pela própria skill |
+| Revisar, auditar ou analisar código, sem mudar nada | `laravel-code-review-senior` | `laravel-best-practices` | — | — |
+| Plano de testes, regressão, isolamento entre tenants, aceite de fase, relatório de QA | `qa-senior` | `pest-testing` | `laravel-code-review-senior` (qualidade dos testes) | — |
+
+**Regras do mapa:**
+
+- Na dúvida entre construir e corrigir: se o código **ainda não existe**, use `laravel-development-senior`. Se **já existe** e precisa mudar, use `laravel-refactoring-senior`.
+- Quem quer **saber** o que está errado usa a revisão. Quem quer o problema **corrigido** usa a refatoração.
+- O backend **não edita** `resources/js/`. Ele entrega o **contrato** (seção 4) e o frontend implementa.
+- O frontend **não edita** PHP. Se faltar uma prop ou rota, ele devolve a tarefa ao backend.
+- Toda tarefa BE ou FE passa pelo `laravel-code-review-senior` antes de ser fechada.
+
 ## Code Review
 
-For any code review, review, audit, refactor, or performance/quality
-improvement request in this Laravel project, **use the `laravel-code-review`
-skill**. This applies even to short prompts like "revise este código",
-"quais melhorias podem ser feitas aqui?", "existe algum n+1 aqui?", ou "isto está limpo?".
+Para qualquer pedido de revisão, auditoria ou análise de qualidade ou performance em que o usuário quer **feedback**, e não mudança de código, **use a skill `laravel-code-review-senior`**. Isso vale mesmo para pedidos curtos, como "revise este código", "quais melhorias podem ser feitas aqui?", "existe algum n+1 aqui?" ou "isto está limpo?".
 
-Before forming opinions, **ground the review in the real state of the
-application using the Laravel Boost MCP tools** — never guess:
+Pedidos para de fato refatorar, corrigir ou otimizar vão para a `laravel-refactoring-senior`, que roda essa revisão como gate final.
 
-- Confirm PHP/Laravel versions, packages, and models (Application Info).
-- Verify the schema and which indexes actually exist before claiming a
-  query is slow or an index is missing (Database Schema).
-- Run `EXPLAIN`/queries to confirm real bottlenecks (Database Query).
-- Check logs and the last error to anchor runtime findings
-  (Read Log Entries / Last Error).
-- Confirm the version-appropriate idiom in the official docs (Search Docs)
-  instead of inventing method signatures.
+Antes de opinar, **fundamente a revisão no estado real da aplicação com as ferramentas MCP do Laravel Boost**, nunca suponha:
 
-No performance claim goes into the review without being verified. Deliver
-the review in pt-BR, ordered by severity, with `file:line`, a concrete fix
-in code (before → after), and prioritized next steps.
+- Confirme as versões de PHP/Laravel, os pacotes e os models (Application Info).
+- Verifique o schema e quais índices existem de fato antes de afirmar que uma query é lenta ou que falta um índice (Database Schema).
+- Rode `EXPLAIN` ou queries para confirmar gargalos reais (Database Query).
+- Consulte os logs e o último erro para ancorar achados de runtime (Read Log Entries / Last Error).
+- Confirme na documentação oficial o idioma da versão instalada (Search Docs), em vez de inventar assinaturas de método.
+
+Nenhuma afirmação de performance entra na revisão sem verificação. A revisão é entregue em pt-BR, ordenada por severidade, com `arquivo:linha`, a correção concreta em código (antes → depois) e os próximos passos priorizados.
 
 ## Instructions
 
