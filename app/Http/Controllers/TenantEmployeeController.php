@@ -7,7 +7,7 @@ use App\Http\Requests\StoreEmployeeRequest;
 use App\Http\Requests\UpdateEmployeeRequest;
 use App\Models\Contact;
 use App\Services\ContactService;
-use App\Services\EmployeesService;
+use App\Services\EmployeeService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
@@ -16,7 +16,7 @@ class TenantEmployeeController extends Controller
 {
     public function __construct(
         protected ContactService $contactService,
-        protected EmployeesService $employeesService,
+        protected EmployeeService $employeesService,
     ) {}
 
     public function index()

@@ -2,8 +2,8 @@
 
 namespace App\Services;
 
-use App\Enums\DocumentOwner;
-use App\Enums\ProposalStatus;
+use App\Enums\DocumentOwnerEnum;
+use App\Enums\ProposalStatusEnum;
 use App\Exceptions\ProposalTimelineException;
 use App\Mail\MissingSellerDocumentsMail;
 use App\Mail\ProposalStageCompletedMail;
@@ -87,8 +87,8 @@ class ProposalTimelineService
 
                 $current->update(['started_at' => now()]);
 
-                if ($proposal->status === ProposalStatus::NEW) {
-                    $proposal->update(['status' => ProposalStatus::IN_PROGRESS]);
+                if ($proposal->status === ProposalStatusEnum::NEW) {
+                    $proposal->update(['status' => ProposalStatusEnum::IN_PROGRESS]);
                 }
 
                 $this->notifyApplicants($proposal, fn (string $name) => new ProposalTrackingStartedMail($name, $proposal->number), bccCreator: true);
@@ -150,7 +150,7 @@ class ProposalTimelineService
                     $replaced = $proposalStage->document;
                     $document = $this->proposalDocumentService->storeFile($proposal, $file, [
                         'uploaded_by' => $actor->id,
-                        'owner' => DocumentOwner::STAGE,
+                        'owner' => DocumentOwnerEnum::STAGE,
                         'proposal_stage_id' => $proposalStage->id,
                         'title' => $data['title'] ?? $proposalStage->stage->name,
                     ]);
@@ -198,15 +198,15 @@ class ProposalTimelineService
         $tenant->run(function () use ($proposalId, $tenant) {
             $documents = DB::transaction(function () use ($proposalId, $tenant) {
                 $proposal = Proposal::lockForUpdate()->findOrFail($proposalId);
-                $documents = $proposal->documents()->where('owner', DocumentOwner::STAGE->value)->get(['id', 'disk', 'path']);
+                $documents = $proposal->documents()->where('owner', DocumentOwnerEnum::STAGE->value)->get(['id', 'disk', 'path']);
 
                 $proposal->stages()->delete();
                 ProposalDocument::whereKey($documents->modelKeys())->delete();
 
                 $this->instantiate($proposal, $tenant);
 
-                if ($proposal->status === ProposalStatus::FINISHED || $proposal->status === ProposalStatus::IN_PROGRESS) {
-                    $proposal->update(['status' => ProposalStatus::NEW, 'finished_at' => null]);
+                if ($proposal->status === ProposalStatusEnum::FINISHED || $proposal->status === ProposalStatusEnum::IN_PROGRESS) {
+                    $proposal->update(['status' => ProposalStatusEnum::NEW, 'finished_at' => null]);
                 }
 
                 return $documents;
@@ -235,7 +235,7 @@ class ProposalTimelineService
 
     private function finish(Proposal $proposal): void
     {
-        $proposal->update(['status' => ProposalStatus::FINISHED, 'finished_at' => now()]);
+        $proposal->update(['status' => ProposalStatusEnum::FINISHED, 'finished_at' => now()]);
 
         $this->notifyApplicants($proposal, fn (string $name) => new ProposalStagesFinishedMail($name, $proposal->number));
 

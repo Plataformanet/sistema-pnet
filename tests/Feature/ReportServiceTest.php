@@ -1,7 +1,7 @@
 <?php
 
-use App\Enums\DocumentOwner;
-use App\Enums\ProposalStatus;
+use App\Enums\DocumentOwnerEnum;
+use App\Enums\ProposalStatusEnum;
 use App\Enums\RolesEnum;
 use App\Http\Requests\DownloadFinishedProposalsRequest;
 use App\Http\Requests\FinishedProposalsReportRequest;
@@ -26,13 +26,13 @@ beforeEach(function () {
  * Proposta finalizada com duas etapas; a final (maior posição) tem a data e,
  * opcionalmente, um documento.
  *
- * @param  array{final_date?: string|null, finished_at?: string, with_document?: bool, development?: Development|null, status?: ProposalStatus}  $options
+ * @param  array{final_date?: string|null, finished_at?: string, with_document?: bool, development?: Development|null, status?: ProposalStatusEnum}  $options
  */
 function finishedProposal(Tenant $tenant, array $options = []): Proposal
 {
     return $tenant->run(function () use ($options) {
         $proposal = Proposal::factory()->create([
-            'status' => $options['status'] ?? ProposalStatus::FINISHED,
+            'status' => $options['status'] ?? ProposalStatusEnum::FINISHED,
             'finished_at' => $options['finished_at'] ?? '2026-10-05 15:00:00',
         ]);
 
@@ -46,7 +46,7 @@ function finishedProposal(Tenant $tenant, array $options = []): Proposal
 
         if ($options['with_document'] ?? true) {
             $document = $proposal->documents()->create([
-                'owner' => DocumentOwner::STAGE,
+                'owner' => DocumentOwnerEnum::STAGE,
                 'proposal_stage_id' => $finalStage->id,
                 'title' => 'Contrato registrado',
                 'disk' => 'public',
@@ -80,7 +80,7 @@ function reportIds(ReportService $service, array $filters, $user, Tenant $tenant
 
 test('o relatório lista só propostas finalizadas e não excluídas', function () {
     $finished = finishedProposal($this->tenant);
-    $inProgress = finishedProposal($this->tenant, ['status' => ProposalStatus::IN_PROGRESS]);
+    $inProgress = finishedProposal($this->tenant, ['status' => ProposalStatusEnum::IN_PROGRESS]);
     $deleted = finishedProposal($this->tenant);
     $this->tenant->run(fn () => $deleted->delete());
 
@@ -160,7 +160,7 @@ test('o total baixável do filtro conta só propostas com documento final', func
 test('o download ignora ids fora do critério e propostas sem documento', function () {
     $finished = finishedProposal($this->tenant);
     $withoutDocument = finishedProposal($this->tenant, ['with_document' => false]);
-    $inProgress = finishedProposal($this->tenant, ['status' => ProposalStatus::IN_PROGRESS]);
+    $inProgress = finishedProposal($this->tenant, ['status' => ProposalStatusEnum::IN_PROGRESS]);
 
     $proposals = $this->service->forDownload([
         'proposal_ids' => [$finished->id, $withoutDocument->id, $inProgress->id, 999999],

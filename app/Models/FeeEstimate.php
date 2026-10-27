@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use App\Enums\CalculationType;
-use App\Enums\SupportedState;
+use App\Enums\CalculationTypeEnum;
+use App\Enums\SupportedStateEnum;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -34,8 +34,8 @@ class FeeEstimate extends Model
     protected function casts(): array
     {
         return [
-            'type' => CalculationType::class,
-            'state' => SupportedState::class,
+            'type' => CalculationTypeEnum::class,
+            'state' => SupportedStateEnum::class,
             'valid_until' => 'date:Y-m-d',
             'api_result' => 'array',
             'fees_total' => 'integer',

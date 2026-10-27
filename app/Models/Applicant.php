@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Enums\MaritalStatus;
+use App\Enums\MaritalStatusEnum;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -41,7 +41,7 @@ class Applicant extends Model
     {
         return [
             'birth_date' => 'date',
-            'marital_status' => MaritalStatus::class,
+            'marital_status' => MaritalStatusEnum::class,
             'family_income' => 'integer',
             'declared_income' => 'integer',
             'declares_income_tax' => 'boolean',

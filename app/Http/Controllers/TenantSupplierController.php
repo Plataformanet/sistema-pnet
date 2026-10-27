@@ -7,7 +7,7 @@ use App\Http\Requests\StoreSupplierRequest;
 use App\Http\Requests\UpdateSupplierRequest;
 use App\Models\Contact;
 use App\Services\ContactService;
-use App\Services\SuppliersService;
+use App\Services\SupplierService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
@@ -16,7 +16,7 @@ class TenantSupplierController extends Controller
 {
     public function __construct(
         protected ContactService $contactService,
-        protected SuppliersService $supplierService,
+        protected SupplierService $supplierService,
     ) {}
 
     public function index()

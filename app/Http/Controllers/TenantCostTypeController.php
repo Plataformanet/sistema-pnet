@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\ReceiptType;
+use App\Enums\ReceiptTypeEnum;
 use App\Http\Requests\IndexCatalogRequest;
 use App\Http\Requests\StoreCostTypeRequest;
 use App\Http\Requests\UpdateCostTypeRequest;
@@ -23,14 +23,14 @@ class TenantCostTypeController extends Controller
         return Inertia::render('tenant/documents/cost-types/list/List', [
             'costTypes' => $costTypes,
             'filters' => $request->validated(),
-            'receiptTypes' => ReceiptType::options(ReceiptType::forCostTypes()),
+            'receiptTypes' => ReceiptTypeEnum::options(ReceiptTypeEnum::forCostTypes()),
         ]);
     }
 
     public function create()
     {
         return Inertia::render('tenant/documents/cost-types/create/Create', [
-            'receiptTypes' => ReceiptType::options(ReceiptType::forCostTypes()),
+            'receiptTypes' => ReceiptTypeEnum::options(ReceiptTypeEnum::forCostTypes()),
         ]);
     }
 
@@ -40,7 +40,7 @@ class TenantCostTypeController extends Controller
 
         return Inertia::render('tenant/documents/cost-types/edit/Edit', [
             'costType' => $costType,
-            'receiptTypes' => ReceiptType::options(ReceiptType::forCostTypes()),
+            'receiptTypes' => ReceiptTypeEnum::options(ReceiptTypeEnum::forCostTypes()),
         ]);
     }
 

@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Enums\ReceiptType;
+use App\Enums\ReceiptTypeEnum;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -26,7 +26,7 @@ class CostType extends Model
     {
         return [
             'requires_notary' => 'boolean',
-            'receipt_type' => ReceiptType::class,
+            'receipt_type' => ReceiptTypeEnum::class,
         ];
     }
 

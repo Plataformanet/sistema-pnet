@@ -2,8 +2,8 @@
 
 namespace App\Services;
 
-use App\Enums\DocumentOwner;
-use App\Enums\ProposalStatus;
+use App\Enums\DocumentOwnerEnum;
+use App\Enums\ProposalStatusEnum;
 use App\Models\Proposal;
 use App\Models\Receipt;
 use App\Models\Tenant;
@@ -30,19 +30,19 @@ class ProposalPdfService
     /**
      * Dados do "Informativo da Proposta". Contato e documento completos de
      * cada lado só aparecem para quem pode ver os documentos daquele lado
-     * (`DocumentOwner::visibleTo`): o cliente vê o vendedor mascarado e o
+     * (`DocumentOwnerEnum::visibleTo`): o cliente vê o vendedor mascarado e o
      * vendedor do imóvel vê o comprador mascarado; a equipe vê tudo.
      *
      * @return array{proposal: Proposal, showApplicantContacts: bool, showSellerContacts: bool}
      */
     public function infoViewData(string $proposalId, User $viewer, Tenant $tenant): array
     {
-        $visibleOwners = $tenant->run(fn () => DocumentOwner::visibleTo($viewer));
+        $visibleOwners = $tenant->run(fn () => DocumentOwnerEnum::visibleTo($viewer));
 
         return [
             'proposal' => $this->proposalQueryService->findForDisplay($proposalId, $tenant),
-            'showApplicantContacts' => in_array(DocumentOwner::BUYER, $visibleOwners, true),
-            'showSellerContacts' => in_array(DocumentOwner::SELLER, $visibleOwners, true),
+            'showApplicantContacts' => in_array(DocumentOwnerEnum::BUYER, $visibleOwners, true),
+            'showSellerContacts' => in_array(DocumentOwnerEnum::SELLER, $visibleOwners, true),
         ];
     }
 
@@ -56,7 +56,7 @@ class ProposalPdfService
     /**
      * @param  Collection<int, Proposal>  $proposals
      */
-    public function list(Collection $proposals, ?ProposalStatus $status, Tenant $tenant): DomPdf
+    public function list(Collection $proposals, ?ProposalStatusEnum $status, Tenant $tenant): DomPdf
     {
         return $this->make('pdf.proposals.list', [
             'proposals' => $proposals,

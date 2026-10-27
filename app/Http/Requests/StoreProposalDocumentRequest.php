@@ -2,8 +2,8 @@
 
 namespace App\Http\Requests;
 
-use App\Enums\DocumentOwner;
-use App\Enums\DocumentType;
+use App\Enums\DocumentOwnerEnum;
+use App\Enums\DocumentTypeEnum;
 use App\Models\Seller;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -23,14 +23,14 @@ class StoreProposalDocumentRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'owner' => ['required', Rule::enum(DocumentOwner::class)->only([
-                DocumentOwner::BUYER,
-                DocumentOwner::SELLER,
-                DocumentOwner::PROPERTY,
-                DocumentOwner::GENERAL,
+            'owner' => ['required', Rule::enum(DocumentOwnerEnum::class)->only([
+                DocumentOwnerEnum::BUYER,
+                DocumentOwnerEnum::SELLER,
+                DocumentOwnerEnum::PROPERTY,
+                DocumentOwnerEnum::GENERAL,
             ])],
-            'person_id' => ['nullable', 'required_if:owner,'.DocumentOwner::BUYER->value.','.DocumentOwner::SELLER->value, 'integer'],
-            'type' => ['nullable', Rule::enum(DocumentType::class)],
+            'person_id' => ['nullable', 'required_if:owner,'.DocumentOwnerEnum::BUYER->value.','.DocumentOwnerEnum::SELLER->value, 'integer'],
+            'type' => ['nullable', Rule::enum(DocumentTypeEnum::class)],
             'title' => ['nullable', 'string', 'max:191'],
             'files' => ['required', 'array', 'min:1', 'max:20'],
             'files.*' => ['file', 'mimes:pdf,doc,docx,jpg,jpeg,png,bmp,zip', 'max:'.config('bucket.proposal_document_max_kb')],
@@ -50,12 +50,12 @@ class StoreProposalDocumentRequest extends FormRequest
                     return;
                 }
 
-                $owner = DocumentOwner::from($this->input('owner'));
-                $personType = $owner === DocumentOwner::SELLER
+                $owner = DocumentOwnerEnum::from($this->input('owner'));
+                $personType = $owner === DocumentOwnerEnum::SELLER
                     ? Seller::with('contact')->find($this->input('person_id'))?->personType()
                     : null;
 
-                if (! in_array(DocumentType::from($this->input('type')), DocumentType::forOwner($owner, $personType), true)) {
+                if (! in_array(DocumentTypeEnum::from($this->input('type')), DocumentTypeEnum::forOwner($owner, $personType), true)) {
                     $validator->errors()->add('type', 'Este tipo de documento não se aplica ao dono selecionado.');
                 }
             },

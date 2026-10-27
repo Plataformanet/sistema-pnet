@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use App\Enums\ItbiModule;
-use App\Enums\SupportedState;
+use App\Enums\ItbiModuleEnum;
+use App\Enums\SupportedStateEnum;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -31,9 +31,9 @@ class ItbiMunicipality extends Model
     protected function casts(): array
     {
         return [
-            'state' => SupportedState::class,
+            'state' => SupportedStateEnum::class,
             'ibge_code' => 'integer',
-            'module' => ItbiModule::class,
+            'module' => ItbiModuleEnum::class,
             'full_rate' => 'decimal:4',
         ];
     }

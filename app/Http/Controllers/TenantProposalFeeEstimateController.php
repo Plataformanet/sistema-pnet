@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Actions\FeeCalculator\AttachFeeEstimateToProposal;
+use App\Actions\FeeCalculator\AttachFeeEstimateToProposalAction;
 use App\Exceptions\ProposalAlreadyHasFeeEstimateException;
 use App\Http\Requests\AttachFeeEstimateRequest;
 use App\Services\BillableServiceService;
@@ -18,7 +18,7 @@ class TenantProposalFeeEstimateController extends Controller
         protected FeeCalculationService $feeCalculationService,
         protected BillableServiceService $billableServiceService,
         protected ProposalService $proposalService,
-        protected AttachFeeEstimateToProposal $attachFeeEstimateToProposal,
+        protected AttachFeeEstimateToProposalAction $attachFeeEstimateToProposal,
     ) {}
 
     public function create(string $id)

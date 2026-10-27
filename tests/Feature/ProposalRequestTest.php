@@ -1,6 +1,6 @@
 <?php
 
-use App\Enums\ProposalStatus;
+use App\Enums\ProposalStatusEnum;
 use App\Enums\RolesEnum;
 use App\Http\Requests\StoreProposalApplicantRequest;
 use App\Http\Requests\StoreProposalCostItemRequest;
@@ -162,7 +162,7 @@ test('na edição o banco excluído já gravado continua válido', function () {
     $this->tenant->run(fn () => $this->bank->delete());
 
     $errors = proposalRequestErrors(UpdateProposalRequest::class, array_merge(storeProposalData(), [
-        'status' => ProposalStatus::IN_PROGRESS->value,
+        'status' => ProposalStatusEnum::IN_PROGRESS->value,
     ]), $proposal->id);
 
     expect($errors)->toBe([]);
@@ -175,17 +175,17 @@ test('status manual exige o motivo ou a previsão correspondente', function (str
 
     expect($errors)->toHaveKey($field);
 })->with([
-    'cancelada' => [ProposalStatus::CANCELED->value, 'cancellation_reason'],
-    'com restrição' => [ProposalStatus::RESTRICTED->value, 'restriction_reason'],
-    'aguardando imóvel (mês)' => [ProposalStatus::AWAITING_PROPERTY->value, 'expected_delivery_month'],
-    'aguardando imóvel (ano)' => [ProposalStatus::AWAITING_PROPERTY->value, 'expected_delivery_year'],
+    'cancelada' => [ProposalStatusEnum::CANCELED->value, 'cancellation_reason'],
+    'com restrição' => [ProposalStatusEnum::RESTRICTED->value, 'restriction_reason'],
+    'aguardando imóvel (mês)' => [ProposalStatusEnum::AWAITING_PROPERTY->value, 'expected_delivery_month'],
+    'aguardando imóvel (ano)' => [ProposalStatusEnum::AWAITING_PROPERTY->value, 'expected_delivery_year'],
 ]);
 
 test('não é possível finalizar a proposta manualmente', function () {
     $proposal = createProposal($this->tenant, ['bank_id' => $this->bank->id, 'contract_type_id' => $this->withFinancing->id]);
 
     $errors = proposalRequestErrors(UpdateProposalRequest::class, array_merge(storeProposalData(), [
-        'status' => ProposalStatus::FINISHED->value,
+        'status' => ProposalStatusEnum::FINISHED->value,
     ]), $proposal->id);
 
     expect($errors)->toHaveKey('status');
@@ -241,7 +241,7 @@ test('a edição aceita manter o criador e os parceiros atuais mesmo sem o cargo
     $errors = proposalRequestErrors(UpdateProposalRequest::class, array_merge(storeProposalData(), [
         'creator_id' => $outsider->id,
         'partner_ids' => [$outsider->id],
-        'status' => ProposalStatus::IN_PROGRESS->value,
+        'status' => ProposalStatusEnum::IN_PROGRESS->value,
     ]), $proposal->id);
 
     expect($errors)->toBe([]);

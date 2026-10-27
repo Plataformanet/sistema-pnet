@@ -2,17 +2,17 @@
 
 namespace App\Http\Requests;
 
-use App\Enums\AmortizationTable;
-use App\Enums\BankAccountType;
-use App\Enums\MaritalStatus;
-use App\Enums\PersonType;
-use App\Enums\PropertyCondition;
+use App\Enums\AmortizationTableEnum;
+use App\Enums\BankAccountTypeEnum;
+use App\Enums\MaritalStatusEnum;
+use App\Enums\PersonTypeEnum;
+use App\Enums\PropertyConditionEnum;
 use App\Enums\RolesEnum;
 use App\Models\ContractType;
 use App\Models\PropertyType;
 use App\Rules\CnpjRule;
 use App\Rules\CpfRule;
-use App\Rules\UserHasRole;
+use App\Rules\UserHasRoleRule;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Validator as ValidatorFacade;
@@ -94,27 +94,27 @@ class StoreProposalRequest extends FormRequest
         $requiresFinancing = fn () => (bool) ContractType::whereKey($this->input('contract_type_id'))->value('requires_financing');
 
         return [
-            'creator_id' => ['required', 'integer', new UserHasRole(
+            'creator_id' => ['required', 'integer', new UserHasRoleRule(
                 RolesEnum::proposalStaffLabels(),
                 'O criador precisa ser um administrador ou analista.',
                 [$this->currentValue('creator_id'), $this->restrictedActorId()],
             )],
-            'analyst_id' => ['nullable', 'integer', new UserHasRole(
+            'analyst_id' => ['nullable', 'integer', new UserHasRoleRule(
                 RolesEnum::proposalStaffLabels(),
                 'O analista precisa ser um administrador ou analista.',
                 [$this->currentValue('analyst_id')],
             )],
             'partner_ids' => ['nullable', 'array'],
-            'partner_ids.*' => ['integer', new UserHasRole(
+            'partner_ids.*' => ['integer', new UserHasRoleRule(
                 [RolesEnum::PARTNER->label()],
                 'Selecione apenas usuários com o cargo Parceiro.',
                 $this->currentPartnerIds(),
             )],
             'bank_id' => ['required', 'integer', $this->activeOrCurrent('banks', 'bank_id')],
             'contract_type_id' => ['required', 'integer', $this->activeOrCurrent('contract_types', 'contract_type_id')],
-            'amortization_table' => [Rule::requiredIf($requiresFinancing), 'nullable', Rule::enum(AmortizationTable::class)],
+            'amortization_table' => [Rule::requiredIf($requiresFinancing), 'nullable', Rule::enum(AmortizationTableEnum::class)],
             'payment_term' => [Rule::requiredIf($requiresFinancing), 'nullable', 'integer', 'min:1', 'max:600'],
-            'property_condition' => ['required', Rule::enum(PropertyCondition::class)],
+            'property_condition' => ['required', Rule::enum(PropertyConditionEnum::class)],
             'has_other_property' => ['boolean'],
             'purchase_value' => ['required', 'integer', 'min:0'],
             'down_payment_value' => ['required', 'integer', 'min:0'],
@@ -166,7 +166,7 @@ class StoreProposalRequest extends FormRequest
             'applicants.*.email' => [$newApplicant, 'required', 'email', 'max:191'],
             'applicants.*.phone' => [$newApplicant, 'required', 'string', 'max:20'],
             'applicants.*.declared_income' => [$newApplicant, 'required', 'integer', 'min:0'],
-            'applicants.*.marital_status' => [$newApplicant, 'required', Rule::enum(MaritalStatus::class)],
+            'applicants.*.marital_status' => [$newApplicant, 'required', Rule::enum(MaritalStatusEnum::class)],
             'applicants.*.profession' => [$newApplicant, 'required', 'string', 'max:191'],
             'applicants.*.birth_date' => [$newApplicant, 'nullable', 'date', 'before:today'],
             'applicants.*.family_income' => [$newApplicant, 'nullable', 'integer', 'min:0'],
@@ -175,17 +175,17 @@ class StoreProposalRequest extends FormRequest
             'applicants.*.by_power_of_attorney' => [$newApplicant, 'boolean'],
             'applicants.*.bank_account' => [$newApplicant, 'nullable', 'array'],
             'applicants.*.bank_account.bank_name' => [$newApplicant, 'required_with:applicants.*.bank_account', 'string', 'max:100'],
-            'applicants.*.bank_account.account_type' => [$newApplicant, 'required_with:applicants.*.bank_account', Rule::enum(BankAccountType::class)],
+            'applicants.*.bank_account.account_type' => [$newApplicant, 'required_with:applicants.*.bank_account', Rule::enum(BankAccountTypeEnum::class)],
             'applicants.*.bank_account.branch' => [$newApplicant, 'required_with:applicants.*.bank_account', 'string', 'max:20'],
             'applicants.*.bank_account.number' => [$newApplicant, 'required_with:applicants.*.bank_account', 'string', 'max:30'],
             'applicants.*.bank_account.notes' => [$newApplicant, 'nullable', 'string'],
             'sellers' => ['nullable', 'array'],
-            'sellers.*.person_type' => ['required', Rule::enum(PersonType::class)],
+            'sellers.*.person_type' => ['required', Rule::enum(PersonTypeEnum::class)],
             'sellers.*.document' => ['required', 'distinct'],
             'sellers.*.name' => ['required', 'string', 'min:3', 'max:191'],
             'sellers.*.email' => ['required', 'email', 'max:191'],
             'sellers.*.phone' => ['nullable', 'string', 'max:20'],
-            'sellers.*.marital_status' => ['nullable', Rule::enum(MaritalStatus::class)],
+            'sellers.*.marital_status' => ['nullable', Rule::enum(MaritalStatusEnum::class)],
             'sellers.*.profession' => ['nullable', 'string', 'max:191'],
             'sellers.*.declared_income' => ['nullable', 'integer', 'min:0'],
             'sellers.*.declares_income_tax' => ['boolean'],
@@ -193,7 +193,7 @@ class StoreProposalRequest extends FormRequest
             'sellers.*.by_power_of_attorney' => ['boolean'],
             'sellers.*.bank_account' => ['nullable', 'array'],
             'sellers.*.bank_account.bank_name' => ['required_with:sellers.*.bank_account', 'string', 'max:100'],
-            'sellers.*.bank_account.account_type' => ['required_with:sellers.*.bank_account', Rule::enum(BankAccountType::class)],
+            'sellers.*.bank_account.account_type' => ['required_with:sellers.*.bank_account', Rule::enum(BankAccountTypeEnum::class)],
             'sellers.*.bank_account.branch' => ['required_with:sellers.*.bank_account', 'string', 'max:20'],
             'sellers.*.bank_account.number' => ['required_with:sellers.*.bank_account', 'string', 'max:30'],
             'sellers.*.bank_account.notes' => ['nullable', 'string'],
@@ -215,7 +215,7 @@ class StoreProposalRequest extends FormRequest
                 }
 
                 foreach ($this->input('sellers', []) as $index => $seller) {
-                    $rule = ($seller['person_type'] ?? null) === PersonType::COMPANY->value ? new CnpjRule : new CpfRule;
+                    $rule = ($seller['person_type'] ?? null) === PersonTypeEnum::COMPANY->value ? new CnpjRule : new CpfRule;
                     $check = ValidatorFacade::make(['document' => $seller['document'] ?? ''], ['document' => [$rule]]);
 
                     if ($check->fails()) {

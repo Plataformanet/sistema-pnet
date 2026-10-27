@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Actions\FeeCalculator\CreateQuote;
-use App\Actions\FeeCalculator\UpdateQuote;
-use App\Enums\MaritalStatus;
+use App\Actions\FeeCalculator\CreateQuoteAction;
+use App\Actions\FeeCalculator\UpdateQuoteAction;
+use App\Enums\MaritalStatusEnum;
 use App\Exceptions\QuoteNotOpenException;
 use App\Http\Requests\IndexCatalogRequest;
 use App\Http\Requests\StoreQuoteRequest;
@@ -24,8 +24,8 @@ class TenantQuoteController extends Controller
         protected FeeCalculationService $feeCalculationService,
         protected BankService $bankService,
         protected BillableServiceService $billableServiceService,
-        protected CreateQuote $createQuote,
-        protected UpdateQuote $updateQuote,
+        protected CreateQuoteAction $createQuote,
+        protected UpdateQuoteAction $updateQuote,
     ) {}
 
     public function index(IndexCatalogRequest $request)
@@ -121,7 +121,7 @@ class TenantQuoteController extends Controller
         return [
             'banks' => $this->bankService->options(tenant(), $currentBankId)->map->only(['id', 'name']),
             'services' => $this->billableServiceService->options(tenant())->map->only(['id', 'name', 'description', 'price', 'generates_receipt']),
-            'maritalStatuses' => MaritalStatus::options(),
+            'maritalStatuses' => MaritalStatusEnum::options(),
         ];
     }
 }

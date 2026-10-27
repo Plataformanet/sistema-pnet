@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\ProposalStatus;
+use App\Enums\ProposalStatusEnum;
 use App\Http\Requests\IndexProposalRequest;
 use App\Http\Requests\StoreProposalRequest;
 use App\Http\Requests\UpdateProposalParticularitiesRequest;
@@ -36,7 +36,7 @@ class TenantProposalController extends Controller
         return Inertia::render('tenant/documents/proposals/list/List', [
             'proposals' => $this->proposalQueryService->paginate($filters, $request->user(), tenant()),
             'statusCounts' => $this->proposalQueryService->statusCounts($request->user(), tenant()),
-            'statuses' => ProposalStatus::options(),
+            'statuses' => ProposalStatusEnum::options(),
             'filters' => $filters,
         ]);
     }

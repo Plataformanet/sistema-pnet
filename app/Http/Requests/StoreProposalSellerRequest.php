@@ -2,7 +2,7 @@
 
 namespace App\Http\Requests;
 
-use App\Enums\PersonType;
+use App\Enums\PersonTypeEnum;
 use App\Rules\CnpjRule;
 use App\Rules\CpfRule;
 use Illuminate\Contracts\Validation\ValidationRule;
@@ -27,10 +27,10 @@ class StoreProposalSellerRequest extends UpdateProposalSellerRequest
      */
     public function rules(): array
     {
-        $isCompany = $this->input('person_type') === PersonType::COMPANY->value;
+        $isCompany = $this->input('person_type') === PersonTypeEnum::COMPANY->value;
 
         return [
-            'person_type' => ['required', Rule::enum(PersonType::class)],
+            'person_type' => ['required', Rule::enum(PersonTypeEnum::class)],
             'document' => ['required', $isCompany ? new CnpjRule : new CpfRule],
             ...parent::rules(),
         ];

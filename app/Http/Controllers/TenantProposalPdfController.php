@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\ProposalStatus;
+use App\Enums\ProposalStatusEnum;
 use App\Http\Requests\IndexProposalRequest;
 use App\Services\ProposalPdfService;
 use App\Services\ProposalQueryService;
@@ -46,7 +46,7 @@ class TenantProposalPdfController extends Controller
     {
         $filters = $request->validated();
         $proposals = $this->proposalQueryService->forPrint($filters, $request->user(), tenant());
-        $status = empty($filters['ids']) && ! empty($filters['status']) ? ProposalStatus::from($filters['status']) : null;
+        $status = empty($filters['ids']) && ! empty($filters['status']) ? ProposalStatusEnum::from($filters['status']) : null;
 
         return $this->proposalPdfService->list($proposals, $status, tenant())->stream('lista-de-propostas.pdf');
     }

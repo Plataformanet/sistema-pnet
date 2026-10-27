@@ -64,7 +64,7 @@ use App\Http\Controllers\TenantStageController;
 use App\Http\Controllers\TenantSupplierController;
 use App\Http\Controllers\TenantUserController;
 use App\Http\Middleware\Authenticate;
-use App\Http\Middleware\RedirectProposalRestrictedUsers;
+use App\Http\Middleware\RedirectProposalRestrictedUsersMiddleware;
 use Illuminate\Support\Facades\Route;
 use Stancl\Tenancy\Middleware\InitializeTenancyByDomain;
 use Stancl\Tenancy\Middleware\PreventAccessFromCentralDomains;
@@ -96,7 +96,7 @@ Route::middleware([
     Route::get('/settings/company/logo', [TenantCompanySettingController::class, 'showLogo'])->name('tenant.settings.company.logo');
 
     Route::middleware(Authenticate::class)->group(function () {
-        Route::middleware(RedirectProposalRestrictedUsers::class)->group(function () {
+        Route::middleware(RedirectProposalRestrictedUsersMiddleware::class)->group(function () {
             Route::get('/dashboard', [TenantController::class, 'dashboard'])->name('tenant.dashboard');
 
             // CRM (Prototipo Visual)

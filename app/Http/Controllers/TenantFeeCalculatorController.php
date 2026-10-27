@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Actions\FeeCalculator\CalculateFees;
-use App\Enums\CalculationType;
-use App\Enums\SupportedState;
+use App\Actions\FeeCalculator\CalculateFeesAction;
+use App\Enums\CalculationTypeEnum;
+use App\Enums\SupportedStateEnum;
 use App\Exceptions\Itbi\ItbiNotConfiguredException;
 use App\Exceptions\RegistryFee\RegistryFeeRejectedException;
 use App\Exceptions\RegistryFee\RegistryFeeUnavailableException;
@@ -18,15 +18,15 @@ use Inertia\Inertia;
 class TenantFeeCalculatorController extends Controller
 {
     public function __construct(
-        protected CalculateFees $calculateFees,
+        protected CalculateFeesAction $calculateFees,
         protected FeeCalculationService $feeCalculationService,
     ) {}
 
     public function index(Request $request)
     {
         return Inertia::render('tenant/documents/fee-calculator/index/Index', [
-            'states' => SupportedState::options(),
-            'types' => CalculationType::options(),
+            'states' => SupportedStateEnum::options(),
+            'types' => CalculationTypeEnum::options(),
             'presentation' => __('fee_calculator.presentation', [], 'pt_BR'),
             'selected' => $request->only(['state', 'ibge', 'name']),
         ]);
@@ -38,15 +38,15 @@ class TenantFeeCalculatorController extends Controller
      */
     /**
      * `{type}` chega como número e é convertido aqui: o binding implícito do
-     * Laravel só resolve enums de string, e `CalculationType` é de inteiro.
+     * Laravel só resolve enums de string, e `CalculationTypeEnum` é de inteiro.
      */
     public function create(Request $request, int $type)
     {
-        $type = CalculationType::tryFrom($type) ?? abort(404);
+        $type = CalculationTypeEnum::tryFrom($type) ?? abort(404);
 
         return Inertia::render('tenant/documents/fee-calculator/calculate/Calculate', $this->feeCalculationService->formProps(
             $type,
-            SupportedState::tryFrom((string) $request->query('state')),
+            SupportedStateEnum::tryFrom((string) $request->query('state')),
             $request->integer('ibge') ?: null,
             $request->query('name'),
             tenant(),

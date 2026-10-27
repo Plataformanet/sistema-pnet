@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Enums\RegistryProtocolPosition;
+use App\Enums\RegistryProtocolPositionEnum;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -36,18 +36,18 @@ class RegistryProtocol extends Model
         return [
             'entered_at' => 'date:Y-m-d',
             'exited_at' => 'date:Y-m-d',
-            'position' => RegistryProtocolPosition::class,
+            'position' => RegistryProtocolPositionEnum::class,
         ];
     }
 
     public function scopeOpen(Builder $query): Builder
     {
-        return $query->whereNotIn('position', RegistryProtocolPosition::closedValues());
+        return $query->whereNotIn('position', RegistryProtocolPositionEnum::closedValues());
     }
 
     public function scopeClosed(Builder $query): Builder
     {
-        return $query->whereIn('position', RegistryProtocolPosition::closedValues());
+        return $query->whereIn('position', RegistryProtocolPositionEnum::closedValues());
     }
 
     /**

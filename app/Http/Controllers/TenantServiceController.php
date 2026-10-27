@@ -4,15 +4,15 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreServiceRequest;
 use App\Http\Requests\UpdateServiceRequest;
+use App\Services\ServiceCatalogService;
 use App\Services\ServiceCategoryService;
-use App\Services\ServicesService;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 
 class TenantServiceController extends Controller
 {
     public function __construct(
-        protected ServicesService $servicesService,
+        protected ServiceCatalogService $servicesService,
         protected ServiceCategoryService $serviceCategoryService
     ) {}
 

@@ -1,6 +1,6 @@
 <?php
 
-use App\Enums\ReceiptType;
+use App\Enums\ReceiptTypeEnum;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\DB;
 
@@ -95,9 +95,9 @@ return new class extends Migration
         $costTypes = [
             ['name' => 'Registro', 'receipt_type' => null],
             ['name' => 'ITBI', 'receipt_type' => null],
-            ['name' => 'Assessoria', 'receipt_type' => ReceiptType::ADVISORY->value],
+            ['name' => 'Assessoria', 'receipt_type' => ReceiptTypeEnum::ADVISORY->value],
             ['name' => 'Matrícula', 'receipt_type' => null],
-            ['name' => 'Motoboy', 'receipt_type' => ReceiptType::COURIER->value],
+            ['name' => 'Motoboy', 'receipt_type' => ReceiptTypeEnum::COURIER->value],
             ['name' => 'Outros', 'receipt_type' => null],
             ['name' => 'Cartório de Notas', 'receipt_type' => null],
         ];

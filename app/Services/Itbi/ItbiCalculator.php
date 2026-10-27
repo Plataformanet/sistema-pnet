@@ -2,9 +2,9 @@
 
 namespace App\Services\Itbi;
 
-use App\Enums\CalculationType;
-use App\Enums\FinancingSystem;
-use App\Enums\ItbiModule;
+use App\Enums\CalculationTypeEnum;
+use App\Enums\FinancingSystemEnum;
+use App\Enums\ItbiModuleEnum;
 use App\Exceptions\Itbi\ItbiNotConfiguredException;
 use App\Models\ItbiBracket;
 use App\Models\ItbiMunicipality;
@@ -22,7 +22,7 @@ class ItbiCalculator
     /**
      * @throws ItbiNotConfiguredException quando o município não tem cadastro ou o valor está fora das faixas.
      */
-    public function calculate(ItbiInput $input): ?int
+    public function calculate(ItbiInputDto $input): ?int
     {
         if (! $input->type->hasItbi()) {
             return null;
@@ -30,28 +30,28 @@ class ItbiCalculator
 
         $municipality = $input->municipality;
 
-        if ($municipality === null || ($municipality->module !== ItbiModule::VALUE_BRACKETS && $municipality->rate === null)) {
+        if ($municipality === null || ($municipality->module !== ItbiModuleEnum::VALUE_BRACKETS && $municipality->rate === null)) {
             throw ItbiNotConfiguredException::municipality();
         }
 
         $value = $input->propertyValue;
         $financed = $input->financedValue;
-        $fullRate = $input->type === CalculationType::GENERAL_REGISTRATION || $input->financingSystem === FinancingSystem::SFI;
+        $fullRate = $input->type === CalculationTypeEnum::GENERAL_REGISTRATION || $input->financingSystem === FinancingSystemEnum::SFI;
 
         $result = match ($municipality->module) {
-            ItbiModule::VALUE_BRACKETS => $fullRate
+            ItbiModuleEnum::VALUE_BRACKETS => $fullRate
                 ? $value * $this->percent($municipality->full_rate)
                 : $this->bracketTax($municipality, $value),
-            ItbiModule::FINANCED_CAP => $fullRate
+            ItbiModuleEnum::FINANCED_CAP => $fullRate
                 ? $value * $this->percent($municipality->rate->own_funds_rate)
                 : $this->financedCapTax($municipality, $value, $financed),
-            ItbiModule::FIRST_PROPERTY_RATE => $fullRate
+            ItbiModuleEnum::FIRST_PROPERTY_RATE => $fullRate
                 ? $value * $this->percent($municipality->rate->own_funds_rate)
                 : ($value - $financed) * $this->percent($municipality->rate->own_funds_rate)
                     + $financed * $this->percent($input->firstProperty
                         ? $municipality->rate->first_property_financed_rate
                         : $municipality->rate->other_property_financed_rate),
-            ItbiModule::STANDARD => $fullRate
+            ItbiModuleEnum::STANDARD => $fullRate
                 ? $value * $this->percent($municipality->rate->own_funds_rate)
                 : ($value - $financed) * $this->percent($municipality->rate->own_funds_rate)
                     + $financed * $this->percent($municipality->rate->financed_rate),

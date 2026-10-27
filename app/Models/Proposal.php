@@ -2,10 +2,10 @@
 
 namespace App\Models;
 
-use App\Enums\AmortizationTable;
-use App\Enums\CostItemType;
-use App\Enums\PropertyCondition;
-use App\Enums\ProposalStatus;
+use App\Enums\AmortizationTableEnum;
+use App\Enums\CostItemTypeEnum;
+use App\Enums\PropertyConditionEnum;
+use App\Enums\ProposalStatusEnum;
 use App\Enums\RolesEnum;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -79,9 +79,9 @@ class Proposal extends Model
     protected function casts(): array
     {
         return [
-            'amortization_table' => AmortizationTable::class,
-            'status' => ProposalStatus::class,
-            'property_condition' => PropertyCondition::class,
+            'amortization_table' => AmortizationTableEnum::class,
+            'status' => ProposalStatusEnum::class,
+            'property_condition' => PropertyConditionEnum::class,
             'has_other_property' => 'boolean',
             'purchase_value' => 'integer',
             'down_payment_value' => 'integer',
@@ -158,7 +158,7 @@ class Proposal extends Model
         return $query->whereDoesntHave('feeEstimate');
     }
 
-    public function scopeWithStatus(Builder $query, ProposalStatus $status): Builder
+    public function scopeWithStatus(Builder $query, ProposalStatusEnum $status): Builder
     {
         return $query->where('status', $status->value);
     }
@@ -169,7 +169,7 @@ class Proposal extends Model
     public function feesTotal(): int
     {
         return (int) $this->costItems()
-            ->whereIn('type', array_map(fn (CostItemType $type) => $type->value, CostItemType::fees()))
+            ->whereIn('type', array_map(fn (CostItemTypeEnum $type) => $type->value, CostItemTypeEnum::fees()))
             ->sum('amount');
     }
 

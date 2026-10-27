@@ -2,8 +2,8 @@
 
 namespace App\Services;
 
-use App\Enums\CostItemType;
-use App\Enums\ReceiptType;
+use App\Enums\CostItemTypeEnum;
+use App\Enums\ReceiptTypeEnum;
 use App\Exceptions\ReceiptNotAllowedException;
 use App\Models\Proposal;
 use App\Models\ProposalCostItem;
@@ -31,7 +31,7 @@ class ReceiptService
             $attributes['document'] = preg_replace('/\D/', '', (string) $attributes['document']);
 
             if (empty($data['proposal_cost_item_id'])) {
-                return $proposal->receipts()->create(array_merge($attributes, ['type' => ReceiptType::GENERAL]));
+                return $proposal->receipts()->create(array_merge($attributes, ['type' => ReceiptTypeEnum::GENERAL]));
             }
 
             /** @var ProposalCostItem $costItem */
@@ -41,9 +41,9 @@ class ReceiptService
                 throw new ReceiptNotAllowedException;
             }
 
-            $type = $costItem->type === CostItemType::MANUAL
+            $type = $costItem->type === CostItemTypeEnum::MANUAL
                 ? $costItem->costType->receipt_type
-                : ReceiptType::ADVISORY;
+                : ReceiptTypeEnum::ADVISORY;
 
             return $proposal->receipts()->create(array_merge($attributes, [
                 'type' => $type,

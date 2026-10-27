@@ -2,10 +2,10 @@
 
 namespace App\Services\FeeCalculator;
 
-use App\Enums\CalculationType;
-use App\Enums\CostItemType;
+use App\Enums\CalculationTypeEnum;
+use App\Enums\CostItemTypeEnum;
 use App\Models\BillableService;
-use App\Services\RegistryFee\RegistryFeeResult;
+use App\Services\RegistryFee\RegistryFeeResultDto;
 use Illuminate\Support\Str;
 
 /**
@@ -19,13 +19,13 @@ class CostItemsBuilder
      * @param  iterable<int, array{service: BillableService, amount: int}>  $services  valor efetivo (negociado ou de tabela)
      * @return array<int, array<string, mixed>>
      */
-    public function build(RegistryFeeResult $result, CalculationType $type, ?int $itbi, iterable $services = []): array
+    public function build(RegistryFeeResultDto $result, CalculationTypeEnum $type, ?int $itbi, iterable $services = []): array
     {
         $items = [];
 
         foreach ($result->acts as $act) {
             $items[] = [
-                'type' => CostItemType::EMOLUMENT,
+                'type' => CostItemTypeEnum::EMOLUMENT,
                 'description' => Str::limit((string) ($act['descricao'] ?? 'Emolumento'), 188),
                 'amount' => (int) ($act['subtotal'] ?? 0),
             ];
@@ -33,7 +33,7 @@ class CostItemsBuilder
 
         foreach ($result->extraFees as $fee) {
             $items[] = [
-                'type' => CostItemType::EXTRA_FEE,
+                'type' => CostItemTypeEnum::EXTRA_FEE,
                 'extra_fee_description' => Str::limit($fee['description'], 188),
                 'amount' => $fee['amount'],
             ];
@@ -41,7 +41,7 @@ class CostItemsBuilder
 
         foreach ($services as $item) {
             $items[] = [
-                'type' => CostItemType::SERVICE,
+                'type' => CostItemTypeEnum::SERVICE,
                 'description' => Str::limit($item['service']->name, 188),
                 'service_description' => $item['service']->description,
                 'generates_receipt' => $item['service']->generates_receipt,
@@ -51,7 +51,7 @@ class CostItemsBuilder
 
         if ($type->hasItbi() && $itbi !== null) {
             $items[] = [
-                'type' => CostItemType::ITBI,
+                'type' => CostItemTypeEnum::ITBI,
                 'description' => 'ITBI',
                 'amount' => $itbi,
             ];

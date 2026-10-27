@@ -2,11 +2,11 @@
 
 namespace App\Services;
 
-use App\Enums\QuoteStatus;
+use App\Enums\QuoteStatusEnum;
 use App\Exceptions\QuoteNotOpenException;
 use App\Models\Quote;
 use App\Models\Tenant;
-use App\Services\FeeCalculator\FeeBreakdown;
+use App\Services\FeeCalculator\FeeBreakdownBuilder;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
@@ -52,11 +52,11 @@ class QuoteService
         return $tenant->run(fn () => Quote::with(['feeEstimate', 'services', 'bank:id,name,deleted_at', 'creator:id,name'])->findOrFail($id));
     }
 
-    public function breakdown(Quote $quote): FeeBreakdown
+    public function breakdown(Quote $quote): FeeBreakdownBuilder
     {
         $estimate = $quote->feeEstimate;
 
-        return FeeBreakdown::fromApiResult(
+        return FeeBreakdownBuilder::fromApiResult(
             $estimate->api_result,
             $estimate->itbi_amount,
             $quote->services->map(fn ($service) => ['name' => $service->name, 'amount' => (int) $service->pivot->amount])->values()->all(),
@@ -112,7 +112,7 @@ class QuoteService
             DB::transaction(function () use ($id) {
                 $quote = Quote::with('feeEstimate')->lockForUpdate()->findOrFail($id);
 
-                if ($quote->status() === QuoteStatus::CONVERTED) {
+                if ($quote->status() === QuoteStatusEnum::CONVERTED) {
                     throw new QuoteNotOpenException('Orçamento convertido em proposta não pode ser excluído.');
                 }
 
@@ -125,7 +125,7 @@ class QuoteService
     /**
      * @return array{value: string, label: string, variant: string}
      */
-    private function statusPayload(QuoteStatus $status): array
+    private function statusPayload(QuoteStatusEnum $status): array
     {
         return ['value' => $status->value, 'label' => $status->label(), 'variant' => $status->badgeVariant()];
     }

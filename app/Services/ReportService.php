@@ -2,12 +2,12 @@
 
 namespace App\Services;
 
-use App\Enums\ProposalStatus;
 use App\Jobs\BuildFinishedProposalsZipJob;
 use App\Models\Applicant;
 use App\Models\Proposal;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Queries\FinishedProposalsReportQuery;
 use App\Services\Reports\ReportZipBuilder;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
@@ -26,19 +26,16 @@ class ReportService
 {
     public const PER_PAGE = 25;
 
-    /**
-     * Data de finalização: a data informada ao concluir a última etapa da
-     * timeline e, se vazia, o dia em que o sistema marcou a proposta como
-     * finalizada.
-     */
-    private const REPORT_DATE = 'COALESCE((SELECT ps.date FROM proposal_stages ps WHERE ps.proposal_id = proposals.id ORDER BY ps.position DESC LIMIT 1), DATE(proposals.finished_at))';
+    public function __construct(
+        protected FinishedProposalsReportQuery $finishedProposalsReportQuery,
+    ) {}
 
     /**
      * @param  array{start_date?: string|null, end_date?: string|null, development_id?: int|string|null}  $filters
      */
     public function finishedProposals(array $filters, User $user, Tenant $tenant): LengthAwarePaginator
     {
-        return $tenant->run(fn () => $this->finishedProposalsQuery($filters, $user)
+        return $tenant->run(fn () => $this->finishedProposalsReportQuery->build($filters, $user)
             ->with([
                 'creator:id,name',
                 'applicants:id,contact_id',
@@ -60,7 +57,7 @@ class ReportService
      */
     public function downloadableCount(array $filters, User $user, Tenant $tenant): int
     {
-        return $tenant->run(fn () => $this->finishedProposalsQuery($filters, $user)
+        return $tenant->run(fn () => $this->finishedProposalsReportQuery->build($filters, $user)
             ->whereHas('finalStage', fn (Builder $query) => $query->whereNotNull('proposal_document_id'))
             ->count());
     }
@@ -80,7 +77,7 @@ class ReportService
             ? Arr::except($selection, 'proposal_ids')
             : ['proposal_ids' => $selection['proposal_ids'] ?? []];
 
-        return $tenant->run(fn () => $this->finishedProposalsQuery($filters, $user)
+        return $tenant->run(fn () => $this->finishedProposalsReportQuery->build($filters, $user)
             ->when(array_key_exists('proposal_ids', $filters), fn (Builder $query) => $query->whereKey($filters['proposal_ids']))
             ->whereHas('finalStage', fn (Builder $query) => $query->whereNotNull('proposal_document_id'))
             ->with('finalStage.document')
@@ -125,28 +122,6 @@ class ReportService
 
             return count($storedZips) + count($temporaryFiles);
         });
-    }
-
-    /**
-     * @param  array{start_date?: string|null, end_date?: string|null, development_id?: int|string|null}  $filters
-     */
-    private function finishedProposalsQuery(array $filters, User $user): Builder
-    {
-        $startDate = $filters['start_date'] ?? null;
-        $endDate = $filters['end_date'] ?? null;
-
-        return Proposal::query()
-            ->select('proposals.*')
-            ->selectRaw(self::REPORT_DATE.' AS report_date')
-            ->visibleTo($user)
-            ->withStatus(ProposalStatus::FINISHED)
-            ->when($startDate && $endDate, fn (Builder $query) => $query->whereRaw(self::REPORT_DATE.' BETWEEN ? AND ?', [$startDate, $endDate]))
-            ->when($filters['development_id'] ?? null, fn (Builder $query, int|string $developmentId) => $query->whereHas(
-                'property',
-                fn (Builder $query) => $query->where('development_id', $developmentId),
-            ))
-            ->orderByRaw(self::REPORT_DATE.' DESC')
-            ->orderByDesc('proposals.id');
     }
 
     /**

@@ -2,8 +2,8 @@
 
 namespace App\Http\Requests;
 
-use App\Enums\ItbiModule;
-use App\Enums\SupportedState;
+use App\Enums\ItbiModuleEnum;
+use App\Enums\SupportedStateEnum;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -25,9 +25,9 @@ class StoreItbiMunicipalityRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:120'],
-            'state' => ['required', Rule::enum(SupportedState::class)],
+            'state' => ['required', Rule::enum(SupportedStateEnum::class)],
             'ibge_code' => ['required', 'integer', 'digits:7', Rule::unique('itbi_municipalities', 'ibge_code')->ignore($this->route('id'))],
-            'module' => ['required', Rule::enum(ItbiModule::class)],
+            'module' => ['required', Rule::enum(ItbiModuleEnum::class)],
         ];
     }
 

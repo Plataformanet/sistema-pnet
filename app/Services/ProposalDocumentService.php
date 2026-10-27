@@ -2,9 +2,9 @@
 
 namespace App\Services;
 
-use App\Enums\DocumentOwner;
-use App\Enums\DocumentType;
-use App\Enums\PersonType;
+use App\Enums\DocumentOwnerEnum;
+use App\Enums\DocumentTypeEnum;
+use App\Enums\PersonTypeEnum;
 use App\Models\Applicant;
 use App\Models\Proposal;
 use App\Models\ProposalDocument;
@@ -56,9 +56,9 @@ class ProposalDocumentService
     {
         return $tenant->run(function () use ($proposalId, $data, $files, $uploader) {
             $proposal = Proposal::findOrFail($proposalId);
-            $owner = DocumentOwner::from($data['owner']);
+            $owner = DocumentOwnerEnum::from($data['owner']);
             $documentable = $this->resolveDocumentable($proposal, $owner, $data['person_id'] ?? null);
-            $type = isset($data['type']) ? DocumentType::from($data['type']) : null;
+            $type = isset($data['type']) ? DocumentTypeEnum::from($data['type']) : null;
 
             return collect($files)->map(fn (UploadedFile $file) => $this->storeFile($proposal, $file, [
                 'uploaded_by' => $uploader->id,
@@ -106,7 +106,7 @@ class ProposalDocumentService
      * Anexa à proposta um documento gerado pelo sistema (ex.: PDF do orçamento
      * na conversão em proposta), com dono "Geral".
      */
-    public function storeGenerated(Proposal $proposal, string $contents, DocumentType $type, string $title, Tenant $tenant): ProposalDocument
+    public function storeGenerated(Proposal $proposal, string $contents, DocumentTypeEnum $type, string $title, Tenant $tenant): ProposalDocument
     {
         return $tenant->run(function () use ($proposal, $contents, $type, $title) {
             $path = self::basePath($proposal->id).'/'.Str::uuid().'.pdf';
@@ -115,7 +115,7 @@ class ProposalDocumentService
 
             try {
                 return $proposal->documents()->create([
-                    'owner' => DocumentOwner::GENERAL,
+                    'owner' => DocumentOwnerEnum::GENERAL,
                     'type' => $type,
                     'title' => $title,
                     'disk' => config('bucket.disk'),
@@ -170,16 +170,16 @@ class ProposalDocumentService
     {
         $proposal->loadMissing(['applicants.contact', 'sellers.contact', 'documents']);
 
-        $sentBy = fn (DocumentOwner $owner, ?string $type = null, ?int $id = null) => $proposal->documents
+        $sentBy = fn (DocumentOwnerEnum $owner, ?string $type = null, ?int $id = null) => $proposal->documents
             ->filter(fn (ProposalDocument $document) => $document->owner === $owner
                 && ($type === null || ($document->documentable_type === $type && $document->documentable_id === $id)))
             ->map(fn (ProposalDocument $document) => $document->type)
             ->filter()
             ->unique();
 
-        $build = function (DocumentOwner $owner, string $name, ?int $personId, Collection $sent, ?PersonType $personType = null) {
-            $required = collect(DocumentType::requiredFor($owner, $personType))
-                ->map(fn (DocumentType $type) => ['value' => $type->value, 'label' => $type->label(), 'sent' => $sent->contains($type)])
+        $build = function (DocumentOwnerEnum $owner, string $name, ?int $personId, Collection $sent, ?PersonTypeEnum $personType = null) {
+            $required = collect(DocumentTypeEnum::requiredFor($owner, $personType))
+                ->map(fn (DocumentTypeEnum $type) => ['value' => $type->value, 'label' => $type->label(), 'sent' => $sent->contains($type)])
                 ->values()
                 ->all();
 
@@ -197,19 +197,19 @@ class ProposalDocumentService
 
         return array_merge(
             $proposal->applicants->map(fn (Applicant $applicant) => $build(
-                DocumentOwner::BUYER,
+                DocumentOwnerEnum::BUYER,
                 $applicant->contact->name_corporatereason,
                 $applicant->id,
-                $sentBy(DocumentOwner::BUYER, $applicantClass, $applicant->id),
+                $sentBy(DocumentOwnerEnum::BUYER, $applicantClass, $applicant->id),
             ))->all(),
             $proposal->sellers->map(fn (Seller $seller) => $build(
-                DocumentOwner::SELLER,
+                DocumentOwnerEnum::SELLER,
                 $seller->contact->name_corporatereason,
                 $seller->id,
-                $sentBy(DocumentOwner::SELLER, $sellerClass, $seller->id),
+                $sentBy(DocumentOwnerEnum::SELLER, $sellerClass, $seller->id),
                 $seller->personType(),
             ))->all(),
-            [$build(DocumentOwner::PROPERTY, 'Imóvel', null, $sentBy(DocumentOwner::PROPERTY))],
+            [$build(DocumentOwnerEnum::PROPERTY, 'Imóvel', null, $sentBy(DocumentOwnerEnum::PROPERTY))],
         );
     }
 
@@ -222,18 +222,18 @@ class ProposalDocumentService
     public function missingSellerDocuments(Proposal $proposal): array
     {
         return collect($this->checklist($proposal))
-            ->filter(fn (array $item) => $item['owner'] === DocumentOwner::SELLER->value && ! $item['complete'])
+            ->filter(fn (array $item) => $item['owner'] === DocumentOwnerEnum::SELLER->value && ! $item['complete'])
             ->mapWithKeys(fn (array $item) => [
                 $item['name'] => collect($item['required'])->reject(fn (array $type) => $type['sent'])->pluck('label')->all(),
             ])
             ->all();
     }
 
-    private function resolveDocumentable(Proposal $proposal, DocumentOwner $owner, int|string|null $personId): Applicant|Seller|null
+    private function resolveDocumentable(Proposal $proposal, DocumentOwnerEnum $owner, int|string|null $personId): Applicant|Seller|null
     {
         $relation = match ($owner) {
-            DocumentOwner::BUYER => $proposal->applicants(),
-            DocumentOwner::SELLER => $proposal->sellers(),
+            DocumentOwnerEnum::BUYER => $proposal->applicants(),
+            DocumentOwnerEnum::SELLER => $proposal->sellers(),
             default => null,
         };
 

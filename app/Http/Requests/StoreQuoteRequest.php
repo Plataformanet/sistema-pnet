@@ -2,7 +2,7 @@
 
 namespace App\Http\Requests;
 
-use App\Enums\MaritalStatus;
+use App\Enums\MaritalStatusEnum;
 use App\Rules\CpfRule;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -35,7 +35,7 @@ class StoreQuoteRequest extends FormRequest
             'email' => ['required', 'email', 'max:191'],
             'phone' => ['required', 'string', 'max:20'],
             'profession' => ['required', 'string', 'max:191'],
-            'marital_status' => ['required', Rule::enum(MaritalStatus::class)],
+            'marital_status' => ['required', Rule::enum(MaritalStatusEnum::class)],
             'bank_id' => ['required', 'integer', $this->bankRule()],
             'valid_until' => ['required', 'date', 'after_or_equal:today'],
             'services' => ['nullable', 'array'],

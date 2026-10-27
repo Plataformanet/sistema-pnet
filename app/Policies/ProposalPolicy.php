@@ -2,7 +2,7 @@
 
 namespace App\Policies;
 
-use App\Enums\DocumentOwner;
+use App\Enums\DocumentOwnerEnum;
 use App\Models\Proposal;
 use App\Models\ProposalDocument;
 use App\Models\User;
@@ -67,7 +67,7 @@ class ProposalPolicy
 
     /**
      * Cargos externos só baixam os documentos que o cargo libera (ver
-     * `DocumentOwner::visibleTo`); a equipe baixa qualquer documento.
+     * `DocumentOwnerEnum::visibleTo`); a equipe baixa qualquer documento.
      */
     public function downloadDocument(User $user, Proposal $proposal, ProposalDocument $document): bool
     {
@@ -75,7 +75,7 @@ class ProposalPolicy
             return false;
         }
 
-        return in_array($document->owner, DocumentOwner::visibleTo($user), true);
+        return in_array($document->owner, DocumentOwnerEnum::visibleTo($user), true);
     }
 
     /**

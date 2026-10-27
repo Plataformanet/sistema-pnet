@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Enums\ReceiptType;
+use App\Enums\ReceiptTypeEnum;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -32,7 +32,7 @@ class Receipt extends Model
     protected function casts(): array
     {
         return [
-            'type' => ReceiptType::class,
+            'type' => ReceiptTypeEnum::class,
             'total_spent' => 'integer',
             'amount_deposited' => 'integer',
             'date' => 'date:Y-m-d',

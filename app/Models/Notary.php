@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Enums\BrazilianState;
+use App\Enums\BrazilianStateEnum;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -32,7 +32,7 @@ class Notary extends Model
     protected function casts(): array
     {
         return [
-            'state' => BrazilianState::class,
+            'state' => BrazilianStateEnum::class,
         ];
     }
 

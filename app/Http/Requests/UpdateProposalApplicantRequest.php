@@ -2,8 +2,8 @@
 
 namespace App\Http\Requests;
 
-use App\Enums\BankAccountType;
-use App\Enums\MaritalStatus;
+use App\Enums\BankAccountTypeEnum;
+use App\Enums\MaritalStatusEnum;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -38,7 +38,7 @@ class UpdateProposalApplicantRequest extends FormRequest
             'email' => ['required', 'email', 'max:191'],
             'phone' => ['required', 'string', 'max:20'],
             'declared_income' => ['required', 'integer', 'min:0'],
-            'marital_status' => ['required', Rule::enum(MaritalStatus::class)],
+            'marital_status' => ['required', Rule::enum(MaritalStatusEnum::class)],
             'profession' => ['required', 'string', 'max:191'],
             'birth_date' => ['nullable', 'date', 'before:today'],
             'family_income' => ['nullable', 'integer', 'min:0'],
@@ -47,7 +47,7 @@ class UpdateProposalApplicantRequest extends FormRequest
             'by_power_of_attorney' => ['boolean'],
             'bank_account' => ['nullable', 'array'],
             'bank_account.bank_name' => ['required_with:bank_account', 'string', 'max:100'],
-            'bank_account.account_type' => ['required_with:bank_account', Rule::enum(BankAccountType::class)],
+            'bank_account.account_type' => ['required_with:bank_account', Rule::enum(BankAccountTypeEnum::class)],
             'bank_account.branch' => ['required_with:bank_account', 'string', 'max:20'],
             'bank_account.number' => ['required_with:bank_account', 'string', 'max:30'],
             'bank_account.notes' => ['nullable', 'string'],

@@ -1,7 +1,7 @@
 <?php
 
-use App\Enums\CostItemType;
-use App\Enums\ReceiptType;
+use App\Enums\CostItemTypeEnum;
+use App\Enums\ReceiptTypeEnum;
 use App\Exceptions\CostItemNotRemovableException;
 use App\Exceptions\ReceiptNotAllowedException;
 use App\Mail\ProposalCostItemCreatedMail;
@@ -53,7 +53,7 @@ test('lançamento manual grava tipo Manual, valor em centavos e o boleto anexo',
     $this->tenant->run(function () use ($costItem) {
         $fresh = $costItem->fresh();
 
-        expect($fresh->type)->toBe(CostItemType::MANUAL)
+        expect($fresh->type)->toBe(CostItemTypeEnum::MANUAL)
             ->and($fresh->amount)->toBe(150035)
             ->and($fresh->has_bill)->toBeTrue();
 
@@ -84,7 +84,7 @@ test('editar o valor exige que a linha seja da proposta', function () {
 
 test('linhas da calculadora não podem ser excluídas', function () {
     $costItem = $this->tenant->run(fn () => $this->proposal->costItems()->create([
-        'type' => CostItemType::EMOLUMENT,
+        'type' => CostItemTypeEnum::EMOLUMENT,
         'description' => 'Registro de compra e venda',
         'amount' => 150000,
     ]));
@@ -119,10 +119,10 @@ test('o comprovante substitui o anterior', function () {
 test('total de emolumentos soma só emolumentos e taxas extras', function () {
     $this->tenant->run(function () {
         $this->proposal->costItems()->createMany([
-            ['type' => CostItemType::EMOLUMENT, 'amount' => 100000],
-            ['type' => CostItemType::EXTRA_FEE, 'amount' => 4510],
-            ['type' => CostItemType::ITBI, 'amount' => 900000],
-            ['type' => CostItemType::SERVICE, 'amount' => 150000],
+            ['type' => CostItemTypeEnum::EMOLUMENT, 'amount' => 100000],
+            ['type' => CostItemTypeEnum::EXTRA_FEE, 'amount' => 4510],
+            ['type' => CostItemTypeEnum::ITBI, 'amount' => 900000],
+            ['type' => CostItemTypeEnum::SERVICE, 'amount' => 150000],
         ]);
 
         expect($this->proposal->feesTotal())->toBe(104510);
@@ -144,7 +144,7 @@ test('recibo vinculado usa o tipo do custo e grava o nome do cartório como text
     $this->tenant->run(function () use ($receipt) {
         $fresh = $receipt->fresh();
 
-        expect($fresh->type)->toBe(ReceiptType::ADVISORY)
+        expect($fresh->type)->toBe(ReceiptTypeEnum::ADVISORY)
             ->and($fresh->document)->toBe('52998224725')
             ->and($fresh->notary_name)->toBe('1º Registro de Imóveis')
             ->and($fresh->total_spent)->toBe(150035);
@@ -171,7 +171,7 @@ test('recibo geral não precisa de cobrança', function () {
         'date' => '2026-10-01',
     ], $this->tenant);
 
-    expect($receipt->type)->toBe(ReceiptType::GENERAL)
+    expect($receipt->type)->toBe(ReceiptTypeEnum::GENERAL)
         ->and($receipt->amount_deposited)->toBe(600000)
         ->and($receipt->refund)->toBe(-100000);
 });

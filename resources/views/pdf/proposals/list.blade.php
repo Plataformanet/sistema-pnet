@@ -1,4 +1,4 @@
-@php use App\Support\Money; @endphp
+@php use App\Support\MoneyHelper; @endphp
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -31,7 +31,7 @@
                 <td>{{ $proposal->creator?->name }}</td>
                 <td>{{ $proposal->bank?->name }}</td>
                 <td>{{ $proposal->property_condition->label() }}</td>
-                <td class="money">{{ Money::format($proposal->purchase_value) }}</td>
+                <td class="money">{{ MoneyHelper::format($proposal->purchase_value) }}</td>
                 <td>{{ $proposal->status->label() }}</td>
                 <td>{{ $proposal->currentStage?->started_at ? $proposal->currentStage->stage?->name : 'Não iniciada' }}</td>
             </tr>

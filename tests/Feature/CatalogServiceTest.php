@@ -1,6 +1,6 @@
 <?php
 
-use App\Enums\BrazilianState;
+use App\Enums\BrazilianStateEnum;
 use App\Models\Bank;
 use App\Models\BillableService;
 use App\Models\ContractType;
@@ -31,7 +31,7 @@ dataset('catalogs', [
         'number' => '100',
         'neighborhood' => 'Sé',
         'city' => 'São Paulo',
-        'state' => BrazilianState::SP->value,
+        'state' => BrazilianStateEnum::SP->value,
     ]],
     'tipos de contrato' => [ContractTypeService::class, ContractType::class, fn () => ['name' => 'Contrato Catálogo', 'requires_financing' => false]],
     'tipos de custo' => [CostTypeService::class, CostType::class, fn () => ['name' => 'Custo Catálogo', 'requires_notary' => true, 'receipt_type' => null]],

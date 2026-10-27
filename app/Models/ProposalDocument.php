@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use App\Enums\DocumentOwner;
-use App\Enums\DocumentType;
+use App\Enums\DocumentOwnerEnum;
+use App\Enums\DocumentTypeEnum;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
@@ -39,8 +39,8 @@ class ProposalDocument extends Model
     protected function casts(): array
     {
         return [
-            'owner' => DocumentOwner::class,
-            'type' => DocumentType::class,
+            'owner' => DocumentOwnerEnum::class,
+            'type' => DocumentTypeEnum::class,
             'size' => 'integer',
         ];
     }

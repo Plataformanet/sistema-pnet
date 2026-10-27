@@ -51,13 +51,13 @@ vendor/bin/sail npm run type-check
 
 | Status | ID | Tarefa | Ref. | Dep. | Skill |
 | --- | --- | --- | --- | --- | --- |
-| ☐ | T-R1-01 | Enums: os 19 sem sufixo → `+Enum`; remover o `PermissionsEnum` sem uso | plan §4, spec §8 (13) | R0 | RF |
-| ☐ | T-R1-02 | Actions da calculadora → `+Action` | plan §4 | R0 | RF |
-| ☐ | T-R1-03 | Jobs (`AttachQuotePdfToProposalJob`, `SeedTenantDatabaseJob`), `EnsureBucketCommand`, Rules (`+Rule`), `RedirectProposalRestrictedUsersMiddleware` | plan §4 | R0 | RF |
-| ☐ | T-R1-04 | Services: `SupplierService`, `EmployeeService`, `ServiceCatalogService`; remover `CoastService` e `PaidMarketService`; renomear os testes correspondentes | plan §4 | R0 | RF |
-| ☐ | T-R1-05 | DTOs (`+Dto`), `FeeBreakdownBuilder`, `MoneyHelper`, `DocumentMaskHelper`, `FinishedProposalsReportQuery` | plan §4 | R0 | RF |
-| ☐ | T-R1-06 | Varredura final: `grep` sem nomes antigos em `app`, `config`, `routes`, `database`, `tests`, `resources/views`; Pint | plan §4 | 01..05 | RF |
-| ☐ | T-R1-07 | Code review da fase (nomes, referências por string) | — | 06 | CR |
+| ☑ | T-R1-01 | Enums: os 19 sem sufixo → `+Enum`; remover o `PermissionsEnum` sem uso | plan §4, spec §8 (13) | R0 | RF |
+| ☑ | T-R1-02 | Actions da calculadora → `+Action` | plan §4 | R0 | RF |
+| ☑ | T-R1-03 | Jobs (`AttachQuotePdfToProposalJob`, `SeedTenantDatabaseJob`), `EnsureBucketCommand`, Rules (`+Rule`), `RedirectProposalRestrictedUsersMiddleware` | plan §4 | R0 | RF |
+| ☑ | T-R1-04 | Services: `SupplierService`, `EmployeeService`, `ServiceCatalogService`; remover `CoastService` e `PaidMarketService`; renomear os testes correspondentes | plan §4 | R0 | RF |
+| ☑ | T-R1-05 | DTOs (`+Dto`), `FeeBreakdownBuilder`, `MoneyHelper`, `DocumentMaskHelper`, `FinishedProposalsReportQuery` | plan §4 | R0 | RF |
+| ☑ | T-R1-06 | Varredura final: `grep` sem nomes antigos em `app`, `config`, `routes`, `database`, `tests`, `resources/views`; Pint | plan §4 | 01..05 | RF |
+| ☑ | T-R1-07 | Code review da fase (nomes, referências por string) | — | 06 | CR |
 | ☐ | T-R1-08 | Aceite: a suíte completa verde (rodada com o pedido do usuário) | — | 07 | QA |
 
 ## R2 — Padronizações de dados

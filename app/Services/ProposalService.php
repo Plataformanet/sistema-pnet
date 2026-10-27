@@ -2,8 +2,8 @@
 
 namespace App\Services;
 
-use App\Enums\PropertyCondition;
-use App\Enums\ProposalStatus;
+use App\Enums\PropertyConditionEnum;
+use App\Enums\ProposalStatusEnum;
 use App\Exceptions\LastApplicantException;
 use App\Exceptions\PersonAlreadyInProposalException;
 use App\Mail\ApplicantWelcomeMail;
@@ -82,7 +82,7 @@ class ProposalService
                 $proposal = Proposal::create(array_merge(
                     Arr::only($data, self::PROPOSAL_FIELDS),
                     [
-                        'status' => ProposalStatus::NEW,
+                        'status' => ProposalStatusEnum::NEW,
                         'analyst_id' => $data['analyst_id'] ?? null,
                     ],
                 ));
@@ -250,8 +250,8 @@ class ProposalService
                 'analyst_id' => $actor->id,
                 'bank_id' => $quote->bank_id,
                 'contract_type_id' => $this->defaultContractTypeId(),
-                'status' => ProposalStatus::NEW,
-                'property_condition' => PropertyCondition::USED,
+                'status' => ProposalStatusEnum::NEW,
+                'property_condition' => PropertyConditionEnum::USED,
                 'purchase_value' => 0,
                 'down_payment_value' => 0,
             ]);
@@ -320,17 +320,17 @@ class ProposalService
      */
     private function applyStatus(Proposal $proposal, array $data): void
     {
-        if (! isset($data['status']) || $proposal->status === ProposalStatus::FINISHED) {
+        if (! isset($data['status']) || $proposal->status === ProposalStatusEnum::FINISHED) {
             return;
         }
 
-        $status = ProposalStatus::from($data['status']);
+        $status = ProposalStatusEnum::from($data['status']);
 
         $proposal->status = $status;
-        $proposal->cancellation_reason = $status === ProposalStatus::CANCELED ? $data['cancellation_reason'] : null;
-        $proposal->restriction_reason = $status === ProposalStatus::RESTRICTED ? $data['restriction_reason'] : null;
-        $proposal->expected_delivery_month = $status === ProposalStatus::AWAITING_PROPERTY ? $data['expected_delivery_month'] : null;
-        $proposal->expected_delivery_year = $status === ProposalStatus::AWAITING_PROPERTY ? $data['expected_delivery_year'] : null;
+        $proposal->cancellation_reason = $status === ProposalStatusEnum::CANCELED ? $data['cancellation_reason'] : null;
+        $proposal->restriction_reason = $status === ProposalStatusEnum::RESTRICTED ? $data['restriction_reason'] : null;
+        $proposal->expected_delivery_month = $status === ProposalStatusEnum::AWAITING_PROPERTY ? $data['expected_delivery_month'] : null;
+        $proposal->expected_delivery_year = $status === ProposalStatusEnum::AWAITING_PROPERTY ? $data['expected_delivery_year'] : null;
     }
 
     /**

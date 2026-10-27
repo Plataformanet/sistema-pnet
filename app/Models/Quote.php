@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use App\Enums\MaritalStatus;
-use App\Enums\QuoteStatus;
+use App\Enums\MaritalStatusEnum;
+use App\Enums\QuoteStatusEnum;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -40,7 +40,7 @@ class Quote extends Model
     protected function casts(): array
     {
         return [
-            'marital_status' => MaritalStatus::class,
+            'marital_status' => MaritalStatusEnum::class,
         ];
     }
 
@@ -49,14 +49,14 @@ class Quote extends Model
         return str_pad((string) $this->id, 5, '0', STR_PAD_LEFT);
     }
 
-    public function status(): QuoteStatus
+    public function status(): QuoteStatusEnum
     {
         $estimate = $this->feeEstimate;
 
         return match (true) {
-            $estimate?->proposal_id !== null => QuoteStatus::CONVERTED,
-            $estimate?->valid_until !== null && $estimate->valid_until->lt(today()) => QuoteStatus::EXPIRED,
-            default => QuoteStatus::OPEN,
+            $estimate?->proposal_id !== null => QuoteStatusEnum::CONVERTED,
+            $estimate?->valid_until !== null && $estimate->valid_until->lt(today()) => QuoteStatusEnum::EXPIRED,
+            default => QuoteStatusEnum::OPEN,
         };
     }
 

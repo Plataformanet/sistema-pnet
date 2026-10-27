@@ -2,14 +2,14 @@
 
 namespace App\Services;
 
-use App\Enums\CalculationType;
-use App\Enums\FeeDiscount;
-use App\Enums\FinancingSystem;
-use App\Enums\SupportedState;
+use App\Enums\CalculationTypeEnum;
+use App\Enums\FeeDiscountEnum;
+use App\Enums\FinancingSystemEnum;
+use App\Enums\SupportedStateEnum;
 use App\Models\FeeCalculation;
 use App\Models\ItbiMunicipality;
 use App\Models\Tenant;
-use App\Services\FeeCalculator\FeeBreakdown;
+use App\Services\FeeCalculator\FeeBreakdownBuilder;
 
 class FeeCalculationService
 {
@@ -21,9 +21,9 @@ class FeeCalculationService
         return $tenant->run(fn () => FeeCalculation::notExpired()->findOrFail($id));
     }
 
-    public function breakdown(FeeCalculation $calculation): FeeBreakdown
+    public function breakdown(FeeCalculation $calculation): FeeBreakdownBuilder
     {
-        return FeeBreakdown::fromApiResult($calculation->api_result, $calculation->itbi_amount);
+        return FeeBreakdownBuilder::fromApiResult($calculation->api_result, $calculation->itbi_amount);
     }
 
     /**
@@ -32,7 +32,7 @@ class FeeCalculationService
      *
      * @return array{type: array{value: int, label: string, description: string}, state: ?string, municipality: array{ibge_code: ?int, name: ?string, itbi_module: ?string}, financingSystems: array<int, array<string, mixed>>, discounts: array<int, array<string, mixed>>, commonNotes: string}
      */
-    public function formProps(CalculationType $type, ?SupportedState $state, ?int $municipalityIbgeCode, ?string $municipalityName, Tenant $tenant): array
+    public function formProps(CalculationTypeEnum $type, ?SupportedStateEnum $state, ?int $municipalityIbgeCode, ?string $municipalityName, Tenant $tenant): array
     {
         return [
             'type' => ['value' => $type->value, 'label' => $type->label(), 'description' => $type->description()],
@@ -44,8 +44,8 @@ class FeeCalculationService
                     ? $tenant->run(fn () => ItbiMunicipality::where('ibge_code', $municipalityIbgeCode)->first()?->module?->value)
                     : null,
             ],
-            'financingSystems' => FinancingSystem::options(),
-            'discounts' => FeeDiscount::options(),
+            'financingSystems' => FinancingSystemEnum::options(),
+            'discounts' => FeeDiscountEnum::options(),
             'commonNotes' => __('fee_calculator.common_notes', [], 'pt_BR'),
         ];
     }
@@ -57,7 +57,7 @@ class FeeCalculationService
      */
     public function present(FeeCalculation $calculation): array
     {
-        $discount = FeeDiscount::tryFrom((string) ($calculation->input['discount'] ?? ''));
+        $discount = FeeDiscountEnum::tryFrom((string) ($calculation->input['discount'] ?? ''));
 
         return [
             'id' => $calculation->id,

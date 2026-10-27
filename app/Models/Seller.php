@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use App\Enums\MaritalStatus;
-use App\Enums\PersonType;
+use App\Enums\MaritalStatusEnum;
+use App\Enums\PersonTypeEnum;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -40,16 +40,16 @@ class Seller extends Model
     protected function casts(): array
     {
         return [
-            'marital_status' => MaritalStatus::class,
+            'marital_status' => MaritalStatusEnum::class,
             'declared_income' => 'integer',
             'declares_income_tax' => 'boolean',
             'by_power_of_attorney' => 'boolean',
         ];
     }
 
-    public function personType(): PersonType
+    public function personType(): PersonTypeEnum
     {
-        return PersonType::tryFrom((string) $this->contact?->type) ?? PersonType::INDIVIDUAL;
+        return PersonTypeEnum::tryFrom((string) $this->contact?->type) ?? PersonTypeEnum::INDIVIDUAL;
     }
 
     public function contact(): BelongsTo

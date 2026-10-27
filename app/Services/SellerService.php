@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-use App\Enums\PersonType;
+use App\Enums\PersonTypeEnum;
 use App\Models\Contact;
 use App\Models\Proposal;
 use App\Models\Seller;
@@ -40,7 +40,7 @@ class SellerService
             }
 
             $contact ??= Contact::create([
-                'type' => PersonType::from($data['person_type'])->value,
+                'type' => PersonTypeEnum::from($data['person_type'])->value,
                 'name_corporatereason' => $data['name'],
                 'cpf_cnpj' => $document,
                 'email' => $data['email'],

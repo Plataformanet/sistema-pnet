@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-use App\Enums\PersonType;
+use App\Enums\PersonTypeEnum;
 use App\Enums\RolesEnum;
 use App\Models\Applicant;
 use App\Models\Contact;
@@ -53,7 +53,7 @@ class ApplicantService
             }
 
             $contact ??= Contact::create([
-                'type' => PersonType::INDIVIDUAL->value,
+                'type' => PersonTypeEnum::INDIVIDUAL->value,
                 'name_corporatereason' => $data['name'],
                 'cpf_cnpj' => $cpf,
                 'email' => $data['email'],

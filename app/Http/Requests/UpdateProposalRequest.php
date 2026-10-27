@@ -2,7 +2,7 @@
 
 namespace App\Http\Requests;
 
-use App\Enums\ProposalStatus;
+use App\Enums\ProposalStatusEnum;
 use App\Models\Proposal;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Validation\Rule;
@@ -28,14 +28,14 @@ class UpdateProposalRequest extends StoreProposalRequest
      */
     public function rules(): array
     {
-        $manual = array_map(fn (ProposalStatus $status) => $status->value, ProposalStatus::manuallySelectable());
+        $manual = array_map(fn (ProposalStatusEnum $status) => $status->value, ProposalStatusEnum::manuallySelectable());
 
         return array_merge($this->proposalRules(), [
-            'status' => ['required', Rule::in([...$manual, ProposalStatus::FINISHED->value])],
-            'cancellation_reason' => ['nullable', 'required_if:status,'.ProposalStatus::CANCELED->value, 'string'],
-            'restriction_reason' => ['nullable', 'required_if:status,'.ProposalStatus::RESTRICTED->value, 'string'],
-            'expected_delivery_month' => ['nullable', 'required_if:status,'.ProposalStatus::AWAITING_PROPERTY->value, 'integer', 'between:1,12'],
-            'expected_delivery_year' => ['nullable', 'required_if:status,'.ProposalStatus::AWAITING_PROPERTY->value, 'integer', 'between:2000,2100'],
+            'status' => ['required', Rule::in([...$manual, ProposalStatusEnum::FINISHED->value])],
+            'cancellation_reason' => ['nullable', 'required_if:status,'.ProposalStatusEnum::CANCELED->value, 'string'],
+            'restriction_reason' => ['nullable', 'required_if:status,'.ProposalStatusEnum::RESTRICTED->value, 'string'],
+            'expected_delivery_month' => ['nullable', 'required_if:status,'.ProposalStatusEnum::AWAITING_PROPERTY->value, 'integer', 'between:1,12'],
+            'expected_delivery_year' => ['nullable', 'required_if:status,'.ProposalStatusEnum::AWAITING_PROPERTY->value, 'integer', 'between:2000,2100'],
         ]);
     }
 
@@ -47,8 +47,8 @@ class UpdateProposalRequest extends StoreProposalRequest
         return [
             ...parent::after(),
             function (Validator $validator) {
-                if ($this->input('status') === ProposalStatus::FINISHED->value
-                    && $this->proposal()?->status !== ProposalStatus::FINISHED) {
+                if ($this->input('status') === ProposalStatusEnum::FINISHED->value
+                    && $this->proposal()?->status !== ProposalStatusEnum::FINISHED) {
                     $validator->errors()->add('status', 'A proposta só é finalizada ao concluir a última etapa do acompanhamento.');
                 }
             },

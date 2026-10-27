@@ -2,7 +2,7 @@
 
 namespace Database\Factories;
 
-use App\Enums\BrazilianState;
+use App\Enums\BrazilianStateEnum;
 use App\Models\Notary;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -26,7 +26,7 @@ class NotaryFactory extends Factory
             'complement' => null,
             'neighborhood' => 'Centro',
             'city' => $this->faker->city(),
-            'state' => BrazilianState::SP,
+            'state' => BrazilianStateEnum::SP,
             'reference_point' => null,
             'business_hours' => null,
         ];

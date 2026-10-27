@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\BrazilianState;
+use App\Enums\BrazilianStateEnum;
 use App\Http\Requests\IndexCatalogRequest;
 use App\Http\Requests\StoreNotaryRequest;
 use App\Http\Requests\UpdateNotaryRequest;
@@ -23,14 +23,14 @@ class TenantNotaryController extends Controller
         return Inertia::render('tenant/documents/notaries/list/List', [
             'notaries' => $notaries,
             'filters' => $request->validated(),
-            'states' => BrazilianState::options(),
+            'states' => BrazilianStateEnum::options(),
         ]);
     }
 
     public function create()
     {
         return Inertia::render('tenant/documents/notaries/create/Create', [
-            'states' => BrazilianState::options(),
+            'states' => BrazilianStateEnum::options(),
         ]);
     }
 
@@ -40,7 +40,7 @@ class TenantNotaryController extends Controller
 
         return Inertia::render('tenant/documents/notaries/edit/Edit', [
             'notary' => $notary,
-            'states' => BrazilianState::options(),
+            'states' => BrazilianStateEnum::options(),
         ]);
     }
 

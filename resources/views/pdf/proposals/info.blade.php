@@ -1,4 +1,4 @@
-@php use App\Support\DocumentMask; use App\Support\Money; @endphp
+@php use App\Support\DocumentMaskHelper; use App\Support\MoneyHelper; @endphp
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -24,16 +24,16 @@
             <tr><td class="label">Prazo</td><td>{{ $proposal->payment_term }} meses</td></tr>
         @endif
         <tr><td class="label">Imóvel</td><td>{{ $proposal->property_condition->label() }}</td></tr>
-        <tr><td class="label">Valor de compra</td><td>{{ Money::format($proposal->purchase_value) }}</td></tr>
-        <tr><td class="label">Valor de entrada</td><td>{{ Money::format($proposal->down_payment_value) }}</td></tr>
+        <tr><td class="label">Valor de compra</td><td>{{ MoneyHelper::format($proposal->purchase_value) }}</td></tr>
+        <tr><td class="label">Valor de entrada</td><td>{{ MoneyHelper::format($proposal->down_payment_value) }}</td></tr>
         @if ($proposal->financing_value !== null)
-            <tr><td class="label">Valor do financiamento</td><td>{{ Money::format($proposal->financing_value) }}</td></tr>
+            <tr><td class="label">Valor do financiamento</td><td>{{ MoneyHelper::format($proposal->financing_value) }}</td></tr>
         @endif
         @if ($proposal->uses_fgts)
-            <tr><td class="label">FGTS</td><td>{{ Money::format($proposal->fgts_value) }}</td></tr>
+            <tr><td class="label">FGTS</td><td>{{ MoneyHelper::format($proposal->fgts_value) }}</td></tr>
         @endif
         @if ($proposal->subsidy_value !== null)
-            <tr><td class="label">Subsídio</td><td>{{ Money::format($proposal->subsidy_value) }}</td></tr>
+            <tr><td class="label">Subsídio</td><td>{{ MoneyHelper::format($proposal->subsidy_value) }}</td></tr>
         @endif
         <tr><td class="label">Criador</td><td>{{ $proposal->creator?->name }}</td></tr>
         <tr><td class="label">Analista</td><td>{{ $proposal->analyst?->name ?? 'Não definido' }}</td></tr>
@@ -45,7 +45,7 @@
         @foreach ($proposal->applicants as $applicant)
             <tr>
                 <td>{{ $applicant->contact->name_corporatereason }}</td>
-                <td>{{ $showApplicantContacts ? $applicant->contact->cpf_cnpj : DocumentMask::mask($applicant->contact->cpf_cnpj) }}</td>
+                <td>{{ $showApplicantContacts ? $applicant->contact->cpf_cnpj : DocumentMaskHelper::mask($applicant->contact->cpf_cnpj) }}</td>
                 <td>{{ $showApplicantContacts ? $applicant->contact->email : 'Oculto' }}</td>
                 <td>{{ $showApplicantContacts ? ($applicant->contact->cell_phone ?: $applicant->contact->phone) : 'Oculto' }}</td>
             </tr>
@@ -59,7 +59,7 @@
             @foreach ($proposal->sellers as $seller)
                 <tr>
                     <td>{{ $seller->contact->name_corporatereason }}</td>
-                    <td>{{ $showSellerContacts ? $seller->contact->cpf_cnpj : DocumentMask::mask($seller->contact->cpf_cnpj) }}</td>
+                    <td>{{ $showSellerContacts ? $seller->contact->cpf_cnpj : DocumentMaskHelper::mask($seller->contact->cpf_cnpj) }}</td>
                     <td>{{ $showSellerContacts ? $seller->contact->email : 'Oculto' }}</td>
                 </tr>
             @endforeach

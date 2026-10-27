@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-use App\Enums\RegistryProtocolPosition;
+use App\Enums\RegistryProtocolPositionEnum;
 use App\Models\Applicant;
 use App\Models\Proposal;
 use App\Models\RegistryProtocol;
@@ -62,7 +62,7 @@ class RegistryProtocolService
                 ->groupBy('position')
                 ->pluck('total', 'position');
 
-            $closed = (int) $counts->only(RegistryProtocolPosition::closedValues())->sum();
+            $closed = (int) $counts->only(RegistryProtocolPositionEnum::closedValues())->sum();
             $all = (int) $counts->sum();
 
             return ['open' => $all - $closed, 'closed' => $closed, 'all' => $all];

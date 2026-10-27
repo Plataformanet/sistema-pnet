@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use App\Enums\CalculationType;
-use App\Enums\SupportedState;
+use App\Enums\CalculationTypeEnum;
+use App\Enums\SupportedStateEnum;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
@@ -40,8 +40,8 @@ class FeeCalculation extends Model
     protected function casts(): array
     {
         return [
-            'type' => CalculationType::class,
-            'state' => SupportedState::class,
+            'type' => CalculationTypeEnum::class,
+            'state' => SupportedStateEnum::class,
             'municipality_ibge_code' => 'integer',
             'input' => 'array',
             'api_result' => 'array',

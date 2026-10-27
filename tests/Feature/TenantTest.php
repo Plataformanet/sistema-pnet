@@ -1,9 +1,9 @@
 <?php
 
 use App\Enums\RolesEnum;
-use App\Enums\TenantProvisioningStatus;
+use App\Enums\TenantProvisioningStatusEnum;
 use App\Http\Controllers\TenantRegistrationController;
-use App\Jobs\SeedTenantDatabase;
+use App\Jobs\SeedTenantDatabaseJob;
 use App\Models\Module;
 use App\Models\Tenant;
 use App\Models\User;
@@ -164,7 +164,7 @@ test('canActivateModule throws when the tenant is blocked', function () {
 
 test('status endpoint reports a provisioned tenant as ready', function () {
     $tenant = makeTenant();
-    $tenant->update(['provisioning_status' => TenantProvisioningStatus::READY->value]);
+    $tenant->update(['provisioning_status' => TenantProvisioningStatusEnum::READY->value]);
 
     $response = app(TenantRegistrationController::class)->status($tenant->id);
 
@@ -193,7 +193,7 @@ test('seeder failed() cleans up the half-provisioned tenant', function () {
     // Simula falha no seeder: deve marcar failed e remover o tenant (o cascade
     // de domains + o DeleteDatabase derrubam domínio e banco). Não registramos
     // no TenantRegistry porque o próprio failed() faz a limpeza.
-    (new SeedTenantDatabase($tenant))->failed(new Exception('boom'));
+    (new SeedTenantDatabaseJob($tenant))->failed(new Exception('boom'));
 
     expect(Tenant::find($tenant->id))->toBeNull();
     $this->assertDatabaseMissing('domains', ['domain' => 'falha.localhost']);

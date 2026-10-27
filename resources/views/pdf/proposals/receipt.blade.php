@@ -1,6 +1,6 @@
 @php
-    use App\Enums\ReceiptType;
-    use App\Support\Money;
+    use App\Enums\ReceiptTypeEnum;
+    use App\Support\MoneyHelper;
     $document = preg_replace('/\D/', '', $receipt->document);
     $formattedDocument = strlen($document) === 11
         ? preg_replace('/(\d{3})(\d{3})(\d{3})(\d{2})/', '$1.$2.$3-$4', $document)
@@ -48,7 +48,7 @@
         <tr><td class="label">Data</td><td>{{ $receipt->date?->format('d/m/Y') }}</td></tr>
     </table>
 
-    @if ($receipt->type === ReceiptType::GENERAL)
+    @if ($receipt->type === ReceiptTypeEnum::GENERAL)
         <h3>Cobranças da proposta</h3>
         <table>
             <tr><th>Tipo</th><th>Descrição</th><th class="money">Valor</th></tr>
@@ -56,13 +56,13 @@
                 <tr>
                     <td>{{ $costItem->type->label() }}</td>
                     <td>{{ $costItem->description ?? $costItem->extra_fee_description ?? $costItem->costType?->name }}</td>
-                    <td class="money">{{ Money::format($costItem->amount) }}</td>
+                    <td class="money">{{ MoneyHelper::format($costItem->amount) }}</td>
                 </tr>
             @endforeach
-            <tr class="total"><td colspan="2">Total de emolumentos</td><td class="money">{{ Money::format($feesTotal) }}</td></tr>
-            <tr class="total"><td colspan="2">Total gasto</td><td class="money">{{ Money::format($receipt->total_spent) }}</td></tr>
-            <tr class="total"><td colspan="2">Valor depositado</td><td class="money">{{ Money::format($receipt->amount_deposited) }}</td></tr>
-            <tr class="total"><td colspan="2">Devolução</td><td class="money">{{ Money::format($receipt->refund) }}</td></tr>
+            <tr class="total"><td colspan="2">Total de emolumentos</td><td class="money">{{ MoneyHelper::format($feesTotal) }}</td></tr>
+            <tr class="total"><td colspan="2">Total gasto</td><td class="money">{{ MoneyHelper::format($receipt->total_spent) }}</td></tr>
+            <tr class="total"><td colspan="2">Valor depositado</td><td class="money">{{ MoneyHelper::format($receipt->amount_deposited) }}</td></tr>
+            <tr class="total"><td colspan="2">Devolução</td><td class="money">{{ MoneyHelper::format($receipt->refund) }}</td></tr>
         </table>
 
         <h3>Proponentes</h3>
@@ -73,7 +73,7 @@
             <tr><th>Descrição</th><th class="money">Valor</th></tr>
             <tr>
                 <td>{{ $receipt->costItem?->description ?? $receipt->costItem?->costType?->name }}</td>
-                <td class="money">{{ Money::format($receipt->total_spent ?? $receipt->costItem?->amount) }}</td>
+                <td class="money">{{ MoneyHelper::format($receipt->total_spent ?? $receipt->costItem?->amount) }}</td>
             </tr>
         </table>
     @endif

@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-use App\Enums\TenantProvisioningStatus;
+use App\Enums\TenantProvisioningStatusEnum;
 use App\Models\Module;
 use App\Models\Plan;
 use App\Models\Tenant;
@@ -21,7 +21,7 @@ class TenantService
      * roles/permissões/usuário admin — acontece no pipeline do evento
      * `TenantCreated` (ver TenancyServiceProvider), fora do request. Por isso o
      * payload de seed é calculado aqui e guardado em `tenant->seed`, para o job
-     * SeedTenantDatabase consumir depois das migrations.
+     * SeedTenantDatabaseJob consumir depois das migrations.
      *
      * @param  array<string, mixed>  $data
      */
@@ -36,13 +36,13 @@ class TenantService
         $modules = $this->resolveActivatableModules($plan);
 
         // Dispara o pipeline de provisionamento (assíncrono em produção). O
-        // payload de seed viaja junto do tenant para o job SeedTenantDatabase.
+        // payload de seed viaja junto do tenant para o job SeedTenantDatabaseJob.
         $tenant = Tenant::create([
             'name' => $data['name'],
             'plan_id' => $plan->id,
             'is_active' => true,
             'trial_ends_at' => now()->addDays(30),
-            'provisioning_status' => TenantProvisioningStatus::PENDING->value,
+            'provisioning_status' => TenantProvisioningStatusEnum::PENDING->value,
             'seed' => [
                 'admin' => [
                     'name' => $data['userName'],

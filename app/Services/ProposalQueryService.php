@@ -2,14 +2,14 @@
 
 namespace App\Services;
 
-use App\Enums\AmortizationTable;
-use App\Enums\BankAccountType;
-use App\Enums\DocumentOwner;
-use App\Enums\DocumentType;
-use App\Enums\MaritalStatus;
-use App\Enums\PersonType;
-use App\Enums\PropertyCondition;
-use App\Enums\ProposalStatus;
+use App\Enums\AmortizationTableEnum;
+use App\Enums\BankAccountTypeEnum;
+use App\Enums\DocumentOwnerEnum;
+use App\Enums\DocumentTypeEnum;
+use App\Enums\MaritalStatusEnum;
+use App\Enums\PersonTypeEnum;
+use App\Enums\PropertyConditionEnum;
+use App\Enums\ProposalStatusEnum;
 use App\Enums\RolesEnum;
 use App\Models\Proposal;
 use App\Models\ProposalDocument;
@@ -67,11 +67,11 @@ class ProposalQueryService
             'developments' => $this->developmentService->options($tenant, $proposal?->property?->development_id)->map->only(['id', 'name']),
             'staff' => $tenant->run(fn () => $this->usersWithRoles($staffRoles)),
             'partners' => $tenant->run(fn () => $this->usersWithRoles([RolesEnum::PARTNER->label()])),
-            'maritalStatuses' => MaritalStatus::options(),
-            'amortizationTables' => AmortizationTable::options(),
-            'propertyConditions' => PropertyCondition::options(),
-            'personTypes' => PersonType::options(),
-            'bankAccountTypes' => BankAccountType::options(),
+            'maritalStatuses' => MaritalStatusEnum::options(),
+            'amortizationTables' => AmortizationTableEnum::options(),
+            'propertyConditions' => PropertyConditionEnum::options(),
+            'personTypes' => PersonTypeEnum::options(),
+            'bankAccountTypes' => BankAccountTypeEnum::options(),
         ];
     }
 
@@ -85,13 +85,13 @@ class ProposalQueryService
         return [
             'costTypes' => $this->costTypeService->options($tenant)->map->only(['id', 'name', 'requires_notary', 'receipt_type']),
             'notaries' => $this->notaryService->options($tenant)->map->only(['id', 'name']),
-            'statuses' => ProposalStatus::options(ProposalStatus::manuallySelectable()),
+            'statuses' => ProposalStatusEnum::options(ProposalStatusEnum::manuallySelectable()),
             'documentTypes' => [
-                DocumentOwner::BUYER->value => DocumentType::options(DocumentType::forOwner(DocumentOwner::BUYER)),
-                'seller_pf' => DocumentType::options(DocumentType::forOwner(DocumentOwner::SELLER, PersonType::INDIVIDUAL)),
-                'seller_pj' => DocumentType::options(DocumentType::forOwner(DocumentOwner::SELLER, PersonType::COMPANY)),
-                DocumentOwner::PROPERTY->value => DocumentType::options(DocumentType::forOwner(DocumentOwner::PROPERTY)),
-                DocumentOwner::GENERAL->value => DocumentType::options(DocumentType::forOwner(DocumentOwner::GENERAL)),
+                DocumentOwnerEnum::BUYER->value => DocumentTypeEnum::options(DocumentTypeEnum::forOwner(DocumentOwnerEnum::BUYER)),
+                'seller_pf' => DocumentTypeEnum::options(DocumentTypeEnum::forOwner(DocumentOwnerEnum::SELLER, PersonTypeEnum::INDIVIDUAL)),
+                'seller_pj' => DocumentTypeEnum::options(DocumentTypeEnum::forOwner(DocumentOwnerEnum::SELLER, PersonTypeEnum::COMPANY)),
+                DocumentOwnerEnum::PROPERTY->value => DocumentTypeEnum::options(DocumentTypeEnum::forOwner(DocumentOwnerEnum::PROPERTY)),
+                DocumentOwnerEnum::GENERAL->value => DocumentTypeEnum::options(DocumentTypeEnum::forOwner(DocumentOwnerEnum::GENERAL)),
             ],
             'maxUploadKb' => config('bucket.proposal_document_max_kb'),
         ];
@@ -99,13 +99,13 @@ class ProposalQueryService
 
     /**
      * Documentos que o usuário pode ver na proposta, conforme o cargo (ver
-     * `DocumentOwner::visibleTo`).
+     * `DocumentOwnerEnum::visibleTo`).
      *
      * @return Collection<int, ProposalDocument>
      */
     public function documentsFor(Proposal $proposal, User $user): Collection
     {
-        $visibleOwners = DocumentOwner::visibleTo($user);
+        $visibleOwners = DocumentOwnerEnum::visibleTo($user);
 
         return $proposal->documents
             ->filter(fn (ProposalDocument $document) => in_array($document->owner, $visibleOwners, true))
@@ -166,8 +166,8 @@ class ProposalQueryService
                 ->groupBy('status')
                 ->pluck('total', 'status');
 
-            return collect(ProposalStatus::cases())
-                ->mapWithKeys(fn (ProposalStatus $status) => [$status->value => (int) ($counts[$status->value] ?? 0)])
+            return collect(ProposalStatusEnum::cases())
+                ->mapWithKeys(fn (ProposalStatusEnum $status) => [$status->value => (int) ($counts[$status->value] ?? 0)])
                 ->all();
         });
     }

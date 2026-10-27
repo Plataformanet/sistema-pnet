@@ -1,6 +1,6 @@
 <?php
 
-use App\Enums\RegistryProtocolPosition;
+use App\Enums\RegistryProtocolPositionEnum;
 use App\Http\Requests\IndexRegistryProtocolRequest;
 use App\Http\Requests\StoreRegistryProtocolRequest;
 use App\Http\Requests\UpdateRegistryProtocolRequest;
@@ -52,7 +52,7 @@ function registryProtocolData(array $overrides = []): array
         'seller_name' => '',
         'entered_at' => '2026-10-01',
         'exited_at' => '',
-        'position' => RegistryProtocolPosition::IN_REGISTRY_PG->value,
+        'position' => RegistryProtocolPositionEnum::IN_REGISTRY_PG->value,
     ], $overrides);
 }
 

@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\RegistryProtocolPosition;
+use App\Enums\RegistryProtocolPositionEnum;
 use App\Http\Requests\IndexRegistryProtocolRequest;
 use App\Http\Requests\StoreRegistryProtocolRequest;
 use App\Http\Requests\UpdateRegistryProtocolRequest;
@@ -24,7 +24,7 @@ class TenantRegistryProtocolController extends Controller
         return Inertia::render('tenant/documents/registry-protocols/list/List', [
             'protocols' => $this->registryProtocolService->paginate($filters, tenant()),
             'tabCounts' => $this->registryProtocolService->tabCounts($filters, tenant()),
-            'positions' => RegistryProtocolPosition::options(),
+            'positions' => RegistryProtocolPositionEnum::options(),
             'filters' => $filters,
         ]);
     }
@@ -32,7 +32,7 @@ class TenantRegistryProtocolController extends Controller
     public function create(Request $request)
     {
         return Inertia::render('tenant/documents/registry-protocols/create/Create', [
-            'positions' => RegistryProtocolPosition::options(),
+            'positions' => RegistryProtocolPositionEnum::options(),
             'proposal' => $this->registryProtocolService->proposalOption(
                 filter_var($request->query('proposal_id'), FILTER_VALIDATE_INT) ?: null,
                 $request->user(),
@@ -45,7 +45,7 @@ class TenantRegistryProtocolController extends Controller
     {
         return Inertia::render('tenant/documents/registry-protocols/edit/Edit', [
             'protocol' => $this->registryProtocolService->findForEdit($id, tenant()),
-            'positions' => RegistryProtocolPosition::options(),
+            'positions' => RegistryProtocolPositionEnum::options(),
         ]);
     }
 

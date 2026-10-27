@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Enums\BankAccountType;
+use App\Enums\BankAccountTypeEnum;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 
@@ -26,7 +26,7 @@ class HolderBankAccount extends Model
     protected function casts(): array
     {
         return [
-            'account_type' => BankAccountType::class,
+            'account_type' => BankAccountTypeEnum::class,
         ];
     }
 

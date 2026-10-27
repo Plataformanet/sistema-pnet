@@ -2,7 +2,7 @@
 
 namespace App\Http\Requests;
 
-use App\Enums\RegistryProtocolPosition;
+use App\Enums\RegistryProtocolPositionEnum;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Foundation\Http\FormRequest;
@@ -48,7 +48,7 @@ class StoreRegistryProtocolRequest extends FormRequest
             'seller_name' => ['nullable', 'string', 'max:255'],
             'entered_at' => ['required', 'date'],
             'exited_at' => ['nullable', 'date', 'after_or_equal:entered_at'],
-            'position' => ['required', Rule::enum(RegistryProtocolPosition::class)],
+            'position' => ['required', Rule::enum(RegistryProtocolPositionEnum::class)],
         ];
     }
 

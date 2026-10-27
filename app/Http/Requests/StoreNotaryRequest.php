@@ -2,7 +2,7 @@
 
 namespace App\Http\Requests;
 
-use App\Enums\BrazilianState;
+use App\Enums\BrazilianStateEnum;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Str;
@@ -39,7 +39,7 @@ class StoreNotaryRequest extends FormRequest
             'complement' => ['nullable', 'string', 'max:45'],
             'neighborhood' => ['required', 'string', 'max:45'],
             'city' => ['required', 'string', 'max:80'],
-            'state' => ['required', Rule::enum(BrazilianState::class)],
+            'state' => ['required', Rule::enum(BrazilianStateEnum::class)],
             'reference_point' => ['nullable', 'string', 'max:100'],
             'business_hours' => ['nullable', 'string'],
         ];

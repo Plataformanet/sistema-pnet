@@ -2,11 +2,11 @@
 
 namespace App\Http\Requests;
 
-use App\Enums\CalculationType;
-use App\Enums\FeeDiscount;
-use App\Enums\FinancingSystem;
-use App\Enums\ItbiModule;
-use App\Enums\SupportedState;
+use App\Enums\CalculationTypeEnum;
+use App\Enums\FeeDiscountEnum;
+use App\Enums\FinancingSystemEnum;
+use App\Enums\ItbiModuleEnum;
+use App\Enums\SupportedStateEnum;
 use App\Models\ItbiMunicipality;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -29,18 +29,18 @@ class CalculateFeesRequest extends FormRequest
      */
     public function rules(): array
     {
-        $isPurchase = fn () => (int) $this->input('type') === CalculationType::PURCHASE_WITH_FIDUCIARY_LIEN->value;
+        $isPurchase = fn () => (int) $this->input('type') === CalculationTypeEnum::PURCHASE_WITH_FIDUCIARY_LIEN->value;
 
         return [
-            'state' => ['required', Rule::enum(SupportedState::class)],
+            'state' => ['required', Rule::enum(SupportedStateEnum::class)],
             'municipality_ibge_code' => ['required', 'integer', 'digits:7'],
             'municipality_name' => ['required', 'string', 'max:120'],
-            'type' => ['required', Rule::enum(CalculationType::class)],
+            'type' => ['required', Rule::enum(CalculationTypeEnum::class)],
             'property_value' => ['required', 'integer', 'gt:0'],
             'financing_value' => [Rule::requiredIf($isPurchase), 'nullable', 'integer', 'min:0', 'lte:property_value'],
-            'financing_system' => [Rule::requiredIf($isPurchase), 'nullable', Rule::enum(FinancingSystem::class)],
+            'financing_system' => [Rule::requiredIf($isPurchase), 'nullable', Rule::enum(FinancingSystemEnum::class)],
             'first_property' => [Rule::requiredIf(fn () => $isPurchase() && $this->isFirstPropertyMunicipality()), 'nullable', 'boolean'],
-            'discount' => ['nullable', Rule::enum(FeeDiscount::class)],
+            'discount' => ['nullable', Rule::enum(FeeDiscountEnum::class)],
         ];
     }
 
@@ -51,8 +51,8 @@ class CalculateFeesRequest extends FormRequest
     {
         return [
             function (Validator $validator) {
-                $state = SupportedState::tryFrom((string) $this->input('state'));
-                $type = CalculationType::tryFrom((int) $this->input('type'));
+                $state = SupportedStateEnum::tryFrom((string) $this->input('state'));
+                $type = CalculationTypeEnum::tryFrom((int) $this->input('type'));
 
                 if ($state === null || $type === null) {
                     return;
@@ -62,7 +62,7 @@ class CalculateFeesRequest extends FormRequest
                     $validator->errors()->add('type', 'Este tipo de cálculo não está disponível para '.$state->label().'.');
                 }
 
-                $discount = FeeDiscount::tryFrom((string) $this->input('discount'));
+                $discount = FeeDiscountEnum::tryFrom((string) $this->input('discount'));
 
                 if ($discount !== null && ! $discount->isAllowedFor($state)) {
                     $validator->errors()->add('discount', 'Este desconto não se aplica a '.$state->label().'.');
@@ -96,7 +96,7 @@ class CalculateFeesRequest extends FormRequest
     private function isFirstPropertyMunicipality(): bool
     {
         return ItbiMunicipality::where('ibge_code', $this->input('municipality_ibge_code'))
-            ->where('module', ItbiModule::FIRST_PROPERTY_RATE->value)
+            ->where('module', ItbiModuleEnum::FIRST_PROPERTY_RATE->value)
             ->exists();
     }
 }

@@ -52,7 +52,7 @@ class TenantRegistry
         ]);
 
         // O tenant compartilhado não tem payload de seed, então o
-        // SeedTenantDatabase não o provisiona. Grava aqui os cargos, o catálogo
+        // SeedTenantDatabaseJob não o provisiona. Grava aqui os cargos, o catálogo
         // completo de permissões e os padrões dos cargos, como num plano com
         // todos os módulos. Os módulos são lidos antes do run() porque Module
         // usa a conexão padrão, que dentro do tenant aponta para o banco dele.

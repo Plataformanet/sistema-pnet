@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Enums\CostItemType;
+use App\Enums\CostItemTypeEnum;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -45,7 +45,7 @@ class ProposalCostItem extends Model
     protected function casts(): array
     {
         return [
-            'type' => CostItemType::class,
+            'type' => CostItemTypeEnum::class,
             'generates_receipt' => 'boolean',
             'amount' => 'integer',
             'date' => 'date:Y-m-d',
@@ -68,7 +68,7 @@ class ProposalCostItem extends Model
      */
     public function canGenerateReceipt(): bool
     {
-        if ($this->type === CostItemType::MANUAL) {
+        if ($this->type === CostItemTypeEnum::MANUAL) {
             return (bool) $this->costType?->generatesReceipt();
         }
 

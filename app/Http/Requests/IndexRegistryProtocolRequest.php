@@ -2,7 +2,7 @@
 
 namespace App\Http\Requests;
 
-use App\Enums\RegistryProtocolPosition;
+use App\Enums\RegistryProtocolPositionEnum;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -23,7 +23,7 @@ class IndexRegistryProtocolRequest extends FormRequest
     {
         return [
             'status' => ['nullable', Rule::in(self::STATUSES)],
-            'position' => ['nullable', Rule::enum(RegistryProtocolPosition::class)],
+            'position' => ['nullable', Rule::enum(RegistryProtocolPositionEnum::class)],
             'search' => ['nullable', 'string', 'max:100'],
             'proposal_id' => ['nullable', 'integer', 'min:1'],
             'page' => ['nullable', 'integer', 'min:1'],

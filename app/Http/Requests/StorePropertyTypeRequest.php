@@ -2,7 +2,7 @@
 
 namespace App\Http\Requests;
 
-use App\Rules\UniqueCatalogName;
+use App\Rules\UniqueCatalogNameRule;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Str;
@@ -25,7 +25,7 @@ class StorePropertyTypeRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => ['required', 'string', 'min:3', 'max:191', new UniqueCatalogName('property_types', 'Este tipo de imóvel já está cadastrado.', $this->ignoreId())],
+            'name' => ['required', 'string', 'min:3', 'max:191', new UniqueCatalogNameRule('property_types', 'Este tipo de imóvel já está cadastrado.', $this->ignoreId())],
             'shows_number' => ['required', 'boolean'],
             'shows_complement' => ['required', 'boolean'],
             'requires_development' => ['required', 'boolean'],

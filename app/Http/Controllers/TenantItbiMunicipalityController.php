@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\ItbiModule;
-use App\Enums\SupportedState;
+use App\Enums\ItbiModuleEnum;
+use App\Enums\SupportedStateEnum;
 use App\Http\Requests\IndexCatalogRequest;
 use App\Http\Requests\StoreItbiMunicipalityRequest;
 use App\Http\Requests\UpdateItbiMunicipalityRequest;
@@ -87,8 +87,8 @@ class TenantItbiMunicipalityController extends Controller
     private function options(): array
     {
         return [
-            'states' => SupportedState::options(),
-            'modules' => ItbiModule::options(),
+            'states' => SupportedStateEnum::options(),
+            'modules' => ItbiModuleEnum::options(),
         ];
     }
 }

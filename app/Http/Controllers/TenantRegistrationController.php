@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\TenantProvisioningStatus;
+use App\Enums\TenantProvisioningStatusEnum;
 use App\Http\Requests\StoreTenantRegistrationRequest;
 use App\Models\Tenant;
 use App\Services\TenantService;
@@ -53,7 +53,7 @@ class TenantRegistrationController extends Controller
         // como falha para a página encerrar o polling.
         if (! $model) {
             return response()->json([
-                'status' => TenantProvisioningStatus::FAILED->value,
+                'status' => TenantProvisioningStatusEnum::FAILED->value,
                 'ready' => false,
             ]);
         }

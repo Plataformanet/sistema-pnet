@@ -1,18 +1,18 @@
 <?php
 
-use App\Actions\FeeCalculator\AttachFeeEstimateToProposal;
-use App\Actions\FeeCalculator\ConvertQuoteToProposal;
-use App\Actions\FeeCalculator\CreateQuote;
-use App\Actions\FeeCalculator\UpdateQuote;
-use App\Enums\CalculationType;
-use App\Enums\CostItemType;
-use App\Enums\MaritalStatus;
-use App\Enums\QuoteStatus;
-use App\Enums\SupportedState;
+use App\Actions\FeeCalculator\AttachFeeEstimateToProposalAction;
+use App\Actions\FeeCalculator\ConvertQuoteToProposalAction;
+use App\Actions\FeeCalculator\CreateQuoteAction;
+use App\Actions\FeeCalculator\UpdateQuoteAction;
+use App\Enums\CalculationTypeEnum;
+use App\Enums\CostItemTypeEnum;
+use App\Enums\MaritalStatusEnum;
+use App\Enums\QuoteStatusEnum;
+use App\Enums\SupportedStateEnum;
 use App\Exceptions\ProposalAlreadyHasFeeEstimateException;
 use App\Exceptions\QuoteNotOpenException;
 use App\Http\Requests\StoreQuoteRequest;
-use App\Jobs\AttachQuotePdfToProposal;
+use App\Jobs\AttachQuotePdfToProposalJob;
 use App\Mail\ApplicantWelcomeMail;
 use App\Mail\ProposalCreatedMail;
 use App\Mail\QuoteSummaryMail;
@@ -46,8 +46,8 @@ beforeEach(function () {
             BillableService::factory()->create(['name' => 'Assessoria', 'price' => 200000, 'generates_receipt' => true]),
             FeeCalculation::create([
                 'user_id' => $user->id,
-                'type' => CalculationType::GENERAL_REGISTRATION,
-                'state' => SupportedState::SP,
+                'type' => CalculationTypeEnum::GENERAL_REGISTRATION,
+                'state' => SupportedStateEnum::SP,
                 'municipality_ibge_code' => 3550308,
                 'municipality_name' => 'São Paulo',
                 'input' => ['property_value' => 40_000_000],
@@ -77,7 +77,7 @@ function quoteData(array $overrides = []): array
         'email' => 'Maria@Example.com',
         'phone' => '11999990000',
         'profession' => 'Engenheira',
-        'marital_status' => MaritalStatus::SINGLE->value,
+        'marital_status' => MaritalStatusEnum::SINGLE->value,
         'bank_id' => test()->bank->id,
         'valid_until' => now()->addDays(10)->toDateString(),
         'services' => [['id' => test()->service->id, 'amount' => 150000]],
@@ -86,29 +86,29 @@ function quoteData(array $overrides = []): array
 
 function createTestQuote(array $overrides = []): Quote
 {
-    return app(CreateQuote::class)->handle(quoteData($overrides), test()->calculation, test()->user, test()->tenant);
+    return app(CreateQuoteAction::class)->handle(quoteData($overrides), test()->calculation, test()->user, test()->tenant);
 }
 
 test('vincular à proposta cria a estimativa sem validade, as linhas de custo e o serviço', function () {
     $proposal = createProposal($this->tenant);
 
-    app(AttachFeeEstimateToProposal::class)->handle($this->calculation, (string) $proposal->id, [['id' => $this->service->id]], $this->tenant);
+    app(AttachFeeEstimateToProposalAction::class)->handle($this->calculation, (string) $proposal->id, [['id' => $this->service->id]], $this->tenant);
 
     $this->tenant->run(function () use ($proposal) {
         $estimate = $proposal->feeEstimate()->firstOrFail();
         $items = $proposal->costItems()->get();
 
         expect($estimate->valid_until)->toBeNull()
-            ->and($items->pluck('type')->all())->toEqualCanonicalizing([CostItemType::EMOLUMENT, CostItemType::EXTRA_FEE, CostItemType::SERVICE, CostItemType::ITBI])
-            ->and($items->firstWhere('type', CostItemType::SERVICE)->amount)->toBe(200000)
-            ->and($items->firstWhere('type', CostItemType::EMOLUMENT)->amount)->toBe(150035)
+            ->and($items->pluck('type')->all())->toEqualCanonicalizing([CostItemTypeEnum::EMOLUMENT, CostItemTypeEnum::EXTRA_FEE, CostItemTypeEnum::SERVICE, CostItemTypeEnum::ITBI])
+            ->and($items->firstWhere('type', CostItemTypeEnum::SERVICE)->amount)->toBe(200000)
+            ->and($items->firstWhere('type', CostItemTypeEnum::EMOLUMENT)->amount)->toBe(150035)
             ->and($proposal->feesTotal())->toBe(154545);
     });
 });
 
 test('a segunda vinculação na mesma proposta é bloqueada sem duplicar linhas', function () {
     $proposal = createProposal($this->tenant);
-    $action = app(AttachFeeEstimateToProposal::class);
+    $action = app(AttachFeeEstimateToProposalAction::class);
 
     $action->handle($this->calculation, (string) $proposal->id, [], $this->tenant);
 
@@ -121,7 +121,7 @@ test('a segunda vinculação na mesma proposta é bloqueada sem duplicar linhas'
 test('propostas com emolumento saem da seleção do vínculo', function () {
     $with = createProposal($this->tenant);
     $without = createProposal($this->tenant);
-    app(AttachFeeEstimateToProposal::class)->handle($this->calculation, (string) $with->id, [], $this->tenant);
+    app(AttachFeeEstimateToProposalAction::class)->handle($this->calculation, (string) $with->id, [], $this->tenant);
 
     $this->tenant->run(function () use ($with, $without) {
         $ids = Proposal::withoutFeeEstimate()->pluck('id');
@@ -141,7 +141,7 @@ test('criar orçamento normaliza o cliente e grava o valor negociado do serviço
             ->and($fresh->email)->toBe('maria@example.com')
             ->and($fresh->services->first()->pivot->amount)->toBe(150000)
             ->and($fresh->feeEstimate->valid_until->toDateString())->toBe(now()->addDays(10)->toDateString())
-            ->and($fresh->status())->toBe(QuoteStatus::OPEN);
+            ->and($fresh->status())->toBe(QuoteStatusEnum::OPEN);
     });
 });
 
@@ -166,7 +166,7 @@ test('editar o orçamento persiste a nova validade', function () {
     $quote = createTestQuote();
     $newDate = now()->addDays(30)->toDateString();
 
-    app(UpdateQuote::class)->handle((string) $quote->id, quoteData(['valid_until' => $newDate, 'services' => []]), $this->tenant);
+    app(UpdateQuoteAction::class)->handle((string) $quote->id, quoteData(['valid_until' => $newDate, 'services' => []]), $this->tenant);
 
     $this->tenant->run(function () use ($quote, $newDate) {
         $fresh = Quote::with('feeEstimate', 'services')->findOrFail($quote->id);
@@ -180,13 +180,13 @@ test('orçamento expirado tem status expirado', function () {
     $quote = createTestQuote();
     $this->tenant->run(fn () => $quote->feeEstimate()->update(['valid_until' => now()->subDay()->toDateString()]));
 
-    $this->tenant->run(fn () => expect($quote->fresh()->status())->toBe(QuoteStatus::EXPIRED));
+    $this->tenant->run(fn () => expect($quote->fresh()->status())->toBe(QuoteStatusEnum::EXPIRED));
 });
 
 test('converter cria uma proposta com proponente, linhas de custo e estimativa vinculada', function () {
     $quote = createTestQuote();
 
-    $proposal = app(ConvertQuoteToProposal::class)->handle((string) $quote->id, $this->user, $this->tenant);
+    $proposal = app(ConvertQuoteToProposalAction::class)->handle((string) $quote->id, $this->user, $this->tenant);
 
     $this->tenant->run(function () use ($proposal, $quote) {
         $proposal->refresh();
@@ -196,12 +196,12 @@ test('converter cria uma proposta com proponente, linhas de custo e estimativa v
             ->and($proposal->creator_id)->toBe($this->user->id)
             ->and($proposal->applicants()->first()->contact->cpf_cnpj)->toBe('52998224725')
             ->and($proposal->stages()->count())->toBeGreaterThan(0)
-            ->and($items->firstWhere('type', CostItemType::SERVICE)->amount)->toBe(150000)
+            ->and($items->firstWhere('type', CostItemTypeEnum::SERVICE)->amount)->toBe(150000)
             ->and(FeeEstimate::where('quote_id', $quote->id)->value('proposal_id'))->toBe($proposal->id)
-            ->and($quote->fresh()->status())->toBe(QuoteStatus::CONVERTED);
+            ->and($quote->fresh()->status())->toBe(QuoteStatusEnum::CONVERTED);
     });
 
-    Queue::assertPushed(AttachQuotePdfToProposal::class, fn (AttachQuotePdfToProposal $job) => $job->afterCommit === true && $job->proposalId === $proposal->id);
+    Queue::assertPushed(AttachQuotePdfToProposalJob::class, fn (AttachQuotePdfToProposalJob $job) => $job->afterCommit === true && $job->proposalId === $proposal->id);
     Mail::assertQueued(ApplicantWelcomeMail::class, fn (ApplicantWelcomeMail $mail) => $mail->afterCommit === true);
 });
 
@@ -212,14 +212,14 @@ test('converter instancia a timeline do banco do orçamento', function () {
     ]);
     $quote = createTestQuote();
 
-    $proposal = app(ConvertQuoteToProposal::class)->handle((string) $quote->id, $this->user, $this->tenant);
+    $proposal = app(ConvertQuoteToProposalAction::class)->handle((string) $quote->id, $this->user, $this->tenant);
 
     $this->tenant->run(fn () => expect($proposal->stages()->pluck('stage_id')->all())->toBe($ids));
 });
 
 test('a segunda conversão não cria outra proposta', function () {
     $quote = createTestQuote();
-    $action = app(ConvertQuoteToProposal::class);
+    $action = app(ConvertQuoteToProposalAction::class);
     $action->handle((string) $quote->id, $this->user, $this->tenant);
 
     expect(fn () => $action->handle((string) $quote->id, $this->user, $this->tenant))->toThrow(QuoteNotOpenException::class);
@@ -231,7 +231,7 @@ test('orçamento expirado não pode ser convertido', function () {
     $quote = createTestQuote();
     $this->tenant->run(fn () => $quote->feeEstimate()->update(['valid_until' => now()->subDay()->toDateString()]));
 
-    app(ConvertQuoteToProposal::class)->handle((string) $quote->id, $this->user, $this->tenant);
+    app(ConvertQuoteToProposalAction::class)->handle((string) $quote->id, $this->user, $this->tenant);
 })->throws(QuoteNotOpenException::class);
 
 test('cliente com CPF já cadastrado é reaproveitado na conversão', function () {
@@ -243,7 +243,7 @@ test('cliente com CPF já cadastrado é reaproveitado na conversão', function (
     ], $this->tenant);
     $quote = createTestQuote();
 
-    $proposal = app(ConvertQuoteToProposal::class)->handle((string) $quote->id, $this->user, $this->tenant);
+    $proposal = app(ConvertQuoteToProposalAction::class)->handle((string) $quote->id, $this->user, $this->tenant);
 
     $this->tenant->run(function () use ($existing, $proposal) {
         expect(Applicant::count())->toBe(1)
@@ -255,9 +255,9 @@ test('cliente com CPF já cadastrado é reaproveitado na conversão', function (
 
 test('orçamento convertido não pode ser editado nem excluído', function () {
     $quote = createTestQuote();
-    app(ConvertQuoteToProposal::class)->handle((string) $quote->id, $this->user, $this->tenant);
+    app(ConvertQuoteToProposalAction::class)->handle((string) $quote->id, $this->user, $this->tenant);
 
-    expect(fn () => app(UpdateQuote::class)->handle((string) $quote->id, quoteData(), $this->tenant))->toThrow(QuoteNotOpenException::class)
+    expect(fn () => app(UpdateQuoteAction::class)->handle((string) $quote->id, quoteData(), $this->tenant))->toThrow(QuoteNotOpenException::class)
         ->and(fn () => app(QuoteService::class)->delete((string) $quote->id, $this->tenant))->toThrow(QuoteNotOpenException::class);
 
     $this->tenant->run(fn () => expect(FeeEstimate::where('quote_id', $quote->id)->value('proposal_id'))->not->toBeNull());

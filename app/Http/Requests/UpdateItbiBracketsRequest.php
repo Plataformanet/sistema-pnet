@@ -2,7 +2,7 @@
 
 namespace App\Http\Requests;
 
-use App\Rules\NonOverlappingBrackets;
+use App\Rules\NonOverlappingBracketsRule;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -36,7 +36,7 @@ class UpdateItbiBracketsRequest extends FormRequest
      */
     public function after(): array
     {
-        return [new NonOverlappingBrackets];
+        return [new NonOverlappingBracketsRule];
     }
 
     public function messages(): array

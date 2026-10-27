@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\SupportedState;
+use App\Enums\SupportedStateEnum;
 use App\Models\ItbiMunicipality;
 use App\Services\Ibge\IbgeLocalityClient;
 use Illuminate\Support\Facades\Log;
@@ -16,7 +16,7 @@ class TenantMunicipalityLookupController extends Controller
     /**
      * Municípios da UF (IBGE) com a indicação de cadastro de ITBI.
      */
-    public function __invoke(SupportedState $state)
+    public function __invoke(SupportedStateEnum $state)
     {
         try {
             $itbi = tenant()->run(fn () => ItbiMunicipality::where('state', $state->value)

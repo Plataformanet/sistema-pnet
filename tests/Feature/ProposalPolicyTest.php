@@ -1,6 +1,6 @@
 <?php
 
-use App\Enums\DocumentOwner;
+use App\Enums\DocumentOwnerEnum;
 use App\Enums\RolesEnum;
 use App\Models\Applicant;
 use App\Models\Proposal;
@@ -98,8 +98,8 @@ test('parceiro só baixa documentos de pessoas e do imóvel', function () {
     $this->tenant->run(function () use ($partner) {
         $this->linked->partners()->attach($partner->id);
 
-        $buyerDocument = new ProposalDocument(['owner' => DocumentOwner::BUYER]);
-        $generalDocument = new ProposalDocument(['owner' => DocumentOwner::GENERAL]);
+        $buyerDocument = new ProposalDocument(['owner' => DocumentOwnerEnum::BUYER]);
+        $generalDocument = new ProposalDocument(['owner' => DocumentOwnerEnum::GENERAL]);
 
         expect($this->policy->downloadDocument($partner, $this->linked, $buyerDocument))->toBeTrue()
             ->and($this->policy->downloadDocument($partner, $this->linked, $generalDocument))->toBeFalse()
@@ -128,9 +128,9 @@ test('cliente não vê documentos do vendedor e vendedor do imóvel não vê os 
         $this->linked->applicants()->attach(Applicant::factory()->create(['user_id' => $client->id]));
         $this->linked->sellers()->attach(Seller::factory()->create(['user_id' => $sellerUser->id]));
 
-        $buyerDocument = new ProposalDocument(['owner' => DocumentOwner::BUYER]);
-        $sellerDocument = new ProposalDocument(['owner' => DocumentOwner::SELLER]);
-        $propertyDocument = new ProposalDocument(['owner' => DocumentOwner::PROPERTY]);
+        $buyerDocument = new ProposalDocument(['owner' => DocumentOwnerEnum::BUYER]);
+        $sellerDocument = new ProposalDocument(['owner' => DocumentOwnerEnum::SELLER]);
+        $propertyDocument = new ProposalDocument(['owner' => DocumentOwnerEnum::PROPERTY]);
         $this->linked->setRelation('documents', collect([$buyerDocument, $sellerDocument, $propertyDocument]));
         $service = app(ProposalQueryService::class);
 
@@ -138,8 +138,8 @@ test('cliente não vê documentos do vendedor e vendedor do imóvel não vê os 
             ->and($this->policy->downloadDocument($client, $this->linked, $sellerDocument))->toBeFalse()
             ->and($this->policy->downloadDocument($sellerUser, $this->linked, $sellerDocument))->toBeTrue()
             ->and($this->policy->downloadDocument($sellerUser, $this->linked, $buyerDocument))->toBeFalse()
-            ->and($service->documentsFor($this->linked, $client)->pluck('owner')->all())->toBe([DocumentOwner::BUYER, DocumentOwner::PROPERTY])
-            ->and($service->documentsFor($this->linked, $sellerUser)->pluck('owner')->all())->toBe([DocumentOwner::SELLER, DocumentOwner::PROPERTY]);
+            ->and($service->documentsFor($this->linked, $client)->pluck('owner')->all())->toBe([DocumentOwnerEnum::BUYER, DocumentOwnerEnum::PROPERTY])
+            ->and($service->documentsFor($this->linked, $sellerUser)->pluck('owner')->all())->toBe([DocumentOwnerEnum::SELLER, DocumentOwnerEnum::PROPERTY]);
     });
 });
 

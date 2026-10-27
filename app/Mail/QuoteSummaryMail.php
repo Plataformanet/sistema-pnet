@@ -17,7 +17,7 @@ class QuoteSummaryMail extends Mailable implements ShouldQueue
     use Queueable, SerializesModels;
 
     /**
-     * @param  array<string, mixed>  $breakdown  `FeeBreakdown::toArray()`
+     * @param  array<string, mixed>  $breakdown  `FeeBreakdownBuilder::toArray()`
      */
     public function __construct(
         public int $quoteId,

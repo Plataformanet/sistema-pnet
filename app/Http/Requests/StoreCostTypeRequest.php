@@ -2,8 +2,8 @@
 
 namespace App\Http\Requests;
 
-use App\Enums\ReceiptType;
-use App\Rules\UniqueCatalogName;
+use App\Enums\ReceiptTypeEnum;
+use App\Rules\UniqueCatalogNameRule;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Str;
@@ -30,9 +30,9 @@ class StoreCostTypeRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => ['required', 'string', 'max:100', new UniqueCatalogName('cost_types', 'Este tipo de custo já está cadastrado.', $this->ignoreId())],
+            'name' => ['required', 'string', 'max:100', new UniqueCatalogNameRule('cost_types', 'Este tipo de custo já está cadastrado.', $this->ignoreId())],
             'requires_notary' => ['required', 'boolean'],
-            'receipt_type' => ['nullable', Rule::enum(ReceiptType::class)->only(ReceiptType::forCostTypes())],
+            'receipt_type' => ['nullable', Rule::enum(ReceiptTypeEnum::class)->only(ReceiptTypeEnum::forCostTypes())],
         ];
     }
 

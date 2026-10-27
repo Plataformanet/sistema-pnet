@@ -1,6 +1,6 @@
 <?php
 
-use App\Enums\RegistryProtocolPosition;
+use App\Enums\RegistryProtocolPositionEnum;
 use App\Enums\RolesEnum;
 use App\Models\Applicant;
 use App\Models\Contact;
@@ -22,14 +22,14 @@ test('store grava o protocolo com a data de saída nula quando não informada', 
         'seller_name' => null,
         'entered_at' => '2026-10-01',
         'exited_at' => null,
-        'position' => RegistryProtocolPosition::UNDER_ANALYSIS->value,
+        'position' => RegistryProtocolPositionEnum::UNDER_ANALYSIS->value,
     ], $this->tenant);
 
     $this->tenant->run(function () use ($protocol) {
         $fresh = $protocol->fresh();
 
         expect($fresh->exited_at)->toBeNull()
-            ->and($fresh->position)->toBe(RegistryProtocolPosition::UNDER_ANALYSIS)
+            ->and($fresh->position)->toBe(RegistryProtocolPositionEnum::UNDER_ANALYSIS)
             ->and($fresh->entered_at->toDateString())->toBe('2026-10-01');
     });
 });
@@ -85,7 +85,7 @@ test('a listagem filtra por posição e por proposta', function () {
         RegistryProtocol::factory()->requirement()->create(),
     ]);
 
-    $byPosition = collect($this->service->paginate(['position' => RegistryProtocolPosition::REQUIREMENT->value], $this->tenant)->items())->pluck('id');
+    $byPosition = collect($this->service->paginate(['position' => RegistryProtocolPositionEnum::REQUIREMENT->value], $this->tenant)->items())->pluck('id');
     $byProposal = collect($this->service->paginate(['proposal_id' => $proposal->id], $this->tenant)->items())->pluck('id');
 
     expect($byPosition)->toContain($other->id)->not->toContain($linked->id)

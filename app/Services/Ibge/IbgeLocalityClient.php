@@ -2,7 +2,7 @@
 
 namespace App\Services\Ibge;
 
-use App\Enums\SupportedState;
+use App\Enums\SupportedStateEnum;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
@@ -22,7 +22,7 @@ class IbgeLocalityClient
      *
      * @return Collection<int, array{ibge_code: int, name: string}>
      */
-    public function municipalities(SupportedState $state): Collection
+    public function municipalities(SupportedStateEnum $state): Collection
     {
         $items = Cache::store()->remember("ibge.municipalities.{$state->value}", now()->addDays(self::CACHE_DAYS), function () use ($state) {
             return Http::baseUrl((string) config('services.ibge.url'))

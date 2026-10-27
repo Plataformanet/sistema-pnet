@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Enums\TenantProvisioningStatus;
+use App\Enums\TenantProvisioningStatusEnum;
 use Illuminate\Support\Str;
 use Stancl\Tenancy\Contracts\TenantWithDatabase;
 use Stancl\Tenancy\Database\Concerns\HasDatabase;
@@ -44,10 +44,10 @@ class Tenant extends BaseTenant implements TenantWithDatabase
     /**
      * Status atual do provisionamento do banco do tenant.
      */
-    public function provisioningStatus(): TenantProvisioningStatus
+    public function provisioningStatus(): TenantProvisioningStatusEnum
     {
-        return TenantProvisioningStatus::tryFrom((string) $this->provisioning_status)
-            ?? TenantProvisioningStatus::PENDING;
+        return TenantProvisioningStatusEnum::tryFrom((string) $this->provisioning_status)
+            ?? TenantProvisioningStatusEnum::PENDING;
     }
 
     /**
@@ -55,7 +55,7 @@ class Tenant extends BaseTenant implements TenantWithDatabase
      */
     public function isProvisioned(): bool
     {
-        return $this->provisioningStatus() === TenantProvisioningStatus::READY;
+        return $this->provisioningStatus() === TenantProvisioningStatusEnum::READY;
     }
 
     public function modules()

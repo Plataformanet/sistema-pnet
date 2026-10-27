@@ -2,7 +2,7 @@
 
 namespace App\Http\Requests;
 
-use App\Rules\UniqueCatalogName;
+use App\Rules\UniqueCatalogNameRule;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Str;
@@ -25,7 +25,7 @@ class StoreBankRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => ['required', 'string', 'max:100', new UniqueCatalogName('banks', 'Este banco já está cadastrado.', $this->ignoreId())],
+            'name' => ['required', 'string', 'max:100', new UniqueCatalogNameRule('banks', 'Este banco já está cadastrado.', $this->ignoreId())],
         ];
     }
 

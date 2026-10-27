@@ -2,13 +2,13 @@
 
 namespace App\Services;
 
-use App\Enums\CostItemType;
+use App\Enums\CostItemTypeEnum;
 use App\Exceptions\CostItemNotRemovableException;
 use App\Mail\ProposalCostItemCreatedMail;
 use App\Models\Proposal;
 use App\Models\ProposalCostItem;
 use App\Models\Tenant;
-use App\Support\Money;
+use App\Support\MoneyHelper;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
@@ -41,7 +41,7 @@ class ProposalCostItemService
                 $costItem = DB::transaction(fn () => $proposal->costItems()->create(array_merge(
                     Arr::only($data, ['cost_type_id', 'notary_id', 'description', 'date', 'amount', 'notes']),
                     [
-                        'type' => CostItemType::MANUAL,
+                        'type' => CostItemTypeEnum::MANUAL,
                         'generates_receipt' => false,
                         'bill_path' => $billPath,
                     ],
@@ -77,7 +77,7 @@ class ProposalCostItemService
         $tenant->run(function () use ($proposalId, $costItemId) {
             $costItem = $this->findForProposal($proposalId, $costItemId);
 
-            if ($costItem->type !== CostItemType::MANUAL) {
+            if ($costItem->type !== CostItemTypeEnum::MANUAL) {
                 throw new CostItemNotRemovableException;
             }
 
@@ -162,7 +162,7 @@ class ProposalCostItemService
                 $recipient[1],
                 $proposal->number,
                 (string) ($costItem->description ?? $costItem->costType?->name),
-                Money::format($costItem->amount),
+                MoneyHelper::format($costItem->amount),
                 $costItem->date?->format('d/m/Y'),
             )
         ));

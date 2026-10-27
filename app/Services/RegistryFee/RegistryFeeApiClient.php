@@ -17,12 +17,12 @@ class RegistryFeeApiClient
     /**
      * Devolve o `result` bruto da API (gravado para auditoria) e o DTO em centavos.
      *
-     * @return array{raw: array<string, mixed>, result: RegistryFeeResult}
+     * @return array{raw: array<string, mixed>, result: RegistryFeeResultDto}
      *
      * @throws RegistryFeeRejectedException
      * @throws RegistryFeeUnavailableException
      */
-    public function calculate(RegistryFeeRequestData $data): array
+    public function calculate(RegistryFeeRequestDto $data): array
     {
         $context = [
             'state' => $data->state->value,
@@ -62,7 +62,7 @@ class RegistryFeeApiClient
         }
 
         $raw = (array) $response->json('result');
-        $result = RegistryFeeResult::fromArray($raw);
+        $result = RegistryFeeResultDto::fromArray($raw);
         $raw['extra_information'] = $result->extraInformation;
 
         return ['raw' => $raw, 'result' => $result];

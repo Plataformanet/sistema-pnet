@@ -1,10 +1,10 @@
 <?php
 
-use App\Enums\BankAccountType;
-use App\Enums\MaritalStatus;
-use App\Enums\PersonType;
-use App\Enums\PropertyCondition;
-use App\Enums\ProposalStatus;
+use App\Enums\BankAccountTypeEnum;
+use App\Enums\MaritalStatusEnum;
+use App\Enums\PersonTypeEnum;
+use App\Enums\PropertyConditionEnum;
+use App\Enums\ProposalStatusEnum;
 use App\Enums\RolesEnum;
 use App\Exceptions\LastApplicantException;
 use App\Exceptions\PersonAlreadyInProposalException;
@@ -52,7 +52,7 @@ function proposalPayload(array $overrides = []): array
         'contract_type_id' => test()->contractType->id,
         'amortization_table' => 'sac',
         'payment_term' => 360,
-        'property_condition' => PropertyCondition::USED->value,
+        'property_condition' => PropertyConditionEnum::USED->value,
         'purchase_value' => 50_000_000,
         'down_payment_value' => 10_000_000,
         'applicants' => [[
@@ -61,7 +61,7 @@ function proposalPayload(array $overrides = []): array
             'email' => 'maria@example.com',
             'phone' => '11999990000',
             'declared_income' => 800_000,
-            'marital_status' => MaritalStatus::MARRIED->value,
+            'marital_status' => MaritalStatusEnum::MARRIED->value,
             'profession' => 'Engenheira',
             'bank_account' => [
                 'bank_name' => 'Itaú',
@@ -71,7 +71,7 @@ function proposalPayload(array $overrides = []): array
             ],
         ]],
         'sellers' => [[
-            'person_type' => PersonType::INDIVIDUAL->value,
+            'person_type' => PersonTypeEnum::INDIVIDUAL->value,
             'document' => '11144477735',
             'name' => 'João Vendedor',
             'email' => 'joao@example.com',
@@ -85,7 +85,7 @@ test('create grava a proposta como nova com proponente, vendedor e timeline', fu
     $this->tenant->run(function () use ($proposal) {
         $proposal->refresh()->load('applicants.contact', 'applicants.bankAccount', 'sellers.contact', 'stages');
 
-        expect($proposal->status)->toBe(ProposalStatus::NEW)
+        expect($proposal->status)->toBe(ProposalStatusEnum::NEW)
             ->and($proposal->analyst_id)->toBeNull()
             ->and($proposal->purchase_value)->toBe(50_000_000)
             ->and($proposal->applicants)->toHaveCount(1)
@@ -166,12 +166,12 @@ test('update aplica o status manual e limpa motivos que não se aplicam', functi
     $service = app(ProposalService::class);
     $base = array_merge(proposalPayload(), ['partner_ids' => []]);
 
-    $service->update(array_merge($base, ['status' => ProposalStatus::CANCELED->value, 'cancellation_reason' => 'Desistência']), (string) $proposal->id, $this->tenant);
+    $service->update(array_merge($base, ['status' => ProposalStatusEnum::CANCELED->value, 'cancellation_reason' => 'Desistência']), (string) $proposal->id, $this->tenant);
 
     $this->tenant->run(fn () => expect($proposal->fresh()->cancellation_reason)->toBe('Desistência'));
 
     $service->update(array_merge($base, [
-        'status' => ProposalStatus::AWAITING_PROPERTY->value,
+        'status' => ProposalStatusEnum::AWAITING_PROPERTY->value,
         'expected_delivery_month' => 6,
         'expected_delivery_year' => 2027,
     ]), (string) $proposal->id, $this->tenant);
@@ -179,7 +179,7 @@ test('update aplica o status manual e limpa motivos que não se aplicam', functi
     $this->tenant->run(function () use ($proposal) {
         $fresh = $proposal->fresh();
 
-        expect($fresh->status)->toBe(ProposalStatus::AWAITING_PROPERTY)
+        expect($fresh->status)->toBe(ProposalStatusEnum::AWAITING_PROPERTY)
             ->and($fresh->cancellation_reason)->toBeNull()
             ->and($fresh->expected_delivery_month)->toBe(6);
     });
@@ -187,20 +187,20 @@ test('update aplica o status manual e limpa motivos que não se aplicam', functi
 
 test('update não altera o status de proposta finalizada', function () {
     $proposal = createProposal($this->tenant, [
-        'status' => ProposalStatus::FINISHED,
+        'status' => ProposalStatusEnum::FINISHED,
         'finished_at' => now(),
         'bank_id' => $this->bank->id,
         'contract_type_id' => $this->contractType->id,
     ]);
 
     app(ProposalService::class)->update(
-        array_merge(proposalPayload(), ['status' => ProposalStatus::IN_PROGRESS->value]),
+        array_merge(proposalPayload(), ['status' => ProposalStatusEnum::IN_PROGRESS->value]),
         (string) $proposal->id,
         $this->tenant,
     );
 
     $this->tenant->run(function () use ($proposal) {
-        expect($proposal->fresh()->status)->toBe(ProposalStatus::FINISHED)
+        expect($proposal->fresh()->status)->toBe(ProposalStatusEnum::FINISHED)
             ->and($proposal->fresh()->finished_at)->not->toBeNull();
     });
 });
@@ -276,7 +276,7 @@ test('findForProposal devolve os proponentes da proposta no formato do formulár
             'name' => 'Maria Proponente',
             'email' => 'maria@example.com',
             'phone' => '11999990000',
-            'marital_status' => MaritalStatus::MARRIED->value,
+            'marital_status' => MaritalStatusEnum::MARRIED->value,
             'profession' => 'Engenheira',
             'declared_income' => 800_000,
         ])
@@ -293,12 +293,12 @@ test('update do proponente altera contato, dados do proponente e conta bancária
         'phone' => '11977776666',
         'declared_income' => 900_000,
         'family_income' => 1_000_000,
-        'marital_status' => MaritalStatus::SINGLE->value,
+        'marital_status' => MaritalStatusEnum::SINGLE->value,
         'profession' => 'Fotógrafa',
         'birth_date' => '1982-09-03',
         'declares_income_tax' => true,
         'by_power_of_attorney' => false,
-        'bank_account' => ['bank_name' => 'Caixa', 'account_type' => BankAccountType::SAVINGS->value, 'branch' => '1234', 'number' => '98765-4'],
+        'bank_account' => ['bank_name' => 'Caixa', 'account_type' => BankAccountTypeEnum::SAVINGS->value, 'branch' => '1234', 'number' => '98765-4'],
     ], (string) $proposal->id, (string) $applicantId, $this->tenant);
 
     $this->tenant->run(function () use ($applicantId) {
@@ -309,7 +309,7 @@ test('update do proponente altera contato, dados do proponente e conta bancária
             ->and($applicant->contact->cell_phone)->toBe('11977776666')
             ->and($applicant->contact->cpf_cnpj)->toBe('52998224725')
             ->and($applicant->declared_income)->toBe(900_000)
-            ->and($applicant->marital_status)->toBe(MaritalStatus::SINGLE)
+            ->and($applicant->marital_status)->toBe(MaritalStatusEnum::SINGLE)
             ->and($applicant->birth_date->format('Y-m-d'))->toBe('1982-09-03')
             ->and($applicant->bankAccount->bank_name)->toBe('Caixa');
     });
@@ -324,7 +324,7 @@ test('update do proponente remove a conta bancária enviada em branco', function
         'email' => 'maria@example.com',
         'phone' => '11999990000',
         'declared_income' => 800_000,
-        'marital_status' => MaritalStatus::MARRIED->value,
+        'marital_status' => MaritalStatusEnum::MARRIED->value,
         'profession' => 'Engenheira',
         'bank_account' => null,
     ], (string) $proposal->id, (string) $applicantId, $this->tenant);
@@ -346,7 +346,7 @@ test('update do proponente não aceita proponente de outra proposta', function (
         'email' => 'x@example.com',
         'phone' => '11900000000',
         'declared_income' => 0,
-        'marital_status' => MaritalStatus::SINGLE->value,
+        'marital_status' => MaritalStatusEnum::SINGLE->value,
         'profession' => 'X',
     ], (string) $proposal->id, (string) $otherApplicantId, $this->tenant);
 })->throws(ModelNotFoundException::class);
@@ -394,7 +394,7 @@ test('addApplicant bloqueia o proponente que já está na proposta', function ()
 test('addSeller inclui o vendedor na proposta e bloqueia o mesmo documento duas vezes', function () {
     $proposal = app(ProposalService::class)->create(proposalPayload(['sellers' => []]), $this->creator, $this->tenant);
     $seller = [
-        'person_type' => PersonType::COMPANY->value,
+        'person_type' => PersonTypeEnum::COMPANY->value,
         'document' => '11222333000181',
         'name' => 'Construtora LTDA',
         'email' => 'contato@construtora.com',
@@ -415,7 +415,7 @@ test('findForProposal dos vendedores devolve o formato do formulário de ediçã
 
     expect($sellers)->toHaveCount(1)
         ->and($sellers[0])->toMatchArray([
-            'person_type' => PersonType::INDIVIDUAL->value,
+            'person_type' => PersonTypeEnum::INDIVIDUAL->value,
             'document' => '11144477735',
             'name' => 'João Vendedor',
             'email' => 'joao@example.com',
@@ -431,10 +431,10 @@ test('update do vendedor altera contato, dados do vendedor e conta bancária', f
         'name' => 'João Atualizado',
         'email' => 'joao.novo@example.com',
         'phone' => '11955554444',
-        'marital_status' => MaritalStatus::DIVORCED->value,
+        'marital_status' => MaritalStatusEnum::DIVORCED->value,
         'profession' => 'Comerciante',
         'declared_income' => 500_000,
-        'bank_account' => ['bank_name' => 'Bradesco', 'account_type' => BankAccountType::CHECKING->value, 'branch' => '0101', 'number' => '1111-1'],
+        'bank_account' => ['bank_name' => 'Bradesco', 'account_type' => BankAccountTypeEnum::CHECKING->value, 'branch' => '0101', 'number' => '1111-1'],
     ], (string) $proposal->id, (string) $sellerId, $this->tenant);
 
     $this->tenant->run(function () use ($sellerId) {
@@ -443,7 +443,7 @@ test('update do vendedor altera contato, dados do vendedor e conta bancária', f
         expect($seller->contact->name_corporatereason)->toBe('João Atualizado')
             ->and($seller->contact->email)->toBe('joao.novo@example.com')
             ->and($seller->contact->cpf_cnpj)->toBe('11144477735')
-            ->and($seller->marital_status)->toBe(MaritalStatus::DIVORCED)
+            ->and($seller->marital_status)->toBe(MaritalStatusEnum::DIVORCED)
             ->and($seller->declared_income)->toBe(500_000)
             ->and($seller->bankAccount->bank_name)->toBe('Bradesco');
     });
@@ -530,7 +530,7 @@ test('a proposta fica sem analista até a equipe assumir, e o analista pode ser 
     $analyst = userWithRole($this->tenant, RolesEnum::ANALYST);
     $service = app(ProposalService::class);
     $proposal = $service->create(proposalPayload(), $this->creator, $this->tenant);
-    $base = array_merge(proposalPayload(), ['partner_ids' => [], 'status' => ProposalStatus::NEW->value]);
+    $base = array_merge(proposalPayload(), ['partner_ids' => [], 'status' => ProposalStatusEnum::NEW->value]);
 
     $this->tenant->run(fn () => expect($proposal->fresh()->analyst_id)->toBeNull());
 

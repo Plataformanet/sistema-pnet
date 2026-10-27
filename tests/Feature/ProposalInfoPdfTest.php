@@ -7,7 +7,7 @@ use App\Models\Seller;
 use App\Models\User;
 use App\Services\CompanySettingService;
 use App\Services\ProposalPdfService;
-use App\Support\DocumentMask;
+use App\Support\DocumentMaskHelper;
 use Illuminate\Support\Facades\Storage;
 
 beforeEach(function () {
@@ -76,7 +76,7 @@ test('a equipe vê os dados completos das duas partes', function () {
 });
 
 test('a máscara mantém só os dígitos do meio do CPF e do CNPJ', function (string $document, string $masked) {
-    expect(DocumentMask::mask($document))->toBe($masked);
+    expect(DocumentMaskHelper::mask($document))->toBe($masked);
 })->with([
     'CPF formatado' => ['529.982.247-25', '***.982.247-**'],
     'CPF só dígitos' => ['52998224725', '***.982.247-**'],

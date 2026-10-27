@@ -1,6 +1,6 @@
 <?php
 
-use App\Enums\ReceiptType;
+use App\Enums\ReceiptTypeEnum;
 use App\Models\Bank;
 use App\Models\ContractType;
 use App\Models\CostType;
@@ -30,7 +30,7 @@ test('tenant migrations create the documents catalogs', function () {
         expect(Bank::pluck('name')->all())->toContain('Banco do Brasil', 'Caixa')
             ->and(ContractType::findOrFail(4)->requires_financing)->toBeFalse()
             ->and(ContractType::find(7))->toBeNull()
-            ->and(CostType::where('name', 'Motoboy')->firstOrFail()->receipt_type)->toBe(ReceiptType::COURIER)
+            ->and(CostType::where('name', 'Motoboy')->firstOrFail()->receipt_type)->toBe(ReceiptTypeEnum::COURIER)
             ->and(Stage::orderBy('order')->pluck('name')->all())->toHaveCount(8)
             ->and(Stage::where('order', 7)->firstOrFail()->shows_registry_protocol)->toBeTrue();
     });

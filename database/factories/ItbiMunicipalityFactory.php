@@ -2,8 +2,8 @@
 
 namespace Database\Factories;
 
-use App\Enums\ItbiModule;
-use App\Enums\SupportedState;
+use App\Enums\ItbiModuleEnum;
+use App\Enums\SupportedStateEnum;
 use App\Models\ItbiMunicipality;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -21,9 +21,9 @@ class ItbiMunicipalityFactory extends Factory
     {
         return [
             'name' => $this->faker->city(),
-            'state' => SupportedState::SP,
+            'state' => SupportedStateEnum::SP,
             'ibge_code' => $this->faker->unique()->numberBetween(1_000_000, 9_999_999),
-            'module' => ItbiModule::STANDARD,
+            'module' => ItbiModuleEnum::STANDARD,
             'full_rate' => null,
         ];
     }

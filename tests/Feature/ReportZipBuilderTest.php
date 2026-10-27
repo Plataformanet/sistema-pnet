@@ -1,7 +1,7 @@
 <?php
 
-use App\Enums\DocumentOwner;
-use App\Enums\ProposalStatus;
+use App\Enums\DocumentOwnerEnum;
+use App\Enums\ProposalStatusEnum;
 use App\Enums\RolesEnum;
 use App\Jobs\BuildFinishedProposalsZipJob;
 use App\Mail\FinishedProposalsZipReadyMail;
@@ -30,12 +30,12 @@ beforeEach(function () {
 function zipProposal(Tenant $tenant, string $title = 'Contrato registrado', bool $storeFile = true): Proposal
 {
     return $tenant->run(function () use ($title, $storeFile) {
-        $proposal = Proposal::factory()->create(['status' => ProposalStatus::FINISHED, 'finished_at' => now()]);
+        $proposal = Proposal::factory()->create(['status' => ProposalStatusEnum::FINISHED, 'finished_at' => now()]);
         $stage = $proposal->stages()->create(['stage_id' => Stage::factory()->create()->id, 'position' => 1, 'completed_at' => now()]);
         $path = "proposals/{$proposal->id}/final.pdf";
 
         $document = $proposal->documents()->create([
-            'owner' => DocumentOwner::STAGE,
+            'owner' => DocumentOwnerEnum::STAGE,
             'proposal_stage_id' => $stage->id,
             'title' => $title,
             'disk' => 'public',

@@ -1,7 +1,7 @@
 <?php
 
 use App\Enums\RolesEnum;
-use App\Http\Middleware\RedirectProposalRestrictedUsers;
+use App\Http\Middleware\RedirectProposalRestrictedUsersMiddleware;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -21,7 +21,7 @@ function throughRestrictedMiddleware(User $user): Response
     $request = Request::create('/dashboard');
     $request->setUserResolver(fn () => $user);
 
-    return (new RedirectProposalRestrictedUsers)->handle($request, fn () => response('ok'));
+    return (new RedirectProposalRestrictedUsersMiddleware)->handle($request, fn () => response('ok'));
 }
 
 it('manda cargo externo às propostas para a lista de propostas', function (RolesEnum $role) {
@@ -55,5 +55,5 @@ it('deixa seguir quem tem cargo externo junto com um cargo interno', function ()
 
 test('dashboard e CRM passam pelo middleware de usuários externos', function (string $routeName) {
     expect(Route::getRoutes()->getByName($routeName)->gatherMiddleware())
-        ->toContain(RedirectProposalRestrictedUsers::class);
+        ->toContain(RedirectProposalRestrictedUsersMiddleware::class);
 })->with(['tenant.dashboard', 'tenant.crm.kanban', 'tenant.crm.list']);

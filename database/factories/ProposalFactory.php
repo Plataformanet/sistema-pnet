@@ -2,8 +2,8 @@
 
 namespace Database\Factories;
 
-use App\Enums\PropertyCondition;
-use App\Enums\ProposalStatus;
+use App\Enums\PropertyConditionEnum;
+use App\Enums\ProposalStatusEnum;
 use App\Models\Bank;
 use App\Models\ContractType;
 use App\Models\Proposal;
@@ -29,14 +29,14 @@ class ProposalFactory extends Factory
             'analyst_id' => fn (array $attributes) => $attributes['creator_id'],
             'bank_id' => Bank::factory(),
             'contract_type_id' => ContractType::factory(),
-            'status' => ProposalStatus::NEW,
-            'property_condition' => PropertyCondition::USED,
+            'status' => ProposalStatusEnum::NEW,
+            'property_condition' => PropertyConditionEnum::USED,
             'purchase_value' => 40_000_000,
             'down_payment_value' => 8_000_000,
         ];
     }
 
-    public function withStatus(ProposalStatus $status): static
+    public function withStatus(ProposalStatusEnum $status): static
     {
         return $this->state(fn (array $attributes): array => ['status' => $status]);
     }

@@ -1,7 +1,7 @@
 <?php
 
-use App\Enums\DocumentOwner;
-use App\Enums\ProposalStatus;
+use App\Enums\DocumentOwnerEnum;
+use App\Enums\ProposalStatusEnum;
 use App\Exceptions\ProposalTimelineException;
 use App\Http\Requests\CompleteProposalStageRequest;
 use App\Mail\ProposalStageCompletedMail;
@@ -67,7 +67,7 @@ test('iniciar o acompanhamento inicia a etapa atual e muda o status para em anda
     $this->service->start((string) $this->proposal->id, $this->tenant);
 
     $this->tenant->run(function () {
-        expect($this->proposal->fresh()->status)->toBe(ProposalStatus::IN_PROGRESS)
+        expect($this->proposal->fresh()->status)->toBe(ProposalStatusEnum::IN_PROGRESS)
             ->and($this->proposal->currentStage()->first()->started_at)->not->toBeNull();
     });
 
@@ -125,7 +125,7 @@ test('concluir com arquivo grava o documento da etapa no disco privado', functio
     $this->tenant->run(function () use ($first) {
         $document = $first->fresh()->document;
 
-        expect($document->owner)->toBe(DocumentOwner::STAGE)
+        expect($document->owner)->toBe(DocumentOwnerEnum::STAGE)
             ->and($document->title)->toBe('Aprovação');
 
         Storage::disk('public')->assertExists($document->path);
@@ -168,7 +168,7 @@ test('concluir a última etapa finaliza a proposta', function () {
     $this->tenant->run(function () {
         $proposal = $this->proposal->fresh();
 
-        expect($proposal->status)->toBe(ProposalStatus::FINISHED)
+        expect($proposal->status)->toBe(ProposalStatusEnum::FINISHED)
             ->and($proposal->finished_at)->not->toBeNull()
             ->and($proposal->currentStage()->first())->toBeNull();
     });
@@ -197,15 +197,15 @@ test('restaurar o acompanhamento recria a timeline, apaga documentos de etapa e 
         expect($stages->whereNotNull('completed_at'))->toBeEmpty()
             ->and($stages->whereNotNull('started_at'))->toBeEmpty()
             ->and($stages->first()->is_current)->toBeTrue()
-            ->and($this->proposal->fresh()->status)->toBe(ProposalStatus::NEW)
-            ->and($this->proposal->documents()->where('owner', DocumentOwner::STAGE->value)->count())->toBe(0);
+            ->and($this->proposal->fresh()->status)->toBe(ProposalStatusEnum::NEW)
+            ->and($this->proposal->documents()->where('owner', DocumentOwnerEnum::STAGE->value)->count())->toBe(0);
     });
 
     Storage::disk('public')->assertMissing($path);
 });
 
 test('restaurar uma proposta finalizada limpa a data de finalização e permite iniciar de novo', function () {
-    $this->tenant->run(fn () => $this->proposal->update(['status' => ProposalStatus::FINISHED, 'finished_at' => now()]));
+    $this->tenant->run(fn () => $this->proposal->update(['status' => ProposalStatusEnum::FINISHED, 'finished_at' => now()]));
 
     $this->service->restore((string) $this->proposal->id, $this->tenant);
     $this->service->start((string) $this->proposal->id, $this->tenant);
@@ -213,18 +213,18 @@ test('restaurar uma proposta finalizada limpa a data de finalização e permite 
     $this->tenant->run(function () {
         $proposal = $this->proposal->fresh();
 
-        expect($proposal->status)->toBe(ProposalStatus::IN_PROGRESS)
+        expect($proposal->status)->toBe(ProposalStatusEnum::IN_PROGRESS)
             ->and($proposal->finished_at)->toBeNull()
             ->and($proposal->currentStage()->first()->started_at)->not->toBeNull();
     });
 });
 
 test('restaurar não altera o status de proposta cancelada', function () {
-    $this->tenant->run(fn () => $this->proposal->update(['status' => ProposalStatus::CANCELED]));
+    $this->tenant->run(fn () => $this->proposal->update(['status' => ProposalStatusEnum::CANCELED]));
 
     $this->service->restore((string) $this->proposal->id, $this->tenant);
 
-    expect($this->tenant->run(fn () => $this->proposal->fresh()->status))->toBe(ProposalStatus::CANCELED);
+    expect($this->tenant->run(fn () => $this->proposal->fresh()->status))->toBe(ProposalStatusEnum::CANCELED);
 });
 
 test('overdueStages lista etapas em andamento que atingiram o prazo de alerta', function () {

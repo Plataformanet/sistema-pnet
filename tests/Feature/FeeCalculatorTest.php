@@ -1,12 +1,12 @@
 <?php
 
-use App\Actions\FeeCalculator\CalculateFees;
-use App\Enums\CalculationType;
-use App\Enums\CostItemType;
-use App\Enums\FeeDiscount;
-use App\Enums\ItbiModule;
+use App\Actions\FeeCalculator\CalculateFeesAction;
+use App\Enums\CalculationTypeEnum;
+use App\Enums\CostItemTypeEnum;
+use App\Enums\FeeDiscountEnum;
+use App\Enums\ItbiModuleEnum;
 use App\Enums\RolesEnum;
-use App\Enums\SupportedState;
+use App\Enums\SupportedStateEnum;
 use App\Exceptions\Itbi\ItbiNotConfiguredException;
 use App\Exceptions\RegistryFee\RegistryFeeRejectedException;
 use App\Exceptions\RegistryFee\RegistryFeeUnavailableException;
@@ -19,10 +19,10 @@ use App\Models\User;
 use App\Policies\FeeCalculationPolicy;
 use App\Services\FeeCalculationService;
 use App\Services\FeeCalculator\CostItemsBuilder;
-use App\Services\FeeCalculator\FeeBreakdown;
+use App\Services\FeeCalculator\FeeBreakdownBuilder;
 use App\Services\Ibge\IbgeLocalityClient;
-use App\Services\RegistryFee\RegistryFeeRequestData;
-use App\Services\RegistryFee\RegistryFeeResult;
+use App\Services\RegistryFee\RegistryFeeRequestDto;
+use App\Services\RegistryFee\RegistryFeeResultDto;
 use Illuminate\Http\Client\Request as HttpRequest;
 use Illuminate\Routing\Redirector;
 use Illuminate\Support\Facades\Http;
@@ -35,7 +35,7 @@ beforeEach(function () {
     config(['services.registry_fee_calculator.url' => 'https://calculadora.test/api']);
 
     [$this->user, $this->municipality] = $this->tenant->run(function () {
-        $municipality = ItbiMunicipality::factory()->create(['name' => 'São Paulo', 'ibge_code' => 3550308, 'module' => ItbiModule::STANDARD]);
+        $municipality = ItbiMunicipality::factory()->create(['name' => 'São Paulo', 'ibge_code' => 3550308, 'module' => ItbiModuleEnum::STANDARD]);
         $municipality->rate()->save(new ItbiRate(['own_funds_rate' => 3, 'financed_rate' => 0.5]));
 
         return [User::factory()->create(), $municipality];
@@ -67,11 +67,11 @@ function calculationData(array $overrides = []): array
         'state' => 'SP',
         'municipality_ibge_code' => 3550308,
         'municipality_name' => 'São Paulo',
-        'type' => CalculationType::PURCHASE_WITH_FIDUCIARY_LIEN->value,
+        'type' => CalculationTypeEnum::PURCHASE_WITH_FIDUCIARY_LIEN->value,
         'property_value' => 40_000_099,
         'financing_value' => 30_000_000,
         'financing_system' => 'sfh',
-        'discount' => FeeDiscount::FIRST_ACQUISITION_SFH->value,
+        'discount' => FeeDiscountEnum::FIRST_ACQUISITION_SFH->value,
     ], $overrides);
 }
 
@@ -96,7 +96,7 @@ function calculationRequestErrors(array $data): array
 test('cálculo com sucesso grava o retrato com valores em centavos e ITBI', function () {
     Http::fake(['calculadora.test/*' => Http::response(['result' => apiResult()])]);
 
-    $calculation = app(CalculateFees::class)->handle(calculationData(), $this->user, $this->tenant);
+    $calculation = app(CalculateFeesAction::class)->handle(calculationData(), $this->user, $this->tenant);
 
     $this->tenant->run(function () use ($calculation) {
         $fresh = FeeCalculation::findOrFail($calculation->id);
@@ -112,7 +112,7 @@ test('cálculo com sucesso grava o retrato com valores em centavos e ITBI', func
 test('o payload enviado à API tem consulta, município, valores em reais inteiros e desconto', function () {
     Http::fake(['calculadora.test/*' => Http::response(['result' => apiResult()])]);
 
-    app(CalculateFees::class)->handle(calculationData(), $this->user, $this->tenant);
+    app(CalculateFeesAction::class)->handle(calculationData(), $this->user, $this->tenant);
 
     Http::assertSent(fn (HttpRequest $request) => $request->url() === 'https://calculadora.test/api/calculate'
         && $request['consulta_id'] === 2
@@ -123,7 +123,7 @@ test('o payload enviado à API tem consulta, município, valores em reais inteir
 });
 
 test('a conversão para reais trunca os centavos num único lugar', function () {
-    $payload = (new RegistryFeeRequestData(CalculationType::GENERAL_REGISTRATION, SupportedState::SP, 3550308, 35_000_099, 10_000_000))->toPayload();
+    $payload = (new RegistryFeeRequestDto(CalculationTypeEnum::GENERAL_REGISTRATION, SupportedStateEnum::SP, 3550308, 35_000_099, 10_000_000))->toPayload();
 
     expect($payload['valor_imovel'])->toBe(350_000)
         ->and($payload['valor_financiamento'])->toBe(0)
@@ -133,7 +133,7 @@ test('a conversão para reais trunca os centavos num único lugar', function () 
 test('erro de negócio da API vira exceção com a mensagem da API', function () {
     Http::fake(['calculadora.test/*' => Http::response(['errorMessage' => 'Valor do imóvel inválido para o município'], 422)]);
 
-    expect(fn () => app(CalculateFees::class)->handle(calculationData(), $this->user, $this->tenant))
+    expect(fn () => app(CalculateFeesAction::class)->handle(calculationData(), $this->user, $this->tenant))
         ->toThrow(RegistryFeeRejectedException::class, 'Valor do imóvel inválido para o município');
 
     $this->tenant->run(fn () => expect(FeeCalculation::count())->toBe(0));
@@ -142,7 +142,7 @@ test('erro de negócio da API vira exceção com a mensagem da API', function ()
 test('API fora do ar ou sem autorização vira indisponibilidade e nada é gravado', function (int $status) {
     Http::fake(['calculadora.test/*' => Http::response(['message' => 'Unauthenticated.'], $status)]);
 
-    expect(fn () => app(CalculateFees::class)->handle(calculationData(), $this->user, $this->tenant))
+    expect(fn () => app(CalculateFeesAction::class)->handle(calculationData(), $this->user, $this->tenant))
         ->toThrow(RegistryFeeUnavailableException::class);
 
     $this->tenant->run(fn () => expect(FeeCalculation::count())->toBe(0));
@@ -151,7 +151,7 @@ test('API fora do ar ou sem autorização vira indisponibilidade e nada é grava
 test('município sem cadastro de ITBI falha antes de chamar a API', function () {
     Http::fake();
 
-    expect(fn () => app(CalculateFees::class)->handle(calculationData(['municipality_ibge_code' => 3548708]), $this->user, $this->tenant))
+    expect(fn () => app(CalculateFeesAction::class)->handle(calculationData(['municipality_ibge_code' => 3548708]), $this->user, $this->tenant))
         ->toThrow(ItbiNotConfiguredException::class);
 
     Http::assertNothingSent();
@@ -160,17 +160,17 @@ test('município sem cadastro de ITBI falha antes de chamar a API', function () 
 test('averbação não exige cadastro de ITBI', function () {
     Http::fake(['calculadora.test/*' => Http::response(['result' => apiResult()])]);
 
-    $calculation = app(CalculateFees::class)->handle(calculationData([
+    $calculation = app(CalculateFeesAction::class)->handle(calculationData([
         'state' => 'RJ',
         'municipality_ibge_code' => 3304557,
-        'type' => CalculationType::ECONOMIC_VALUE_ANNOTATION->value,
+        'type' => CalculationTypeEnum::ECONOMIC_VALUE_ANNOTATION->value,
     ]), $this->user, $this->tenant);
 
     expect($calculation->itbi_amount)->toBeNull();
 });
 
 test('a resposta da API é convertida para centavos sem perda', function () {
-    $result = RegistryFeeResult::fromArray(apiResult());
+    $result = RegistryFeeResultDto::fromArray(apiResult());
 
     expect($result->acts[0]['subtotal'])->toBe(150035)
         ->and($result->acts[0]['descricao'])->toBe('Registro de compra e venda')
@@ -179,18 +179,18 @@ test('a resposta da API é convertida para centavos sem perda', function () {
 });
 
 test('averbação fora do RJ e compra no PA são rejeitadas', function () {
-    expect(calculationRequestErrors(calculationData(['type' => CalculationType::ECONOMIC_VALUE_ANNOTATION->value])))->toHaveKey('type')
+    expect(calculationRequestErrors(calculationData(['type' => CalculationTypeEnum::ECONOMIC_VALUE_ANNOTATION->value])))->toHaveKey('type')
         ->and(calculationRequestErrors(calculationData(['state' => 'PA'])))->toHaveKey('type');
 });
 
 test('desconto de outra UF é rejeitado e financiamento não pode passar do valor do imóvel', function () {
-    expect(calculationRequestErrors(calculationData(['discount' => FeeDiscount::POPULAR_HOUSING->value])))->toHaveKey('discount')
+    expect(calculationRequestErrors(calculationData(['discount' => FeeDiscountEnum::POPULAR_HOUSING->value])))->toHaveKey('discount')
         ->and(calculationRequestErrors(calculationData(['financing_value' => 50_000_000])))->toHaveKey('financing_value')
         ->and(calculationRequestErrors(calculationData(['property_value' => '400.000,00'])))->toHaveKey('property_value');
 });
 
 test('primeiro imóvel é obrigatório na compra em município do módulo 03', function () {
-    $this->tenant->run(fn () => $this->municipality->update(['module' => ItbiModule::FIRST_PROPERTY_RATE]));
+    $this->tenant->run(fn () => $this->municipality->update(['module' => ItbiModuleEnum::FIRST_PROPERTY_RATE]));
 
     expect(calculationRequestErrors(calculationData()))->toHaveKey('first_property')
         ->and(calculationRequestErrors(calculationData(['first_property' => true])))->toBe([]);
@@ -198,58 +198,58 @@ test('primeiro imóvel é obrigatório na compra em município do módulo 03', f
 
 test('CostItemsBuilder gera atos, taxas extras, serviços e ITBI só quando há ITBI', function () {
     $service = new BillableService(['name' => 'Assessoria', 'description' => 'Assessoria completa', 'price' => 200000, 'generates_receipt' => true]);
-    $result = RegistryFeeResult::fromArray(apiResult());
+    $result = RegistryFeeResultDto::fromArray(apiResult());
     $builder = new CostItemsBuilder;
 
-    $items = collect($builder->build($result, CalculationType::GENERAL_REGISTRATION, 450000, [['service' => $service, 'amount' => 150000]]));
+    $items = collect($builder->build($result, CalculationTypeEnum::GENERAL_REGISTRATION, 450000, [['service' => $service, 'amount' => 150000]]));
 
-    expect($items->pluck('type')->all())->toBe([CostItemType::EMOLUMENT, CostItemType::EXTRA_FEE, CostItemType::SERVICE, CostItemType::ITBI])
+    expect($items->pluck('type')->all())->toBe([CostItemTypeEnum::EMOLUMENT, CostItemTypeEnum::EXTRA_FEE, CostItemTypeEnum::SERVICE, CostItemTypeEnum::ITBI])
         ->and($items[0]['amount'])->toBe(150035)
         ->and($items[1]['extra_fee_description'])->toBe('Prenotação')
         ->and($items[2]['amount'])->toBe(150000)
         ->and($items[2]['generates_receipt'])->toBeTrue()
         ->and($items[3]['amount'])->toBe(450000);
 
-    $annotation = collect($builder->build($result, CalculationType::ECONOMIC_VALUE_ANNOTATION, null));
+    $annotation = collect($builder->build($result, CalculationTypeEnum::ECONOMIC_VALUE_ANNOTATION, null));
 
-    expect($annotation->pluck('type'))->not->toContain(CostItemType::ITBI);
+    expect($annotation->pluck('type'))->not->toContain(CostItemTypeEnum::ITBI);
 });
 
 test('o total geral soma cálculo, ITBI e serviços e aparece sempre que houver ITBI ou serviço', function () {
-    $breakdown = FeeBreakdown::fromApiResult(apiResult(), 450000, [['name' => 'Assessoria', 'amount' => 150000]])->toArray();
+    $breakdown = FeeBreakdownBuilder::fromApiResult(apiResult(), 450000, [['name' => 'Assessoria', 'amount' => 150000]])->toArray();
 
     expect($breakdown['grand_total'])->toBe(154545 + 450000 + 150000)
         ->and($breakdown['show_grand_total'])->toBeTrue()
         ->and($breakdown['subtotals']['subtotal'])->toBe(150035)
-        ->and(FeeBreakdown::fromApiResult(apiResult(), null)->toArray()['show_grand_total'])->toBeFalse();
+        ->and(FeeBreakdownBuilder::fromApiResult(apiResult(), null)->toArray()['show_grand_total'])->toBeFalse();
 });
 
 test('as colunas seguem a ordem da calculadora de origem, independente da ordem das chaves gravadas', function () {
     $act = ['ipesp' => 136.45, 'subtotal' => 1155.95, 'descricao' => 'Registro', 'emolumento' => 701.42, 'estado(sp)' => 199.35, 'registro_civil' => 36.92, 'ministerio_publico' => 33.67, 'tribunal_de_justica' => 48.14];
 
-    $columns = FeeBreakdown::fromApiResult(['atos' => [$act], 'total' => 1155.95], null)->toArray()['columns'];
+    $columns = FeeBreakdownBuilder::fromApiResult(['atos' => [$act], 'total' => 1155.95], null)->toArray()['columns'];
 
     expect(array_column($columns, 'key'))->toBe(['descricao', 'emolumento', 'estado(sp)', 'ipesp', 'registro_civil', 'tribunal_de_justica', 'ministerio_publico', 'subtotal']);
 });
 
 test('as opções de tipo de cálculo trazem o resumo exibido nos cards', function () {
-    $options = collect(CalculationType::options())->keyBy('value');
+    $options = collect(CalculationTypeEnum::options())->keyBy('value');
 
-    expect($options)->toHaveCount(count(CalculationType::cases()))
-        ->and($options[CalculationType::GENERAL_REGISTRATION->value]['summary'])->toBe('Registro de Compra e Venda e outros')
+    expect($options)->toHaveCount(count(CalculationTypeEnum::cases()))
+        ->and($options[CalculationTypeEnum::GENERAL_REGISTRATION->value]['summary'])->toBe('Registro de Compra e Venda e outros')
         ->and($options->every(fn (array $option) => filled($option['summary']) && filled($option['description'])))->toBeTrue();
 });
 
 test('o formulário de cálculo traz o módulo de ITBI do município e as opções da tela', function () {
-    $props = app(FeeCalculationService::class)->formProps(CalculationType::PURCHASE_WITH_FIDUCIARY_LIEN, SupportedState::SP, 3550308, 'São Paulo', $this->tenant);
+    $props = app(FeeCalculationService::class)->formProps(CalculationTypeEnum::PURCHASE_WITH_FIDUCIARY_LIEN, SupportedStateEnum::SP, 3550308, 'São Paulo', $this->tenant);
 
-    expect($props['type']['value'])->toBe(CalculationType::PURCHASE_WITH_FIDUCIARY_LIEN->value)
+    expect($props['type']['value'])->toBe(CalculationTypeEnum::PURCHASE_WITH_FIDUCIARY_LIEN->value)
         ->and($props['state'])->toBe('SP')
-        ->and($props['municipality'])->toBe(['ibge_code' => 3550308, 'name' => 'São Paulo', 'itbi_module' => ItbiModule::STANDARD->value])
+        ->and($props['municipality'])->toBe(['ibge_code' => 3550308, 'name' => 'São Paulo', 'itbi_module' => ItbiModuleEnum::STANDARD->value])
         ->and($props['discounts'])->not->toBeEmpty()
         ->and($props['financingSystems'])->not->toBeEmpty();
 
-    expect(app(FeeCalculationService::class)->formProps(CalculationType::GENERAL_REGISTRATION, null, null, null, $this->tenant)['municipality']['itbi_module'])->toBeNull();
+    expect(app(FeeCalculationService::class)->formProps(CalculationTypeEnum::GENERAL_REGISTRATION, null, null, null, $this->tenant)['municipality']['itbi_module'])->toBeNull();
 });
 
 test('a lista de municípios do IBGE funciona no tenant com um cache sem suporte a tags', function () {
@@ -259,7 +259,7 @@ test('a lista de municípios do IBGE funciona no tenant com um cache sem suporte
         ['id' => 3509502, 'nome' => 'Campinas'],
     ])]);
 
-    $municipalities = app(IbgeLocalityClient::class)->municipalities(SupportedState::SP);
+    $municipalities = app(IbgeLocalityClient::class)->municipalities(SupportedStateEnum::SP);
 
     expect($municipalities->all())->toBe([
         ['ibge_code' => 3509502, 'name' => 'Campinas'],
@@ -269,7 +269,7 @@ test('a lista de municípios do IBGE funciona no tenant com um cache sem suporte
 
 test('só o dono ou o administrador vê o cálculo', function () {
     Http::fake(['calculadora.test/*' => Http::response(['result' => apiResult()])]);
-    $calculation = app(CalculateFees::class)->handle(calculationData(), $this->user, $this->tenant);
+    $calculation = app(CalculateFeesAction::class)->handle(calculationData(), $this->user, $this->tenant);
 
     $other = $this->tenant->run(fn () => User::factory()->create());
     $admin = userWithRole($this->tenant, RolesEnum::ADMIN);

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
-use App\Jobs\SeedTenantDatabase;
+use App\Jobs\SeedTenantDatabaseJob;
 use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
@@ -34,7 +34,7 @@ class TenancyServiceProvider extends ServiceProvider
 
                     // Cria roles, permissões e usuário admin no banco já migrado
                     // do tenant, a partir do payload guardado em `tenant->seed`.
-                    SeedTenantDatabase::class,
+                    SeedTenantDatabaseJob::class,
 
                 ])->send(function (Events\TenantCreated $event) {
                     return $event->tenant;

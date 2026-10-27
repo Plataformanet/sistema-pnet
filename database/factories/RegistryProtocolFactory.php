@@ -2,7 +2,7 @@
 
 namespace Database\Factories;
 
-use App\Enums\RegistryProtocolPosition;
+use App\Enums\RegistryProtocolPositionEnum;
 use App\Models\Proposal;
 use App\Models\RegistryProtocol;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -26,23 +26,23 @@ class RegistryProtocolFactory extends Factory
             'seller_name' => $this->faker->name(),
             'entered_at' => $this->faker->dateTimeBetween('-3 months')->format('Y-m-d'),
             'exited_at' => null,
-            'position' => RegistryProtocolPosition::IN_REGISTRY_PG,
+            'position' => RegistryProtocolPositionEnum::IN_REGISTRY_PG,
         ];
     }
 
-    public function withPosition(RegistryProtocolPosition $position): static
+    public function withPosition(RegistryProtocolPositionEnum $position): static
     {
         return $this->state(fn (array $attributes): array => ['position' => $position]);
     }
 
     public function underAnalysis(): static
     {
-        return $this->withPosition(RegistryProtocolPosition::UNDER_ANALYSIS);
+        return $this->withPosition(RegistryProtocolPositionEnum::UNDER_ANALYSIS);
     }
 
     public function requirement(): static
     {
-        return $this->withPosition(RegistryProtocolPosition::REQUIREMENT);
+        return $this->withPosition(RegistryProtocolPositionEnum::REQUIREMENT);
     }
 
     /**
@@ -51,7 +51,7 @@ class RegistryProtocolFactory extends Factory
     public function awaitingBankPayment(): static
     {
         return $this->state(fn (array $attributes): array => [
-            'position' => RegistryProtocolPosition::AWAITING_BANK_PAYMENT,
+            'position' => RegistryProtocolPositionEnum::AWAITING_BANK_PAYMENT,
             'exited_at' => $attributes['entered_at'],
         ]);
     }
@@ -62,7 +62,7 @@ class RegistryProtocolFactory extends Factory
     public function completed(): static
     {
         return $this->state(fn (array $attributes): array => [
-            'position' => RegistryProtocolPosition::COMPLETED,
+            'position' => RegistryProtocolPositionEnum::COMPLETED,
             'exited_at' => $attributes['entered_at'],
         ]);
     }

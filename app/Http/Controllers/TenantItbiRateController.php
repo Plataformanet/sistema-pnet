@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\ItbiModule;
+use App\Enums\ItbiModuleEnum;
 use App\Http\Requests\UpdateItbiRateRequest;
 use App\Services\ItbiMunicipalityService;
 use Illuminate\Support\Facades\Log;
@@ -18,7 +18,7 @@ class TenantItbiRateController extends Controller
     {
         $municipality = $this->itbiMunicipalityService->findById($id, tenant());
 
-        if ($municipality->module === ItbiModule::VALUE_BRACKETS) {
+        if ($municipality->module === ItbiModuleEnum::VALUE_BRACKETS) {
             return redirect()->route('tenant.documents.itbi-municipalities.brackets.edit', $id);
         }
 
