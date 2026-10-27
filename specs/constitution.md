@@ -112,7 +112,9 @@ Efeitos pós-commit → <X>Job / <X>Mail (ShouldQueue) / <X>Event → <X>Listene
 
 ## 6. Nomenclatura — sufixo de tipo obrigatório
 
-**Regra:** todo nome de classe termina com o seu tipo. Os controllers de tenant **mantêm o prefixo `Tenant`**.
+**Regra:** todo nome de classe criada para o projeto termina com o seu tipo. Os controllers de tenant **mantêm o prefixo `Tenant`**.
+
+**Exceção (V-17):** as classes padrão do framework e dos pacotes mantêm o nome original. Exemplos: as Actions do Fortify (`CreateNewUser`, `ResetUserPassword`…), os middlewares padrão (`Authenticate`, `HandleInertiaRequests`, `VerifyCsrfToken`) e os providers.
 
 | Tipo | Padrão | Exemplo | Pasta |
 | --- | --- | --- | --- |
@@ -344,3 +346,9 @@ Um documento de nível inferior nunca contradiz um superior. Se surgir uma contr
 | V-14 | A P-07 vale para os efeitos das operações de escrita. Um PDF gerado e devolvido numa requisição GET de leitura pode ser síncrono. |
 | V-15 | A P-14 abre exceção para as migrations do catálogo e da sincronização das permissões `crm.*` (e para a atribuição da V-12). |
 | V-16 | O enum de cargos é o `RolesEnum`, nome atual que já tem o sufixo de tipo. A renomeação para `RoleEnum` fica fora do escopo. |
+
+### Decisões do fechamento da R1 (2026-10-27)
+
+| ID | Decisão |
+| --- | --- |
+| V-17 | O sufixo de tipo (§6) vale só para as classes criadas para o projeto. As classes padrão do framework e dos pacotes (Actions do Fortify, middlewares padrão, providers) mantêm o nome original. O `app/Utils/Utils.php` é do projeto e entra na regra: a limpeza dele fica para a R6 (T-R6-06). |

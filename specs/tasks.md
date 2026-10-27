@@ -118,7 +118,7 @@ vendor/bin/sail npm run type-check
 | ☐ | T-R6-03 | Tirar consultas Eloquent dos controllers (cadastros, financeiro); `DriveService` sem FormRequest | constitution §4 e P-05, spec §8 (6, 14) | R1 | RF |
 | ☐ | T-R6-04 | Back do diálogo de contrato: `contractTypes` e `defaultContractTypeId` no `show`; `ConvertQuoteToProposalRequest`; contrato repassado ao `createFromQuote` | RN-DOC-QUO-06, Q-S-09 | R3 | BE |
 | ☐ | T-R6-05 | Front do diálogo de contrato: select "Tipo de contrato" pré-selecionado no `AlertDialog` de "Gerar proposta", sem mudar o visual | RN-DOC-QUO-06 | 04 | FE |
-| ☐ | T-R6-06 | Back: remover `TenantSettingController` e as renderizações de páginas inexistentes | spec §8 | R1 | RF |
+| ☐ | T-R6-06 | Back: remover `TenantSettingController` e as renderizações de páginas inexistentes; remover `app/Utils/Utils.php` (só o `format_coin_real` é usado, nas exceptions do financeiro → `MoneyHelper::format()`, com a mensagem igual) | spec §8, V-17 | R1 | RF |
 | ☐ | T-R6-07 | Front: remover arquivos mortos; carregar a fonte Instrument Sans; URLs literais → `route()` | spec §8 | R1 | FE |
 | ☐ | T-R6-08 | Exportação de listas em PDF: `ListPdfService` + `pdf/list.blade.php`, `forPrint`/`printColumns` nos 12 services, `ExportListPdfRequest`, método `pdf()` e rota `tenant.<modulo>.<recurso>.pdf`, com testes | RF-CORE-12, RN-CORE-15 | R1 | BE |
 | ☐ | T-R6-09 | Front: ligar o "Exportar lista" do `DataTable` ao PDF nas 12 listas (busca em todas; status só em Cadastros), sem mudar o visual | RF-CORE-12 | 08 | FE |
