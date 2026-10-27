@@ -58,7 +58,7 @@ vendor/bin/sail npm run type-check
 | ☑ | T-R1-05 | DTOs (`+Dto`), `FeeBreakdownBuilder`, `MoneyHelper`, `DocumentMaskHelper`, `FinishedProposalsReportQuery` | plan §4 | R0 | RF |
 | ☑ | T-R1-06 | Varredura final: `grep` sem nomes antigos em `app`, `config`, `routes`, `database`, `tests`, `resources/views`; Pint | plan §4 | 01..05 | RF |
 | ☑ | T-R1-07 | Code review da fase (nomes, referências por string) | — | 06 | CR |
-| ☐ | T-R1-08 | Aceite: a suíte completa verde (rodada com o pedido do usuário) | — | 07 | QA |
+| ☑ | T-R1-08 | Aceite: a suíte completa verde (rodada com o pedido do usuário) | — | 07 | QA |
 
 ## R2 — Padronizações de dados
 
