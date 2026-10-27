@@ -48,9 +48,9 @@ As skills ficam em `.claude/skills/<nome>/SKILL.md`. O mesmo mapa está no `CLAU
 | R1 Renomeações | `laravel-refactoring-senior` | CR, QA (aceite com a suíte completa) |
 | R2 Padronizações de dados | `laravel-refactoring-senior` | BE (permissões), FE (sidebar), QA |
 | R3 MUD-04 | `laravel-development-senior` (migração) + `laravel-refactoring-senior` (código atual) | FE (`ServicePicker`), QA |
-| R4 MUD-02 | `laravel-development-senior` | RF (ligar nos services atuais), FE (card, colunas), QA |
+| R4 MUD-02 | `laravel-development-senior` | RF (fornecedor opcional em pagar, ligar nos services atuais), FE (formulário de pagar, colunas), QA |
 | R5 MUD-03 / MUD-01 | `laravel-development-senior` | FE (botão do CRM, prefill), QA |
-| R6 Correções | `laravel-refactoring-senior` | BE (dashboard, exportação de listas em PDF), FE (limpeza, widgets, botão "Exportar lista"), QA |
+| R6 Correções | `laravel-refactoring-senior` | BE (dashboard, diálogo de contrato, exportação de listas em PDF), FE (limpeza, widgets, diálogo de contrato, botão "Exportar lista"), QA |
 | R7 Fechamento | `laravel-code-review-senior` + `qa-senior` | RF (correções), BE (atualizar `docs/`) |
 
 ---

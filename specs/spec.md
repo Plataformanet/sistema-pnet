@@ -47,7 +47,7 @@
 
 ## 1. Atores e cargos
 
-Os cargos (`RoleEnum`) são gravados no spatie pelo **rótulo em pt-BR**.
+Os cargos (`RolesEnum`) são gravados no spatie pelo **rótulo em pt-BR**.
 
 | Valor | Rótulo | Perfil | Permissões padrão (só no provisionamento) |
 | --- | --- | --- | --- |
@@ -96,9 +96,10 @@ Os cargos (`RoleEnum`) são gravados no spatie pelo **rótulo em pt-BR**.
 
 #### 2.1.2 Planos, módulos e permissões
 
-- **RN-CORE-05:** as tabelas centrais `plans`, `modules`, `plan_modules`, `tenant_modules` e `permissions` (catálogo, com `module_id`, `name` **único** e `display_name` em pt-BR) são criadas e populadas por migration idempotente. Os planos são basic, standard e premium (2999, 5999 e 9999 centavos).
+- **RN-CORE-05:** as tabelas centrais `plans`, `modules`, `plan_modules`, `tenant_modules` e `permissions` (catálogo, com `module_id`, `name` **único** **[alvo: índice unique]** e `display_name` em pt-BR) são criadas e populadas por migration idempotente. Os planos são basic, standard e premium (2999, 5999 e 9999 centavos).
 - **RN-CORE-06:** um tenant recebe **só** as permissões dos módulos ativos dele. O `tenants:sync-permissions [--tenants=]` sincroniza os tenants existentes, apenas adicionando.
 - **RN-CORE-07:** as permissões padrão dos cargos são aplicadas só no provisionamento, nunca no `sync`.
+  - **[alvo] Exceção (V-12):** a migration de tenant que cria `crm.deals.view` e `crm.pipelines.view` também as atribui ao cargo Administrador, quando o plano do tenant tem o módulo. Os demais cargos são configurados na tela de cargos.
 - **RF-CORE-03:** o frontend recebe `tenant.hasModules` e `permissions` nas props compartilhadas. A sidebar filtra os itens por módulo e por permissão.
 
 #### 2.1.3 Autenticação do tenant
@@ -131,7 +132,7 @@ Os cargos (`RoleEnum`) são gravados no spatie pelo **rótulo em pt-BR**.
   - Identificação e contato: razão social, nome fantasia, CNPJ, IE, e-mail e telefone.
   - Endereço comercial: com ViaCEP.
 - **RN-CORE-12:**
-  - Os dados da empresa ficam em `tenant_settings` (`company.*`), com `key` **única**.
+  - Os dados da empresa ficam em `tenant_settings` (`company.*`), com `key` **única** **[alvo: índice unique]**.
   - O logo vai para o bucket (`company/`) e é servido por `GET /settings/company/logo`, uma rota pública do tenant com cache buster.
   - O nome exibido segue a ordem `company.trade_name` → `company.name` → nome do tenant.
   - O `pdfBranding()` embute o logo nos PDFs.
@@ -173,11 +174,11 @@ Os cargos (`RoleEnum`) são gravados no spatie pelo **rótulo em pt-BR**.
 - **RN-CORE-15 [alvo]:** regras do PDF da lista:
   - **Conteúdo:**
     - cabeçalho com a marca da empresa, igual ao dos PDFs atuais;
-    - título da lista, data e hora da emissão e nome de quem emitiu;
+    - título da lista, data e hora da emissão e nome do usuário logado que emitiu;
     - as mesmas colunas da tela, menos seleção e ações, com os mesmos formatos (dinheiro em R$, datas dd/mm/aaaa, documento com máscara, status por extenso);
     - total de registros no rodapé.
   - **Filtros:**
-    - o PDF respeita a busca digitada no "Pesquisar..." e os filtros da tela, como os chips Todos/Ativos/Inativos de Clientes, Fornecedores e Funcionários;
+    - o PDF respeita a busca digitada no "Pesquisar..." e, em Clientes, Fornecedores e Funcionários, os chips Todos/Ativos/Inativos. As outras 9 listas têm só a busca;
     - a busca é aplicada no servidor sobre os mesmos campos exibidos nas colunas;
     - sem filtro, o PDF traz todos os registros que a tela lista.
   - **Ordem:** a ordem padrão da lista.
@@ -291,9 +292,9 @@ Permissões: `products.{products,categories}.*` e `services.{services,categories
   - 5 KPIs clicáveis: Vencidos, Vencem hoje, A vencer, Pagos e Total do período;
   - tabela de **parcelas**: Nº, Conta, Vencimento, Pagamento, n/N, Categoria, Descrição, Valor da parcela, Total e Situação;
   - ações Editar, Liquidar, Visualizar e Excluir.
-- **RF-FIN-04:** o formulário tem Descrição, Fornecedor/Cliente (`ComboboxRemote`), Conta, Categoria, Subcategoria, Tipo de custo, Condição (à vista ou 1x a 12x), Forma de pagamento, Total, Vencimento, Situação inicial (Em aberto/Pago), Observações e Comprovante. No editar, há um cartão por parcela.
+- **RF-FIN-04:** o formulário tem Descrição, Fornecedor/Cliente (`ComboboxRemote`; **[alvo]** o fornecedor fica opcional em pagar, RN-FIN-14), Conta, Categoria, Subcategoria, Tipo de custo, Condição (à vista ou 1x a 12x), Forma de pagamento, Total, Vencimento, Situação inicial (Em aberto/Pago), Observações e Comprovante. No editar, há um cartão por parcela.
 - **RF-FIN-05:** o detalhe mostra o cabeçalho e as parcelas, com a ação de pagar.
-- **RN-FIN-05:** o contato financeiro é resolvido por `(contact_id, type)`, com `fornecedor` em pagar e `cliente` em receber (`ContactTypeEnum`). Papel inativo é bloqueado.
+- **RN-FIN-05:** o contato financeiro é resolvido por `(contact_id, type)`, com `fornecedor` em pagar e `cliente` em receber (`ContactTypeEnum`). Papel inativo é bloqueado. **[alvo]** Em pagar, o contato é opcional (RN-FIN-14).
 - **RN-FIN-06:** parcelas:
   - A divisão usa `intdiv`, e **o resto vai para a última parcela**.
   - A parcela N vence na data inicial + (N−1) meses (`addMonthsNoOverflow`).
@@ -307,8 +308,13 @@ Permissões: `products.{products,categories}.*` e `services.{services,categories
 - **RN-FIN-09:** a baixa (`PATCH …/installments/update {id}`) trava a parcela e recusa se ela já estiver paga (`InstallmentAlreadyPaidException`, 422). Depois move o saldo (−1 pagar / +1 receber) e grava `payment_date = hoje` e `status = paid`.
 - **RN-FIN-10:** a exclusão estorna o pago, faz soft delete das parcelas e do lançamento.
 - **RN-FIN-11:** o saldo só muda por `UPDATE` atômico, dentro de transação com `lockForUpdate`.
-- **RN-FIN-12:** status de parcela (`InstallmentStatusEnum`): `open` e `paid`. "Vencidos", "Vencem hoje" e "A vencer" são filtros de data sobre `open`.
-- **RN-FIN-13 (MUD-02) [alvo]:** os lançamentos podem nascer de uma **proposta de documentações**. Esses lançamentos guardam `proposal_id` e `proposal_cost_item_id` (seção 3.2).
+- **RN-FIN-12:** status de parcela (`AccountsEnum`): as parcelas são gravadas só como `open` e `paid`. "Vencidos", "Vencem hoje" e "A vencer" são filtros de data sobre `open`.
+- **RN-FIN-13 (MUD-02) [alvo]:** os lançamentos podem nascer de uma **proposta de documentações**. Esses lançamentos guardam `proposal_id` e `proposal_cost_item_id` (seção 3.2). As contas a pagar geradas pela proposta não têm fornecedor (RN-FIN-14).
+- **RN-FIN-14 [alvo] (V-11, Q-S-18):** o fornecedor é **opcional** em contas a pagar.
+  - `account_payables.financial_contact_id` passa a aceitar nulo.
+  - Sem fornecedor, não há checagem de papel inativo.
+  - A lista, o detalhe e os relatórios mostram "—" no lugar do fornecedor.
+  - Em contas a receber, o cliente continua obrigatório.
 
 #### 2.4.3 Relatórios financeiros
 
@@ -390,15 +396,19 @@ Permissões: `drive.{drives,folders,trash,logs}.*`.
   - O `TenantCrmController` devolve dados mock, no mesmo formato dos tipos `types/crm/Deal.ts`.
   - Nada é gravado; arrastar, ganhar ou perder muda só o estado local.
 - **RN-CRM-02 [alvo]:** criar as permissões `crm.deals.view` e `crm.pipelines.view` para controlar o menu *(Q-S-07)*.
-- **Contratos pendentes** (o backend é especificado quando o CRM for definido):
-  - **MUD-01:** oportunidade/proposta do CRM → proposta de documentações (seção 3.1).
-  - **MUD-03:** orçamento da calculadora → oportunidade no funil (seção 3.3).
+- **Contratos pendentes — backlog do CRM** (o backend é especificado quando o CRM for definido). Esta lista **é** o backlog do CRM:
+  - **MUD-01:** oportunidade/proposta do CRM → proposta de documentações (seção 3.1; contrato em RN-MUD01-02, aceite em CA-MUD01-01).
+  - **MUD-03:** orçamento da calculadora → oportunidade no funil (seção 3.3):
+    - listener `CreateCrmDealFromQuoteListener` sobre `QuoteCreatedEvent` (RN-MUD03-02);
+    - efeitos de `QuoteConvertedEvent` e `QuoteDeletedEvent` no negócio (RN-MUD03-03 e RN-MUD03-05);
+    - aceite em CA-MUD03-01.
+  - **MUD-02:** o gatilho "conversão a partir do CRM" (RN-MUD02-01).
 
 ---
 
 ### 2.7 DOC-CAT — Cadastros auxiliares de Documentações
 
-São 7 catálogos. "Serviços cobráveis" foi **removido** (MUD-04).
+São 7 catálogos. **[alvo]** "Serviços cobráveis", que ainda existe hoje como 8º catálogo, é removido (MUD-04).
 
 **Padrão comum:**
 
@@ -500,7 +510,7 @@ Permissões: `documents.stages.*`.
   2. Os proponentes passam por `ApplicantService::findOrCreateByCpf`. O existente é reaproveitado (e restaurado, se estava excluído) sem sobrescrever dados. O novo cria Contato PF, Usuário (cargo Cliente; reaproveita pelo e-mail, senha inutilizável) e Proponente, mais a conta bancária.
   3. Os vendedores passam por `SellerService::findOrCreateByDocument`, sem criar usuário.
   4. Parceiros, imóvel e timeline (RN-DOC-STG).
-  5. **A distribuição financeira (MUD-02).**
+  - A criação manual **não gera linhas de custo**, então não distribui nada no financeiro. A distribuição (MUD-02) acontece quando as linhas são lançadas depois (RN-MUD02-01).
 - **RN-DOC-PRO-03:** e-mails **depois do commit**: usuário novo recebe `ApplicantWelcomeMail` (link de 72 h); existente recebe `ProposalCreatedMail`.
 - **RN-DOC-PRO-04:** status (`ProposalStatusEnum`): `new`, `in_progress`, `awaiting_property`, `canceled`, `finished` e `restricted`.
   - Manualmente, só `in_progress`, `awaiting_property` (mês 1–12 e ano), `canceled` (motivo) e `restricted` (motivo). Os motivos que não se aplicam são limpos.
@@ -510,7 +520,7 @@ Permissões: `documents.stages.*`.
   - Adicionar recusa duplicado (`PersonAlreadyInProposalException`).
   - Remover só desvincula; remover o último proponente é bloqueado (`LastApplicantException`).
   - CPF e tipo de pessoa não mudam.
-- **RN-DOC-PRO-07:** excluir é soft delete; os usuários dos proponentes são mantidos. *(MUD-02: os lançamentos financeiros da proposta — ver 3.2.)*
+- **RN-DOC-PRO-07:** excluir é soft delete; os usuários dos proponentes são mantidos. *(MUD-02 [alvo]: os lançamentos financeiros da proposta — ver 3.2.)*
 - **RN-DOC-PRO-08:** visibilidade (`Proposal::scopeVisibleTo`), só para usuários externos, com as condições somadas por OR:
   - Parceiro: criador ou parceiro da proposta.
   - Vendedor do imóvel: `sellers.user_id`.
@@ -579,7 +589,7 @@ Permissões: `documents.stages.*`.
   - O `notary_name` é copiado como texto.
   - O documento é validado como CPF ou CNPJ.
   - Há PDF por recibo.
-- **RN-DOC-PRO-24 (MUD-02):** toda linha criada, editada ou excluída reflete no financeiro (seção 3.2).
+- **RN-DOC-PRO-24 (MUD-02) [alvo]:** toda linha criada, editada ou excluída reflete no financeiro (seção 3.2).
 
 #### 2.9.5 PDFs
 
@@ -641,8 +651,8 @@ A `ProposalPolicy` tem: `viewAny`, `view`, `create`, `update`, `delete`, `manage
   - Lista só propostas visíveis e **sem** `fee_estimate` (Combobox, limite de 20).
   - Trava a proposta e revalida (`ProposalAlreadyHasFeeEstimateException`).
   - Cria o `FeeEstimate` (`valid_until = null`).
-  - Gera as linhas (`CostItemsBuilder`) e anexa os **serviços do catálogo** (MUD-04).
-  - Dispara a **distribuição financeira** das linhas novas (MUD-02).
+  - Gera as linhas (`CostItemsBuilder`) e anexa os **serviços do catálogo** (MUD-04 **[alvo]**; hoje, os serviços cobráveis).
+  - **[alvo]** Dispara a **distribuição financeira** das linhas novas (MUD-02).
   - Rate limit de 20 por minuto em "calcular".
 - **RF-DOC-CALC-04:** o ITBI tem cadastro de municípios (lista, criar e editar com o `StateMunicipalityPicker` e o módulo), alíquotas (campos por módulo) e faixas (repetidor, com "Alíquota cheia").
 - **RN-DOC-CALC-07:** cadastro de ITBI:
@@ -659,33 +669,43 @@ Permissões: `documents.itbi_calculator.{view,create}` e `documents.itbi_municip
 ### 2.11 DOC-QUO — Orçamentos
 
 - **RF-DOC-QUO-01:** a lista tem busca por nome ou CPF, e as colunas Nº, Cliente, CPF, Validade e Status (Em aberto, Expirado, Convertido). O botão "Nova calculadora" leva à calculadora.
-- **RF-DOC-QUO-02:** o formulário tem Nome, CPF, E-mail, Telefone, Profissão, Estado civil, Banco e Validade, mais os **Serviços** (`ServicePicker` sobre o catálogo `services`, MUD-04) e a prévia da `FeeResultTable`.
+- **RF-DOC-QUO-02:** o formulário tem Nome, CPF, E-mail, Telefone, Profissão, Estado civil, Banco e Validade, mais os **Serviços** (`ServicePicker`; **[alvo]** sobre o catálogo `services`, MUD-04; hoje, sobre os serviços cobráveis) e a prévia da `FeeResultTable`.
 - **RF-DOC-QUO-03:** a tela "Ver" tem Imprimir, Enviar por e-mail, Editar e Gerar proposta (com confirmação), e "Abrir proposta" quando convertido. Mostra os alertas de convertido e de expirado.
 - **RN-DOC-QUO-01:** criar (`CreateQuoteAction`):
   - Normaliza os dados: nome em Title Case, CPF só com dígitos, e-mail em minúsculas.
   - Exige `valid_until ≥ hoje`.
   - Cria o `FeeEstimate` com o snapshot.
-  - Grava os serviços no pivot `quote_service`, com o valor efetivo (negociado ou `sell_value`).
-  - **Dispara `QuoteCreatedEvent` depois do commit (MUD-03).**
+  - Grava os serviços no pivot com o valor efetivo (negociado ou preço de tabela). **[alvo]** O pivot passa a ser `quote_service`, e o preço de tabela, o `sell_value` (MUD-04); hoje é `quote_billable_service`.
+  - **[alvo] Dispara `QuoteCreatedEvent` depois do commit (MUD-03).**
 - **RN-DOC-QUO-02:** o status é derivado:
   - `converted`: `fee_estimate.proposal_id` preenchido.
   - `expired`: `valid_until < hoje`.
   - Senão, `open`.
 - **RN-DOC-QUO-03:**
   - **Editar:** cliente, serviços e validade. Bloqueado se convertido.
-  - **Excluir:** soft delete do orçamento e da estimativa. Bloqueado se convertido.
+  - **Excluir:** soft delete do orçamento e da estimativa. Bloqueado se convertido. **[alvo]** Dispara `QuoteDeletedEvent` depois do commit (RN-MUD03-05).
 - **RN-DOC-QUO-04:** o e-mail (`QuoteSummaryMail`, em fila) leva o PDF anexo, gerado no worker. O PDF tem cabeçalho com o logo e os dados da empresa, "Orçamento Nº 00012", os blocos de administrador e proponente, a tabela e o aviso legal.
 - **RN-DOC-QUO-05:** **converter em proposta** (`ConvertQuoteToProposalAction`, POST, idempotente):
   1. `lockForUpdate` e checagem de status `open` (`QuoteNotOpenException`).
-  2. `ProposalService::createFromQuote`: criador e analista = autor; banco do orçamento; contrato padrão (Q-S-09); `new`; imóvel usado; valores zerados; proponente por CPF; timeline.
+  2. `ProposalService::createFromQuote`: criador e analista = autor; banco do orçamento; contrato (hoje o `proposals.default_contract_type_id`, id 4; **[alvo]** o escolhido no diálogo, RN-DOC-QUO-06); `new`; imóvel usado; valores zerados; proponente por CPF; timeline.
   3. As linhas de custo vêm da estimativa e dos serviços, com o valor negociado.
-  4. Os serviços vão para a proposta (`proposal_service`).
+  4. Os serviços vão para a proposta (**[alvo]** `proposal_service`; hoje `proposal_billable_service`).
   5. `estimate.proposal_id = proposta`.
-  6. Distribuição financeira (MUD-02).
-  7. Depois do commit: `AttachQuotePdfToProposalJob` (o PDF vira documento `fee_estimate`) e o e-mail ao cliente.
+  6. **[alvo]** Distribuição financeira (MUD-02).
+  7. Depois do commit: `AttachQuotePdfToProposalJob` (o PDF vira documento `fee_estimate`) e o e-mail ao cliente. **[alvo]** Também dispara `QuoteConvertedEvent` (RN-MUD03-05).
   8. *(MUD-03, pendente: avançar a oportunidade do CRM para "Ganho".)*
+- **RN-DOC-QUO-06 [alvo] — diálogo de conversão (Q-S-09):**
+  - "Gerar proposta", na tela Ver, abre o diálogo de confirmação atual, que ganha o select "Tipo de contrato" com os tipos ativos.
+  - O select vem pré-selecionado com o `proposals.default_contract_type_id`, se ele estiver ativo; senão, vem vazio.
+  - O contrato é obrigatório e vai no POST da conversão.
+  - Um contrato com `requires_financing` é aceito. A tabela de amortização e o prazo ficam vazios e são exigidos na próxima edição da proposta, como os valores zerados.
+  - Visual (P-10): o mesmo `AlertDialog` de hoje, com o select usando os componentes já existentes.
 - **CA-DOC-QUO-01:** uma segunda chamada de conversão não cria outra proposta.
 - **CA-DOC-QUO-02:** um orçamento com um serviço de `sell_value` 150000 e valor negociado vazio grava `amount = 150000`.
+- **CA-DOC-QUO-03:**
+  - **Dado** um orçamento em aberto,
+  - **quando** "Gerar proposta" é confirmado com o tipo de contrato "CCSBPE",
+  - **então** a proposta nasce com esse contrato. Sem contrato informado, a conversão é recusada com erro de validação.
 
 Permissões: `documents.quotes.*` (e-mail e converter usam `edit`).
 
@@ -757,7 +777,7 @@ Permissões: `documents.reports.view`.
   - **Idempotência:** `crm_deals.proposal_id` (único). Uma segunda conversão é recusada.
   - Depois do commit: os mesmos e-mails da criação manual; o negócio guarda o link da proposta.
 - **RN-MUD01-03 — interino (sem backend de CRM)** (Q-S-10, adotado): o botão abre `tenant.documents.proposals.create` com o nome do cliente e o valor pré-preenchidos via query string, sem vínculo persistido.
-- **CA-MUD01-01:**
+- **CA-MUD01-01 (quando o CRM existir):**
   - **Dado** um negócio com contato PF de CPF válido,
   - **quando** "Gerar proposta de documentações" é acionado,
   - **então** é criada uma proposta `new`, com o proponente e a timeline do banco escolhido, e o negócio passa a apontar para ela.
@@ -770,56 +790,66 @@ O desenho abaixo foi **confirmado** (Q-S-11 a Q-S-14):
 
 - distribuição em toda linha criada;
 - receber tudo do cliente e pagar os repasses;
-- padrões vindos da configuração do tenant;
+- categorias fixas criadas pelo sistema, sem tela de configuração (Q-S-21);
 - um lançamento por linha.
 
 - **RN-MUD02-01 — Gatilhos:** sempre na **mesma transação** da operação que cria as linhas:
-  - criação manual da proposta (as linhas manuais, quando houver);
   - conversão de orçamento;
   - vínculo de cálculo à proposta;
   - lançamento manual em "Pagamentos e Taxas";
   - conversão a partir do CRM (MUD-01, pendente).
-  - Ou seja: **em toda linha criada**, na criação da proposta e depois dela (Q-S-11).
+  - Ou seja: **em toda linha criada**, na criação da proposta e depois dela (Q-S-11). A criação manual da proposta não gera linhas, então não é gatilho (RN-DOC-PRO-02).
 - **RN-MUD02-02 — Mapeamento** (Q-S-12):
 
   | Linha (`CostItemTypeEnum`) | Conta a **receber** (do cliente) | Conta a **pagar** (repasse) |
   | --- | --- | --- |
-  | `emolument` | ✔ | ✔ (cartório) |
-  | `extra_fee` | ✔ | ✔ (cartório) |
-  | `itbi` | ✔ | ✔ (prefeitura) |
-  | `manual` | ✔ | ✔ (fornecedor do tipo de custo; cartório se `requires_notary`) |
+  | `emolument` | ✔ | ✔ (custo de cartório) |
+  | `extra_fee` | ✔ | ✔ (custo de cartório) |
+  | `itbi` | ✔ | ✔ (imposto municipal) |
+  | `manual` | ✔ | ✔ (custo do tipo de custo da linha) |
   | `service` | ✔ | — (receita da empresa) |
+
+  A conta a pagar **não tem fornecedor** (`financial_contact_id = null`, RN-FIN-14, Q-S-18). O destino do pagamento é identificado pela descrição e pelo tipo de custo.
 
 - **RN-MUD02-03 — Dados do lançamento:**
 
   | Campo | Valor |
   | --- | --- |
-  | Contato financeiro | **Receber:** o 1º proponente (contato), papel `cliente` (`ContactTypeEnum`). **Pagar:** o fornecedor padrão configurado por tipo de linha (cartório para emolumento, taxa e manual com cartório; prefeitura para ITBI; fornecedor do tipo de custo para manual). Esses fornecedores são contatos com papel `fornecedor` (Q-S-13) |
-  | Categoria / subcategoria | Configuração do tenant (`tenant_settings`), por tipo de linha e direção: `documents.finance.<tipo>.receivable_category_id`, `…receivable_subcategory_id`, `…payable_category_id`, `…payable_subcategory_id`, `…payable_supplier_contact_id` (Q-S-13) |
+  | Contato financeiro | **Receber:** o 1º proponente (contato), papel `cliente` (`ContactTypeEnum`). Se o contato ainda não tem o papel, ele é criado (`ClientService::persist`). Se o papel está **inativo**, o lançamento a receber da linha é pulado com aviso (`warning`), sem bloquear a operação (Q-S-19). **Pagar:** nenhum (RN-FIN-14, Q-S-18) |
+  | Categoria / subcategoria | As **categorias fixas** da RN-MUD02-09: **receber** em "Documentações", com a subcategoria do tipo da linha; **pagar** em "Documentações — Repasses", com a subcategoria do tipo da linha (Q-S-21) |
   | Conta bancária | A conta principal (`main_account`) |
   | Tipo de custo | O `cost_type_id` da linha (manual) ou o tipo de custo correspondente (Registro, ITBI…) |
   | Condição | À vista (1 parcela), status `open` |
-  | Vencimento | A `date` da linha, ou hoje + `documents.finance.due_in_days` (Q-S-13) |
+  | Forma de pagamento | `pix` (`FinancialPaymentMethodEnum::PIX`). O tenant pode alterá-la editando o lançamento (Q-S-21) |
+  | Vencimento | A `date` da linha, ou hoje quando a linha não tem data (Q-S-21) |
   | Descrição | `Proposta Nº 00042 — <descrição da linha>` |
   | Vínculo | `proposal_id` e `proposal_cost_item_id` nas tabelas `account_payables`/`account_receivables` (FKs nulas, `nullOnDelete`) |
 
 - **RN-MUD02-04 — Agrupamento** (Q-S-14): **um lançamento por linha**, o que permite sincronizar edição e exclusão.
-- **RN-MUD02-09 — Tela de configuração:** fica em Configurações → Empresa, numa aba ou card "Integração Documentações → Financeiro" *(detalhe no plan)*. Para cada tipo de linha (`emolument`, `extra_fee`, `itbi`, `manual`, `service`), define:
-  - categoria e subcategoria a receber;
-  - categoria e subcategoria a pagar;
-  - fornecedor padrão;
-  - o prazo de vencimento (dias), comum a todos.
-  - **Permissão:** `settings.company.edit`.
+- **RN-MUD02-09 — Categorias fixas (Q-S-21):** **não há tela de configuração**. Uma migration idempotente de tenant cria as categorias financeiras abaixo, que valem para todos os tenants:
+
+  | Categoria (tipo) | Subcategorias |
+  | --- | --- |
+  | "Documentações" (`receita`) | Emolumentos, Taxas extras, ITBI, Lançamentos manuais, Serviços |
+  | "Documentações — Repasses" (`despesa`) | Emolumentos, Taxas extras, ITBI, Lançamentos manuais |
+
+  - A subcategoria é escolhida pelo tipo da linha (`emolument` → Emolumentos, `extra_fee` → Taxas extras, `itbi` → ITBI, `manual` → Lançamentos manuais, `service` → Serviços).
+  - Os ids ficam gravados em `tenant_settings` (`documents.finance.*`) pela própria migration. Assim, renomear a categoria na tela de categorias não quebra a distribuição.
+  - Nenhum fornecedor é configurado (Q-S-18).
+  - O tenant pode mudar a categoria de um lançamento já criado editando o lançamento.
+  - **Adendo (evolução futura):** se algum tenant precisar controlar quais categorias a distribuição usa, a escolha poderá virar configurável (por exemplo, um card em Configurações → Empresa), gravando nas mesmas chaves `documents.finance.*`. Isso exige uma nova decisão registrada neste spec.
 - **RN-MUD02-05 — Sincronização:**
   - **Editar o valor da linha** atualiza o lançamento vinculado se as parcelas estiverem `open`. Se já houver parcela paga, a edição da linha é recusada com aviso.
   - **Excluir uma linha manual** exclui os lançamentos vinculados, com estorno se pagos (a regra RN-FIN-10 já faz isso).
   - **Excluir a proposta** (soft delete): os lançamentos abertos vinculados são excluídos; os pagos ficam (histórico) (Q-S-14).
 - **RN-MUD02-06 — Pré-condições:**
-  - Sem conta principal ou categoria configurada, a criação da proposta **não** é bloqueada: a distribuição é pulada, e um aviso (`warning`) pede a configuração.
+  - Sem conta principal (nenhuma conta bancária cadastrada), ou com uma categoria ou subcategoria fixa excluída ou inativa, a operação **não** é bloqueada: a distribuição é pulada, e um aviso (`warning`) pede para cadastrar a conta ou restaurar/ativar a categoria.
+  - Com o papel de cliente do 1º proponente inativo, só o lançamento a receber é pulado, com aviso (Q-S-19).
+  - **Sem o módulo Financeiro** (`finance`) no plano do tenant, a distribuição é pulada **sem aviso** e nenhum lançamento é criado (Q-S-22). Se o tenant contratar o módulo depois, as linhas novas passam a ser distribuídas, e as propostas antigas podem ser trazidas uma a uma pelo botão "Distribuir no financeiro".
   - Um botão "Distribuir no financeiro" na aba Pagamentos reprocessa as linhas sem lançamento (idempotente por `proposal_cost_item_id`).
 - **RN-MUD02-07 — Idempotência:** cada linha gera no máximo um lançamento por direção (`unique(proposal_cost_item_id)` em cada tabela).
 - **RN-MUD02-08 — Telas:**
-  - Aba "Pagamentos e Taxas": colunas "A receber" e "A pagar", com o status da parcela e um link para o lançamento.
+  - Aba "Pagamentos e Taxas": colunas "A receber" e "A pagar", com o status da parcela e um link para o lançamento. As colunas e o botão "Distribuir no financeiro" só aparecem quando o tenant tem o módulo Financeiro (Q-S-22).
   - Listas do financeiro: badge "Proposta Nº 00042", com link.
 - **CA-MUD02-01:**
   - **Dado** um orçamento com 2 atos, 1 taxa extra, ITBI e 1 serviço,
@@ -848,7 +878,11 @@ O desenho abaixo foi **confirmado** (Q-S-11 a Q-S-14):
   - convertido em proposta → negócio "Ganho";
   - expirado → nada (Q-S-15);
   - excluído → negócio "Perdido" com o motivo "Orçamento excluído" (Q-S-15).
-- **RN-MUD03-04 — Interino:** enquanto não houver backend, o Kanban mock não recebe orçamentos. O spec registra a pendência no backlog do CRM.
+- **RN-MUD03-04 — Interino:** enquanto não houver backend, o Kanban mock não recebe orçamentos. A pendência fica no backlog do CRM (seção 2.6, "Contratos pendentes").
+- **RN-MUD03-05 (Q-S-20):** além do `QuoteCreatedEvent`, a fase R5 dispara, depois do commit:
+  - `QuoteConvertedEvent(quoteId)`, pelo `ConvertQuoteToProposalAction`;
+  - `QuoteDeletedEvent(quoteId)`, pela exclusão do orçamento.
+  - Nenhum dos três tem listener até o backend do CRM existir; os efeitos no negócio são os da RN-MUD03-03.
 - **CA-MUD03-01 (quando o CRM existir):**
   - **Dado** um cálculo,
   - **quando** o orçamento é salvo,
@@ -887,7 +921,7 @@ Formato: `<modulo>.<recurso>.<acao>`. O catálogo mantém só o que tem tela ou 
 | documents | proposals, proposal_documents, proposal_financial, quotes, banks, notaries, contract_types, cost_types, property_types, developments, stages, itbi_municipalities, registry_protocols (CRUD); proposal_timeline (edit, delete); itbi_calculator (view, create); reports (view) |
 | drive | drives, folders, trash, logs (CRUD atual) |
 | settings | company (view, edit); roles, users (CRUD) |
-| crm | deals (view), pipelines (view) — só para o menu *(Q-S-07)* |
+| crm | deals (view), pipelines (view) — só para o menu *(Q-S-07)*; atribuídas ao Administrador pela migration (V-12) |
 | sales | sales, quotations (CRUD) — mantidas como estão para o módulo Vendas futuro |
 
 **A remover do catálogo atual [alvo]:**
@@ -905,15 +939,18 @@ O schema atual está em `docs/arquitetura/database_dictionary.md`. As mudanças 
 | --- | --- |
 | `contacts` | `cpf_cnpj` só com dígitos e **unique** |
 | `products`, `services`, `employees`, `plans` | Dinheiro passa a `unsignedBigInteger` (D-06) |
+| `account_payables.total`, `account_receivables.total`, `installments.value` | `bigInteger` → `unsignedBigInteger`, mantendo o `nullable` dos totais (D-06, V-10) |
+| `bank_accounts.initial_balance`, `current_balance` | **Continuam** `bigInteger` com sinal: o saldo pode ficar negativo (V-10) |
 | `services` | Passa a ser referenciada por `quote_service` e `proposal_service` |
-| `account_payables`, `account_receivables` | `cost_id` mantido; `bank_account_out` (int sem FK) é removido (Q-S-16); **novas** `proposal_id` e `proposal_cost_item_id` (nulas, `nullOnDelete`, unique por item) |
+| `account_payables`, `account_receivables` | `cost_id` mantido; `bank_account_out` (int sem FK) é removido (Q-S-16); **novas** `proposal_id` e `proposal_cost_item_id` (nulas, `nullOnDelete`, unique por item); em `account_payables`, `financial_contact_id` passa a aceitar nulo (RN-FIN-14) |
 | `drive_logs` | Colunas estruturadas: `user_id`, `drive_id`, `action`, `ip_address`, `meta` (json) *(Q-S-06)* |
 | `tenant_settings` | `key` **unique**; o model passa a usar `SoftDeletes` |
 | `permissions` (central) | `name` **unique** |
 | `proposal_stages` | **Nova** `overdue_alerted_at` (RN-DOC-PRO-15) |
 | `users` (tenant) | **Novo** `softDeletes()`. Excluir = `status = false` + soft delete (Q-S-01) |
 | `services` | `sku` **unique**, considerando soft delete (Q-S-03) |
-| `tenant_settings` | Novas chaves `documents.finance.*` da integração Proposta → Financeiro (RN-MUD02-09), criadas por migration idempotente sem valor |
+| `financial_categories`, `financial_subcategories` | **Novas** categorias fixas "Documentações" (`receita`) e "Documentações — Repasses" (`despesa`), com as subcategorias por tipo de linha, criadas por migration idempotente (RN-MUD02-09) |
+| `tenant_settings` | Novas chaves `documents.finance.*` com os ids das categorias e subcategorias fixas, gravadas pela mesma migration (RN-MUD02-09). Sem tela de edição |
 | `billable_services`, `quote_billable_service`, `proposal_billable_service` | **Removidas** depois da migração de dados: cada serviço cobrável vira um `service` na categoria "Documentação" (`price` → `sell_value`), e os vínculos passam para `quote_service` / `proposal_service` (V-09) |
 | `proposal_cost_items` | **Nova** `service_id` (nullable), preenchida para as linhas `service` |
 | `subscriptions`, `subscription_items`, `payments`, `payment_methods`, `mp_webhooks`, `coupons`, `coupon_redemptions` | **Mantidas sem uso**, fora do escopo (D-11 / V-08) |
@@ -967,29 +1004,36 @@ O schema atual está em `docs/arquitetura/database_dictionary.md`. As mudanças 
 10. CRM sem permissão → seções 2.6 e 4. O menu "Vendas" **não** é defeito: ele fica para o módulo futuro (seção 0).
 11. Fonte Instrument Sans não carregada; botão "Exportar lista" sem ação → RF-CORE-12 (Q-S-17).
 12. Arquivos mortos no front (`login-04`, `SearchForm.vue`, `PermissionGroupCard.vue`, `central/Dashboard.vue`, páginas `drive_folder/*` e `show` de cadastros referenciadas sem existir) e o `TenantSettingController` sem rota.
+13. `PermissionsEnum` sem uso → removido na R1.
+14. `DriveService` recebe FormRequest em vez de array, misturando validação e regra → constitution P-05.
 
 ---
 
 ## 9. Decisões registradas (perguntas do spec)
 
-Todas as perguntas abaixo foram respondidas em **2026-10-26**. **Em todas foi adotada a recomendação, exceto na Q-S-17**, que o usuário revisou no mesmo dia. Onde o texto acima diz *(Q-S-nn)*, vale a decisão desta tabela.
+As perguntas Q-S-01 a Q-S-17 foram respondidas em **2026-10-26**, e as Q-S-18 a Q-S-22 em **2026-10-27** (auditoria de consistência). **Em todas foi adotada a recomendação, exceto na Q-S-17**, que o usuário revisou no mesmo dia, e nas **Q-S-18 e Q-S-21**, que têm partes definidas pelo próprio usuário. A Q-S-04 teve o texto corrigido em 2026-10-27. Onde o texto acima diz *(Q-S-nn)*, vale a decisão desta tabela.
 
 | ID | Pergunta | Decisão (= recomendação) |
 | --- | --- | --- |
 | Q-S-01 | Excluir usuário: manter a exclusão física ou passar a inativar/soft delete? | Inativar (`status = false`) + soft delete |
 | Q-S-02 | Dashboard: alimentar os KPIs financeiros e "Próximos vencimentos" com dados reais? | Sim; o resto fica como placeholder |
 | Q-S-03 | `services.sku` único? | Sim (validado e com índice) |
-| Q-S-04 | Alerta de estoque mínimo e baixa de estoque entram no escopo? | Não; ficam para o CRM |
+| Q-S-04 | Alerta de estoque mínimo e baixa de estoque entram no escopo? | Não; ficam fora do escopo, sem fase definida |
 | Q-S-05 | Conta bancária com lançamentos: bloquear a exclusão? | Bloquear |
 | Q-S-06 | `drive_logs` estruturado (usuário, ação, IP)? | Sim |
-| Q-S-07 | Criar as permissões `crm.*` só para o menu? | Sim (`crm.deals.view`) |
+| Q-S-07 | Criar as permissões `crm.*` só para o menu? | Sim (`crm.deals.view` e `crm.pipelines.view`) |
 | Q-S-08 | Alerta de etapa: enviar uma vez só (`overdue_alerted_at`) ou todo dia útil, como hoje? | Uma vez |
 | Q-S-09 | Contrato padrão na conversão de orçamento: manter o id 4 por config ou escolher num diálogo? | Diálogo com o padrão pré-selecionado |
 | Q-S-10 | MUD-01: em qual estágio aparece a conversão? `total_value` vira `purchase_value`? Usar o interino via query string enquanto o CRM não tem backend? | Só em "Ganho"; sim; sim |
 | Q-S-11 | MUD-02: distribuir só na criação da proposta, ou também nas linhas adicionadas depois? | Em toda linha criada |
 | Q-S-12 | MUD-02: o mapeamento pagar/receber da tabela RN-MUD02-02 está correto? | Como na tabela |
-| Q-S-13 | MUD-02: quem é o fornecedor (cartório? prefeitura?), qual categoria/subcategoria e qual vencimento usar? | Configuração em `tenant_settings`, com fornecedor genérico por tipo |
+| Q-S-13 | MUD-02: quem é o fornecedor (cartório? prefeitura?), qual categoria/subcategoria e qual vencimento usar? | ~~Configuração em `tenant_settings`, com fornecedor genérico por tipo~~. **Revista pela Q-S-18** (sem fornecedor) **e pela Q-S-21** (categorias fixas, sem tela; vencimento na data da linha ou hoje) |
 | Q-S-14 | MUD-02: um lançamento por linha ou um por proposta? O que fazer com os lançamentos ao excluir a proposta? | Um por linha; excluir os abertos e manter os pagos |
 | Q-S-15 | MUD-03: estágio inicial do negócio; efeitos de expirar ou excluir o orçamento no negócio | 1º estágio do funil padrão; expirado = nada; excluído = Perdido |
 | Q-S-16 | Remover `bank_account_out` (sem uso)? | Sim |
 | Q-S-17 | Botão "Exportar lista" do `DataTable`: implementar (CSV) ou remover? | **Revista:** implementar a exportação em **PDF** nas 12 listas com `DataTable`, sem mudar o visual (RF-CORE-12, RN-CORE-15). A recomendação original era remover o botão |
+| Q-S-18 | MUD-02: quem é o fornecedor da conta a pagar gerada pela proposta? | **Nenhum.** O fornecedor não recebe repasse configurado, e passa a ser opcional no cadastro de contas a pagar (RN-FIN-14, V-11). A tela Empresa não tem configuração de fornecedor |
+| Q-S-19 | MUD-02: e se o 1º proponente não tiver o papel de cliente, ou se o papel estiver inativo? | Sem o papel: ele é criado (`ClientService::persist`). Papel inativo: o lançamento a receber da linha é pulado com aviso; "Distribuir no financeiro" reprocessa depois |
+| Q-S-20 | MUD-03: disparar já o `QuoteConvertedEvent` e o `QuoteDeletedEvent`, mesmo sem listener? | Sim, os três eventos na R5 (RN-MUD03-05) |
+| Q-S-21 | MUD-02: as categorias da distribuição são configuráveis numa tela, ou fixas? Qual forma de pagamento usar? | **Fixas**, criadas por migration ("Documentações" e "Documentações — Repasses", com subcategoria por tipo de linha), sem tela. Fica o adendo: poderá virar configurável se algum tenant precisar desse controle. Forma de pagamento `pix`, que o tenant pode alterar no lançamento. Vencimento: data da linha, ou hoje (RN-MUD02-03/09) |
+| Q-S-22 | MUD-02: e se o plano do tenant não tem o módulo Financeiro? | A distribuição é pulada sem aviso, e as colunas e o botão "Distribuir" ficam ocultos na aba Pagamentos. Se o módulo for contratado depois, as linhas novas são distribuídas, e as antigas podem ser trazidas pelo "Distribuir no financeiro" (RN-MUD02-06/08) |

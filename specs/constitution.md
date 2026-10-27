@@ -54,14 +54,14 @@ Nenhuma dependência nova (composer ou npm) entra sem aprovação registrada na 
 | P-04 | **Dinheiro em centavos inteiros**, percentuais em `decimal(7,4)` (seção 7). | Sem erro de ponto flutuante. |
 | P-05 | **Regra de negócio no Service ou na Action.** O controller só orquestra. Validação fica no FormRequest. Sem camada Repository. | Testabilidade e controllers finos. |
 | P-06 | **Autorização em duas camadas:** middleware `permission:` em toda rota e Policy quando a regra depende do registro. | O plano contratado vale no backend. |
-| P-07 | **Efeitos externos depois do commit e em fila:** e-mail, PDF, arquivo, evento de integração. | Um rollback nunca deixa efeito órfão. |
+| P-07 | **Efeitos externos de operações de escrita depois do commit e em fila:** e-mail, PDF, arquivo, evento de integração. Um PDF gerado e devolvido numa requisição GET de leitura pode ser síncrono (V-14). | Um rollback nunca deixa efeito órfão. |
 | P-08 | **Arquivos em disco privado**, baixados só por rota autenticada e autorizada. | Os documentos são dados pessoais (LGPD). |
 | P-09 | **Dados de referência e permissões entram por migration idempotente**, nunca por seeder. | Chegam a qualquer ambiente só com o `migrate`. |
 | P-10 | **Estilo das telas congelado.** Nenhuma mudança visual nas telas existentes; telas e elementos novos usam os mesmos componentes, tokens, layout e dark mode (seção 9). | Regra do PRD de evolução: "NÃO mude nada". |
 | P-11 | **Toda mudança tem teste Pest**, e o teste é executado antes de a tarefa ser dada como pronta. | Qualidade. |
 | P-12 | **pt-BR** em textos de UI, mensagens, PDFs, e-mails, comentários e documentação. **Inglês** em identificadores de código, tabelas, colunas e rotas. | Padrão do repositório. |
 | P-13 | **Nenhum GET com efeito colateral.** Escritas usam POST, PUT, PATCH ou DELETE. Ações críticas são idempotentes, com trava e checagem de estado. | Segurança e consistência. |
-| P-14 | **CRM só no frontend.** Nenhuma migration, model, service ou rota de escrita do CRM até o módulo ser especificado. As integrações com o CRM ficam como contrato pendente no [spec.md](spec.md). | Regra do PRD de evolução. |
+| P-14 | **CRM só no frontend.** Nenhuma migration, model, service ou rota de escrita do CRM até o módulo ser especificado. As integrações com o CRM ficam como contrato pendente no [spec.md](spec.md). **Exceção (V-15):** as migrations do catálogo e da sincronização das permissões `crm.*`, inclusive a atribuição delas ao Administrador (V-12). | Regra do PRD de evolução. |
 | P-15 | **Na dúvida, pare e pergunte.** Nenhum agente decide sozinho algo que muda o resultado. | Critério de parada do PRD de evolução. |
 
 ---
@@ -82,8 +82,9 @@ Efeitos pós-commit → <X>Job / <X>Mail (ShouldQueue) / <X>Event → <X>Listene
 - **Flash keys:** `success`, `error` e `warning`. Nenhuma outra.
 - **Rotas:**
   - Declaradas uma a uma em `routes/tenant.php` (tenant) ou `routes/web.php` (central). Sem `Route::resource`.
-  - Nome no formato `tenant.<modulo>.<recurso>.<acao>`.
-  - Ações: `list`, `create`, `store`, `edit`, `update`, `destroy`, `show`, `restore`, `toggle-active`.
+  - Nome no formato `tenant.<modulo>.<recurso>.<acao>`. Um sub-recurso usa `tenant.<modulo>.<recurso>.<sub-recurso>.<acao>` (ex.: `tenant.documents.proposals.cost-items.store`) (V-13).
+  - Ações padrão: `list`, `create`, `store`, `edit`, `update`, `destroy`, `show`, `restore`, `toggle-active`.
+  - Uma ação fora do padrão usa um verbo em inglês, em kebab-case, como as que já existem: `pdf`, `move`, `convert`, `email`, `download`, `distribute` (V-13).
 - **Sem lógica no controller:** nenhuma consulta Eloquent direto no controller. Hoje isso acontece em `Contact::where` e `BankAccount::...`; não copie, e corrija quando a tarefa tocar o arquivo.
 
 ---
@@ -163,7 +164,7 @@ Efeitos pós-commit → <X>Job / <X>Mail (ShouldQueue) / <X>Event → <X>Listene
 
 | Regra | Detalhe |
 | --- | --- |
-| Dinheiro | `unsignedBigInteger` em **centavos** em **todas** as colunas monetárias. Hoje há `int`/`bigint`/`ubigint`; a fase R2 unifica (D-06). O nome da coluna não leva sufixo. Exibição: `MoneyHelper::format()` no PHP e `formatMoney()` no front. |
+| Dinheiro | `unsignedBigInteger` em **centavos** em **todas** as colunas monetárias. **Exceção (V-10):** os saldos de conta bancária (`bank_accounts.initial_balance` e `current_balance`) são `bigInteger` **com sinal**, porque podem ficar negativos. Hoje há `int`/`bigint`/`ubigint`; a fase R2 unifica (D-06). O nome da coluna não leva sufixo. Exibição: `MoneyHelper::format()` no PHP e `formatMoney()` no front. |
 | Percentual | `decimal(7,4)`, cast `decimal:4`. O valor é arredondado só no final: `(int) round($cents * $rate / 100)`. |
 | Datas | ISO no transporte, formato pt-BR na tela. Data vazia é `null`, nunca `0000-00-00`. |
 | Chaves | `$table->id()`. A exceção é `fee_calculations`, que usa UUID. FK com `constrained()` e `onDelete` explícito: `restrictOnDelete` para catálogos, `cascadeOnDelete` para filhos do agregado, `nullOnDelete` para vínculos opcionais. |
@@ -185,8 +186,9 @@ Efeitos pós-commit → <X>Job / <X>Mail (ShouldQueue) / <X>Event → <X>Listene
    - **O plano filtra as permissões:** nenhuma migration de tenant cria permissão "para todos".
 2. **Duas migrations por permissão nova:** uma central (o catálogo) e uma de tenant (a sincronização respeitando o plano).
 3. **Cargos:**
-   - São definidos no `RoleEnum` e gravados pelo rótulo em pt-BR.
+   - São definidos no `RolesEnum` e gravados pelo rótulo em pt-BR (V-16).
    - As permissões padrão de cada cargo são aplicadas só no provisionamento.
+   - **Exceção (V-12):** a migration de tenant que cria as permissões `crm.*` também as atribui ao cargo Administrador, quando o plano do tenant tem o módulo.
 4. **Policies:** só existem quando a regra depende do registro (`ProposalPolicy`, `DrivePolicy`, `FeeCalculationPolicy`). Usam `checkPermissionTo()`.
 5. **Form Requests:**
    - O `authorize()` retorna `true`, porque a autorização acontece na rota e na Policy.
@@ -310,7 +312,7 @@ Um documento de nível inferior nunca contradiz um superior. Se surgir uma contr
 | D-03 | 2026-10-26 | O "Billable Service" é removido. Orçamento e proposta passam a usar o catálogo `services` como está: `generates_receipt` e a descrição obrigatória são descartados. |
 | D-04 | 2026-10-26 | (Q-C1) DTOs usam o sufixo `Dto` (`RegistryFeeRequestDto`, `ItbiInputDto`). Utilitários puros usam `Helper` (`MoneyHelper`, `DocumentMaskHelper`). O `ServicesService` vira `ServiceCatalogService`. |
 | D-05 | 2026-10-26 | (Q-C2) Models ficam **sem sufixo** (`Client`, `Proposal`), no padrão do Laravel. |
-| D-06 | 2026-10-26 | (Q-C3) **Todo** dinheiro é `unsignedBigInteger` em centavos, incluindo catálogo, salário, financeiro e planos. |
+| D-06 | 2026-10-26 | (Q-C3) **Todo** dinheiro é `unsignedBigInteger` em centavos, incluindo catálogo, salário, financeiro e planos. **Revisada por V-10:** os saldos de conta bancária têm sinal. |
 | D-07 | 2026-10-26 | (Q-C8) Valores de enum, query strings e parâmetros em **inglês**, com rótulos em pt-BR no `label()`. **Revisada por V-03:** vale só para código novo; os valores atuais ficam. |
 | D-08 | 2026-10-26 | (Q-C4) Mantém o **Ziggy** (`route()`). Não haverá Wayfinder. |
 | D-09 | 2026-10-26 | (Q-C5) Os testes ficam no nível de **Service, Form Request e classes puras**. Testes HTTP só para middleware e roteamento. Não haverá teste HTTP por rota. |
@@ -330,3 +332,15 @@ Um documento de nível inferior nunca contradiz um superior. Se surgir uma contr
 | V-07 | A skill de code review passa a se chamar `laravel-code-review-senior`. |
 | V-08 | As tabelas de cobrança do SaaS ficam sem uso, fora do escopo (revisa D-11). |
 | V-09 | MUD-04: a migration cria a categoria de serviço "Documentação" e converte cada serviço cobrável em `service`, remapeando os vínculos. |
+
+### Decisões da auditoria de consistência (2026-10-27)
+
+| ID | Decisão |
+| --- | --- |
+| V-10 | Dinheiro: os valores e preços são `unsignedBigInteger`. Os saldos de conta bancária (`bank_accounts.initial_balance` e `current_balance`) ficam `bigInteger` com sinal, porque podem ficar negativos (revisa D-06). A R2 converte também os totais de pagar e receber e o valor das parcelas. |
+| V-11 | MUD-02: a conta a pagar gerada pela proposta **não tem fornecedor**. O contato passa a ser opcional em contas a pagar (spec RN-FIN-14), e nenhum fornecedor é configurado na tela Empresa. |
+| V-12 | As permissões `crm.deals.view` e `crm.pipelines.view` são atribuídas ao cargo Administrador pela própria migration de tenant, quando o plano do tenant tem o módulo. É exceção à regra de que os padrões dos cargos só valem no provisionamento (§8.3). |
+| V-13 | Rotas: além das ações padrão, valem verbos de ação em inglês e kebab-case (`pdf`, `move`, `convert`, `email`, `download`, `distribute`…) e nomes com sub-recurso (`tenant.<modulo>.<recurso>.<sub-recurso>.<acao>`). |
+| V-14 | A P-07 vale para os efeitos das operações de escrita. Um PDF gerado e devolvido numa requisição GET de leitura pode ser síncrono. |
+| V-15 | A P-14 abre exceção para as migrations do catálogo e da sincronização das permissões `crm.*` (e para a atribuição da V-12). |
+| V-16 | O enum de cargos é o `RolesEnum`, nome atual que já tem o sufixo de tipo. A renomeação para `RoleEnum` fica fora do escopo. |
