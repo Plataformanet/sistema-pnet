@@ -217,7 +217,8 @@ class ProposalTimelineService
     }
 
     /**
-     * Etapas em andamento cujo prazo de alerta (> 0) já foi atingido.
+     * Etapas em andamento cujo prazo de alerta (> 0) já foi atingido e que
+     * ainda não tiveram o alerta enviado (`overdue_alerted_at`).
      *
      * @return Collection<int, ProposalStage>
      */
@@ -225,6 +226,7 @@ class ProposalTimelineService
     {
         return $tenant->run(fn () => ProposalStage::query()
             ->inProgress()
+            ->whereNull('overdue_alerted_at')
             ->whereHas('stage', fn ($query) => $query->where('alert_deadline_hours', '>', 0))
             ->whereHas('proposal')
             ->with(['stage:id,name,alert_deadline_hours', 'proposal.creator:id,name,email', 'proposal.applicants.contact:id,name_corporatereason,email'])

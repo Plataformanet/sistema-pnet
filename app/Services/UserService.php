@@ -99,13 +99,19 @@ class UserService
         ]));
     }
 
+    /**
+     * Excluir é inativar + soft delete (RN-CORE-11): o histórico de propostas,
+     * orçamentos e Drive continua apontando para o usuário.
+     */
     public function destroy(string $id, Tenant $tenant): void
     {
         $tenant->run(function () use ($id) {
             DB::beginTransaction();
 
             try {
-                User::findOrFail($id)->delete();
+                $user = User::findOrFail($id);
+                $user->update(['status' => false]);
+                $user->delete();
                 DB::commit();
             } catch (\Throwable $th) {
                 DB::rollBack();

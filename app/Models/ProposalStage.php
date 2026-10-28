@@ -27,6 +27,7 @@ class ProposalStage extends Model
         'is_current',
         'started_at',
         'completed_at',
+        'overdue_alerted_at',
     ];
 
     protected $appends = ['status'];
@@ -42,6 +43,7 @@ class ProposalStage extends Model
             'is_current' => 'boolean',
             'started_at' => 'datetime',
             'completed_at' => 'datetime',
+            'overdue_alerted_at' => 'datetime',
         ];
     }
 

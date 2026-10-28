@@ -64,17 +64,17 @@ vendor/bin/sail npm run type-check
 
 | Status | ID | Tarefa | Spec | Dep. | Skill |
 | --- | --- | --- | --- | --- | --- |
-| ☐ | T-R2-01 | Dinheiro em `unsignedBigInteger` (produtos, serviços, salário, planos, totais de pagar e receber, valor das parcelas); saldos de conta bancária ficam `bigInteger` com sinal | D-06, V-10, spec §5 | R1 | RF |
-| ☐ | T-R2-02 | `contacts.cpf_cnpj` só com dígitos + unique (a migration normaliza e falha listando duplicados); normalizar no request e na busca | RN-CAD-01 | R1 | RF |
-| ☐ | T-R2-03 | `tenant_settings.key` unique + `SoftDeletes` no model; central `permissions.name` unique | spec §5 | R1 | RF |
-| ☐ | T-R2-04 | Usuários: `deleted_at`; excluir = inativar + soft delete | RN-CORE-11 | R1 | RF |
-| ☐ | T-R2-05 | `proposal_stages.overdue_alerted_at`; o comando de alerta não reenvia | RN-DOC-PRO-15 | R1 | RF |
-| ☐ | T-R2-06 | `drive_logs` estruturado; pastas do Drive no disco do bucket | RN-DRV-05/06 | R1 | RF |
-| ☐ | T-R2-07 | Remover `bank_account_out`; bloquear a exclusão de conta bancária com lançamentos | RN-FIN-02 | R1 | RF |
-| ☐ | T-R2-08 | `services.sku` unique; validação `min:0` com mensagem nos valores do catálogo | RN-CAT-01 | R1 | RF |
-| ☐ | T-R2-09 | Permissões: remover `documents.contracts.*` (`sales.*` fica, para o módulo Vendas futuro); criar `crm.deals.view` e `crm.pipelines.view` (par central + tenant), atribuídas ao Administrador quando o plano tem o módulo; rota do CRM com a permissão | spec §4, RN-CRM-02, RN-CORE-07, V-12 | R1 | BE |
-| ☐ | T-R2-10 | Sidebar: grupo CRM com `crm.deals.view`; o grupo "Vendas" fica como está | spec §4 | 09 | FE |
-| ☐ | T-R2-11 | Aceite R2: testes novos e afetados verdes; migrations aplicadas em todos os tenants | — | 01..10 | QA |
+| ☑ | T-R2-01 | Dinheiro em `unsignedBigInteger` (produtos, serviços, salário, planos, totais de pagar e receber, valor das parcelas); saldos de conta bancária ficam `bigInteger` com sinal | D-06, V-10, spec §5 | R1 | RF |
+| ☑ | T-R2-02 | `contacts.cpf_cnpj` só com dígitos + unique (a migration normaliza e falha listando duplicados); normalizar no request e na busca | RN-CAD-01 | R1 | RF |
+| ☑ | T-R2-03 | `tenant_settings.key` unique + `SoftDeletes` no model; central `permissions.name` unique | spec §5 | R1 | RF |
+| ☑ | T-R2-04 | Usuários: `deleted_at`; excluir = inativar + soft delete | RN-CORE-11 | R1 | RF |
+| ☑ | T-R2-05 | `proposal_stages.overdue_alerted_at`; o comando de alerta não reenvia | RN-DOC-PRO-15 | R1 | RF |
+| ☑ | T-R2-06 | `drive_logs` estruturado; pastas do Drive no disco do bucket | RN-DRV-05/06 | R1 | RF |
+| ☑ | T-R2-07 | Remover `bank_account_out`; bloquear a exclusão de conta bancária com lançamentos | RN-FIN-02 | R1 | RF |
+| ☑ | T-R2-08 | `services.sku` unique; validação `min:0` com mensagem nos valores do catálogo | RN-CAT-01 | R1 | RF |
+| ☑ | T-R2-09 | Permissões: remover `documents.contracts.*` (`sales.*` fica, para o módulo Vendas futuro); criar `crm.deals.view` e `crm.pipelines.view` (par central + tenant), atribuídas ao Administrador quando o plano tem o módulo; rota do CRM com a permissão | spec §4, RN-CRM-02, RN-CORE-07, V-12 | R1 | BE |
+| ☑ | T-R2-10 | Sidebar: grupo CRM com `crm.deals.view`; o grupo "Vendas" fica como está | spec §4 | 09 | FE |
+| ☑ | T-R2-11 | Aceite R2: testes novos e afetados verdes; migrations aplicadas em todos os tenants | — | 01..10 | QA |
 
 ## R3 — MUD-04: serviços do catálogo no orçamento e na proposta
 

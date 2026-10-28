@@ -18,6 +18,16 @@ class StoreContactRequest extends FormRequest
     }
 
     /**
+     * O documento chega com ou sem máscara e segue só com dígitos (RN-CAD-01).
+     */
+    protected function prepareForValidation(): void
+    {
+        if (is_string($this->input('cpf_cnpj'))) {
+            $this->merge(['cpf_cnpj' => preg_replace('/\D/', '', $this->input('cpf_cnpj'))]);
+        }
+    }
+
+    /**
      * Get the validation rules that apply to the request.
      *
      * @return array<string, ValidationRule|array<mixed>|string>
@@ -32,6 +42,7 @@ class StoreContactRequest extends FormRequest
                 'required',
                 'string',
                 Rule::when($this->input('type') === 'PF', [new CpfRule]),
+                Rule::when($this->route('id') !== null, [Rule::unique('contacts', 'cpf_cnpj')->ignore($this->route('id'))]),
             ],
             'email' => 'required|email|max:255',
             'phone' => 'required|string',
@@ -62,6 +73,7 @@ class StoreContactRequest extends FormRequest
             'name_corporatereason.max' => 'O nome ou razão social deve ter no máximo 255 caracteres.',
             'fantasy_name.max' => 'O nome fantasia deve ter no máximo 255 caracteres.',
             'cpf_cnpj.required' => 'O CPF/CNPJ é obrigatório.',
+            'cpf_cnpj.unique' => 'Este CPF/CNPJ já pertence a outro contato.',
             'email.required' => 'O e-mail é obrigatório.',
             'email.email' => 'O e-mail deve ser um endereço de e-mail válido.',
             'email.max' => 'O e-mail deve ter no máximo 255 caracteres.',

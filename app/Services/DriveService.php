@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Enums\DocumentTypeDriveEnum;
+use App\Enums\DriveLogActionEnum;
 use App\Enums\PermissionTypeDriveEnum;
 use App\Exceptions\UploadDocumentException;
 use App\Http\Requests\ForceDeleteRequest;
@@ -97,6 +98,8 @@ class DriveService
                         'modified_at' => $modifiedAt,
                     ]);
 
+                    $this->driveLogService->record(DriveLogActionEnum::UPLOAD, $drive);
+
                     try {
                         $disk->putFileAs(
                             $this->basePath().'/'.$folder->getPath(),
@@ -133,6 +136,8 @@ class DriveService
             if (! $disk->exists($drive->document_path)) {
                 abort(Response::HTTP_NOT_FOUND, 'Documento não encontrado no armazenamento.');
             }
+
+            $this->driveLogService->record(DriveLogActionEnum::DOWNLOAD, $drive);
 
             if (config('bucket.signed_urls') && $disk->providesTemporaryUrls()) {
                 return redirect()->away(
@@ -222,6 +227,8 @@ class DriveService
                 $drive->save();
 
                 $drive->delete();
+
+                $this->driveLogService->record(DriveLogActionEnum::DELETE, $drive);
 
                 return $drive;
             });
@@ -403,6 +410,8 @@ class DriveService
                     // Restaura a própria pasta e toda a sua subárvore (subpastas + arquivos).
                     $this->restoreFolderTree($folder);
 
+                    $this->driveLogService->record(DriveLogActionEnum::RESTORE, null, ['folder_id' => $folder->id, 'name' => $folder->name]);
+
                     return $folder;
                 }
 
@@ -411,6 +420,8 @@ class DriveService
                 // invisível dentro de uma pasta que continua na lixeira.
                 $drive = Drive::onlyTrashed()->findOrFail($id);
                 $drive->restore();
+
+                $this->driveLogService->record(DriveLogActionEnum::RESTORE, $drive);
 
                 $folder = DriveFolder::withTrashed()->find($drive->drive_folder_id);
 
@@ -490,7 +501,7 @@ class DriveService
                 $documentPath = $drive->document_path;
 
                 DB::transaction(function () use ($drive) {
-                    $this->driveLogService->store($drive->toArray());
+                    $this->driveLogService->record(DriveLogActionEnum::PERMANENT_DELETE, $drive);
 
                     $drive->forceDelete();
                 });
@@ -508,7 +519,7 @@ class DriveService
                     $firstDrive = $drive->drives()->withTrashed()->first();
 
                     if ($firstDrive) {
-                        $this->driveLogService->store($firstDrive->toArray());
+                        $this->driveLogService->record(DriveLogActionEnum::PERMANENT_DELETE, $firstDrive);
                     }
 
                     $drive->forceDelete();
@@ -539,6 +550,8 @@ class DriveService
                     $drive->save();
 
                     $drive->delete();
+
+                    $this->driveLogService->record(DriveLogActionEnum::DELETE, $drive);
                 }
 
                 return $drive;
@@ -565,7 +578,7 @@ class DriveService
                     $documentPath = $drive->document_path;
 
                     DB::transaction(function () use ($drive) {
-                        $this->driveLogService->store($drive->toArray());
+                        $this->driveLogService->record(DriveLogActionEnum::PERMANENT_DELETE, $drive);
 
                         $drive->forceDelete();
                     });
@@ -583,7 +596,7 @@ class DriveService
                         $firstDrive = $drive->drives()->withTrashed()->first();
 
                         if ($firstDrive) {
-                            $this->driveLogService->store($firstDrive->toArray());
+                            $this->driveLogService->record(DriveLogActionEnum::PERMANENT_DELETE, $firstDrive);
                         }
 
                         $drive->forceDelete();
@@ -845,6 +858,8 @@ class DriveService
                             'modified_at' => now(),
                         ]);
 
+                        $this->driveLogService->record(DriveLogActionEnum::MOVE, $drive, ['from' => $oldPath, 'to' => $newPath]);
+
                     } elseif ($item['type'] === 'folder') {
                         $folder = DriveFolder::findOrFail($item['id']);
 
@@ -891,6 +906,13 @@ class DriveService
 
                         // Atualiza os caminhos no banco de dados recursivamente
                         $this->collectPhysicalFolderMoves($folder, $oldFolderPath, $newFolderPath, $user->id);
+
+                        $this->driveLogService->record(DriveLogActionEnum::MOVE, null, [
+                            'folder_id' => $folder->id,
+                            'name' => $folder->name,
+                            'from' => $oldPhysicalFolderPath,
+                            'to' => $newPhysicalFolderPath,
+                        ]);
                     }
                 }
             });

@@ -23,7 +23,6 @@ class AccountPayable extends Model
         'payment_method',
         'payment_condition',
         'total_installments',
-        'bank_account_out',
         'observations',
         'receipt',
     ];
@@ -38,7 +37,6 @@ class AccountPayable extends Model
         return [
             'total' => 'integer',
             'total_installments' => 'integer',
-            'bank_account_out' => 'integer',
             'payment_method' => FinancialPaymentMethodEnum::class,
         ];
     }

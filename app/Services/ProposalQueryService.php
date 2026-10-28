@@ -32,13 +32,6 @@ class ProposalQueryService
      */
     public const PRINT_LIMIT = 500;
 
-    /**
-     * `contacts.cpf_cnpj` só com dígitos. O módulo de Cadastros grava o
-     * documento formatado (529.982.247-25) e as propostas gravam só os
-     * dígitos, então a busca compara as duas formas pelos dígitos.
-     */
-    private const DIGITS_ONLY_CPF_CNPJ = "REPLACE(REPLACE(REPLACE(cpf_cnpj, '.', ''), '-', ''), '/', '')";
-
     public function __construct(
         protected ProposalDocumentService $proposalDocumentService,
         protected BankService $bankService,
@@ -248,7 +241,7 @@ class ProposalQueryService
                     $query->where('name_corporatereason', 'like', '%'.$search.'%');
 
                     if ($digits !== '') {
-                        $query->orWhereRaw(self::DIGITS_ONLY_CPF_CNPJ.' like ?', ['%'.$digits.'%']);
+                        $query->orWhere('cpf_cnpj', 'like', '%'.$digits.'%');
                     }
                 });
             }));

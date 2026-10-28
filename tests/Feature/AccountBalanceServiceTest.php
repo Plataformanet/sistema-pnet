@@ -82,7 +82,6 @@ function balancePayload(array $overrides = []): array
         'payment_method' => 'pix',
         'payment_condition' => '3',
         'total_installments' => 3,
-        'bank_account_out' => 1,
         'value' => 30000,
         'due_date' => '2026-06-12',
         'status' => AccountsEnum::OPEN->value,

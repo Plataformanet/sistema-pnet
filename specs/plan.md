@@ -321,3 +321,4 @@ Cada item é uma migration **nova**, de tenant ou central conforme o caso, mais 
 | Q-P-06 | (2026-10-27) A migração da MUD-04 é feita em três migrations (estrutura, dados e remoção), porque o DDL faz commit implícito no MySQL; só a de dados usa transação, e todas são idempotentes |
 | Q-P-07 | (2026-10-27) A R3 depende da T-R2-01 e da T-R2-08 |
 | Q-P-08 | (2026-10-27) Os Services novos ficam em `app/Services/`, sem subpasta (constitution §6) |
+| Q-P-09 | (2026-10-28) As permissões `crm.deals.view` e `crm.pipelines.view` ficam num módulo central novo `crm` (`is_core`), ligado aos planos que já têm módulos core e aos tenants desses planos pela própria migration central. O Administrador as recebe pela migration de tenant (V-12). As rotas `tenant.crm.kanban` e `tenant.crm.list` exigem `crm.deals.view`; `crm.pipelines.view` só controla o menu e ainda não tem rota |

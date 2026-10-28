@@ -5,6 +5,7 @@ use App\Enums\ProposalStatusEnum;
 use App\Exceptions\ProposalTimelineException;
 use App\Http\Requests\CompleteProposalStageRequest;
 use App\Mail\ProposalStageCompletedMail;
+use App\Mail\ProposalStageOverdueMail;
 use App\Mail\ProposalStagesFinishedMail;
 use App\Mail\ProposalTrackingStartedMail;
 use App\Models\Applicant;
@@ -237,6 +238,47 @@ test('overdueStages lista etapas em andamento que atingiram o prazo de alerta', 
     });
 
     expect($this->service->overdueStages($this->tenant)->pluck('proposal_id'))->toContain($this->proposal->id);
+});
+
+/**
+ * Inicia o acompanhamento e deixa a etapa atual em andamento há 30h, com alerta de 24h.
+ */
+function startOverdueStage(): ProposalStage
+{
+    test()->service->start((string) test()->proposal->id, test()->tenant);
+
+    return test()->tenant->run(function () {
+        $current = test()->proposal->currentStage()->with('stage')->first();
+        $current->stage->update(['alert_deadline_hours' => 24, 'completion_deadline_hours' => 48]);
+        $current->update(['started_at' => now()->subHours(30)]);
+
+        return $current;
+    });
+}
+
+test('o comando de alerta envia uma vez e marca overdue_alerted_at', function () {
+    $stage = startOverdueStage();
+    Mail::fake();
+
+    $this->artisan('proposals:alert-overdue-stages')->assertSuccessful();
+
+    $queued = Mail::queued(ProposalStageOverdueMail::class)->count();
+
+    expect($queued)->toBeGreaterThan(0)
+        ->and($this->tenant->run(fn () => $stage->fresh()->overdue_alerted_at))->not->toBeNull();
+});
+
+test('o comando de alerta não reenvia a etapa já avisada (RN-DOC-PRO-15)', function () {
+    startOverdueStage();
+    Mail::fake();
+
+    $this->artisan('proposals:alert-overdue-stages')->assertSuccessful();
+    $afterFirstRun = Mail::queued(ProposalStageOverdueMail::class)->count();
+
+    $this->artisan('proposals:alert-overdue-stages')->assertSuccessful();
+
+    expect(Mail::queued(ProposalStageOverdueMail::class)->count())->toBe($afterFirstRun)
+        ->and($this->service->overdueStages($this->tenant))->toBeEmpty();
 });
 
 test('a conclusão exige os campos obrigatórios configurados na etapa', function () {

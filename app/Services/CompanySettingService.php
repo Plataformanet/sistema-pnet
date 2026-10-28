@@ -82,15 +82,12 @@ class CompanySettingService
                 foreach ($fieldsToSave as $field => $value) {
                     $key = "company.{$field}";
 
-                    TenantSetting::updateOrCreate(
-                        ['key' => $key],
-                        [
-                            'value' => (string) ($value ?? ''),
-                            'module' => 'company',
-                            'type' => 'string',
-                            'user_id' => auth()->id(),
-                        ]
-                    );
+                    TenantSetting::firstOrNewByKey($key)->fill([
+                        'value' => (string) ($value ?? ''),
+                        'module' => 'company',
+                        'type' => 'string',
+                        'user_id' => auth()->id(),
+                    ])->save();
 
                     $this->forgetCache("settings.{$key}");
                 }
@@ -114,15 +111,12 @@ class CompanySettingService
 
                     $newLogoPath = $logoFile->store('company', config('bucket.disk'));
 
-                    TenantSetting::updateOrCreate(
-                        ['key' => 'company.logo_path'],
-                        [
-                            'value' => $newLogoPath,
-                            'module' => 'company',
-                            'type' => 'string',
-                            'user_id' => auth()->id(),
-                        ]
-                    );
+                    TenantSetting::firstOrNewByKey('company.logo_path')->fill([
+                        'value' => $newLogoPath,
+                        'module' => 'company',
+                        'type' => 'string',
+                        'user_id' => auth()->id(),
+                    ])->save();
 
                     $this->forgetCache('settings.company.logo_path');
                 }

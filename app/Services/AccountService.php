@@ -742,10 +742,15 @@ abstract class AccountService
         }
 
         if ($search) {
-            $query->where(function ($q) use ($search) {
+            $digits = preg_replace('/\D/', '', $search);
+
+            $query->where(function ($q) use ($search, $digits) {
                 $q->where('name_corporatereason', 'like', "%{$search}%")
-                    ->orWhere('fantasy_name', 'like', "%{$search}%")
-                    ->orWhere('cpf_cnpj', 'like', "%{$search}%");
+                    ->orWhere('fantasy_name', 'like', "%{$search}%");
+
+                if ($digits !== '') {
+                    $q->orWhere('cpf_cnpj', 'like', "%{$digits}%");
+                }
             });
         }
 

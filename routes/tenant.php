@@ -100,8 +100,8 @@ Route::middleware([
             Route::get('/dashboard', [TenantController::class, 'dashboard'])->name('tenant.dashboard');
 
             // CRM (Prototipo Visual)
-            Route::get('/crm/kanban', [TenantCrmController::class, 'kanban'])->name('tenant.crm.kanban');
-            Route::get('/crm/list', [TenantCrmController::class, 'list'])->name('tenant.crm.list');
+            Route::get('/crm/kanban', [TenantCrmController::class, 'kanban'])->name('tenant.crm.kanban')->middleware('permission:crm.deals.view');
+            Route::get('/crm/list', [TenantCrmController::class, 'list'])->name('tenant.crm.list')->middleware('permission:crm.deals.view');
         });
 
         // Clients

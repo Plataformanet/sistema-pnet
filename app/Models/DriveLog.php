@@ -2,12 +2,18 @@
 
 namespace App\Models;
 
+use App\Enums\DriveLogActionEnum;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class DriveLog extends Model
 {
     protected $fillable = [
-        'log',
+        'user_id',
+        'drive_id',
+        'action',
+        'ip_address',
+        'meta',
     ];
 
     /**
@@ -16,7 +22,13 @@ class DriveLog extends Model
     protected function casts(): array
     {
         return [
-            'log' => 'array',
+            'action' => DriveLogActionEnum::class,
+            'meta' => 'array',
         ];
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class)->withTrashed();
     }
 }

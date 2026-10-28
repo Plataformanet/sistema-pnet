@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exceptions\BankAccountHasFinancialEntriesException;
 use App\Http\Requests\StoreBankAccountRequest;
 use App\Http\Requests\UpdateBankAccountRequest;
 use App\Services\BankAccountService;
@@ -85,6 +86,8 @@ class TenantBankAccountController extends Controller
             $this->bankAccountService->delete($id, tenant());
 
             return redirect()->route('tenant.finance.bank-accounts.list')->with('success', 'Conta bancária excluída com sucesso!');
+        } catch (BankAccountHasFinancialEntriesException $th) {
+            return redirect()->back()->with('warning', $th->getMessage());
         } catch (\Throwable $th) {
             Log::error('Erro ao excluir conta bancária: '.$th->getMessage());
 

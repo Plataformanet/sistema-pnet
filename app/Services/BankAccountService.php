@@ -2,12 +2,9 @@
 
 namespace App\Services;
 
-use App\Models\AccountPayable;
-use App\Models\AccountReceivable;
+use App\Exceptions\BankAccountHasFinancialEntriesException;
 use App\Models\BankAccount;
-use App\Models\Installment;
 use App\Models\Tenant;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -70,20 +67,22 @@ class BankAccountService
         });
     }
 
+    /**
+     * Exclui a conta bancária (soft delete). Com lançamentos ativos a exclusão é
+     * bloqueada: os saldos dependem das baixas e estornos deles (RN-FIN-02).
+     *
+     * @throws BankAccountHasFinancialEntriesException
+     */
     public function delete(string $id, Tenant $tenant)
     {
         return $tenant->run(function () use ($id) {
             return DB::transaction(function () use ($id) {
                 $bankAccount = BankAccount::findOrFail($id);
 
-                Installment::whereHasMorph(
-                    'installmentable',
-                    [AccountPayable::class, AccountReceivable::class],
-                    fn (Builder $query) => $query->where('bank_account_id', $bankAccount->id),
-                )->delete();
+                if ($bankAccount->accountsPayable()->exists() || $bankAccount->accountsReceivable()->exists()) {
+                    throw new BankAccountHasFinancialEntriesException;
+                }
 
-                $bankAccount->accountsPayable()->delete();
-                $bankAccount->accountsReceivable()->delete();
                 $bankAccount->delete();
 
                 return $bankAccount;

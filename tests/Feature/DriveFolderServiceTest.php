@@ -15,6 +15,7 @@ beforeEach(function () {
 
     $this->actingAs($this->user);
 
+    config(['bucket.disk' => 'public']);
     Storage::fake('public');
 });
 
@@ -43,6 +44,16 @@ test('store cria a pasta e o respectivo drive da pasta', function () {
             ->and((int) $drive->document_size)->toBe(0)
             ->and($drive->user_id)->toBe($this->user->id);
     });
+});
+
+test('store cria o diretório no disco do bucket (RN-DRV-06)', function () {
+    config(['bucket.disk' => 'outro']);
+    Storage::fake('outro');
+
+    storeFolder(['name' => 'NoBucket']);
+
+    Storage::disk('outro')->assertExists('drive/NoBucket');
+    Storage::disk('public')->assertMissing('drive/NoBucket');
 });
 
 test('store incrementa o nome quando já existe pasta com o mesmo nome no mesmo nível', function () {

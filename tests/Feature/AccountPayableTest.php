@@ -65,7 +65,6 @@ function payablePayload(array $overrides = []): array
         'payment_method' => 'pix',
         'payment_condition' => 'a-vista',
         'total_installments' => 1,
-        'bank_account_out' => 1,
         'value' => 50000,
         'due_date' => '2026-06-12',
         'status' => AccountsEnum::OPEN->value,

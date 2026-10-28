@@ -120,7 +120,7 @@ class Drive extends Model
 
     public function user(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class)->withTrashed();
     }
 
     public function driveFolder(): BelongsTo
@@ -138,7 +138,7 @@ class Drive extends Model
      */
     public function createdBy(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'user_id');
+        return $this->belongsTo(User::class, 'user_id')->withTrashed();
     }
 
     /**
@@ -146,6 +146,6 @@ class Drive extends Model
      */
     public function modifiedBy(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'modified_by');
+        return $this->belongsTo(User::class, 'modified_by')->withTrashed();
     }
 }

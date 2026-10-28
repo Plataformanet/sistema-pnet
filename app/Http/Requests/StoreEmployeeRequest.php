@@ -17,7 +17,7 @@ class StoreEmployeeRequest extends StoreContactRequest
             'rg' => 'required|string',
             'birth_date' => 'required|date',
             'position' => 'required|string',
-            'salary' => 'required|numeric',
+            'salary' => 'required|integer|min:0',
             'hire_date' => 'required|date',
         ]);
     }
@@ -34,6 +34,8 @@ class StoreEmployeeRequest extends StoreContactRequest
             'birth_date.required' => 'A data de nascimento é obrigatória.',
             'position.required' => 'O cargo é obrigatório.',
             'salary.required' => 'O salário é obrigatório.',
+            'salary.integer' => 'O salário deve ser um valor inteiro em centavos.',
+            'salary.min' => 'O salário não pode ser inferior a zero.',
             'hire_date.required' => 'A data de admissão é obrigatória.',
         ]);
     }

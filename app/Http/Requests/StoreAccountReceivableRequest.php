@@ -38,7 +38,6 @@ class StoreAccountReceivableRequest extends FormRequest
             'payment_method' => ['required', Rule::enum(FinancialPaymentMethodEnum::class)],
             'payment_condition' => ['required', 'string', Rule::in(self::paymentConditions())],
             'total_installments' => ['required', 'integer'],
-            'bank_account_out' => ['required', 'integer'],
             'observations' => ['nullable', 'string'],
             'receipt' => ['nullable', 'string'],
 
@@ -115,8 +114,6 @@ class StoreAccountReceivableRequest extends FormRequest
             'payment_condition.in' => 'A condição de pagamento selecionada é inválida.',
             'total_installments.required' => 'O total de parcelas é obrigatório.',
             'total_installments.integer' => 'O total de parcelas deve ser um valor inteiro.',
-            'bank_account_out.required' => 'A conta de saída é obrigatória.',
-            'bank_account_out.integer' => 'A conta de saída é inválida.',
             'observations.string' => 'As observações devem ser um texto válido.',
             'receipt.string' => 'O comprovante deve ser um texto válido.',
             'value.required' => 'O valor é obrigatório.',

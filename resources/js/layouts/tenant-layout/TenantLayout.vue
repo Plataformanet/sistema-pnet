@@ -59,6 +59,7 @@ const sidebarNavigation: TenantSidebarNavigation = {
         {
             title: "CRM",
             module: "",
+            permission: "crm.deals.view",
             internalOnly: true,
             url: "/crm/kanban",
             items: [

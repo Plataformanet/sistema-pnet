@@ -40,6 +40,8 @@ class AlertOverdueProposalStagesCommand extends Command
                             Mail::to($recipient[0])->queue(new ProposalStageOverdueMail($recipient[1], $proposal->number, $proposalStage->stage->name));
                             $sent++;
                         });
+
+                        $proposalStage->update(['overdue_alerted_at' => now()]);
                     });
                 });
             } catch (Throwable $exception) {

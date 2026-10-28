@@ -25,6 +25,7 @@ class Employee extends Model
     protected function casts(): array
     {
         return [
+            'salary' => 'integer',
             'active' => 'boolean',
         ];
     }

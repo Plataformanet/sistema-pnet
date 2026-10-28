@@ -23,7 +23,6 @@ class AccountReceivable extends Model
         'payment_method',
         'payment_condition',
         'total_installments',
-        'bank_account_out',
         'observations',
         'receipt',
     ];
@@ -37,7 +36,6 @@ class AccountReceivable extends Model
             'total' => 'integer',
             'payment_method' => FinancialPaymentMethodEnum::class,
             'total_installments' => 'integer',
-            'bank_account_out' => 'integer',
         ];
     }
 

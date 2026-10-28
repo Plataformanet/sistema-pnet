@@ -148,7 +148,6 @@ function createFinancialEntry(Tenant $tenant, int $contactId, ContactTypeEnum $t
             'payment_method' => 'pix',
             'payment_condition' => '1',
             'total_installments' => 1,
-            'bank_account_out' => 1,
         ]);
     });
 }

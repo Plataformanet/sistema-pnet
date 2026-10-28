@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Enums\DocumentTypeDriveEnum;
+use App\Enums\DriveLogActionEnum;
 use App\Http\Requests\StoreDriveFolderRequest;
 use App\Models\DriveFolder;
 use App\Models\Tenant;
@@ -12,12 +13,19 @@ use Illuminate\Support\Facades\Storage;
 
 class DriveFolderService
 {
+    /**
+     * Subpasta do Drive dentro do disco do tenant; a mesma do DriveService.
+     */
+    private const BASE_PATH = 'drive';
+
+    public function __construct(protected DriveLogService $driveLogService) {}
+
     public function store(StoreDriveFolderRequest $request, Tenant $tenant)
     {
         return $tenant->run(function () use ($request) {
             return DB::transaction(function () use ($request) {
 
-                $disk = Storage::disk('public');
+                $disk = Storage::disk(config('bucket.disk'));
                 $requestedName = $request->validated('name');
 
                 // Definir parent_id se houver (pasta dentro de pasta)
@@ -53,7 +61,7 @@ class DriveFolderService
                 ]);
 
                 // Criar diretório no storage
-                $folderPath = 'drive/'.$folder->getPath();
+                $folderPath = self::BASE_PATH.'/'.$folder->getPath();
 
                 if (! $disk->exists($folderPath)) {
                     $disk->makeDirectory($folderPath);
@@ -105,6 +113,8 @@ class DriveFolderService
 
                 $folder->drives()->delete();
                 $folder->delete();
+
+                $this->driveLogService->record(DriveLogActionEnum::DELETE, null, ['folder_id' => $folder->id, 'name' => $folder->name]);
 
                 return $folder;
             });

@@ -2,14 +2,20 @@
 
 use App\Enums\AccountsEnum;
 use App\Enums\ContactTypeEnum;
+use App\Exceptions\BankAccountHasFinancialEntriesException;
+use App\Http\Requests\StoreAccountPayableRequest;
+use App\Http\Requests\StoreAccountReceivableRequest;
 use App\Http\Requests\UpdateBankAccountRequest;
 use App\Models\AccountPayable;
+use App\Models\AccountReceivable;
 use App\Models\BankAccount;
 use App\Models\Contact;
 use App\Models\FinancialCategory;
+use App\Models\FinancialContact;
 use App\Models\Installment;
 use App\Services\AccountPayableService;
 use App\Services\BankAccountService;
+use Illuminate\Support\Facades\Schema;
 
 beforeEach(function () {
     $this->tenant = sharedTenant();
@@ -78,10 +84,12 @@ test('os saldos suportam valores acima do limite de integer', function () {
     expect($fresh->current_balance)->toBe(5_000_000_000);
 });
 
-test('excluir a conta bancária remove também as parcelas dos seus lançamentos', function () {
-    $bankAccount = app(BankAccountService::class)->create(bankAccountPayload(), $this->tenant);
-
-    [$contact, $category] = $this->tenant->run(fn () => [
+/**
+ * Cria uma conta a pagar de R$ 600,00 em 2 parcelas na conta bancária informada.
+ */
+function payableOnBankAccount(BankAccount $bankAccount): AccountPayable
+{
+    [$contact, $category] = test()->tenant->run(fn () => [
         Contact::create([
             'type' => ContactTypeEnum::SUPPLIER->value,
             'name_corporatereason' => 'Fornecedor',
@@ -93,7 +101,7 @@ test('excluir a conta bancária remove também as parcelas dos seus lançamentos
         FinancialCategory::create(['name' => 'Despesa', 'type' => 'despesa']),
     ]);
 
-    $account = app(AccountPayableService::class)->create([
+    return app(AccountPayableService::class)->create([
         'financial_category_id' => $category->id,
         'bank_account_id' => $bankAccount->id,
         'financial_contact_id' => $contact->id,
@@ -102,19 +110,78 @@ test('excluir a conta bancária remove também as parcelas dos seus lançamentos
         'payment_method' => 'pix',
         'payment_condition' => '2',
         'total_installments' => 2,
-        'bank_account_out' => 1,
         'value' => 30000,
         'due_date' => '2026-06-12',
         'status' => AccountsEnum::OPEN->value,
         'installments' => [],
-    ], $this->tenant);
+    ], test()->tenant);
+}
+
+test('excluir a conta bancária com lançamentos é bloqueado e nada é alterado (RN-FIN-02)', function () {
+    $bankAccount = app(BankAccountService::class)->create(bankAccountPayload(), $this->tenant);
+    $account = payableOnBankAccount($bankAccount);
+
+    expect(fn () => app(BankAccountService::class)->delete((string) $bankAccount->id, $this->tenant))
+        ->toThrow(BankAccountHasFinancialEntriesException::class, 'existem lançamentos financeiros vinculados');
+
+    $this->tenant->run(function () use ($bankAccount, $account) {
+        expect(BankAccount::find($bankAccount->id))->not->toBeNull()
+            ->and(AccountPayable::find($account->id))->not->toBeNull()
+            ->and(Installment::where('installmentable_type', AccountPayable::class)
+                ->where('installmentable_id', $account->id)
+                ->count())->toBeGreaterThan(0);
+    });
+});
+
+test('excluir a conta bancária sem lançamentos faz soft delete', function () {
+    $bankAccount = app(BankAccountService::class)->create(bankAccountPayload(), $this->tenant);
 
     app(BankAccountService::class)->delete((string) $bankAccount->id, $this->tenant);
 
-    $this->tenant->run(function () use ($account) {
-        expect(AccountPayable::find($account->id))->toBeNull()
-            ->and(Installment::where('installmentable_type', AccountPayable::class)
-                ->where('installmentable_id', $account->id)
-                ->count())->toBe(0);
+    $this->tenant->run(fn () => expect(BankAccount::find($bankAccount->id))->toBeNull()
+        ->and(BankAccount::withTrashed()->find($bankAccount->id))->not->toBeNull());
+});
+
+test('lançamentos já excluídos não bloqueiam a exclusão da conta bancária', function () {
+    $bankAccount = app(BankAccountService::class)->create(bankAccountPayload(), $this->tenant);
+    $account = payableOnBankAccount($bankAccount);
+
+    $this->tenant->run(fn () => $account->delete());
+
+    app(BankAccountService::class)->delete((string) $bankAccount->id, $this->tenant);
+
+    $this->tenant->run(fn () => expect(BankAccount::find($bankAccount->id))->toBeNull());
+});
+
+test('lançamentos a receber também bloqueiam a exclusão da conta bancária', function () {
+    $bankAccount = app(BankAccountService::class)->create(bankAccountPayload(), $this->tenant);
+
+    $this->tenant->run(fn () => AccountReceivable::create([
+        'financial_category_id' => FinancialCategory::create(['name' => 'Receita', 'type' => 'receita'])->id,
+        'bank_account_id' => $bankAccount->id,
+        'financial_contact_id' => FinancialContact::create([
+            'contact_id' => Contact::factory()->create()->id,
+            'type' => ContactTypeEnum::CLIENT->value,
+        ])->id,
+        'description' => 'Honorários',
+        'total' => 10000,
+        'payment_method' => 'pix',
+        'payment_condition' => '1',
+        'total_installments' => 1,
+    ]));
+
+    expect(fn () => app(BankAccountService::class)->delete((string) $bankAccount->id, $this->tenant))
+        ->toThrow(BankAccountHasFinancialEntriesException::class);
+});
+
+test('os requests de contas a pagar e a receber não pedem mais bank_account_out', function () {
+    expect((new StoreAccountPayableRequest)->rules())->not->toHaveKey('bank_account_out')
+        ->and((new StoreAccountReceivableRequest)->rules())->not->toHaveKey('bank_account_out');
+});
+
+test('as tabelas de contas não têm mais a coluna bank_account_out', function () {
+    $this->tenant->run(function () {
+        expect(Schema::hasColumn('account_payables', 'bank_account_out'))->toBeFalse()
+            ->and(Schema::hasColumn('account_receivables', 'bank_account_out'))->toBeFalse();
     });
 });

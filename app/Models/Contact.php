@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\ContactTypeEnum;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -20,6 +21,19 @@ class Contact extends Model
         'phone',
         'cell_phone',
     ];
+
+    /**
+     * O documento é sempre gravado só com dígitos (RN-CAD-01), qualquer que
+     * seja a origem: cadastro, proposta ou factory.
+     *
+     * @return Attribute<string|null, string|null>
+     */
+    protected function cpfCnpj(): Attribute
+    {
+        return Attribute::set(
+            fn (?string $value): ?string => $value === null ? null : (string) preg_replace('/\D/', '', $value)
+        );
+    }
 
     public function address()
     {

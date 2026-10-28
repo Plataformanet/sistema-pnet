@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\SettingTypeEnum;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 
 /**
@@ -19,6 +20,8 @@ use Illuminate\Support\Carbon;
  */
 class TenantSetting extends Model
 {
+    use SoftDeletes;
+
     // Não usa created_at
     const CREATED_AT = null;
 
@@ -42,6 +45,19 @@ class TenantSetting extends Model
             'is_public' => 'boolean',
             'updated_at' => 'datetime',
         ];
+    }
+
+    /**
+     * Busca a configuração pela chave ou prepara uma nova. Como `key` é única
+     * mesmo entre as excluídas (soft delete), uma configuração excluída é
+     * reaproveitada e volta a valer ao ser salva.
+     */
+    public static function firstOrNewByKey(string $key): static
+    {
+        $setting = static::withTrashed()->firstOrNew(['key' => $key]);
+        $setting->deleted_at = null;
+
+        return $setting;
     }
 
     /**

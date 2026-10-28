@@ -175,12 +175,12 @@ class Proposal extends Model
 
     public function creator(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'creator_id');
+        return $this->belongsTo(User::class, 'creator_id')->withTrashed();
     }
 
     public function analyst(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'analyst_id');
+        return $this->belongsTo(User::class, 'analyst_id')->withTrashed();
     }
 
     public function bank(): BelongsTo

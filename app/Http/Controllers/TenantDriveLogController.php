@@ -14,13 +14,7 @@ class TenantDriveLogController extends Controller
      */
     public function __invoke()
     {
-        $logs = [];
-        $logsAll = $this->driveLogService->findAll(tenant());
-
-        foreach ($logsAll as $log) {
-            // O cast 'log' => 'array' no model já retorna o array desserializado
-            $logs[] = $log->log;
-        }
+        $logs = $this->driveLogService->permanentDeletions(tenant());
 
         return Inertia::render('tenant/drive/logs/List', [
             'logs' => $logs,

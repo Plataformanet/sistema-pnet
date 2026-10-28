@@ -288,3 +288,28 @@ test('destroy remove o usuário', function () {
 
     $this->tenant->run(fn () => expect(User::find($user->id))->toBeNull());
 });
+
+test('destroy inativa o usuário e faz soft delete, preservando o registro', function () {
+    $user = app(UserService::class)->store(userPayload(), $this->tenant);
+
+    app(UserService::class)->destroy((string) $user->id, $this->tenant);
+
+    $this->tenant->run(function () use ($user) {
+        $deleted = User::withTrashed()->find($user->id);
+
+        expect($deleted)->not->toBeNull()
+            ->and($deleted->trashed())->toBeTrue()
+            ->and($deleted->status)->toBeFalse();
+    });
+});
+
+test('o usuário excluído sai da listagem mas segue como autor da proposta', function () {
+    $user = app(UserService::class)->store(userPayload(), $this->tenant);
+    $proposal = createProposal($this->tenant, ['creator_id' => $user->id]);
+
+    app(UserService::class)->destroy((string) $user->id, $this->tenant);
+
+    expect(collect(app(UserService::class)->findAll($this->tenant))->firstWhere('id', $user->id))->toBeNull();
+
+    $this->tenant->run(fn () => expect($proposal->fresh()->creator?->id)->toBe($user->id));
+});

@@ -27,7 +27,8 @@ class SellerService
     {
         return $tenant->run(function () use ($data, $creator, $tenant) {
             $document = preg_replace('/\D/', '', (string) $data['document']);
-            $contact = $this->contactService->getContactByCpfCnpj($document, $tenant);
+            $contact = $this->contactService->getContactByCpfCnpj($document, $tenant)
+                ?? $this->contactService->restoreByDocument($document);
 
             $seller = $contact?->seller()->withTrashed()->first();
 

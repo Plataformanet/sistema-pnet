@@ -35,7 +35,8 @@ class ApplicantService
     {
         return $tenant->run(function () use ($data, $tenant) {
             $cpf = preg_replace('/\D/', '', (string) $data['cpf']);
-            $contact = $this->contactService->getContactByCpfCnpj($cpf, $tenant);
+            $contact = $this->contactService->getContactByCpfCnpj($cpf, $tenant)
+                ?? $this->contactService->restoreByDocument($cpf);
 
             $applicant = $contact?->applicant()->withTrashed()->first();
 
