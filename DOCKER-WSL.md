@@ -123,9 +123,14 @@ sail artisan key:generate
 ```
 
 ### Passo 3.7. Executar as Migrações e Seeders
+Crie a tabela sessions:
+```bash
+sail artisan migrate:fresh
+```
+
 Crie as tabelas no banco de dados MySQL e insira os dados iniciais:
 ```bash
-sail artisan migrate --seed
+sail artisan migrate --path=database/migrations/central --seed
 ```
 
 > [!IMPORTANT]
@@ -134,7 +139,6 @@ sail artisan migrate --seed
 > ```bash
 > docker compose exec mysql mysql -u root -ppassword -e "GRANT ALL PRIVILEGES ON *.* TO 'sail'@'%'; FLUSH PRIVILEGES;"
 > ```
-> *(Alternativamente, caso já tenha configurado o alias do Sail, você pode rodar: `sail mysql -u root -ppassword -e "GRANT ALL PRIVILEGES ON *.* TO 'sail'@'%'; FLUSH PRIVILEGES;"`)*
 
 ### Passo 3.8. Garantir a Existência do Bucket S3 no MinIO
 Esta aplicação utiliza o MinIO como serviço local compatível com S3. Execute o comando customizado para criar o bucket configurado:
