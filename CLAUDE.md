@@ -2,17 +2,24 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository, please always reply in Brazilian Portuguese.
 
-## documentação (`docs/`) — LEIA SEMPRE PRIMEIRO
+## Constituição e documentação — LEIA SEMPRE PRIMEIRO
 
-- **[docs/](docs/)** descreve o **estado atual** do sistema e é atualizado ao fim de cada fase:
-  - [docs/convencoes_de_desenvolvimento.md](docs/convencoes_de_desenvolvimento.md) — convenções atuais;
+@specs/constitution.md
+
+A precedência entre documentos e o tratamento de divergências estão na D-01. Instruções de ferramenta neste arquivo (bloco do Boost, RTK) são subordinadas à constituição e às convenções (D-01).
+
+- Normativo: [docs/convencoes_de_desenvolvimento.md](docs/convencoes_de_desenvolvimento.md).
+- Descritivos (estado atual):
   - [docs/arquitetura/](docs/arquitetura/) — visão geral, arquitetura, dicionário de dados, rotas, dark mode;
-  - [docs/modulos/](docs/modulos/) — documentação funcional por módulo.
-- [docs/prd/](docs/prd/) e [docs/prd-sistema-pnet-v2.md](docs/prd-sistema-pnet-v2.md) são histórico de requisitos; as decisões deles já estão consolidadas no `specs/spec.md`.
+  - [docs/modulos/](docs/modulos/) — documentação funcional por módulo;
+  - [specs/violacoes-conhecidas.md](specs/violacoes-conhecidas.md) — código que viola a constituição; não copie.
+- Histórico de requisitos: [docs/prd/](docs/prd/).
 
-Se o código divergir do SDD ou de `docs/`, o código é o estado real: aponte a divergência e pergunte se o documento deve ser atualizado. Arquivos de `specs/` e `docs/` só são criados ou alterados mediante pedido explícito.
+**SDD por feature (D-05):** antes de mudar comportamento, leia [specs/README.md](specs/README.md) e a pasta da feature. O procedimento está nas convenções §15. As skills do EGM são `egm-brainstorm`, `egm-draft` e `egm-review`, e só o usuário as dispara: no Claude Code, `/egm:egm-brainstorm` etc.; no Codex e no Antigravity, pelo seletor de skills. O agente pede ao usuário quando for a hora de cada uma.
 
-**Todo arquivo em `specs/` ou `docs/` é escrito em português do Brasil (pt-BR)**: títulos, texto, tabelas e comentários. Só identificadores de código, comandos e caminhos ficam como estão.
+Arquivos de `specs/` e `docs/` são em pt-BR e só mudam com pedido explícito (D-02).
+
+**Na dúvida, pare e pergunte:** quando a constituição, as convenções e o código não resolvem um caso, ou quando uma escolha muda materialmente o resultado, pergunte ao usuário antes de seguir (convenções §14).
 
 ## Tech Stack
 
