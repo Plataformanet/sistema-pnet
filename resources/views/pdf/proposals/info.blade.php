@@ -45,7 +45,7 @@
         @foreach ($proposal->applicants as $applicant)
             <tr>
                 <td>{{ $applicant->contact->name_corporatereason }}</td>
-                <td>{{ $showApplicantContacts ? $applicant->contact->cpf_cnpj : DocumentMaskHelper::mask($applicant->contact->cpf_cnpj) }}</td>
+                <td>{{ $showApplicantContacts ? DocumentMaskHelper::format($applicant->contact->cpf_cnpj) : DocumentMaskHelper::mask($applicant->contact->cpf_cnpj) }}</td>
                 <td>{{ $showApplicantContacts ? $applicant->contact->email : 'Oculto' }}</td>
                 <td>{{ $showApplicantContacts ? ($applicant->contact->cell_phone ?: $applicant->contact->phone) : 'Oculto' }}</td>
             </tr>
@@ -59,7 +59,7 @@
             @foreach ($proposal->sellers as $seller)
                 <tr>
                     <td>{{ $seller->contact->name_corporatereason }}</td>
-                    <td>{{ $showSellerContacts ? $seller->contact->cpf_cnpj : DocumentMaskHelper::mask($seller->contact->cpf_cnpj) }}</td>
+                    <td>{{ $showSellerContacts ? DocumentMaskHelper::format($seller->contact->cpf_cnpj) : DocumentMaskHelper::mask($seller->contact->cpf_cnpj) }}</td>
                     <td>{{ $showSellerContacts ? $seller->contact->email : 'Oculto' }}</td>
                 </tr>
             @endforeach
