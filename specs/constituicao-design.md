@@ -632,10 +632,11 @@ foi verificado no código em 2026-11-11. A implementação refaz a auditoria
     não faz essa afirmação.
 *   **Resolvida, Q1:** "código novo" quer dizer linhas novas ou alteradas
     (M5).
-*   **Decidida, Q2 (confirmada só depois da verificação da M10):** os testes num clone novo usam o `.env`, com MySQL e o
+*   **Confirmada, Q2 (M10 em 2026-11-13, commit `86ef4db`):** os testes num clone novo usam o `.env`, com MySQL e o
     usuário `sail`. O script `database/mysql/grant-tenant-databases.sh` dá a
     esse usuário o privilégio sobre `tenant%` no primeiro boot do volume. O
-    `phpunit.xml` não fixa a conexão. A confirmação vem da verificação da M10.
+    `phpunit.xml` não fixa a conexão. Na M10, o volume novo criou o grant
+    sem intervenção manual e os três testes passaram (35 testes, 86 asserções).
 *   **Resolvida, Q3:** o `GuidelineWriter` do Boost substitui só o trecho
     entre as tags `<laravel-boost-guidelines>`, então um import escrito fora
     delas é preservado.
@@ -1164,7 +1165,10 @@ Cada item tem o resultado esperado.
         `COMPOSE_PROJECT_NAME=pnet-verify`, `APP_PORT=8081`,
         `VITE_PORT=5174`, `FORWARD_DB_PORT=3307`, `FORWARD_REDIS_PORT=6380`,
         `FORWARD_MAILPIT_PORT=1026`, `FORWARD_MAILPIT_DASHBOARD_PORT=8026`,
-        `FORWARD_MINIO_PORT=9001` e `FORWARD_MINIO_CONSOLE_PORT=8901`;
+        `FORWARD_MINIO_PORT=9001` e `FORWARD_MINIO_CONSOLE_PORT=8901`
+        (se uma porta já estiver em uso na máquina, troque por outra livre;
+        na execução de 2026-11-13 foram `APP_PORT=18081`, `VITE_PORT=15174` e
+        `FORWARD_DB_PORT=3317`);
     4.  `vendor/bin/sail up -d --wait` (espera o healthcheck do MySQL, que num
         volume novo roda os scripts de init antes de aceitar conexões) e
         `vendor/bin/sail artisan key:generate`;
