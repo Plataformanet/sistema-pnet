@@ -72,7 +72,7 @@ test('o vendedor do imóvel vê os próprios dados e os do comprador mascarados'
 test('a equipe vê os dados completos das duas partes', function () {
     $admin = userWithRole($this->tenant, RolesEnum::ADMIN);
 
-    expect(infoPdfHtml($admin))->toContain('529.982.247-25', 'comprador@example.com', '11988887777', '11144477735', 'vendedor@example.com');
+    expect(infoPdfHtml($admin))->toContain('529.982.247-25', 'comprador@example.com', '11988887777', '111.444.777-35', 'vendedor@example.com');
 });
 
 test('a máscara mantém só os dígitos do meio do CPF e do CNPJ', function (string $document, string $masked) {
@@ -82,4 +82,13 @@ test('a máscara mantém só os dígitos do meio do CPF e do CNPJ', function (st
     'CPF só dígitos' => ['52998224725', '***.982.247-**'],
     'CNPJ' => ['11.222.333/0001-81', '**.222.333/****-**'],
     'inválido' => ['123', '***'],
+]);
+
+test('a formatação mostra o CPF e o CNPJ completos', function (string $document, string $formatted) {
+    expect(DocumentMaskHelper::format($document))->toBe($formatted);
+})->with([
+    'CPF só dígitos' => ['52998224725', '529.982.247-25'],
+    'CPF formatado' => ['529.982.247-25', '529.982.247-25'],
+    'CNPJ só dígitos' => ['11222333000181', '11.222.333/0001-81'],
+    'inválido' => ['123', '123'],
 ]);
