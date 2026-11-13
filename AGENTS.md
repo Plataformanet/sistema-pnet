@@ -2,41 +2,24 @@
 
 Este arquivo orienta agentes (Codex, Antigravity e outros) neste repositório. Responda sempre em português do Brasil.
 
-## SDD (`specs/`) e documentação (`docs/`) — LEIA SEMPRE PRIMEIRO
+## Constituição e documentação — LEIA SEMPRE PRIMEIRO
 
-**No início de toda sessão, antes de planejar ou mudar qualquer código, leia o SDD em [specs/](specs/).** O sistema evolui de forma incremental até o padrão definido ali (não há v2 — decisão V-01). Ordem de leitura:
+No início de toda sessão, antes de planejar ou mudar código, leia [specs/constitution.md](specs/constitution.md).
 
-1. [specs/constitution.md](specs/constitution.md) — princípios inegociáveis, **sufixo de tipo em toda classe**, tenancy, dados, testes e Definition of Done.
-2. [specs/spec.md](specs/spec.md) — o que o sistema faz. Os itens **[alvo]** ainda não estão implementados.
-3. [specs/plan.md](specs/plan.md) — como evoluir: recursos-espelho, mapa de renomeações, padronizações e design das 4 mudanças (MUD-01 a MUD-04).
-4. [specs/tasks.md](specs/tasks.md) — backlog por fase (R0 a R7), com skill responsável e status (☐/◐/☑).
-5. [specs/implementation.md](specs/implementation.md) — fluxo de cada tarefa, mapa de skills, gates e comandos.
+A precedência entre documentos e o tratamento de divergências estão na D-01. Instruções de ferramenta neste arquivo (bloco do Boost, RTK) são subordinadas à constituição e às convenções (D-01).
 
-**Hierarquia:** `constitution` > `spec` > `plan` > `tasks` > `implementation` > `docs/`.
-
-- **`specs/` manda** no que fazer e como fazer.
-- **[docs/](docs/)** descreve o **estado atual** do sistema e é atualizado ao fim de cada fase:
-  - [docs/convencoes_de_desenvolvimento.md](docs/convencoes_de_desenvolvimento.md) — convenções atuais;
+- Normativo: [docs/convencoes_de_desenvolvimento.md](docs/convencoes_de_desenvolvimento.md).
+- Descritivos (estado atual):
   - [docs/arquitetura/](docs/arquitetura/) — visão geral, arquitetura, dicionário de dados, rotas, dark mode;
-  - [docs/modulos/](docs/modulos/) — documentação funcional por módulo.
-- [docs/prd/](docs/prd/) e [docs/prd-sistema-pnet-v2.md](docs/prd-sistema-pnet-v2.md) são histórico de requisitos; as decisões deles já estão consolidadas no `specs/spec.md`.
+  - [docs/modulos/](docs/modulos/) — documentação funcional por módulo;
+  - [specs/violacoes-conhecidas.md](specs/violacoes-conhecidas.md) — código que viola a constituição; não copie.
+- Histórico de requisitos: [docs/prd/](docs/prd/).
 
-Se o código divergir do SDD ou de `docs/`, o código é o estado real: aponte a divergência e pergunte se o documento deve ser atualizado. Arquivos de `specs/` e `docs/` só são criados ou alterados mediante pedido explícito.
+**SDD por feature (D-05):** antes de mudar comportamento, leia [specs/README.md](specs/README.md) e a pasta da feature. O procedimento está nas convenções §15. As skills do EGM são `egm-brainstorm`, `egm-draft` e `egm-review`, e só o usuário as dispara: no Claude Code, `/egm:egm-brainstorm` etc.; no Codex e no Antigravity, pelo seletor de skills. O agente pede ao usuário quando for a hora de cada uma.
 
-**Todo arquivo em `specs/` ou `docs/` é escrito em português do Brasil (pt-BR)**: títulos, texto, tabelas e comentários. Só identificadores de código, comandos e caminhos ficam como estão.
+Arquivos de `specs/` e `docs/` são em pt-BR e só mudam com pedido explícito (D-02).
 
-### Regras do PRD de evolução (resumo)
-
-- **CRM:** só frontend (dados mock). **Não** implemente backend de CRM até ele ser especificado no spec.
-- **Sufixo de tipo em toda classe:** `ClientService`, `UserTypeEnum`, `StoreClientRequest`, `ClientPolicy`, `SendEmailDispatchJob`, `AutoBlockClientsCommand`, `CpfRule`, `ClientServiceTest`. Os controllers mantêm o prefixo `Tenant` (`TenantClientController`). Models ficam sem sufixo.
-- **Estilo das telas:** não muda.
-- **Mudanças de regra:**
-  - **MUD-01:** CRM → proposta de documentações.
-  - **MUD-02:** a proposta distribui os valores no financeiro.
-  - **MUD-03:** o orçamento entra no funil do CRM.
-  - **MUD-04:** "Billable Service" removido; o orçamento usa o catálogo `services`.
-- **Testes:** cada tarefa roda **só os arquivos de teste afetados**. A suíte completa (lenta, cerca de 9 min) só roda com pedido explícito.
-- **Na dúvida, pare e pergunte.**
+**Na dúvida, pare e pergunte:** quando a constituição, as convenções e o código não resolvem um caso, ou quando uma escolha muda materialmente o resultado, pergunte ao usuário antes de seguir (convenções §14).
 
 <laravel-boost-guidelines>
 === .ai/rtk rules ===
