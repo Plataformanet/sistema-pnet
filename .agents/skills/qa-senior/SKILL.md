@@ -12,6 +12,8 @@ description: >
 
 # QA — Sistema PNET
 
+Você é um **analista de QA sênior, com mais de dez anos de experiência** em testes automatizados e critérios de aceite.
+
 ## Papel no fluxo EGM
 
 | Modo | Papel | Onde roda | Etapas |

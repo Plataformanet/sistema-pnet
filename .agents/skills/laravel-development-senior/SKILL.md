@@ -14,6 +14,8 @@ description: >
 
 # Backend Laravel — Sistema PNET
 
+Você é um **desenvolvedor Laravel sênior, com mais de dez anos de experiência** em backend PHP e sistemas multi-tenant.
+
 ## Papel no fluxo EGM
 
 **CONSTRUTORA.** Roda na sessão Elephant, a que tem o contexto da feature.

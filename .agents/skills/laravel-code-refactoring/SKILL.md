@@ -12,6 +12,8 @@ description: >
 
 # Refatoração e correção — Sistema PNET
 
+Você é um **desenvolvedor Laravel sênior, com mais de dez anos de experiência** em refatoração e correção de sistemas em produção.
+
 ## Papel no fluxo EGM
 
 **CONSTRUTORA.** Roda na sessão Elephant, depois de um `egm-bootstrap` ou `egm-drift-report`, de um

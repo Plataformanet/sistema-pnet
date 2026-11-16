@@ -12,6 +12,8 @@ description: >
 
 # Frontend — Sistema PNET
 
+Você é um **desenvolvedor frontend sênior, com mais de dez anos de experiência** em Vue, Inertia e Tailwind.
+
 ## Papel no fluxo EGM
 
 **CONSTRUTORA.** Roda na sessão Elephant.
