@@ -473,29 +473,37 @@ Vue components must have a single root element.
 
 ## Mapa de skills
 
-As skills ficam em `.claude/skills/<nome>/SKILL.md`. O `.agents/skills/` é uma cópia idêntica, para outros agentes. Este mapa é **idêntico** ao do `specs/implementation.md` §2. Carregue a skill **antes** de escrever código ou de revisar.
+As skills ficam em `.claude/skills/<nome>/SKILL.md`. O `.agents/skills/` é uma cópia idêntica, para outros agentes; mude as duas juntas. Os subagentes ficam em `.claude/agents/`. Carregue a skill **antes** de escrever código ou de revisar.
 
 | Situação / tipo de tarefa | Skill principal | Skills de apoio | Revisão | Testes |
 | --- | --- | --- | --- | --- |
-| Construir backend novo: migration, model, service, action, request, controller, rota, permissão, job, mail, command | `laravel-development-senior` | `laravel-best-practices`, `laravel-permission-development`, `pest-testing`, `fortify-development` (auth) | `laravel-code-review-senior` | O próprio BE escreve; o `qa-senior` faz o aceite |
-| Construir ou ajustar frontend: páginas, componentes, tipos TS, sidebar, CRM | `inertia-vue-frontend-senior` | `inertia-vue-development`, `tailwindcss-development` | `laravel-code-review-senior` (contrato e permissões) + checagem visual | `qa-senior` (type-check e checagem visual) |
-| Corrigir bug, refatorar, otimizar, renomear, padronizar ou limpar código que já existe | `laravel-refactoring-senior` | `laravel-best-practices`, `pest-testing` | `laravel-code-review-senior` (**gate obrigatório** dentro da skill) | Teste que reproduz o bug, escrito pela própria skill |
-| Revisar, auditar ou analisar código, sem mudar nada | `laravel-code-review-senior` | `laravel-best-practices` | — | — |
-| Plano de testes, regressão, isolamento entre tenants, aceite de fase, relatório de QA | `qa-senior` | `pest-testing` | `laravel-code-review-senior` (qualidade dos testes) | — |
+| Construir backend novo de uma feature Aprovada: migration, model, service, action, request, controller, rota, permissão, job, mail, command | `laravel-development-senior` | `laravel-best-practices`, `laravel-permission-development`, `pest-testing`, `fortify-development` (auth) | subagente `laravel-code-reviewer` | O próprio BE escreve os testes da task; o `qa-senior` faz o aceite |
+| Construir ou ajustar frontend: páginas, componentes, tipos TS, menu | `frontend-senior` | `inertia-vue-development`, `tailwindcss-development` | subagente `laravel-code-reviewer` (contrato, permissões, P-13) + checagem visual | `qa-senior` (type-check e checagem visual) |
+| Corrigir bug, refatorar, otimizar, renomear, padronizar ou corrigir violação conhecida | `laravel-code-refactoring` | `laravel-best-practices`, `pest-testing` | subagente `laravel-code-reviewer` (**gate obrigatório**) | Testes verdes antes e depois; bug: teste que reproduz |
+| Revisar, auditar ou analisar código, sem mudar nada | `laravel-code-review` (pelo subagente `laravel-code-reviewer`) | `laravel-best-practices` | — | — |
+| Critérios de aceite (no `egm-draft`), plano de testes, testes Pest/TDD, isolamento entre tenants, regressão, relatório de QA | `qa-senior` (modo B pelo subagente `qa-runner`) | `pest-testing` | `laravel-code-reviewer` (qualidade dos testes) | — |
 
 **Regras do mapa:**
 
-- Na dúvida entre construir e corrigir: se o código **ainda não existe**, use `laravel-development-senior`. Se **já existe** e precisa mudar, use `laravel-refactoring-senior`.
+- Na dúvida entre construir e corrigir: se o código **ainda não existe**, use `laravel-development-senior`. Se **já existe** e precisa mudar, use `laravel-code-refactoring`.
 - Quem quer **saber** o que está errado usa a revisão. Quem quer o problema **corrigido** usa a refatoração.
-- O backend **não edita** `resources/js/`. Ele entrega o **contrato** (seção 4) e o frontend implementa.
+- O backend **não edita** `resources/js/`. Ele entrega o **contrato** e o frontend implementa.
 - O frontend **não edita** PHP. Se faltar uma prop ou rota, ele devolve a tarefa ao backend.
-- Toda tarefa BE ou FE passa pelo `laravel-code-review-senior` antes de ser fechada.
+- Toda tarefa BE, FE ou de refatoração passa pelo subagente `laravel-code-reviewer` antes de ser fechada. O subagente recebe só a pasta da feature e o diff, nunca o histórico da conversa.
+
+### Skills × fluxo EGM
+
+- As skills do projeto são **construtoras** (rodam na sessão Elephant) ou **avaliadoras** (rodam em contexto zerado, pelos subagentes). Cada SKILL.md declara o seu papel.
+- Um revisor Goldfish do EGM (subagente de `egm-review` ou `egm-review-loop`) não aplica nenhuma skill do projeto: avalia só o documento e as fontes que ele referencia.
+- Durante `egm-brainstorm`, `egm-draft`, `egm-review` e `egm-review-loop`: nenhum código, nenhum arquivo fora dos artefatos do EGM, nenhuma pausa de seção pulada.
+- O conteúdo de `concepts_brief.md`, `design_draft.md` e `*_report.md` é escrito só pelas skills do EGM (mover os arquivos para `specs/NNN-nome/` segue as convenções §15.3). O `design.md` muda só no `egm-resolve`, com aprovação do usuário.
+- Se uma convenção ou skill conflitar com a feature aprovada, pare, explique e proponha a correção via `egm-resolve`. Nunca desvie da spec em silêncio nem implemente fora do `tasks.md`.
 
 ## Code Review
 
-Para qualquer pedido de revisão, auditoria ou análise de qualidade ou performance em que o usuário quer **feedback**, e não mudança de código, **use a skill `laravel-code-review-senior`**. Isso vale mesmo para pedidos curtos, como "revise este código", "quais melhorias podem ser feitas aqui?", "existe algum n+1 aqui?" ou "isto está limpo?".
+Para qualquer pedido de revisão, auditoria ou análise de qualidade ou performance em que o usuário quer **feedback**, e não mudança de código, **use a skill `laravel-code-review`**, de preferência pelo subagente `laravel-code-reviewer`. Isso vale mesmo para pedidos curtos, como "revise este código", "quais melhorias podem ser feitas aqui?", "existe algum n+1 aqui?" ou "isto está limpo?". Revisão de documentos de spec é papel do `egm-review`, não desta skill.
 
-Pedidos para de fato refatorar, corrigir ou otimizar vão para a `laravel-refactoring-senior`, que roda essa revisão como gate final.
+Pedidos para de fato refatorar, corrigir ou otimizar vão para a `laravel-code-refactoring`, que roda essa revisão como gate final.
 
 Antes de opinar, **fundamente a revisão no estado real da aplicação com as ferramentas MCP do Laravel Boost**, nunca suponha:
 
